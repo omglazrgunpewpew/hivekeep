@@ -414,11 +414,39 @@ function estimateContextTokens(
         if ('text' in part && typeof part.text === 'string') {
           messagesTokens += estimateTokens(part.text)
         } else if ('type' in part && part.type === 'image') {
-          messagesTokens += 85 // rough per-image overhead
+          // Anthropic vision pricing scales with pixel count. PNGs compress
+          // to roughly 1 byte per pixel on average and Anthropic charges
+          // ~1 token per 750 pixels, so bytes/750 is a usable heuristic.
+          // Floor at 1500 (≈ a typical 1280×720 screenshot) since the prior
+          // 85-token flat estimate was 15-60× too low and silently masked
+          // huge contexts.
+          const img = (part as { image?: unknown }).image
+          const bytes = img instanceof Uint8Array
+            ? img.length
+            : typeof img === 'string' ? img.length * 0.75 // assume base64
+            : 0
+          messagesTokens += bytes > 0 ? Math.max(1500, Math.round(bytes / 750)) : 1500
         } else if ('type' in part && part.type === 'file') {
           // Rough estimate for PDF: ~500 tokens per page, ~3KB per page
           const dataLen = 'data' in part && typeof part.data === 'string' ? part.data.length * 0.75 : 0
           messagesTokens += Math.max(500, Math.ceil(dataLen / 3000) * 500)
+        } else if ('type' in part && part.type === 'tool-call') {
+          // Tool call args JSON — serialized back to the API as part of the
+          // assistant's tool_use block, so it must be counted.
+          const args = (part as { args?: unknown }).args
+          const argsStr = args !== undefined ? JSON.stringify(args) : ''
+          messagesTokens += estimateTokens(argsStr)
+        } else if ('type' in part && part.type === 'tool-result') {
+          // Tool result content — typically the LARGEST unbilled hidden cost.
+          // kubectl outputs, file reads, page_state YAMLs, etc. all live here
+          // and were previously silently dropped from the estimate, leading
+          // to dashboards under-counting context size by 10-20× on
+          // tool-heavy Kins.
+          const result = (part as { result?: unknown }).result
+          const resultStr = typeof result === 'string'
+            ? result
+            : result !== undefined ? JSON.stringify(result) : ''
+          messagesTokens += estimateTokens(resultStr)
         }
       }
     }

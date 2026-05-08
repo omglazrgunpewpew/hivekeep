@@ -26,6 +26,10 @@ interface MessagePreview {
   role: string
   content: string | null
   hasToolCalls: boolean
+  /** Server-side estimate covering content + toolCalls JSON content. The
+   *  tool calls JSON is intentionally NOT sent in the preview (it would
+   *  bloat the response), but its tokens DO count toward the context size. */
+  tokenEstimate: number
   createdAt: number | null
 }
 
@@ -253,6 +257,7 @@ export async function buildContextPreview(kinId: string): Promise<ContextPreview
     role: m.role,
     content: m.content,
     hasToolCalls: m.toolCalls !== null,
+    tokenEstimate: estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? ''),
     createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
   }))
 
@@ -401,9 +406,14 @@ function formatResult(
   const summaryTokens = compactingSummary ? estimateTokens(compactingSummary) : 0
   const rawSystemTokens = estimateTokens(systemPrompt)
   const systemPromptTokens = Math.max(0, rawSystemTokens - summaryTokens - cronRunsTokens - cronLearningsTokens)
+  // Count message tokens from the per-message tokenEstimate computed at
+  // preview construction time, which covers BOTH content text AND toolCalls
+  // JSON. The previous version only counted content, silently under-counting
+  // context by 10-20× on tool-heavy Kins (kubectl outputs, file reads,
+  // page_state YAMLs all live in toolCalls).
   let messagesTokens = 0
   for (const m of messagesPreviews) {
-    if (m.content) messagesTokens += estimateTokens(m.content)
+    messagesTokens += m.tokenEstimate
   }
   const toolsTokens = toolDefinitions.length > 0 ? estimateTokens(JSON.stringify(toolDefinitions)) : 0
   const total = systemPromptTokens + summaryTokens + cronRunsTokens + cronLearningsTokens + messagesTokens + toolsTokens
@@ -505,6 +515,7 @@ export async function buildTaskContextPreview(taskId: string): Promise<ContextPr
     role: m.role,
     content: m.content,
     hasToolCalls: m.toolCalls !== null,
+    tokenEstimate: estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? ''),
     createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
   }))
 
@@ -644,6 +655,7 @@ export async function buildQuickSessionContextPreview(kinId: string, sessionId: 
     role: m.role,
     content: m.content,
     hasToolCalls: m.toolCalls !== null,
+    tokenEstimate: estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? ''),
     createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
   }))
 
