@@ -392,6 +392,31 @@ function sanitizePersistedToolCalls<T extends { id: unknown; name: unknown; args
 }
 
 /**
+ * Convert each tool's Zod inputSchema to its JSON Schema form (what actually
+ * reaches the LLM), so token counts match what the API sees. Falls back to
+ * the raw schema when no `.toJSONSchema()` method is exposed.
+ */
+function buildToolSchemaPayload(tools: Record<string, unknown>): Array<{ name: string; description: string; parameters: unknown }> {
+  return Object.entries(tools).map(([name, t]) => {
+    const toolObj = t as { description?: string; inputSchema?: unknown }
+    const schema = toolObj.inputSchema
+    let parameters: unknown = null
+    if (schema && typeof schema === 'object' && 'toJSONSchema' in schema && typeof (schema as { toJSONSchema: unknown }).toJSONSchema === 'function') {
+      try {
+        parameters = (schema as { toJSONSchema(): unknown }).toJSONSchema()
+      } catch {
+        parameters = null
+      }
+    }
+    return {
+      name,
+      description: toolObj.description ?? '',
+      parameters,
+    }
+  })
+}
+
+/**
  * Estimate the total token count of a full LLM request payload.
  * When `summaryTokens` is provided, that amount is split out of the system prompt total
  * and reported as a separate `summary` field.
@@ -451,7 +476,14 @@ function estimateContextTokens(
       }
     }
   }
-  const toolsTokens = (tools && Object.keys(tools).length > 0) ? estimateTokens(JSON.stringify(tools)) : 0
+  // Tools are sent to the LLM as JSON Schema (not as the raw Zod object that
+  // lives in the Vercel AI SDK's tool registry), so we count the JSON Schema
+  // representation. JSON.stringify(tools) would inflate by serializing Zod's
+  // internal fields that never reach the API and would diverge from the
+  // visualizer's count of the same data.
+  const toolsTokens = (tools && Object.keys(tools).length > 0)
+    ? estimateTokens(JSON.stringify(buildToolSchemaPayload(tools)))
+    : 0
   const total = systemPromptTokens + summary + messagesTokens + toolsTokens
   return {
     systemPrompt: systemPromptTokens,
