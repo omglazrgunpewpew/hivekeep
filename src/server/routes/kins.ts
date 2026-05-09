@@ -952,8 +952,11 @@ kinRoutes.post('/:id/compacting/run', async (c) => {
   await enqueueMessage({
     kinId: existing.id,
     messageType: 'compacting_followup',
-    sourceType: 'system',
-    content: `[System] La compaction de l'historique vient de se terminer (déclenchée manuellement par l'utilisateur). Confirme brièvement que c'est fait — une seule phrase courte — et invite l'utilisateur à reprendre la conversation. N'élabore pas sur les détails techniques.`,
+    // Dedicated sourceType (rather than reusing 'system') so the chat UI
+    // can filter the trigger prompt out of view — the user shouldn't see
+    // an internal instruction appearing as if they typed it.
+    sourceType: 'compacting_followup',
+    content: `[Internal] La compaction de l'historique vient de se terminer (déclenchée manuellement par l'utilisateur). Confirme brièvement que c'est fait — une seule phrase courte — et invite l'utilisateur à reprendre la conversation. N'élabore pas sur les détails techniques.`,
   })
 
   return c.json({ success: true, summary: result.summary, memoriesExtracted: result.memoriesExtracted })

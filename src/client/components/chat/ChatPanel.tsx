@@ -603,9 +603,17 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
   // React tree branch as persisted messages — prevents unmount/remount (and
   // entrance animation replay) when the stream completes.
   const displayMessages = useMemo(() => {
-    if (!streamingMessage) return messages
-    if (messages.some(m => m.id === streamingMessage.id)) return messages
-    return [...messages, streamingMessage]
+    // Hide the internal instruction injected by the force-compact endpoint
+    // (sourceType 'compacting_followup'). It's a user-role message in the DB
+    // because that's how the engine consumes queue items, but it's actually
+    // an internal trigger to make the kin acknowledge the compaction +
+    // refresh the navbar context counter — the user never typed it and
+    // shouldn't see it as if they did. The kin's reply (sourceType 'kin')
+    // stays visible.
+    const filtered = messages.filter((m) => m.sourceType !== 'compacting_followup')
+    if (!streamingMessage) return filtered
+    if (filtered.some(m => m.id === streamingMessage.id)) return filtered
+    return [...filtered, streamingMessage]
   }, [messages, streamingMessage])
 
   const handleSearchChange = useCallback((query: string, matchIndex: number, matchCount: number) => {
