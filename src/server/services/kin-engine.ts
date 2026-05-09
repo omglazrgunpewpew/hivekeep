@@ -2630,7 +2630,41 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
   const maskResult = config.progressiveCompactionEnabled
     ? maskOldToolResults(history, config.toolResultMaskKeepLast, config.observationCompactionWindow, config.observationMaxChars)
     : { messages: history, maskedGroupCount: 0, observationCompactedCount: 0, estimatedTokensSaved: 0 }
-  const maskedHistory = maskResult.messages
+
+  // Per-message size cap — independently of progressive compaction. A
+  // single tool-result message can be 50-150k tokens (browser snapshots,
+  // unspilled kubectl outputs from before tool-output spilling shipped).
+  // After compacting these still dominate the keep-window, so even a
+  // forced compaction barely reduces the total context.
+  //
+  // Cache-safe: the criterion is per-message and stable (a message at
+  // 80k tokens stays at 80k → always trimmed; a message at 5k stays at
+  // 5k → never trimmed). The transformation is deterministic per message
+  // so the prefix stabilizes after the first apply.
+  const SIZE_CAP_TOKENS = config.toolResultSizeCapTokens
+  let oversizedTrimmedCount = 0
+  let oversizedTrimmedTokens = 0
+  const sizedHistory = SIZE_CAP_TOKENS > 0 ? maskResult.messages.map((msg) => {
+    if (msg.role !== 'tool' || !Array.isArray(msg.content)) return msg
+    let modified = false
+    const content = (msg.content as Array<{ type: string; toolCallId?: string; toolName?: string; output?: { type?: string; value?: unknown } }>).map((part) => {
+      if (part.type !== 'tool-result') return part
+      const value = part.output?.value
+      const json = value === undefined ? '' : (typeof value === 'string' ? value : JSON.stringify(value))
+      const tokens = estimateTokens(json)
+      if (tokens <= SIZE_CAP_TOKENS) return part
+      modified = true
+      oversizedTrimmedCount++
+      oversizedTrimmedTokens += tokens
+      const placeholder = `[Tool result trimmed: ${part.toolName ?? 'unknown'} returned ~${tokens.toLocaleString()} tokens, exceeding the ${SIZE_CAP_TOKENS.toLocaleString()}-token keep-window cap. Re-run the tool if you need the full output.]`
+      return { ...part, output: { type: 'text' as const, value: placeholder } }
+    })
+    return modified ? { ...msg, content } as ModelMessage : msg
+  }) : maskResult.messages
+  if (oversizedTrimmedCount > 0) {
+    log.debug({ kinId, count: oversizedTrimmedCount, totalOriginalTokens: oversizedTrimmedTokens, capTokens: SIZE_CAP_TOKENS }, 'Tool results above keep-window size cap trimmed')
+  }
+  const maskedHistory = sizedHistory
   if (maskResult.maskedGroupCount > 0 || maskResult.observationCompactedCount > 0) {
     log.debug({ kinId, maskedGroups: maskResult.maskedGroupCount, observationCompacted: maskResult.observationCompactedCount, tokensSaved: maskResult.estimatedTokensSaved }, 'Context compaction pipeline applied')
   }

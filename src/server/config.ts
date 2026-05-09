@@ -230,6 +230,15 @@ export const config = {
    *  Only applied when `progressiveCompactionEnabled` is true. */
   observationMaxChars: Number(process.env.OBSERVATION_MAX_CHARS ?? 200),
 
+  /** Per-message size cap for tool-result content sent to the LLM (tokens).
+   *  When a tool-result exceeds this cap, it's replaced by a small placeholder
+   *  in the LLM payload (DB content unchanged). Independent of progressive
+   *  compaction — applied always, including with prompt caching enabled.
+   *  Cache-safe because the criterion is stable per message: a 80k-token
+   *  result always trims to the same placeholder; a 5k-token result is never
+   *  trimmed. Default 30000 tokens. Set 0 to disable. */
+  toolResultSizeCapTokens: Number(process.env.TOOL_RESULT_SIZE_CAP_TOKENS ?? 30000),
+
   memory: (() => {
     const extraction = parseModelEnv(process.env.MEMORY_EXTRACTION_MODEL)
     const embedding = parseModelEnv(process.env.MEMORY_EMBEDDING_MODEL || 'text-embedding-3-small')
