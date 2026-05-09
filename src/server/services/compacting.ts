@@ -380,8 +380,13 @@ export async function runCompacting(kinId: string, contextWindow?: number): Prom
 
   const model = await resolveLLMModel(effectiveModelId, effectiveProviderId)
   if (!model) {
-    log.warn({ kinId }, 'No LLM model available for compacting')
-    return null
+    // Distinct from "no messages to summarize" (which legitimately returns
+    // null and gets a quiet compacting:done): this is a misconfiguration
+    // (provider deleted, model retired, OAuth expired). Throw so the catch
+    // surfaces compacting:error with an actionable message instead of a
+    // misleading "no-op" success.
+    log.warn({ kinId, effectiveModelId, effectiveProviderId }, 'No LLM model available for compacting — provider/model misconfiguration')
+    throw new Error(`Compacting model '${effectiveModelId}' is unavailable. Check the Kin's compacting model + provider in settings.`)
   }
 
   // Cap the generated summary at one summary's slice of the budget so the
