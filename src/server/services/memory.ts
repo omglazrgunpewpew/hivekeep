@@ -1112,20 +1112,28 @@ export async function recalibrateImportance(kinId: string): Promise<number> {
 
     let delta = 0
     if (ratio >= 2.0) {
-      // Retrieved much more than expected — bump up
-      delta = 0.5
-    } else if (ratio >= 1.0) {
-      // Retrieved at expected rate — small bump
+      // Retrieved much more than expected — bump up (small, was 0.5).
+      // Larger values created a positive feedback loop: more retrievals
+      // → higher importance → higher score multiplier → more retrievals.
+      // After many recalibrations a single popular memory snowballed to
+      // importance 10 and crowded out everything else.
       delta = 0.2
+    } else if (ratio >= 1.0) {
+      // At expected retrieval rate — no reward. Previously +0.2 here was
+      // basically free importance for memories that just kept getting
+      // surfaced; combined with the >=2.0 bump it made the runaway
+      // worse.
+      delta = 0
     } else if (mem.retrieval_count === 0 && ageDays > 30) {
-      // Never retrieved in 30+ days — slight decrease
+      // Never retrieved in 30+ days — slight decrease.
       delta = -0.3
     } else if (ratio < 0.3 && ageDays > 14) {
-      // Retrieved much less than expected — slight decrease
+      // Retrieved much less than expected — slight decrease.
       delta = -0.2
     } else {
       continue // No adjustment needed
     }
+    if (delta === 0) continue
 
     const newImportance = Math.max(1, Math.min(10, Math.round((mem.importance + delta) * 10) / 10))
     if (newImportance === mem.importance) continue
