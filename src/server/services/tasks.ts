@@ -10,7 +10,7 @@ import {
   buildSegmentedMessages,
   markLastToolCacheable,
 } from '@/server/services/llm-cache-hints'
-import { resolveLLMModel, buildThinkingProviderOptions, isContextTooLargeError } from '@/server/services/kin-engine'
+import { resolveLLMModel, buildThinkingProviderOptions, resolveThinkingConfig, isContextTooLargeError } from '@/server/services/kin-engine'
 import { toolRegistry } from '@/server/tools/index'
 import { resolveMCPTools } from '@/server/services/mcp'
 import { resolveCustomTools } from '@/server/services/custom-tools'
@@ -463,12 +463,11 @@ async function executeSubKin(taskId: string, isNudge = false) {
       throw new Error('No LLM provider available')
     }
 
-    // Resolve thinking config: task-level override takes precedence over parent Kin
-    const taskThinkingConfig: KinThinkingConfig | null = task.thinkingConfig
-      ? JSON.parse(task.thinkingConfig as string)
-      : kinIdentity.thinkingConfig
-        ? JSON.parse(kinIdentity.thinkingConfig as string)
-        : null
+    // Resolve thinking config: task-level override takes precedence over parent Kin.
+    // Defaults to enabled (interleaved thinking reduces tool-result hallucinations).
+    const taskThinkingConfig = resolveThinkingConfig(
+      (task.thinkingConfig as string | null) ?? (kinIdentity.thinkingConfig as string | null),
+    )
     const taskProviderType = guessProviderType(modelId) ?? kinIdentity.providerId ?? ''
     const taskThinkingProviderOptions = buildThinkingProviderOptions(taskProviderType, taskThinkingConfig)
 

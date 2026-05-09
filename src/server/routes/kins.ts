@@ -44,7 +44,7 @@ const OPENAI_COMPATIBLE_PROVIDERS = new Set([
 ])
 import { createLogger } from '@/server/logger'
 import { recordUsage } from '@/server/services/token-usage'
-import { getLastContextUsage, compactingKins } from '@/server/services/kin-engine'
+import { getLastContextUsage, compactingKins, resolveThinkingConfig } from '@/server/services/kin-engine'
 import { getModelContextWindow } from '@/shared/model-context-windows'
 
 const log = createLogger('routes:kins')
@@ -84,7 +84,7 @@ kinRoutes.get('/', async (c) => {
         providerId: k.providerId ?? null,
         createdAt: k.createdAt,
         isHub: k.id === hubKinId,
-        thinkingEnabled: k.thinkingConfig ? (JSON.parse(k.thinkingConfig) as { enabled?: boolean }).enabled === true : false,
+        thinkingEnabled: resolveThinkingConfig(k.thinkingConfig).enabled === true,
         isProcessing: qs?.isProcessing ?? false,
         queueSize: qs?.queueSize ?? 0,
         processingStartedAt: qs?.processingStartedAt ?? undefined,

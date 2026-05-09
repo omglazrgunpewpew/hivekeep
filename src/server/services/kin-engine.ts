@@ -1302,10 +1302,8 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       ? JSON.parse(kin.toolConfig)
       : null
 
-    // Resolve thinking config for this Kin
-    const thinkingConfig: KinThinkingConfig | null = kin.thinkingConfig
-      ? JSON.parse(kin.thinkingConfig)
-      : null
+    // Resolve thinking config for this Kin (defaults to enabled if never configured)
+    const thinkingConfig = resolveThinkingConfig(kin.thinkingConfig)
     const providerType = guessProviderType(kin.model) ?? kin.providerId ?? ''
     const thinkingProviderOptions = buildThinkingProviderOptions(providerType, thinkingConfig)
 
@@ -2063,10 +2061,8 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       return true
     }
 
-    // Resolve thinking config for quick session
-    const qsThinkingConfig: KinThinkingConfig | null = kin.thinkingConfig
-      ? JSON.parse(kin.thinkingConfig)
-      : null
+    // Resolve thinking config for quick session (defaults to enabled)
+    const qsThinkingConfig = resolveThinkingConfig(kin.thinkingConfig)
     const qsProviderType = guessProviderType(kin.model) ?? kin.providerId ?? ''
     const qsThinkingProviderOptions = buildThinkingProviderOptions(qsProviderType, qsThinkingConfig)
 
@@ -2739,6 +2735,22 @@ function getProviderTypeForModel(modelId: string): string | null {
 }
 
 /**
+ * Resolve a Kin's thinking config from its raw JSON column.
+ * `null` (never configured) defaults to enabled with adaptive budget — interleaved
+ * thinking measurably reduces tool-result hallucinations on multi-step turns.
+ * Explicit `{ enabled: false }` is respected as a user opt-out.
+ */
+export function resolveThinkingConfig(rawJson: string | null | undefined): KinThinkingConfig {
+  if (!rawJson) return { enabled: true, budgetTokens: null }
+  try {
+    const parsed = JSON.parse(rawJson) as KinThinkingConfig
+    return parsed && typeof parsed === 'object' ? parsed : { enabled: true, budgetTokens: null }
+  } catch {
+    return { enabled: true, budgetTokens: null }
+  }
+}
+
+/**
  * Build provider-specific options to enable thinking/reasoning on the LLM call.
  * Returns undefined when thinking is disabled or the provider doesn't support it.
  */
@@ -2870,6 +2882,15 @@ async function tryCreateModel(
           if (init?.body && typeof init.body === 'string') {
             try {
               const body = JSON.parse(init.body)
+              // TEMP diagnostic: dump thinking field shape on every OAuth request
+              if (process.env.DEBUG_THINKING_WIRE) {
+                log.info({
+                  provider: 'anthropic-oauth',
+                  thinking: body.thinking ?? null,
+                  model: body.model,
+                  hasThinking: 'thinking' in body,
+                }, 'wire body thinking field')
+              }
               const billingBlock = {
                 type: 'text' as const,
                 text: buildBillingHeaderText(body.messages),

@@ -509,6 +509,10 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `IMPORTANT: You MUST avoid speculative phrases such as "Let me check...", "The result should be...", "Great, it worked!" or "Voilà, c'est bon !" before any tool result is in your context. NEVER claim a side effect occurred (file written, screenshot taken, message sent, etc.) unless the tool's actual return value confirms it.\n\n` +
       `IMPORTANT: If a tool fails or returns nothing useful, say so honestly — never invent a successful outcome.\n\n` +
       `When a tool call depends on the result of a previous one, call them one at a time. Wait to receive each result before calling the next tool.\n\n` +
+      `### Concrete anti-pattern (NEVER do this)\n\n` +
+      `BAD: "✅ Done. File saved to /tmp/output.txt." [then calls write_file] — the path was invented before the tool ran.\n` +
+      `GOOD: [calls write_file → returns { path: "/actual/path.txt" }] then "File saved to /actual/path.txt."\n\n` +
+      `Use ONLY URLs, IDs, paths, counts, and outcomes that appear in actual tool results in your context.\n\n` +
       `### Embedding images\n\n` +
       `When a tool returns an image URL, embed it using markdown image syntax \`![alt](url)\` so the chat renders it inline. Do not use plain link syntax for images.\n\n` +
       `## CRITICAL — Task resolution (MANDATORY)\n` +
@@ -599,6 +603,16 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `- Any summary of what the tool "did" before its output is in your context\n\n` +
       `IMPORTANT: If a tool fails, returns an error, or returns nothing useful, say so honestly. NEVER invent a successful outcome. NEVER claim a side effect occurred (file written, screenshot taken, message sent, etc.) unless the tool's actual return value confirms it.\n\n` +
       `When a tool call depends on the result of a previous one, you MUST call them one at a time across separate steps. Wait to receive each result before calling the next tool. Never batch dependent tool calls — you cannot predict outputs.\n\n` +
+      `### Concrete anti-pattern (NEVER do this)\n\n` +
+      `BAD — fabricating a result before the tool runs:\n` +
+      `> "✅ Article published. Link: https://example.com/news/my-article — Discord notification sent to #announcements."\n` +
+      `> [then calls publish_article and send_discord_message]\n\n` +
+      `The URL above is invented. The user has now read a confirmation that did not happen yet, with a fake link. Even if the tools succeed afterwards, the message is a lie.\n\n` +
+      `GOOD — call first, describe after:\n` +
+      `> [calls publish_article → returns { url: "https://real.example.com/news/abc" }]\n` +
+      `> [calls send_discord_message → returns { ok: true, messageId: "..." }]\n` +
+      `> "Article published at https://real.example.com/news/abc and announced on Discord."\n\n` +
+      `Use ONLY URLs, IDs, counts, and outcomes that appear in actual tool results in your context. If you have not yet seen the tool's return value, you do not know the outcome — do not describe it.\n\n` +
       `### Embedding images in your response\n\n` +
       `When a tool returns an image URL (screenshot, generated image, or any fileUrl with image/* mime type), embed it inline using markdown image syntax: \`![short description](url)\`. The chat renderer displays these inline with click-to-zoom. Do NOT use plain link syntax \`[text](url)\` for images — that produces a clickable text link instead of the image itself. Plain links remain correct for non-image URLs.`,
     )
