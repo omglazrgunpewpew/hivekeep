@@ -343,6 +343,7 @@ export const ConversationHeader = memo(function ConversationHeader({
           kinId={kinId}
           estimatedTokens={estimatedTokens}
           maxTokens={maxTokens}
+          apiContextTokens={apiContextTokens}
           contextBreakdown={contextBreakdown}
           pipelineStatus={pipelineStatus}
           compactingPercent={compactingPercent}
