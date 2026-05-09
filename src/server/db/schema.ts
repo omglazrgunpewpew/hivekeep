@@ -785,3 +785,12 @@ export const llmUsage = sqliteTable('llm_usage', {
   index('idx_llm_usage_task').on(table.taskId),
   index('idx_llm_usage_cron').on(table.cronId),
 ])
+
+export const kinReadState = sqliteTable('kin_read_state', {
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  lastReadAt: integer('last_read_at', { mode: 'timestamp_ms' }).notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.kinId] }),
+  index('idx_kin_read_state_user').on(table.userId),
+])

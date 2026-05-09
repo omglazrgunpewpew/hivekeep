@@ -31,6 +31,7 @@ import {
   deleteKin,
   getKinDetails,
 } from '@/server/services/kins'
+import { markKinAsRead } from '@/server/services/kin-read-state'
 import { kinAvatarUrl, validateKinFields } from '@/server/services/field-validator'
 import { getHubKinId, getDefaultLlmModel, getDefaultLlmProviderId } from '@/server/services/app-settings'
 import { listModelsForProvider } from '@/server/providers/index'
@@ -709,6 +710,17 @@ kinRoutes.delete('/:id', async (c) => {
     return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Kin not found' } }, 404)
   }
 
+  return c.json({ success: true })
+})
+
+// POST /api/kins/:id/mark-read — bump the lastReadAt marker for the current user
+kinRoutes.post('/:id/mark-read', async (c) => {
+  const sessionUser = c.get('user') as { id: string }
+  const existing = resolveKinByIdOrSlug(c.req.param('id'))
+  if (!existing) {
+    return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Kin not found' } }, 404)
+  }
+  await markKinAsRead(sessionUser.id, existing.id)
   return c.json({ success: true })
 })
 

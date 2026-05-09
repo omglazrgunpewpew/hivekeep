@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { userProfiles, user } from '@/server/db/schema'
+import { getUnreadCountsForUser } from '@/server/services/kin-read-state'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 
@@ -224,6 +225,13 @@ meRoutes.post('/avatar', async (c) => {
     .where(eq(user.id, sessionUser.id))
 
   return c.json({ avatarUrl })
+})
+
+// GET /api/me/unread-counts — per-Kin unread assistant message counts for the current user
+meRoutes.get('/unread-counts', async (c) => {
+  const sessionUser = c.get('user') as { id: string }
+  const counts = getUnreadCountsForUser(sessionUser.id)
+  return c.json({ counts })
 })
 
 export { meRoutes }

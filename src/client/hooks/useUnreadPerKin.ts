@@ -1,11 +1,18 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSSE } from '@/client/hooks/useSSE'
+import { api } from '@/client/lib/api'
 
 /**
  * Track unread assistant message counts per kin.
  *
- * Messages arriving for a kin that is NOT currently selected are counted.
- * When the user selects a kin, its count is reset to 0.
+ * Persistence model:
+ *  - Initial counts are fetched from the server on mount (`GET /api/me/unread-counts`),
+ *    so a page reload or fresh device sees state that survived the previous session.
+ *  - SSE `chat:message` increments the in-memory counter for non-active Kins,
+ *    keeping the badge live without a server roundtrip per message.
+ *  - Whenever the user opens a Kin (sidebar click OR URL navigation), or a message
+ *    arrives in the active Kin, the server-side `lastReadAt` is bumped via
+ *    `POST /api/kins/:id/mark-read`, keeping persistence in sync with the UI.
  */
 export function useUnreadPerKin(selectedKinId: string | null): {
   unreadCounts: Map<string, number>
@@ -15,16 +22,49 @@ export function useUnreadPerKin(selectedKinId: string | null): {
   const selectedRef = useRef(selectedKinId)
   selectedRef.current = selectedKinId
 
+  // Hydrate from server on mount. Skip the currently-selected Kin (the user is
+  // actively viewing it, so it's de facto read) and bump its server marker.
+  useEffect(() => {
+    api
+      .get<{ counts: Record<string, number> }>('/me/unread-counts')
+      .then(({ counts }) => {
+        const next = new Map(Object.entries(counts))
+        if (selectedRef.current) next.delete(selectedRef.current)
+        setUnreadCounts(next)
+        if (selectedRef.current && counts[selectedRef.current]) {
+          api.post(`/kins/${selectedRef.current}/mark-read`).catch(() => { /* silent */ })
+        }
+      })
+      .catch(() => { /* fall back to empty map — SSE will hydrate as new messages arrive */ })
+  }, [])
+
+  // When the user lands on or switches to a Kin (including via URL navigation
+  // that bypasses handleSelectKin), clear its badge and persist the read marker.
+  useEffect(() => {
+    if (!selectedKinId) return
+    setUnreadCounts((prev) => {
+      if (!prev.has(selectedKinId)) return prev
+      const next = new Map(prev)
+      next.delete(selectedKinId)
+      return next
+    })
+    api.post(`/kins/${selectedKinId}/mark-read`).catch(() => { /* silent */ })
+  }, [selectedKinId])
+
   const handleMessage = useCallback(
     (data: Record<string, unknown>) => {
       const kinId = data.kinId as string | undefined
       if (!kinId) return
-      // Don't count messages for the currently viewed kin
-      if (kinId === selectedRef.current) return
       // Skip task and quick session messages
       if (data.taskId || data.sessionId) return
       // Only count assistant messages
       if (data.role !== 'assistant') return
+
+      // Active Kin: bump server marker so persistence stays in sync, no badge increment
+      if (kinId === selectedRef.current) {
+        api.post(`/kins/${kinId}/mark-read`).catch(() => { /* silent */ })
+        return
+      }
 
       setUnreadCounts((prev) => {
         const next = new Map(prev)
@@ -46,6 +86,8 @@ export function useUnreadPerKin(selectedKinId: string | null): {
       next.delete(kinId)
       return next
     })
+    // Persist server-side: any subsequent reload will see 0 unread for this Kin
+    api.post(`/kins/${kinId}/mark-read`).catch(() => { /* silent — local state already cleared */ })
   }, [])
 
   return { unreadCounts, clearUnread }
