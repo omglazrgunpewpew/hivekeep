@@ -1800,22 +1800,30 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     // previous turn), trigger a forced compacting in the background so the
     // user can retry without manual intervention.
     if (isContextTooLargeError(errorMsg)) {
-      log.warn({ kinId }, 'Main turn failed with prompt-too-long — triggering recovery compacting')
-      ;(async () => {
-        compactingKins.add(kinId)
-        try {
-          // Re-fetch the Kin since `kin` was scoped to the try block.
-          const recoveryKin = await db.select({ model: kins.model }).from(kins).where(eq(kins.id, kinId)).get()
-          if (!recoveryKin) return
-          const ctxWindow = getModelContextWindow(recoveryKin.model)
-          const cached = lastContextUsage.get(kinId)
-          await maybeCompact(kinId, cached?.apiContextTokens ?? cached?.contextTokens, ctxWindow)
-        } catch (err) {
-          log.error({ kinId, err }, 'Recovery compacting after prompt-too-long failed')
-        } finally {
-          compactingKins.delete(kinId)
-        }
-      })()
+      // Skip recovery if compacting is already running for this Kin — racing
+      // would risk duplicate summaries (both reading the same message range)
+      // AND the recovery's `finally` would clear the lock the other path
+      // depends on. The in-flight compacting will deal with it.
+      if (compactingKins.has(kinId)) {
+        log.info({ kinId }, 'Prompt-too-long detected but compacting already in progress — skipping recovery trigger')
+      } else {
+        log.warn({ kinId }, 'Main turn failed with prompt-too-long — triggering recovery compacting')
+        ;(async () => {
+          compactingKins.add(kinId)
+          try {
+            // Re-fetch the Kin since `kin` was scoped to the try block.
+            const recoveryKin = await db.select({ model: kins.model }).from(kins).where(eq(kins.id, kinId)).get()
+            if (!recoveryKin) return
+            const ctxWindow = getModelContextWindow(recoveryKin.model)
+            const cached = lastContextUsage.get(kinId)
+            await maybeCompact(kinId, cached?.apiContextTokens ?? cached?.contextTokens, ctxWindow)
+          } catch (err) {
+            log.error({ kinId, err }, 'Recovery compacting after prompt-too-long failed')
+          } finally {
+            compactingKins.delete(kinId)
+          }
+        })()
+      }
     }
 
     // Send error as a system message visible in the chat
