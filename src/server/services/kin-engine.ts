@@ -344,6 +344,20 @@ export function recordApiContextSize(kinId: string, peakStepInputTokens: number)
  *      Opus 4.7 to 1M tokens since the last LLM call)
  *    - the Kin's model was changed in the UI
  */
+/** Drop all in-memory + persisted context usage state for a Kin. Called by
+ *  deleteKin so the lastContextUsage map and the corresponding app_settings
+ *  row don't leak after the Kin is gone (uncleaned, both grow unboundedly
+ *  on a deployment with high Kin churn). */
+export async function clearKinContextUsage(kinId: string): Promise<void> {
+  lastContextUsage.delete(kinId)
+  try {
+    const { deleteSetting } = await import('@/server/services/app-settings')
+    await deleteSetting(`context_usage:${kinId}`)
+  } catch {
+    // Best-effort — the in-memory entry is gone either way
+  }
+}
+
 export async function getLastContextUsage(kinId: string) {
   // Check in-memory cache first, fall back to DB (survives restarts)
   let cached = lastContextUsage.get(kinId)

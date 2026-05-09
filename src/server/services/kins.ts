@@ -362,6 +362,14 @@ export async function deleteKin(kinId: string): Promise<boolean> {
     })
     .catch((err) => log.warn({ kinId, err }, 'Failed to clean up browser resources for deleted kin'))
 
+  // Drop in-memory + persisted context usage cache for this Kin so it doesn't
+  // leak across deployments with high Kin churn (lastContextUsage map keeps
+  // growing, plus the orphan app_settings row context_usage:<kinId> stays
+  // forever otherwise).
+  import('@/server/services/kin-engine')
+    .then(({ clearKinContextUsage }) => clearKinContextUsage(kinId))
+    .catch((err) => log.warn({ kinId, err }, 'Failed to clear context usage cache for deleted kin'))
+
   log.info({ kinId, name: existing.name, slug: existing.slug }, 'Kin deleted')
 
   // Notify all clients about cascade-deleted children first, then the kin itself
