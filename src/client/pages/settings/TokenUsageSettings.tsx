@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avat
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
 import { ArrowDownRight, ArrowUpRight, Activity, Hash, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '@/client/lib/api'
-import { computeBillableInput, computeCacheHitRate } from '@/shared/billing'
+import { computeBillableInput, computeCacheHitRate, getCacheMultipliers, PROVIDER_CACHE_MULTIPLIERS } from '@/shared/billing'
 import type { LlmUsageRow, UsageSummaryRow } from '@/shared/types'
 
 function formatPercent(ratio: number): string {
@@ -263,13 +263,24 @@ function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
           const billable = row.billableInputTokens
           const hit = computeCacheHitRate(row)
           const hasCache = (row.cacheReadTokens > 0) || (row.cacheWriteTokens > 0)
+          // When the row IS a single provider (groupBy=provider_type) we can
+          // show the exact pricing multipliers in the tooltip. For other
+          // groupings the row may span multiple providers — omit multipliers
+          // since the displayed billable was computed server-side per row
+          // with the right per-provider CASE WHEN.
+          const fresh = Math.max(0, row.inputTokens - row.cacheReadTokens - row.cacheWriteTokens)
+          const knownProvider = groupBy === 'provider_type' && row.group in PROVIDER_CACHE_MULTIPLIERS
+          const m = knownProvider ? getCacheMultipliers(row.group) : null
+          const tooltip = !hasCache
+            ? undefined
+            : m
+              ? `Gross input ${formatTokens(row.inputTokens)} = fresh ${formatTokens(fresh)} + cache write ${formatTokens(row.cacheWriteTokens)} (×${m.write}) + cache read ${formatTokens(row.cacheReadTokens)} (×${m.read})`
+              : `Gross input ${formatTokens(row.inputTokens)} = fresh ${formatTokens(fresh)} + cache write ${formatTokens(row.cacheWriteTokens)} + cache read ${formatTokens(row.cacheReadTokens)} (multipliers vary by provider)`
           return (
             <div
               key={row.group}
               className="grid grid-cols-[1fr_90px_80px_60px_60px] gap-2 px-3 py-1.5 text-xs hover:bg-muted/30 border-b border-border/20 items-center"
-              title={hasCache
-                ? `Gross input ${formatTokens(row.inputTokens)} = fresh ${formatTokens(Math.max(0, row.inputTokens - row.cacheReadTokens - row.cacheWriteTokens))} + cache write ${formatTokens(row.cacheWriteTokens)} (×1.25) + cache read ${formatTokens(row.cacheReadTokens)} (×0.1)`
-                : undefined}
+              title={tooltip}
             >
               <RowLabel group={row.group} groupBy={groupBy} kinMap={kinMap} />
               <span className="text-right font-mono tabular-nums font-semibold text-primary">
