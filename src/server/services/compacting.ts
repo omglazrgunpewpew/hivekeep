@@ -337,9 +337,34 @@ export async function runCompacting(kinId: string, contextWindow?: number): Prom
     `- Pay special attention to OPEN THREADS — unfinished business is the most important thing to preserve\n\n` +
     `## Exchanges to summarize\n\n${formattedMessages}`
 
-  // Resolve model for compacting
+  // Resolve model for compacting. If the configured compacting model is
+  // smaller than the prompt we're about to send (typical: a cheap Haiku at
+  // 200k window summarizing 600k of tool-heavy history), fall back to the
+  // Kin's own model — which by definition handled the original payload, so
+  // it can handle the same payload reformatted as a summarization prompt.
+  // Without this, the API call throws "prompt is too long" and the Kin's
+  // context grows unboundedly because compacting silently fails every turn.
   const { resolveLLMModel } = await import('@/server/services/kin-engine')
-  const model = await resolveLLMModel(effectiveConfig.model, effectiveConfig.providerId)
+  let effectiveModelId = effectiveConfig.model
+  let effectiveProviderId = effectiveConfig.providerId
+  const promptTokens = estimateTokens(systemPrompt)
+  const compactingModelWindow = getModelContextWindow(effectiveModelId)
+  // Reserve ~2k tokens for the LLM's own output. If the prompt alone already
+  // takes 95%+ of the window, fallback even before the API rejects it.
+  const usableWindow = compactingModelWindow > 0 ? compactingModelWindow - 2000 : 0
+  if (compactingModelWindow > 0 && promptTokens > usableWindow && effectiveModelId !== kin.model) {
+    log.warn({
+      kinId,
+      configuredModel: effectiveModelId,
+      configuredWindow: compactingModelWindow,
+      promptTokens,
+      fallbackModel: kin.model,
+    }, 'Compacting prompt exceeds configured model window — falling back to Kin model')
+    effectiveModelId = kin.model
+    effectiveProviderId = kin.providerId
+  }
+
+  const model = await resolveLLMModel(effectiveModelId, effectiveProviderId)
   if (!model) {
     log.warn({ kinId }, 'No LLM model available for compacting')
     return null
@@ -349,10 +374,10 @@ export async function runCompacting(kinId: string, contextWindow?: number): Prom
     // Generate summary
     const result = await safeGenerateText({
       model,
-      providerId: effectiveConfig.providerId,
+      providerId: effectiveProviderId,
       prompt: systemPrompt,
       callSite: 'compacting',
-      modelId: effectiveConfig.model,
+      modelId: effectiveModelId,
       kinId,
     })
 
