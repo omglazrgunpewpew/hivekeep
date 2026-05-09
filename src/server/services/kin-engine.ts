@@ -236,49 +236,99 @@ const quickAbortControllers = new Map<string, AbortController>()
 //                       the first turn. Independent of the estimate; the
 //                       UI shows it on a separate solid bar.
 const lastContextUsage = new Map<string, {
+  /** Calibrated estimate (= raw BPE × calibrationFactor) — what the UI shows
+   *  on the "estimate" bar. Closer to the provider count than the raw value. */
   contextTokens: number
+  /** Untouched BPE total — kept so we can recompute calibration each turn
+   *  by comparing to apiContextTokens. Never displayed directly. */
+  contextTokensRaw?: number
   apiContextTokens?: number
   contextWindow: number
   updatedAt: number
+  /** Calibrated section sizes (each scaled by calibrationFactor). Sums to
+   *  contextTokens. Drives the colored breakdown bar. */
   breakdown?: ContextTokenBreakdown
+  /** Raw section sizes from the BPE estimator (no calibration). */
+  breakdownRaw?: ContextTokenBreakdown
   pipelineStatus?: ContextPipelineStatus
+  /** EMA-smoothed ratio observed from past API roundtrips (api / raw_estimate).
+   *  Defaults to 1.0 before any roundtrip. Clamped to [0.7, 3.0] for safety. */
+  calibrationFactor?: number
 }>()
+
+const CALIBRATION_EMA_ALPHA = 0.4 // weight given to the new observation
+const CALIBRATION_MIN = 0.7
+const CALIBRATION_MAX = 3.0
+
+function scaleBreakdown(b: ContextTokenBreakdown, factor: number): ContextTokenBreakdown {
+  const scale = (n: number) => Math.round(n * factor)
+  return {
+    systemPrompt: scale(b.systemPrompt),
+    messages: scale(b.messages),
+    tools: scale(b.tools),
+    summary: scale(b.summary ?? 0),
+    cronRuns: b.cronRuns != null ? scale(b.cronRuns) : undefined,
+    cronLearnings: b.cronLearnings != null ? scale(b.cronLearnings) : undefined,
+    total: scale(b.total),
+  }
+}
 
 /** Store the local-estimate context size for a Kin (called BEFORE each LLM
  *  call). Does NOT touch apiContextTokens — that field is owned by
- *  recordApiContextSize and reflects the most recent provider roundtrip. */
+ *  recordApiContextSize and reflects the most recent provider roundtrip.
+ *
+ *  Applies the per-Kin calibration factor learned from past roundtrips so
+ *  the displayed estimate tracks the provider count instead of under-counting
+ *  by 30-60% on JSON / tool-heavy contexts (the BPE tokenizer is OpenAI's
+ *  o200k_base, less efficient than Claude's tokenizer on structured text). */
 export function setLastContextUsage(
   kinId: string,
-  contextTokens: number,
+  contextTokensRaw: number,
   contextWindow: number,
-  breakdown?: ContextTokenBreakdown,
+  breakdownRaw?: ContextTokenBreakdown,
   pipelineStatus?: ContextPipelineStatus,
 ) {
   const existing = lastContextUsage.get(kinId)
+  const calibrationFactor = existing?.calibrationFactor ?? 1
   const data = {
-    contextTokens,
+    contextTokens: Math.round(contextTokensRaw * calibrationFactor),
+    contextTokensRaw,
     apiContextTokens: existing?.apiContextTokens,
     contextWindow,
     updatedAt: Date.now(),
-    breakdown,
+    breakdown: breakdownRaw ? scaleBreakdown(breakdownRaw, calibrationFactor) : undefined,
+    breakdownRaw,
     pipelineStatus,
+    calibrationFactor,
   }
   lastContextUsage.set(kinId, data)
   setSetting(`context_usage:${kinId}`, JSON.stringify(data)).catch(() => {})
 }
 
-/** Update the cached api-reported context size (ground truth) for a Kin.
- *  Called from the kin-engine after each LLM turn with the peak single-step
- *  input from aggregateStepUsage. Leaves the estimate / breakdown intact. */
+/** Update the cached api-reported context size (ground truth) for a Kin and
+ *  refine the per-Kin calibration factor by EMA-blending the new observed
+ *  ratio. Called from the kin-engine after each LLM turn. */
 export function recordApiContextSize(kinId: string, peakStepInputTokens: number) {
   const existing = lastContextUsage.get(kinId)
+  let calibrationFactor = existing?.calibrationFactor ?? 1
+  // Update calibration only when we have a meaningful raw estimate to compare
+  // against. The first turn has contextTokensRaw set by setLastContextUsage
+  // immediately before this call.
+  if (existing?.contextTokensRaw && existing.contextTokensRaw > 1000) {
+    const observed = peakStepInputTokens / existing.contextTokensRaw
+    const blended = calibrationFactor * (1 - CALIBRATION_EMA_ALPHA) + observed * CALIBRATION_EMA_ALPHA
+    calibrationFactor = Math.max(CALIBRATION_MIN, Math.min(CALIBRATION_MAX, blended))
+  }
   const data = {
     contextTokens: existing?.contextTokens ?? peakStepInputTokens,
+    contextTokensRaw: existing?.contextTokensRaw,
     apiContextTokens: peakStepInputTokens,
     contextWindow: existing?.contextWindow ?? 0,
     updatedAt: Date.now(),
     breakdown: existing?.breakdown,
+    breakdownRaw: existing?.breakdownRaw,
     pipelineStatus: existing?.pipelineStatus,
+    calibrationFactor,
   }
   lastContextUsage.set(kinId, data)
   setSetting(`context_usage:${kinId}`, JSON.stringify(data)).catch(() => {})
