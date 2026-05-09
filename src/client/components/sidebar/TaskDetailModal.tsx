@@ -100,6 +100,7 @@ export function TaskDetailModal({
     isLoading,
     isStreaming,
     streamingMessage,
+    streamingReasoning,
     cancelTask,
     allToolCalls,
     toolCallCount,
@@ -359,6 +360,7 @@ export function TaskDetailModal({
                     timestamp={msg.createdAt ? String(msg.createdAt) : undefined}
                     toolCalls={toolCallsByMessage.get(msg.id)}
                     tokenUsage={msg.tokenUsage}
+                    reasoning={msg.reasoning ?? undefined}
                   />
                 ))}
                 {streamingMessage && (
@@ -371,6 +373,7 @@ export function TaskDetailModal({
                     senderName={kinName}
                     timestamp={streamingMessage.createdAt ? String(streamingMessage.createdAt) : undefined}
                     toolCalls={toolCallsByMessage.get(streamingMessage.id)}
+                    reasoning={streamingReasoning || undefined}
                   />
                 )}
                 {pendingPrompts.map((prompt) => (

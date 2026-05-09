@@ -32,6 +32,7 @@ export interface TaskMessage {
   isRedacted: boolean
   toolCalls: ToolCallEntry[] | null
   tokenUsage: MessageTokenUsage | null
+  reasoning: Array<{ offset: number; text: string }> | null
   createdAt: number
 }
 
@@ -75,9 +76,12 @@ export function useTaskDetail(taskId: string | null) {
   // Streaming state (same pattern as useChat)
   const [streamingMessage, setStreamingMessage] = useState<TaskMessage | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingReasoning, setStreamingReasoning] = useState('')
   const streamingContentRef = useRef('')
   const streamingMessageIdRef = useRef<string | null>(null)
+  const streamingReasoningRef = useRef('')
   const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reasoningBatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Streaming tool calls (accumulated during streaming, merged into allToolCalls)
   const [streamingToolCalls, setStreamingToolCalls] = useState<ToolCallViewItem[]>([])
@@ -107,13 +111,19 @@ export function useTaskDetail(taskId: string | null) {
     setMessages([])
     setIsStreaming(false)
     setStreamingMessage(null)
+    setStreamingReasoning('')
     streamingContentRef.current = ''
     streamingMessageIdRef.current = null
+    streamingReasoningRef.current = ''
     streamingToolCallsRef.current = []
     setStreamingToolCalls([])
     if (batchTimerRef.current) {
       clearTimeout(batchTimerRef.current)
       batchTimerRef.current = null
+    }
+    if (reasoningBatchTimerRef.current) {
+      clearTimeout(reasoningBatchTimerRef.current)
+      reasoningBatchTimerRef.current = null
     }
   }, [taskId])
 
@@ -150,8 +160,10 @@ export function useTaskDetail(taskId: string | null) {
       if (s === 'completed' || s === 'failed' || s === 'cancelled') {
         setIsStreaming(false)
         setStreamingMessage(null)
+        setStreamingReasoning('')
         streamingContentRef.current = ''
         streamingMessageIdRef.current = null
+        streamingReasoningRef.current = ''
         streamingToolCallsRef.current = []
         setStreamingToolCalls([])
       }
@@ -183,8 +195,26 @@ export function useTaskDetail(taskId: string | null) {
       isRedacted: false,
       toolCalls: null,
       tokenUsage: null,
+      reasoning: null,
       createdAt: existing?.createdAt ?? Date.now(),
     })
+  }
+
+  function handleReasoningToken(data: Record<string, unknown>) {
+    const messageId = data.messageId as string
+    const token = data.token as string
+
+    if (!streamingMessageIdRef.current) {
+      seedStreaming(messageId)
+    }
+
+    streamingReasoningRef.current += token
+    if (!reasoningBatchTimerRef.current) {
+      reasoningBatchTimerRef.current = setTimeout(() => {
+        reasoningBatchTimerRef.current = null
+        setStreamingReasoning(streamingReasoningRef.current)
+      }, STREAMING_BATCH_MS)
+    }
   }
 
   function handleToolCallStart(data: Record<string, unknown>) {
@@ -256,9 +286,16 @@ export function useTaskDetail(taskId: string | null) {
       clearTimeout(batchTimerRef.current)
       batchTimerRef.current = null
     }
+    if (reasoningBatchTimerRef.current) {
+      clearTimeout(reasoningBatchTimerRef.current)
+      reasoningBatchTimerRef.current = null
+    }
 
     const finalContent = (data.content as string) ?? streamingContentRef.current
     const doneMessageId = (data.messageId as string) ?? streamingMessageIdRef.current
+    const finalReasoning = streamingReasoningRef.current
+      ? [{ offset: 0, text: streamingReasoningRef.current }]
+      : null
 
     if (doneMessageId) {
       setMessages((prev) => {
@@ -274,6 +311,7 @@ export function useTaskDetail(taskId: string | null) {
             isRedacted: false,
             toolCalls: null,
             tokenUsage: null,
+            reasoning: finalReasoning,
             createdAt: Date.now(),
           },
         ]
@@ -282,8 +320,10 @@ export function useTaskDetail(taskId: string | null) {
 
     setIsStreaming(false)
     setStreamingMessage(null)
+    setStreamingReasoning('')
     streamingContentRef.current = ''
     streamingMessageIdRef.current = null
+    streamingReasoningRef.current = ''
     streamingToolCallsRef.current = []
     setStreamingToolCalls([])
 
@@ -297,6 +337,7 @@ export function useTaskDetail(taskId: string | null) {
       switch (type) {
         case 'chat:tool-call-start': handleToolCallStart(data); break
         case 'chat:token': handleToken(data); break
+        case 'chat:reasoning-token': handleReasoningToken(data); break
         case 'chat:tool-call': handleToolCall(data); break
         case 'chat:tool-result': handleToolResult(data); break
         case 'chat:done': handleDone(data); break
@@ -318,8 +359,10 @@ export function useTaskDetail(taskId: string | null) {
       setMessages([])
       setIsStreaming(false)
       setStreamingMessage(null)
+      setStreamingReasoning('')
       streamingContentRef.current = ''
       streamingMessageIdRef.current = null
+      streamingReasoningRef.current = ''
       streamingToolCallsRef.current = []
       setStreamingToolCalls([])
     },
@@ -335,10 +378,16 @@ export function useTaskDetail(taskId: string | null) {
           clearTimeout(batchTimerRef.current)
           batchTimerRef.current = null
         }
+        if (reasoningBatchTimerRef.current) {
+          clearTimeout(reasoningBatchTimerRef.current)
+          reasoningBatchTimerRef.current = null
+        }
         setIsStreaming(false)
         setStreamingMessage(null)
+        setStreamingReasoning('')
         streamingContentRef.current = ''
         streamingMessageIdRef.current = null
+        streamingReasoningRef.current = ''
         streamingToolCallsRef.current = []
         setStreamingToolCalls([])
         fetchDetail()
@@ -351,10 +400,16 @@ export function useTaskDetail(taskId: string | null) {
         clearTimeout(batchTimerRef.current)
         batchTimerRef.current = null
       }
+      if (reasoningBatchTimerRef.current) {
+        clearTimeout(reasoningBatchTimerRef.current)
+        reasoningBatchTimerRef.current = null
+      }
       setIsStreaming(false)
       setStreamingMessage(null)
+      setStreamingReasoning('')
       streamingContentRef.current = ''
       streamingMessageIdRef.current = null
+      streamingReasoningRef.current = ''
       streamingToolCallsRef.current = []
       setStreamingToolCalls([])
       fetchDetail()
@@ -373,6 +428,7 @@ export function useTaskDetail(taskId: string | null) {
         isRedacted: false,
         toolCalls: null,
         tokenUsage: null,
+        reasoning: null,
         createdAt: data.createdAt as number,
       }
 
@@ -397,6 +453,12 @@ export function useTaskDetail(taskId: string | null) {
       if (data.taskId !== taskId) return
       if (!readyRef.current) { pendingEventsRef.current.push({ type: 'chat:token', data }); return }
       handleToken(data)
+    },
+
+    'chat:reasoning-token': (data) => {
+      if (data.taskId !== taskId) return
+      if (!readyRef.current) { pendingEventsRef.current.push({ type: 'chat:reasoning-token', data }); return }
+      handleReasoningToken(data)
     },
 
     'chat:tool-call': (data) => {
@@ -525,6 +587,9 @@ export function useTaskDetail(taskId: string | null) {
       if (batchTimerRef.current) {
         clearTimeout(batchTimerRef.current)
       }
+      if (reasoningBatchTimerRef.current) {
+        clearTimeout(reasoningBatchTimerRef.current)
+      }
     }
   }, [])
 
@@ -534,6 +599,7 @@ export function useTaskDetail(taskId: string | null) {
     isLoading,
     isStreaming,
     streamingMessage,
+    streamingReasoning,
     cancelTask,
     pauseTask,
     resumeTask,
