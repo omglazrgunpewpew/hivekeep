@@ -498,11 +498,13 @@ export async function runCompacting(kinId: string, contextWindow?: number): Prom
 
     log.info({ kinId, summaryId: newSummaryId, summarizedMessages: messagesToSummarize.length, memoriesExtracted }, 'Compacting batch completed')
 
-    // Emit SSE: compaction done
+    // Emit SSE: compaction done. messageCount lets the UI tell the user
+    // "compacted N messages" — concrete signal of what just happened
+    // beyond the abstract "compacting done" status.
     sseManager.sendToKin(kinId, {
       type: 'compacting:done',
       kinId,
-      data: { kinId, summary, memoriesExtracted },
+      data: { kinId, summary, memoriesExtracted, messageCount: messagesToSummarize.length },
     })
 
     // Check if telescopic merge is needed after adding new summary

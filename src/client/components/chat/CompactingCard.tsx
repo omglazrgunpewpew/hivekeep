@@ -14,6 +14,7 @@ interface CompactingCardProps {
   status: 'running' | 'done' | 'error'
   summary: string | null
   memoriesExtracted: number | null
+  messageCount?: number
   cycle?: number
   estimatedTotal?: number
   error?: string
@@ -24,6 +25,7 @@ export const CompactingCard = memo(function CompactingCard({
   status,
   summary,
   memoriesExtracted,
+  messageCount,
   cycle,
   estimatedTotal,
   error,
@@ -84,6 +86,15 @@ export const CompactingCard = memo(function CompactingCard({
                     <span className="text-xs font-medium text-success">
                       {t('chat.compacting.done')}
                     </span>
+                    {messageCount != null && messageCount > 0 && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <Archive className="size-3 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground">
+                          {t('chat.compacting.messages', { count: messageCount })}
+                        </span>
+                      </>
+                    )}
                     {memoriesExtracted != null && memoriesExtracted > 0 && (
                       <>
                         <span className="text-[10px] text-muted-foreground">·</span>

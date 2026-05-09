@@ -662,6 +662,8 @@
       "running": "Summarizing messages...",
       "done": "Compacted",
       "memories": "{{count}} memories extracted",
+      "messages_one": "{{count}} message folded",
+      "messages_other": "{{count}} messages folded",
       "showSummary": "Show summary",
       "inputDisabled": "Please wait - compacting conversation history...",
       "nothingToCompact": "Not enough messages to compact",

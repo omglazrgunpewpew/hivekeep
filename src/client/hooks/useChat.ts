@@ -53,6 +53,8 @@ export interface LiveCompacting {
   status: 'running' | 'done' | 'error'
   summary: string | null
   memoriesExtracted: number | null
+  /** How many source messages were folded into the summary (set on done). */
+  messageCount?: number
   startedAt: string
   cycle?: number
   estimatedTotal?: number
@@ -424,6 +426,7 @@ export function useChat(kinId: string | null) {
           status: 'done' as const,
           summary: data.summary as string,
           memoriesExtracted: data.memoriesExtracted as number,
+          messageCount: (data.messageCount as number | undefined) ?? prev.messageCount,
         }
         // During catch-up, more cycles may follow — don't clear yet
         if (prev.cycle && prev.estimatedTotal && prev.cycle < prev.estimatedTotal) {

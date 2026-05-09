@@ -662,6 +662,8 @@
       "running": "Résumé des messages en cours...",
       "done": "Compacté",
       "memories": "{{count}} souvenir(s) extrait(s)",
+      "messages_one": "{{count}} message résumé",
+      "messages_other": "{{count}} messages résumés",
       "showSummary": "Voir le résumé",
       "inputDisabled": "Veuillez patienter - compaction de l'historique...",
       "nothingToCompact": "Pas assez de messages à compacter",
