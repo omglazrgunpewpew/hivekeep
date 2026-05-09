@@ -939,6 +939,23 @@ kinRoutes.post('/:id/compacting/run', async (c) => {
     return c.json({ error: { code: 'NOTHING_TO_COMPACT', message: 'Not enough messages to compact' } }, 422)
   }
 
+  // Trigger a brief follow-up turn so:
+  //  1. The Kin acknowledges the compaction in the chat (instead of the
+  //     conversation just sitting silent after the user clicked the button).
+  //  2. The next setLastContextUsage / recordApiContextSize cycle refreshes
+  //     the navbar with the post-compaction context size — without this,
+  //     the cached numbers stay stale until the user happens to send a real
+  //     message, which is jarring ("I just compacted but the bar didn't move").
+  // Enqueued as 'system' source so it's clearly an internal trigger, not a
+  // user message. The Kin processes it normally and replies briefly.
+  const { enqueueMessage } = await import('@/server/services/queue')
+  await enqueueMessage({
+    kinId: existing.id,
+    messageType: 'compacting_followup',
+    sourceType: 'system',
+    content: `[System] La compaction de l'historique vient de se terminer (déclenchée manuellement par l'utilisateur). Confirme brièvement que c'est fait — une seule phrase courte — et invite l'utilisateur à reprendre la conversation. N'élabore pas sur les détails techniques.`,
+  })
+
   return c.json({ success: true, summary: result.summary, memoriesExtracted: result.memoriesExtracted })
 })
 
