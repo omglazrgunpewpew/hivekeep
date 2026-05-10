@@ -1168,7 +1168,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     }
 
     // Build message history (also returns compacting summaries for system prompt injection)
-    const { messages: messageHistory, compactingSummaries: compactingSummariesData, participants, visibleMessageCount, totalMessageCount, hasCompactedHistory, oldestVisibleMessageAt, maskedToolGroups, observationCompactedCount, estimatedTokensSavedByMasking, emergencyTrimmedCount, trimmedToolResultsCount, trimmedToolResultsTokensSaved, trimmedToolCallArgsCount, trimmedToolCallArgsTokensSaved, trimmedAssistantContentCount, trimmedAssistantContentTokensSaved } = await buildMessageHistory(kinId)
+    const { messages: messageHistory, compactingSummaries: compactingSummariesData, participants, visibleMessageCount, totalMessageCount, hasCompactedHistory, oldestVisibleMessageAt, maskedToolGroups, observationCompactedCount, estimatedTokensSavedByMasking, emergencyTrimmedCount, trimmedToolResultsCount, trimmedToolResultsTokensSaved, trimmedToolCallArgsCount, trimmedToolCallArgsTokensSaved, trimmedAssistantContentCount, trimmedAssistantContentTokensSaved, trimmedUserContentCount, trimmedUserContentTokensSaved } = await buildMessageHistory(kinId)
 
     // Resolve the current message's originating platform for formatting hints
     let currentMessageSource: { platform: string; senderName?: string } | undefined
@@ -1367,6 +1367,8 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       trimmedToolCallArgsTokensSaved,
       trimmedAssistantContentCount,
       trimmedAssistantContentTokensSaved,
+      trimmedUserContentCount,
+      trimmedUserContentTokensSaved,
     }
     setLastContextUsage(kinId, contextTokens, contextWindow, contextBreakdown, pipelineStatus)
     log.debug({ kinId, toolCount: Object.keys(tools).length, modelId: kin.model, contextTokens, contextWindow }, 'Starting LLM stream')
@@ -2374,7 +2376,7 @@ export interface ConversationParticipant {
   lastSeenAt: Date
 }
 
-async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number }> {
+async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number; trimmedUserContentCount: number; trimmedUserContentTokensSaved: number }> {
   const history: ModelMessage[] = []
 
   // Fetch all active (in-context) summaries, ordered oldest to newest
@@ -2744,7 +2746,47 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
   if (trimmedContentCount > 0) {
     log.debug({ kinId, count: trimmedContentCount, totalOriginalTokens: trimmedContentTokens, capTokens: CONTENT_CAP_TOKENS }, 'Assistant text content above per-message cap trimmed')
   }
-  const maskedHistory = contentCappedHistory
+
+  // Per-message USER text content cap (4th companion). User messages can
+  // grow to 15-20k tokens when the user pastes a CSV / log dump / file
+  // contents. Same head + tail preservation as assistant content. Default
+  // cap is independent (often higher than assistant) since user pastes
+  // tend to carry the actual question / data.
+  const USER_CONTENT_CAP_TOKENS = config.userContentSizeCapTokens
+  let trimmedUserContentCount = 0
+  let trimmedUserContentTokens = 0
+  const userContentCappedHistory = USER_CONTENT_CAP_TOKENS > 0 ? contentCappedHistory.map((msg) => {
+    if (msg.role !== 'user') return msg
+    if (typeof msg.content === 'string') {
+      const tokens = estimateTokens(msg.content)
+      if (tokens <= USER_CONTENT_CAP_TOKENS) return msg
+      trimmedUserContentCount++
+      trimmedUserContentTokens += tokens
+      const head = msg.content.slice(0, 500).trimEnd()
+      const tail = msg.content.slice(-500).trimStart()
+      const placeholder = `${head}\n\n[…user content truncated: ~${tokens.toLocaleString()} tokens, ${msg.content.length.toLocaleString()} chars cut from middle. Head + tail preserved below…]\n\n${tail}`
+      return { ...msg, content: placeholder } as ModelMessage
+    }
+    if (!Array.isArray(msg.content)) return msg
+    let modified = false
+    const content = (msg.content as Array<{ type: string; text?: string }>).map((part) => {
+      if (part.type !== 'text' || typeof part.text !== 'string') return part
+      const tokens = estimateTokens(part.text)
+      if (tokens <= USER_CONTENT_CAP_TOKENS) return part
+      modified = true
+      trimmedUserContentCount++
+      trimmedUserContentTokens += tokens
+      const head = part.text.slice(0, 500).trimEnd()
+      const tail = part.text.slice(-500).trimStart()
+      const placeholder = `${head}\n\n[…user content truncated: ~${tokens.toLocaleString()} tokens, ${part.text.length.toLocaleString()} chars cut from middle. Head + tail preserved below…]\n\n${tail}`
+      return { ...part, text: placeholder }
+    })
+    return modified ? { ...msg, content } as ModelMessage : msg
+  }) : contentCappedHistory
+  if (trimmedUserContentCount > 0) {
+    log.debug({ kinId, count: trimmedUserContentCount, totalOriginalTokens: trimmedUserContentTokens, capTokens: USER_CONTENT_CAP_TOKENS }, 'User text content above per-message cap trimmed')
+  }
+  const maskedHistory = userContentCappedHistory
   if (maskResult.maskedGroupCount > 0 || maskResult.observationCompactedCount > 0) {
     log.debug({ kinId, maskedGroups: maskResult.maskedGroupCount, observationCompacted: maskResult.observationCompactedCount, tokensSaved: maskResult.estimatedTokensSaved }, 'Context compaction pipeline applied')
   }
@@ -2814,6 +2856,8 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
     trimmedToolCallArgsTokensSaved: Math.max(0, trimmedArgsTokens - trimmedArgsCount * SIZE_CAP_PLACEHOLDER_TOKENS),
     trimmedAssistantContentCount: trimmedContentCount,
     trimmedAssistantContentTokensSaved: Math.max(0, trimmedContentTokens - trimmedContentCount * SIZE_CAP_PLACEHOLDER_TOKENS),
+    trimmedUserContentCount,
+    trimmedUserContentTokensSaved: Math.max(0, trimmedUserContentTokens - trimmedUserContentCount * SIZE_CAP_PLACEHOLDER_TOKENS),
   }
 }
 

@@ -542,6 +542,9 @@ export interface ContextPipelineStatus {
   /** Per-assistant-content size cap (`assistantContentSizeCapTokens`) trim. */
   trimmedAssistantContentCount: number
   trimmedAssistantContentTokensSaved: number
+  /** Per-user-content size cap (`userContentSizeCapTokens`) trim. */
+  trimmedUserContentCount: number
+  trimmedUserContentTokensSaved: number
 }
 
 // ─── LLM Usage Tracking ───────────────────────────────────────────────────────

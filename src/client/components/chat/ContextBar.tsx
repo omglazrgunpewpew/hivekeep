@@ -322,7 +322,7 @@ export function ContextBar({
               </p>
             )}
 
-            {pipelineStatus && (pipelineStatus.maskedToolGroups > 0 || pipelineStatus.observationCompactedCount > 0 || pipelineStatus.emergencyTrimmedCount > 0 || (pipelineStatus.trimmedToolResultsCount ?? 0) > 0 || (pipelineStatus.trimmedToolCallArgsCount ?? 0) > 0 || (pipelineStatus.trimmedAssistantContentCount ?? 0) > 0) && (
+            {pipelineStatus && (pipelineStatus.maskedToolGroups > 0 || pipelineStatus.observationCompactedCount > 0 || pipelineStatus.emergencyTrimmedCount > 0 || (pipelineStatus.trimmedToolResultsCount ?? 0) > 0 || (pipelineStatus.trimmedToolCallArgsCount ?? 0) > 0 || (pipelineStatus.trimmedAssistantContentCount ?? 0) > 0 || (pipelineStatus.trimmedUserContentCount ?? 0) > 0) && (
               <div className="space-y-0.5 border-t border-border/40 pt-2 text-[10px]">
                 {pipelineStatus.maskedToolGroups > 0 && (
                   <div className="flex items-center gap-1 text-muted-foreground">
@@ -352,6 +352,12 @@ export function ContextBar({
                   <div className="flex items-center gap-1 text-muted-foreground" title="Assistant text content above 12k tokens trimmed (head + tail preserved)">
                     <Archive className="size-2.5 shrink-0" />
                     <span>{t('chat.pipeline.trimmedAssistantContent', { defaultValue: '{{count}} assistant message(s) capped · −{{tokens}} tokens', count: pipelineStatus.trimmedAssistantContentCount, tokens: formatTokenCount(pipelineStatus.trimmedAssistantContentTokensSaved ?? 0) })}</span>
+                  </div>
+                )}
+                {(pipelineStatus.trimmedUserContentCount ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 text-muted-foreground" title="User text content above 16k tokens trimmed (head + tail preserved) — typical of pasted CSV / log dumps / file contents">
+                    <Archive className="size-2.5 shrink-0" />
+                    <span>{t('chat.pipeline.trimmedUserContent', { defaultValue: '{{count}} user message(s) capped · −{{tokens}} tokens', count: pipelineStatus.trimmedUserContentCount, tokens: formatTokenCount(pipelineStatus.trimmedUserContentTokensSaved ?? 0) })}</span>
                   </div>
                 )}
                 {pipelineStatus.emergencyTrimmedCount > 0 && (

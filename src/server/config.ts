@@ -259,6 +259,14 @@ export const config = {
    *  Default 12000 tokens (~48k chars, ~900 lines of prose). Set 0 to disable. */
   assistantContentSizeCapTokens: Number(process.env.ASSISTANT_CONTENT_SIZE_CAP_TOKENS ?? 12000),
 
+  /** Per-user-message TEXT content size cap. 4th companion to the other
+   *  three caps. User pastes (CSV dumps, file contents, log spam) can hit
+   *  15-20k tokens per message. Same head + tail preservation as assistant
+   *  content. Default 16000 tokens (~64k chars), slightly higher than
+   *  assistant cap because user pastes often carry the actual data the
+   *  request is about. Set 0 to disable. */
+  userContentSizeCapTokens: Number(process.env.USER_CONTENT_SIZE_CAP_TOKENS ?? 16000),
+
   memory: (() => {
     const extraction = parseModelEnv(process.env.MEMORY_EXTRACTION_MODEL)
     const embedding = parseModelEnv(process.env.MEMORY_EMBEDDING_MODEL || 'text-embedding-3-small')
