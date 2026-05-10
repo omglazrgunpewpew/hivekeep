@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
+import { api } from '@/client/lib/api'
 import {
   Dialog,
   DialogContent,
@@ -105,6 +106,19 @@ export function AvatarPickerModal({
       setZoom(1)
       setCroppedAreaPixels(null)
       setIsCropping(false)
+
+      // Honor the user's saved default image generator when available.
+      api.get<{ defaultImageModel: string | null; defaultImageProviderId: string | null }>(
+        '/settings/default-models',
+      )
+        .then((data) => {
+          if (!data.defaultImageModel || !data.defaultImageProviderId) return
+          const match = imageModels?.find(
+            (m) => m.id === data.defaultImageModel && m.providerId === data.defaultImageProviderId,
+          )
+          if (match) setSelectedModelValue(`${match.providerId}:${match.id}`)
+        })
+        .catch(() => {})
     }
   }, [open])
 
