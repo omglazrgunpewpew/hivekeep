@@ -2736,17 +2736,25 @@ function getProviderTypeForModel(modelId: string): string | null {
 
 /**
  * Resolve a Kin's thinking config from its raw JSON column.
- * `null` (never configured) defaults to enabled with adaptive budget — interleaved
- * thinking measurably reduces tool-result hallucinations on multi-step turns.
+ * Defaults to `{ enabled: true, effort: 'medium' }` when never configured —
+ * interleaved thinking measurably reduces tool-result hallucinations on multi-step turns.
  * Explicit `{ enabled: false }` is respected as a user opt-out.
+ * Legacy rows with `{ enabled: true }` (no effort, no custom budget) are migrated
+ * in-memory to medium so the UI picker reflects the actual runtime behavior.
  */
+const DEFAULT_THINKING_CONFIG: KinThinkingConfig = { enabled: true, effort: 'medium', budgetTokens: null }
+
 export function resolveThinkingConfig(rawJson: string | null | undefined): KinThinkingConfig {
-  if (!rawJson) return { enabled: true, budgetTokens: null }
+  if (!rawJson) return DEFAULT_THINKING_CONFIG
   try {
     const parsed = JSON.parse(rawJson) as KinThinkingConfig
-    return parsed && typeof parsed === 'object' ? parsed : { enabled: true, budgetTokens: null }
+    if (!parsed || typeof parsed !== 'object') return DEFAULT_THINKING_CONFIG
+    if (parsed.enabled === true && !parsed.effort && parsed.budgetTokens == null) {
+      return { ...parsed, effort: 'medium' }
+    }
+    return parsed
   } catch {
-    return { enabled: true, budgetTokens: null }
+    return DEFAULT_THINKING_CONFIG
   }
 }
 
