@@ -31,6 +31,8 @@ interface MessagePreview {
   role: string
   content: string | null
   hasToolCalls: boolean
+  toolCallCount?: number
+  toolCallsTokens?: number
   /** Calibrated estimate (content + tool calls JSON), filled by server. */
   tokenEstimate?: number
   createdAt: number | null
@@ -637,6 +639,18 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
                                   ? t('chat.contextViewer.withToolCalls')
                                   : '—'}
                             </span>
+                            {(msg.toolCallCount ?? 0) > 0 && (
+                              <span
+                                className="shrink-0 rounded px-1 py-px font-mono text-[10px] tabular-nums bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                title={t('chat.contextViewer.toolCallsHint', {
+                                  defaultValue: '{{count}} tool call(s) — {{tokens}} tokens',
+                                  count: msg.toolCallCount,
+                                  tokens: formatTokenCount(msg.toolCallsTokens ?? 0),
+                                })}
+                              >
+                                🔧{msg.toolCallCount}
+                              </span>
+                            )}
                             {tokens > 0 && (
                               <span
                                 className={`shrink-0 rounded px-1 py-px font-mono text-[10px] tabular-nums ${
@@ -644,9 +658,16 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
                                     ? 'bg-warning/15 text-warning'
                                     : 'bg-muted text-muted-foreground/70'
                                 }`}
-                                title={t('chat.contextViewer.messageTokensHint', {
-                                  defaultValue: 'Estimated tokens for this message (content + tool calls)',
-                                })}
+                                title={(msg.toolCallsTokens ?? 0) > 0
+                                  ? t('chat.contextViewer.messageTokensSplit', {
+                                      defaultValue: 'Total {{total}} = content {{content}} + tool calls {{tools}}',
+                                      total: formatTokenCount(tokens),
+                                      content: formatTokenCount(Math.max(0, tokens - (msg.toolCallsTokens ?? 0))),
+                                      tools: formatTokenCount(msg.toolCallsTokens ?? 0),
+                                    })
+                                  : t('chat.contextViewer.messageTokensHint', {
+                                      defaultValue: 'Estimated tokens for this message',
+                                    })}
                               >
                                 {formatTokenCount(tokens)}
                               </span>

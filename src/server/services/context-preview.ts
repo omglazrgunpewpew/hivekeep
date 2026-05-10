@@ -88,6 +88,13 @@ interface MessagePreview {
   role: string
   content: string | null
   hasToolCalls: boolean
+  /** Number of tool calls if assistant; 0 otherwise. Surfaced in the viewer
+   *  so users can spot tool-heavy turns at a glance. */
+  toolCallCount: number
+  /** Token estimate of the toolCalls JSON alone (subset of tokenEstimate).
+   *  Lets the UI split the per-message bar into content vs tool-call tokens —
+   *  the dominant signal for "why is this message huge?". */
+  toolCallsTokens: number
   /** Server-side estimate covering content + toolCalls JSON content. The
    *  tool calls JSON is intentionally NOT sent in the preview (it would
    *  bloat the response), but its tokens DO count toward the context size. */
@@ -387,16 +394,29 @@ export async function buildContextPreview(kinId: string): Promise<ContextPreview
   const visibleIds = visibleMessages.map((m) => m.id ?? null).filter((id): id is string => !!id)
   const filesByMessageId = visibleIds.length > 0 ? await getFilesForMessages(visibleIds) : new Map()
 
-  const messagesPreviews: MessagePreview[] = visibleMessages.map((m) => ({
-    role: m.role,
-    content: m.content,
-    hasToolCalls: m.toolCalls !== null,
-    tokenEstimate:
-      estimateTokens(m.content ?? '')
-      + estimateTokens((m.toolCalls as string | null) ?? '')
-      + estimateMessageFilesTokens(filesByMessageId.get(m.id ?? '')),
-    createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
-  }))
+  const messagesPreviews: MessagePreview[] = visibleMessages.map((m) => {
+    const toolCallsRaw = (m.toolCalls as string | null) ?? ''
+    const toolCallsTokens = estimateTokens(toolCallsRaw)
+    let toolCallCount = 0
+    if (toolCallsRaw) {
+      try {
+        const parsed = JSON.parse(toolCallsRaw)
+        if (Array.isArray(parsed)) toolCallCount = parsed.length
+      } catch { /* keep 0 */ }
+    }
+    return {
+      role: m.role,
+      content: m.content,
+      hasToolCalls: m.toolCalls !== null,
+      toolCallCount,
+      toolCallsTokens,
+      tokenEstimate:
+        estimateTokens(m.content ?? '')
+        + toolCallsTokens
+        + estimateMessageFilesTokens(filesByMessageId.get(m.id ?? '')),
+      createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
+    }
+  })
 
   // Message counts for conversation state
   const totalMessageCount = db
@@ -572,7 +592,11 @@ function formatResult(
   const scale = (n: number) => Math.round(n * calibrationFactor)
   const calibratedMessagesPreviews = calibrationFactor === 1
     ? messagesPreviews
-    : messagesPreviews.map((m) => ({ ...m, tokenEstimate: scale(m.tokenEstimate) }))
+    : messagesPreviews.map((m) => ({
+        ...m,
+        tokenEstimate: scale(m.tokenEstimate),
+        toolCallsTokens: scale(m.toolCallsTokens),
+      }))
 
   return {
     systemPrompt: fullPrompt,
@@ -671,16 +695,29 @@ export async function buildTaskContextPreview(taskId: string): Promise<ContextPr
   const taskMsgIds = taskMessages.map((m) => m.id ?? null).filter((id): id is string => !!id)
   const taskFilesByMessageId = taskMsgIds.length > 0 ? await getFilesForMessages(taskMsgIds) : new Map()
 
-  const messagesPreviews: MessagePreview[] = taskMessages.map((m) => ({
-    role: m.role,
-    content: m.content,
-    hasToolCalls: m.toolCalls !== null,
-    tokenEstimate:
-      estimateTokens(m.content ?? '')
-      + estimateTokens((m.toolCalls as string | null) ?? '')
-      + estimateMessageFilesTokens(taskFilesByMessageId.get(m.id ?? '')),
-    createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
-  }))
+  const messagesPreviews: MessagePreview[] = taskMessages.map((m) => {
+    const toolCallsRaw = (m.toolCalls as string | null) ?? ''
+    const toolCallsTokens = estimateTokens(toolCallsRaw)
+    let toolCallCount = 0
+    if (toolCallsRaw) {
+      try {
+        const parsed = JSON.parse(toolCallsRaw)
+        if (Array.isArray(parsed)) toolCallCount = parsed.length
+      } catch { /* keep 0 */ }
+    }
+    return {
+      role: m.role,
+      content: m.content,
+      hasToolCalls: m.toolCalls !== null,
+      toolCallCount,
+      toolCallsTokens,
+      tokenEstimate:
+        estimateTokens(m.content ?? '')
+        + toolCallsTokens
+        + estimateMessageFilesTokens(taskFilesByMessageId.get(m.id ?? '')),
+      createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
+    }
+  })
 
   // Tools: same resolution as executeSubKin
   const kinToolConfig: KinToolConfig | null = kinIdentity.toolConfig ? JSON.parse(kinIdentity.toolConfig) : null
@@ -820,16 +857,29 @@ export async function buildQuickSessionContextPreview(kinId: string, sessionId: 
   const sessionMsgIds = sessionMessages.map((m) => m.id ?? null).filter((id): id is string => !!id)
   const sessionFilesByMessageId = sessionMsgIds.length > 0 ? await getFilesForMessages(sessionMsgIds) : new Map()
 
-  const messagesPreviews: MessagePreview[] = sessionMessages.map((m) => ({
-    role: m.role,
-    content: m.content,
-    hasToolCalls: m.toolCalls !== null,
-    tokenEstimate:
-      estimateTokens(m.content ?? '')
-      + estimateTokens((m.toolCalls as string | null) ?? '')
-      + estimateMessageFilesTokens(sessionFilesByMessageId.get(m.id ?? '')),
-    createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
-  }))
+  const messagesPreviews: MessagePreview[] = sessionMessages.map((m) => {
+    const toolCallsRaw = (m.toolCalls as string | null) ?? ''
+    const toolCallsTokens = estimateTokens(toolCallsRaw)
+    let toolCallCount = 0
+    if (toolCallsRaw) {
+      try {
+        const parsed = JSON.parse(toolCallsRaw)
+        if (Array.isArray(parsed)) toolCallCount = parsed.length
+      } catch { /* keep 0 */ }
+    }
+    return {
+      role: m.role,
+      content: m.content,
+      hasToolCalls: m.toolCalls !== null,
+      toolCallCount,
+      toolCallsTokens,
+      tokenEstimate:
+        estimateTokens(m.content ?? '')
+        + toolCallsTokens
+        + estimateMessageFilesTokens(sessionFilesByMessageId.get(m.id ?? '')),
+      createdAt: m.createdAt ? (m.createdAt as unknown as number) : null,
+    }
+  })
 
   // Tools: same resolution as processQuickMessage
   const kinToolConfig: KinToolConfig | null = kin.toolConfig ? JSON.parse(kin.toolConfig) : null
