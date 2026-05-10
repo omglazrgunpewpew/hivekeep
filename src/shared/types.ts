@@ -530,6 +530,18 @@ export interface ContextPipelineStatus {
   estimatedTokensSavedByMasking: number
   /** Number of messages dropped by emergency token-budget trimming. */
   emergencyTrimmedCount: number
+  /** Per-tool-result size cap (`toolResultSizeCapTokens`) trim activity for the
+   *  current turn — counts a single tool-result block trimmed, summing the
+   *  original (pre-cap) tokens. Surfaced in the UI so the user knows when the
+   *  caps actually fire and how much they save. */
+  trimmedToolResultsCount: number
+  trimmedToolResultsTokensSaved: number
+  /** Per-tool-call args size cap (`toolCallArgsSizeCapTokens`) trim activity. */
+  trimmedToolCallArgsCount: number
+  trimmedToolCallArgsTokensSaved: number
+  /** Per-assistant-content size cap (`assistantContentSizeCapTokens`) trim. */
+  trimmedAssistantContentCount: number
+  trimmedAssistantContentTokensSaved: number
 }
 
 // ─── LLM Usage Tracking ───────────────────────────────────────────────────────

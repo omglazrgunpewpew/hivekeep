@@ -322,7 +322,7 @@ export function ContextBar({
               </p>
             )}
 
-            {pipelineStatus && (pipelineStatus.maskedToolGroups > 0 || pipelineStatus.observationCompactedCount > 0 || pipelineStatus.emergencyTrimmedCount > 0) && (
+            {pipelineStatus && (pipelineStatus.maskedToolGroups > 0 || pipelineStatus.observationCompactedCount > 0 || pipelineStatus.emergencyTrimmedCount > 0 || (pipelineStatus.trimmedToolResultsCount ?? 0) > 0 || (pipelineStatus.trimmedToolCallArgsCount ?? 0) > 0 || (pipelineStatus.trimmedAssistantContentCount ?? 0) > 0) && (
               <div className="space-y-0.5 border-t border-border/40 pt-2 text-[10px]">
                 {pipelineStatus.maskedToolGroups > 0 && (
                   <div className="flex items-center gap-1 text-muted-foreground">
@@ -334,6 +334,24 @@ export function ContextBar({
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Archive className="size-2.5 shrink-0" />
                     <span>{t('chat.pipeline.observationCompacted', { count: pipelineStatus.observationCompactedCount })}</span>
+                  </div>
+                )}
+                {(pipelineStatus.trimmedToolResultsCount ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 text-muted-foreground" title="tool_result blocks above 30k tokens trimmed to a placeholder for the LLM payload">
+                    <Wrench className="size-2.5 shrink-0" />
+                    <span>{t('chat.pipeline.trimmedToolResults', { defaultValue: '{{count}} tool result(s) capped · −{{tokens}} tokens', count: pipelineStatus.trimmedToolResultsCount, tokens: formatTokenCount(pipelineStatus.trimmedToolResultsTokensSaved ?? 0) })}</span>
+                  </div>
+                )}
+                {(pipelineStatus.trimmedToolCallArgsCount ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 text-muted-foreground" title="String args above 8k tokens trimmed in old tool calls (write_file content, edit_file blocks…)">
+                    <Wrench className="size-2.5 shrink-0" />
+                    <span>{t('chat.pipeline.trimmedToolCallArgs', { defaultValue: '{{count}} tool-call arg(s) capped · −{{tokens}} tokens', count: pipelineStatus.trimmedToolCallArgsCount, tokens: formatTokenCount(pipelineStatus.trimmedToolCallArgsTokensSaved ?? 0) })}</span>
+                  </div>
+                )}
+                {(pipelineStatus.trimmedAssistantContentCount ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 text-muted-foreground" title="Assistant text content above 12k tokens trimmed (head + tail preserved)">
+                    <Archive className="size-2.5 shrink-0" />
+                    <span>{t('chat.pipeline.trimmedAssistantContent', { defaultValue: '{{count}} assistant message(s) capped · −{{tokens}} tokens', count: pipelineStatus.trimmedAssistantContentCount, tokens: formatTokenCount(pipelineStatus.trimmedAssistantContentTokensSaved ?? 0) })}</span>
                   </div>
                 )}
                 {pipelineStatus.emergencyTrimmedCount > 0 && (

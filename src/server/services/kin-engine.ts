@@ -1168,7 +1168,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     }
 
     // Build message history (also returns compacting summaries for system prompt injection)
-    const { messages: messageHistory, compactingSummaries: compactingSummariesData, participants, visibleMessageCount, totalMessageCount, hasCompactedHistory, oldestVisibleMessageAt, maskedToolGroups, observationCompactedCount, estimatedTokensSavedByMasking, emergencyTrimmedCount } = await buildMessageHistory(kinId)
+    const { messages: messageHistory, compactingSummaries: compactingSummariesData, participants, visibleMessageCount, totalMessageCount, hasCompactedHistory, oldestVisibleMessageAt, maskedToolGroups, observationCompactedCount, estimatedTokensSavedByMasking, emergencyTrimmedCount, trimmedToolResultsCount, trimmedToolResultsTokensSaved, trimmedToolCallArgsCount, trimmedToolCallArgsTokensSaved, trimmedAssistantContentCount, trimmedAssistantContentTokensSaved } = await buildMessageHistory(kinId)
 
     // Resolve the current message's originating platform for formatting hints
     let currentMessageSource: { platform: string; senderName?: string } | undefined
@@ -1361,6 +1361,12 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       observationCompactedCount,
       estimatedTokensSavedByMasking,
       emergencyTrimmedCount,
+      trimmedToolResultsCount,
+      trimmedToolResultsTokensSaved,
+      trimmedToolCallArgsCount,
+      trimmedToolCallArgsTokensSaved,
+      trimmedAssistantContentCount,
+      trimmedAssistantContentTokensSaved,
     }
     setLastContextUsage(kinId, contextTokens, contextWindow, contextBreakdown, pipelineStatus)
     log.debug({ kinId, toolCount: Object.keys(tools).length, modelId: kin.model, contextTokens, contextWindow }, 'Starting LLM stream')
@@ -2368,7 +2374,7 @@ export interface ConversationParticipant {
   lastSeenAt: Date
 }
 
-async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number }> {
+async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number }> {
   const history: ModelMessage[] = []
 
   // Fetch all active (in-context) summaries, ordered oldest to newest
@@ -2789,6 +2795,7 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
       }))
     : null
 
+  const SIZE_CAP_PLACEHOLDER_TOKENS = 50  // approx tokens of the trim placeholder message
   return {
     messages: maskedHistory,
     compactingSummaries: summariesForPrompt,
@@ -2801,6 +2808,12 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
     observationCompactedCount: maskResult.observationCompactedCount,
     estimatedTokensSavedByMasking: maskResult.estimatedTokensSaved,
     emergencyTrimmedCount,
+    trimmedToolResultsCount: oversizedTrimmedCount,
+    trimmedToolResultsTokensSaved: Math.max(0, oversizedTrimmedTokens - oversizedTrimmedCount * SIZE_CAP_PLACEHOLDER_TOKENS),
+    trimmedToolCallArgsCount: trimmedArgsCount,
+    trimmedToolCallArgsTokensSaved: Math.max(0, trimmedArgsTokens - trimmedArgsCount * SIZE_CAP_PLACEHOLDER_TOKENS),
+    trimmedAssistantContentCount: trimmedContentCount,
+    trimmedAssistantContentTokensSaved: Math.max(0, trimmedContentTokens - trimmedContentCount * SIZE_CAP_PLACEHOLDER_TOKENS),
   }
 }
 
