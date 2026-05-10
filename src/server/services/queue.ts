@@ -11,6 +11,20 @@ const log = createLogger('queue')
 /** In-memory sideband for file IDs attached to queue items (single-process, lost on restart — files stay orphaned but harmless) */
 const queueFileIds = new Map<string, string[]>()
 
+/**
+ * In-memory sideband for free-form structured metadata attached to queue items
+ * (e.g. channel adapter context like modality, presence, channel info).
+ * Read once by the kin-engine when persisting the user message and merged
+ * into messages.metadata. Single-process, lost on restart.
+ */
+const queueMessageMetadata = new Map<string, Record<string, unknown>>()
+
+export function popQueueMessageMetadata(itemId: string): Record<string, unknown> | undefined {
+  const meta = queueMessageMetadata.get(itemId)
+  if (meta) queueMessageMetadata.delete(itemId)
+  return meta
+}
+
 export interface EnqueueParams {
   kinId: string
   messageType: string
@@ -28,6 +42,13 @@ export interface EnqueueParams {
   id?: string
   /** ID of the originating channel queue item (causal chain tracking) */
   channelOriginId?: string
+  /**
+   * Free-form structured metadata to attach to the user message once persisted.
+   * Used by channel adapters / plugins to pass context to the LLM (modality,
+   * presence, channel info...). Stored in messages.metadata under the
+   * `channel` key (or merged with other reserved keys).
+   */
+  messageMetadata?: Record<string, unknown>
 }
 
 /**
@@ -73,6 +94,11 @@ export async function enqueueMessage(params: EnqueueParams) {
   // Store file IDs in sideband map for later retrieval by kin-engine
   if (params.fileIds && params.fileIds.length > 0) {
     queueFileIds.set(id, params.fileIds)
+  }
+
+  // Store free-form message metadata in sideband for later retrieval by kin-engine
+  if (params.messageMetadata && Object.keys(params.messageMetadata).length > 0) {
+    queueMessageMetadata.set(id, params.messageMetadata)
   }
 
   log.debug({ kinId: params.kinId, itemId: id, messageType: params.messageType, sourceType: params.sourceType, queuePosition }, 'Message enqueued')

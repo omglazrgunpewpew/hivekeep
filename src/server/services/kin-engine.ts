@@ -22,7 +22,7 @@ import {
   buildSegmentedMessages,
   markLastToolCacheable,
 } from '@/server/services/llm-cache-hints'
-import { dequeueMessage, markQueueItemDone, isKinProcessing, getQueueSize, recoverStaleProcessingItems } from '@/server/services/queue'
+import { dequeueMessage, markQueueItemDone, isKinProcessing, getQueueSize, recoverStaleProcessingItems, popQueueMessageMetadata } from '@/server/services/queue'
 import { recoverStaleTasks } from '@/server/services/tasks'
 import { sseManager } from '@/server/sse/index'
 import { eventBus } from '@/server/services/events'
@@ -967,13 +967,26 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       log.debug({ kinId, queueItemId: queueItem.id, userMessageId }, 'Reusing existing message from recovered queue item')
     } else {
       userMessageId = uuid()
-      // For task_result messages, propagate the task ID as metadata so the client
-      // can link the message back to its task detail modal.
-      const messageMetadata = queueItem.sourceType === 'task' && queueItem.taskId
-        ? JSON.stringify({ resolvedTaskId: queueItem.taskId })
-        : queueItem.messageType === 'user_addendum'
-          ? JSON.stringify({ isAddendum: true })
-          : null
+      // Build the message metadata bag. We merge known reserved keys
+      // (resolvedTaskId, isAddendum) with any free-form structured context
+      // attached by an enqueuer (e.g. a channel adapter via incoming.metadata).
+      // The free-form blob lives under the `channel` key (and other top-level
+      // keys reserved by enqueueMessage callers) and is later injected into
+      // the LLM prompt by buildMessageHistory.
+      const sidebandMetadata = popQueueMessageMetadata(queueItem.id)
+      const metaBag: Record<string, unknown> = {}
+      if (queueItem.sourceType === 'task' && queueItem.taskId) {
+        metaBag.resolvedTaskId = queueItem.taskId
+      }
+      if (queueItem.messageType === 'user_addendum') {
+        metaBag.isAddendum = true
+      }
+      if (sidebandMetadata) {
+        for (const [k, v] of Object.entries(sidebandMetadata)) {
+          if (!(k in metaBag)) metaBag[k] = v
+        }
+      }
+      const messageMetadata = Object.keys(metaBag).length > 0 ? JSON.stringify(metaBag) : null
       await db.insert(messages).values({
         id: userMessageId,
         kinId,
@@ -2476,12 +2489,20 @@ async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMess
         const pseudo = pseudonymMap.get(msg.sourceId)
         if (pseudo) textContent = `[${pseudo}] ${textContent}`
       }
-      // Addendum messages: prefix with context so the LLM knows this was injected mid-response
+      // Addendum messages: prefix with context so the LLM knows this was injected mid-response.
+      // Channel context: when a channel adapter attached structured metadata
+      // (modality, presence, channel info...) we surface it to the LLM as a
+      // <channel-context> block so the Kin can use it for routing decisions
+      // without polluting the visible content.
       if (msg.metadata) {
         try {
           const meta = JSON.parse(msg.metadata as string)
           if (meta.isAddendum) {
             textContent += '\n\n[The user sent this additional context while you were in the middle of responding. Take it into account and continue.]'
+          }
+          if (meta.channel && typeof meta.channel === 'object') {
+            const channelJson = JSON.stringify(meta.channel)
+            textContent = `<channel-context>\n${channelJson}\n</channel-context>\n${textContent}`
           }
         } catch { /* ignore parse errors */ }
       }

@@ -36,6 +36,20 @@ export interface IncomingMessage {
   content: string
   /** File attachments (images, documents, audio, video) from the platform */
   attachments?: IncomingAttachment[]
+  /**
+   * Free-form structured context provided by the channel adapter.
+   * Persisted into the user message metadata under the `channel` key, and
+   * injected into the LLM prompt as a `<channel-context>` block so the Kin
+   * can use it for routing decisions (modality, presence, channel type, etc.)
+   * without polluting the visible content.
+   *
+   * Examples:
+   *   - `{ modality: 'voice', channel: { id: 12, name: 'Gaming' }, present: ['Alice','Bob'] }`
+   *   - `{ chatType: 'private' }`
+   *
+   * Non-breaking: built-in adapters can ignore this field.
+   */
+  metadata?: Record<string, unknown>
 }
 
 export type IncomingMessageHandler = (message: IncomingMessage) => Promise<void>

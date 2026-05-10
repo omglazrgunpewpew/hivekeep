@@ -384,7 +384,15 @@ export async function handleIncomingChannelMessage(channelId: string, incoming: 
   // Pre-generate ID so the queue item can self-reference as its own channelOriginId
   const originId = uuid()
 
-  // Enqueue message to Kin's queue
+  // Enqueue message to Kin's queue.
+  // Channel adapters can attach free-form structured context via incoming.metadata
+  // (modality, presence, channel info, etc.). It is stored under the `channel`
+  // key of the user message metadata so the kin-engine can inject it as a
+  // <channel-context> block in the prompt.
+  const messageMetadata = incoming.metadata && Object.keys(incoming.metadata).length > 0
+    ? { channel: incoming.metadata }
+    : undefined
+
   const { id: queueItemId } = await enqueueMessage({
     id: originId,
     kinId: channel.kinId,
@@ -395,6 +403,7 @@ export async function handleIncomingChannelMessage(channelId: string, incoming: 
     priority: config.queue.userPriority,
     fileIds,
     channelOriginId: originId,
+    messageMetadata,
   })
 
   // Store channel metadata in one-shot sideband for direct channel response
