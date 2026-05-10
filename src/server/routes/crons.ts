@@ -27,6 +27,16 @@ function kinAvatarUrl(kinId: string, avatarPath: string | null): string | null {
 interface KinInfo { name: string; avatarPath: string | null }
 
 // Serialize cron for API response
+function parseThinkingConfig(raw: string | null | undefined): { enabled: boolean; effort: string | null } {
+  if (!raw) return { enabled: false, effort: null }
+  try {
+    const parsed = JSON.parse(raw) as { enabled?: boolean; effort?: string | null }
+    return { enabled: parsed?.enabled === true, effort: parsed?.effort ?? null }
+  } catch {
+    return { enabled: false, effort: null }
+  }
+}
+
 function serializeCron(cron: any, kinInfo?: KinInfo, targetKinInfo?: KinInfo) {
   return {
     id: cron.id,
@@ -41,7 +51,8 @@ function serializeCron(cron: any, kinInfo?: KinInfo, targetKinInfo?: KinInfo) {
     targetKinAvatarUrl: cron.targetKinId && targetKinInfo ? kinAvatarUrl(cron.targetKinId, targetKinInfo.avatarPath) : null,
     model: cron.model,
     providerId: cron.providerId ?? null,
-    thinkingEnabled: cron.thinkingConfig ? (JSON.parse(cron.thinkingConfig)?.enabled ?? false) : false,
+    thinkingEnabled: parseThinkingConfig(cron.thinkingConfig).enabled,
+    thinkingEffort: parseThinkingConfig(cron.thinkingConfig).effort,
     runOnce: cron.runOnce,
     isActive: cron.isActive,
     requiresApproval: cron.requiresApproval,
@@ -84,6 +95,7 @@ cronRoutes.post('/', async (c) => {
     providerId?: string
     runOnce?: boolean
     thinkingEnabled?: boolean
+    thinkingEffort?: 'low' | 'medium' | 'high' | 'max' | null
   }>()
 
   if (!body.kinId || !body.name || !body.schedule || !body.taskDescription) {
@@ -94,6 +106,17 @@ cronRoutes.post('/', async (c) => {
   }
 
   try {
+    let thinkingConfig: { enabled: boolean; effort: 'low' | 'medium' | 'high' | 'max' | null } | undefined
+    if (body.thinkingEffort !== undefined) {
+      thinkingConfig = body.thinkingEffort === null
+        ? { enabled: false, effort: null }
+        : { enabled: true, effort: body.thinkingEffort }
+    } else if (body.thinkingEnabled !== undefined) {
+      thinkingConfig = { enabled: body.thinkingEnabled, effort: body.thinkingEnabled ? 'medium' : null }
+    } else {
+      thinkingConfig = { enabled: true, effort: 'medium' }
+    }
+
     const cron = await createCron({
       kinId: body.kinId,
       name: body.name,
@@ -103,7 +126,7 @@ cronRoutes.post('/', async (c) => {
       model: body.model,
       providerId: body.providerId,
       runOnce: body.runOnce,
-      thinkingConfig: body.thinkingEnabled !== undefined ? { enabled: body.thinkingEnabled } : undefined,
+      thinkingConfig,
       createdBy: 'user',
     })
 
@@ -138,12 +161,22 @@ cronRoutes.patch('/:id', async (c) => {
     isActive?: boolean
     runOnce?: boolean
     thinkingEnabled?: boolean
+    thinkingEffort?: 'low' | 'medium' | 'high' | 'max' | null
   }>()
 
   try {
     const updates: Record<string, unknown> = { ...body }
-    if (body.thinkingEnabled !== undefined) {
-      updates.thinkingConfig = JSON.stringify({ enabled: body.thinkingEnabled })
+    if (body.thinkingEffort !== undefined) {
+      updates.thinkingConfig = body.thinkingEffort === null
+        ? JSON.stringify({ enabled: false, effort: null })
+        : JSON.stringify({ enabled: true, effort: body.thinkingEffort })
+      delete updates.thinkingEffort
+      delete updates.thinkingEnabled
+    } else if (body.thinkingEnabled !== undefined) {
+      updates.thinkingConfig = JSON.stringify({
+        enabled: body.thinkingEnabled,
+        effort: body.thinkingEnabled ? 'medium' : null,
+      })
       delete updates.thinkingEnabled
     }
     const updated = await updateCron(cronId, updates)

@@ -208,6 +208,7 @@ export interface CronSummary {
   model: string | null
   providerId: string | null
   thinkingEnabled: boolean
+  thinkingEffort: KinThinkingEffort | null
   runOnce: boolean
   isActive: boolean
   requiresApproval: boolean

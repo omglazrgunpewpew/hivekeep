@@ -16,7 +16,8 @@ import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { KinSelector } from '@/client/components/common/KinSelector'
 import { KinSelectItem, type KinOption } from '@/client/components/common/KinSelectItem'
-import { Switch } from '@/client/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
+import type { KinThinkingEffort } from '@/shared/types'
 import { Loader2, Sparkles, Trash2 } from 'lucide-react'
 import { InfoTip } from '@/client/components/common/InfoTip'
 import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
@@ -53,7 +54,7 @@ interface CronFormModalProps {
     model?: string
     providerId?: string
     runOnce?: boolean
-    thinkingEnabled?: boolean
+    thinkingEffort?: KinThinkingEffort | null
   }) => Promise<CronSummary>
   onUpdate?: (id: string, updates: Record<string, unknown>) => Promise<CronSummary>
   onDelete?: (id: string) => Promise<void>
@@ -99,7 +100,7 @@ export function CronFormModal({
   const [targetKinId, setTargetKinId] = useState<string>('')
   const [model, setModel] = useState('')
   const [modelProviderId, setModelProviderId] = useState('')
-  const [thinkingEnabled, setThinkingEnabled] = useState(false)
+  const [thinkingEffort, setThinkingEffort] = useState<KinThinkingEffort | 'off'>('medium')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -122,7 +123,7 @@ export function CronFormModal({
         setTargetKinId(cron.targetKinId ?? '')
         setModel(cron.model ?? '')
         setModelProviderId(cron.providerId ?? '')
-        setThinkingEnabled(cron.thinkingEnabled ?? false)
+        setThinkingEffort(cron.thinkingEffort ?? (cron.thinkingEnabled ? 'medium' : 'off'))
       } else if (defaults) {
         setName(defaults.name ?? '')
         setKinId(defaults.kinId ?? (kins.length === 1 ? kins[0]!.id : ''))
@@ -133,7 +134,7 @@ export function CronFormModal({
         setTargetKinId(defaults.targetKinId ?? '')
         setModel(defaults.model ?? '')
         setModelProviderId(defaults.providerId ?? '')
-        setThinkingEnabled(defaults.thinkingEnabled ?? false)
+        setThinkingEffort(defaults.thinkingEffort ?? (defaults.thinkingEnabled ? 'medium' : 'off'))
       } else {
         setName('')
         setKinId(kins.length === 1 ? kins[0]!.id : '')
@@ -144,7 +145,7 @@ export function CronFormModal({
         setTargetKinId('')
         setModel('')
         setModelProviderId('')
-        setThinkingEnabled(false)
+        setThinkingEffort('medium')
       }
       setError(null)
       resetDirty()
@@ -158,6 +159,8 @@ export function CronFormModal({
 
     const effectiveSchedule = runOnce && scheduleDatetime ? scheduleDatetime : schedule
 
+    const effortPayload: KinThinkingEffort | null = thinkingEffort === 'off' ? null : thinkingEffort
+
     try {
       if (isEdit && onUpdate && cron) {
         await onUpdate(cron.id, {
@@ -168,7 +171,7 @@ export function CronFormModal({
           model: model || null,
           providerId: modelProviderId || null,
           runOnce,
-          thinkingEnabled,
+          thinkingEffort: effortPayload,
         })
       } else if (onCreate) {
         await onCreate({
@@ -180,7 +183,7 @@ export function CronFormModal({
           model: model || undefined,
           providerId: modelProviderId || undefined,
           runOnce: runOnce || undefined,
-          thinkingEnabled: thinkingEnabled || undefined,
+          thinkingEffort: effortPayload,
         })
       }
       resetDirty()
@@ -416,13 +419,27 @@ export function CronFormModal({
               />
             </div>
 
-            {/* Thinking toggle */}
-            <div className="flex items-center justify-between">
+            {/* Thinking effort */}
+            <div className="space-y-2">
               <Label className="inline-flex items-center gap-1.5">
                 <Sparkles className="size-3.5" />
-                {t('kin.thinking.enableLabel')}
+                {t('chat.thinkingPicker.title')}
               </Label>
-              <Switch checked={thinkingEnabled} onCheckedChange={(v) => { setThinkingEnabled(v); markDirty() }} />
+              <Select
+                value={thinkingEffort}
+                onValueChange={(v) => { setThinkingEffort(v as KinThinkingEffort | 'off'); markDirty() }}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
+                  <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
+                  <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
+                  <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
+                  <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

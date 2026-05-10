@@ -11,8 +11,18 @@ import { fetchPreviousCronRuns } from '@/server/services/tasks'
 import { resolveKinId } from '@/server/services/kin-resolver'
 import { createLogger } from '@/server/logger'
 import type { ToolRegistration } from '@/server/tools/types'
+import type { KinThinkingConfig, KinThinkingEffort } from '@/shared/types'
 
 const log = createLogger('tools:cron')
+
+const THINKING_EFFORT_VALUES = ['off', 'low', 'medium', 'high', 'max'] as const
+type ThinkingEffortInput = typeof THINKING_EFFORT_VALUES[number]
+
+/** Map the LLM-facing effort string to a stored thinking config. */
+function effortToConfig(effort: ThinkingEffortInput): KinThinkingConfig {
+  if (effort === 'off') return { enabled: false, effort: null }
+  return { enabled: true, effort: effort as KinThinkingEffort }
+}
 
 /**
  * create_cron — create a new scheduled task.
@@ -46,12 +56,12 @@ export const createCronTool: ToolRegistration = {
           .boolean()
           .optional()
           .describe('If true, fires once then auto-deactivates.'),
-        thinking: z
-          .boolean()
+        thinking_effort: z
+          .enum(THINKING_EFFORT_VALUES)
           .optional()
-          .describe('Enable extended thinking/reasoning for tasks spawned by this cron. Omit to inherit from Kin config.'),
+          .describe('Reasoning effort for tasks spawned by this cron. "off" disables thinking. Defaults to "medium" if omitted.'),
       }),
-      execute: async ({ name, schedule, task_description, target_kin_slug, model, provider_id, run_once, thinking }) => {
+      execute: async ({ name, schedule, task_description, target_kin_slug, model, provider_id, run_once, thinking_effort }) => {
         let targetKinId: string | undefined
         if (target_kin_slug) {
           const resolved = resolveKinId(target_kin_slug)
@@ -72,7 +82,7 @@ export const createCronTool: ToolRegistration = {
             providerId: provider_id,
             createdBy: 'kin',
             runOnce: run_once,
-            thinkingConfig: thinking !== undefined ? { enabled: thinking } : undefined,
+            thinkingConfig: effortToConfig(thinking_effort ?? 'medium'),
           })
           return {
             cronId: cron.id,
@@ -97,28 +107,64 @@ export const updateCronTool: ToolRegistration = {
   availability: ['main'],
   create: (ctx) =>
     tool({
-      description: 'Update an existing cron (schedule, description, active state).',
+      description: 'Update any field of an existing cron (schedule, description, active state, target Kin, model, provider, thinking, run_once). Omit a field to keep its current value.',
       inputSchema: z.object({
         cron_id: z.string(),
         name: z.string().optional(),
-        schedule: z.string().optional(),
+        schedule: z.string().optional()
+          .describe('New cron expression or ISO 8601 datetime (when run_once)'),
         task_description: z.string().optional(),
         is_active: z.boolean().optional(),
-        thinking: z.boolean().optional()
-          .describe('Enable or disable thinking for tasks spawned by this cron. Omit to keep current.'),
+        target_kin_slug: z.string().nullable().optional()
+          .describe('Re-target the cron to a different Kin (use the slug). Pass null to clear and run on yourself.'),
+        model: z.string().nullable().optional()
+          .describe('Override the model used for spawned tasks. Pass null to clear and inherit from the target Kin.'),
+        provider_id: z.string().nullable().optional()
+          .describe('Provider ID for the model override. Pass null to clear.'),
+        run_once: z.boolean().optional()
+          .describe('Toggle one-shot vs recurring behavior.'),
+        thinking_effort: z.enum(THINKING_EFFORT_VALUES).optional()
+          .describe('Change reasoning effort. "off" disables thinking. Omit to keep current.'),
       }),
-      execute: async ({ cron_id, name, schedule, task_description, is_active, thinking }) => {
+      execute: async ({ cron_id, name, schedule, task_description, is_active, target_kin_slug, model, provider_id, run_once, thinking_effort }) => {
         try {
-          const updates: Record<string, unknown> = {}
+          const updates: Parameters<typeof updateCron>[1] = {}
           if (name !== undefined) updates.name = name
           if (schedule !== undefined) updates.schedule = schedule
           if (task_description !== undefined) updates.taskDescription = task_description
           if (is_active !== undefined) updates.isActive = is_active
-          if (thinking !== undefined) updates.thinkingConfig = JSON.stringify({ enabled: thinking })
+          if (run_once !== undefined) updates.runOnce = run_once
+          if (model !== undefined) updates.model = model
+          if (provider_id !== undefined) updates.providerId = provider_id
+
+          if (target_kin_slug !== undefined) {
+            if (target_kin_slug === null) {
+              updates.targetKinId = null
+            } else {
+              const resolved = resolveKinId(target_kin_slug)
+              if (!resolved) return { error: `Kin not found for slug "${target_kin_slug}"` }
+              updates.targetKinId = resolved
+            }
+          }
+
+          if (thinking_effort !== undefined) {
+            updates.thinkingConfig = JSON.stringify(effortToConfig(thinking_effort))
+          }
 
           const updated = await updateCron(cron_id, updates)
           if (!updated) return { error: 'Cron not found' }
-          return { success: true, cronId: updated.id, isActive: updated.isActive }
+          return {
+            success: true,
+            cronId: updated.id,
+            name: updated.name,
+            schedule: updated.schedule,
+            isActive: updated.isActive,
+            runOnce: updated.runOnce,
+            targetKinId: updated.targetKinId,
+            model: updated.model,
+            providerId: updated.providerId,
+            thinkingConfig: updated.thinkingConfig,
+          }
         } catch (err) {
           return { error: err instanceof Error ? err.message : 'Unknown error' }
         }
@@ -158,7 +204,7 @@ export const listCronsTool: ToolRegistration = {
   readOnly: true,
   create: (ctx) =>
     tool({
-      description: 'List all your scheduled tasks (crons).',
+      description: 'List all your scheduled tasks (crons) with their full configuration.',
       inputSchema: z.object({}),
       execute: async () => {
         const allCrons = await listCrons(ctx.kinId)
@@ -171,6 +217,10 @@ export const listCronsTool: ToolRegistration = {
             isActive: c.isActive,
             runOnce: c.runOnce,
             requiresApproval: c.requiresApproval,
+            targetKinId: c.targetKinId,
+            model: c.model,
+            providerId: c.providerId,
+            thinkingConfig: c.thinkingConfig,
             lastTriggeredAt: c.lastTriggeredAt ? c.lastTriggeredAt.toISOString() : null,
           })),
         }
