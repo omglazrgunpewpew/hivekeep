@@ -63,6 +63,11 @@ interface CronLearningPreview {
   createdAt: string
 }
 
+interface SystemPromptBlock {
+  heading: string
+  tokens: number
+}
+
 interface LastTurnCache {
   inputTokens: number
   outputTokens: number
@@ -87,6 +92,7 @@ interface ContextPreviewData {
     tools: ToolDefinition[]
   }
   lastTurnCache?: LastTurnCache
+  systemPromptBreakdown?: SystemPromptBlock[]
   tokenEstimate?: {
     systemPrompt: number
     summary: number
@@ -117,6 +123,36 @@ const CRON_LEARNINGS_HEADER = '## Learnings from previous runs'
 function formatTokenCount(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
   return String(n)
+}
+
+function SystemPromptBreakdown({ blocks }: { blocks: SystemPromptBlock[] }) {
+  const { t } = useTranslation()
+  const sorted = useMemo(() => [...blocks].sort((a, b) => b.tokens - a.tokens), [blocks])
+  const max = Math.max(1, ...sorted.map((b) => b.tokens))
+  return (
+    <div className="mb-3 rounded-md border border-border/50 bg-card/30 p-2">
+      <p className="mb-1.5 px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {t('chat.contextViewer.systemPromptBlocks', { defaultValue: 'Blocks (sorted by cost)' })}
+      </p>
+      <div className="space-y-0.5">
+        {sorted.map((b, i) => {
+          const heavy = b.tokens / max >= 0.6 && b.tokens >= 200
+          return (
+            <div key={`${b.heading}-${i}`} className="flex items-center gap-2 text-[11px]">
+              <span className="min-w-0 flex-1 truncate text-foreground/80">{b.heading}</span>
+              <span
+                className={`shrink-0 rounded px-1 py-px font-mono text-[10px] tabular-nums ${
+                  heavy ? 'bg-warning/15 text-warning' : 'bg-muted text-muted-foreground/70'
+                }`}
+              >
+                {formatTokenCount(b.tokens)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function LastTurnCachePanel({ cache }: { cache: LastTurnCache }) {
@@ -534,6 +570,9 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
                 label={t('chat.contextViewer.legend.systemPrompt')}
                 tokens={data.tokenEstimate ? formatTokenCount(data.tokenEstimate.systemPrompt) : undefined}
               >
+                {data.systemPromptBreakdown && data.systemPromptBreakdown.length > 1 && (
+                  <SystemPromptBreakdown blocks={data.systemPromptBreakdown} />
+                )}
                 <Suspense
                   fallback={
                     <div className="flex items-center justify-center py-10">

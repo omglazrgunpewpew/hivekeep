@@ -26,6 +26,29 @@ interface MessageMetadataTokenUsage {
   cacheWriteTokens?: number
 }
 
+/** Split a system prompt by `## ` headers and return tokens per section.
+ *  The piece before the first `## ` (typically the role + identity intro) is
+ *  labeled "(intro)" so it stays visible. Headers preserve their text after
+ *  the `## ` marker, trimmed at the first newline. */
+function decomposeSystemPrompt(prompt: string): Array<{ heading: string; tokens: number }> {
+  if (!prompt) return []
+  const sections: Array<{ heading: string; tokens: number }> = []
+  const parts = prompt.split(/\n## /)
+  if (parts.length === 0) return sections
+  const intro = parts[0] ?? ''
+  if (intro.trim().length > 0) {
+    sections.push({ heading: '(intro)', tokens: estimateTokens(intro) })
+  }
+  for (let i = 1; i < parts.length; i++) {
+    const block = parts[i] ?? ''
+    const newlineIdx = block.indexOf('\n')
+    const heading = (newlineIdx === -1 ? block : block.slice(0, newlineIdx)).trim()
+    const body = newlineIdx === -1 ? '' : block.slice(newlineIdx + 1)
+    sections.push({ heading: heading || '(unnamed)', tokens: estimateTokens(`## ${heading}\n${body}`) })
+  }
+  return sections
+}
+
 /** Pull the most recent assistant turn that reported cache stats and compute
  *  hit rate + cost savings. Returns null when no recent turn has cache data. */
 function buildLastTurnCache(
@@ -163,6 +186,11 @@ interface ContextPreviewResult {
   compactingThresholdPercent: number | null
   messageCount: number
   generatedAt: number
+  /** Section-by-section breakdown of the system prompt, parsed by `## `
+   *  headers. Lets the viewer show users which prompt blocks (Memories,
+   *  Constraints, Personality, Available tools…) eat the most tokens.
+   *  The "(intro)" section captures everything before the first ## header. */
+  systemPromptBreakdown?: Array<{ heading: string; tokens: number }>
   /** Cache hit/miss breakdown of the most recent assistant turn that reported
    *  cache stats. Null when no recent turn has tokenUsage with cache fields
    *  (cold Kin, non-Anthropic provider, etc.). Used by the context viewer to
@@ -637,6 +665,10 @@ function formatResult(
     compactingThresholdPercent,
     messageCount,
     generatedAt: Date.now(),
+    systemPromptBreakdown: decomposeSystemPrompt(systemPrompt).map((s) => ({
+      heading: s.heading,
+      tokens: scale(s.tokens),
+    })),
     lastTurnCache,
   }
 }
