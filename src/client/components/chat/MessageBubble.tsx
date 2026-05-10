@@ -233,9 +233,20 @@ function MessageFiles({ files, isUser }: { files: MessageFile[]; isUser: boolean
 
 // ─── Injected memories indicator ──────────────────────────────────────────────
 
+function estimateMemoryTokens(mem: InjectedMemory): number {
+  const text = `${mem.content}${mem.subject ?? ''}${mem.category}`
+  return Math.ceil(text.length / 3.5)
+}
+
+function formatMemoryTokens(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return String(n)
+}
+
 function InjectedMemoriesIndicator({ memories }: { memories: InjectedMemory[] }) {
   const { t } = useTranslation()
   const count = memories.length
+  const totalTokens = memories.reduce((sum, m) => sum + estimateMemoryTokens(m), 0)
 
   return (
     <Collapsible>
@@ -244,23 +255,30 @@ function InjectedMemoriesIndicator({ memories }: { memories: InjectedMemory[] })
         <span>
           {count === 1 ? t('chat.memoriesUsedSingular') : t('chat.memoriesUsed', { count })}
         </span>
+        <span className="font-mono text-[10px] text-muted-foreground/70">~{formatMemoryTokens(totalTokens)}t</span>
         <ChevronDown className="size-3 transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1.5 space-y-1 rounded-lg border border-chart-2/20 bg-chart-2/5 px-3 py-2">
-          {memories.map((mem) => (
-            <div key={mem.id} className="flex items-start gap-2 text-xs">
- <Badge variant="secondary" size="xs" className="mt-0.5 shrink-0">
-                {t(`settings.memories.category.${mem.category}`)}
-              </Badge>
-              <span className="text-muted-foreground whitespace-pre-wrap">
-                {mem.content}
-                {mem.subject && (
-                  <span className="ml-1 text-muted-foreground/60">({mem.subject})</span>
-                )}
-              </span>
-            </div>
-          ))}
+          {memories.map((mem) => {
+            const memTokens = estimateMemoryTokens(mem)
+            return (
+              <div key={mem.id} className="flex items-start gap-2 text-xs">
+                <Badge variant="secondary" size="xs" className="mt-0.5 shrink-0">
+                  {t(`settings.memories.category.${mem.category}`)}
+                </Badge>
+                <span className="text-muted-foreground whitespace-pre-wrap min-w-0 flex-1">
+                  {mem.content}
+                  {mem.subject && (
+                    <span className="ml-1 text-muted-foreground/60">({mem.subject})</span>
+                  )}
+                </span>
+                <span className="shrink-0 self-start mt-0.5 font-mono text-[10px] text-muted-foreground/60 tabular-nums">
+                  {formatMemoryTokens(memTokens)}t
+                </span>
+              </div>
+            )
+          })}
         </div>
       </CollapsibleContent>
     </Collapsible>
