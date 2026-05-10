@@ -636,6 +636,17 @@
         "cronRuns": "Exécutions précédentes ({{count}})",
         "cronLearnings": "Apprentissages ({{count}})"
       },
+      "cache": {
+        "title": "Cache du dernier tour",
+        "hit": "hit rate",
+        "cost": "coût",
+        "read": "Lus du cache",
+        "write": "Écrits dans le cache",
+        "fresh": "Input frais",
+        "justNow": "à l'instant",
+        "minAgo": "il y a {{min}}min",
+        "hAgo": "il y a {{h}}h"
+      },
       "summariesTitle": "Résumés de conversation ({{count}})",
       "cronRunsTitle": "Exécutions précédentes ({{count}})",
       "cronLearningsTitle": "Apprentissages des runs ({{count}})",

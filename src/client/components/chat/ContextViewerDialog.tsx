@@ -60,6 +60,18 @@ interface CronLearningPreview {
   createdAt: string
 }
 
+interface LastTurnCache {
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  freshInputTokens: number
+  hitRate: number
+  costSavingsPercent: number
+  multipliers: { read: number; write: number }
+  turnAt: string
+}
+
 interface ContextPreviewData {
   systemPrompt: string
   compactingSummary: string | null
@@ -71,6 +83,7 @@ interface ContextPreviewData {
     messages: MessagePreview[]
     tools: ToolDefinition[]
   }
+  lastTurnCache?: LastTurnCache
   tokenEstimate?: {
     systemPrompt: number
     summary: number
@@ -101,6 +114,76 @@ const CRON_LEARNINGS_HEADER = '## Learnings from previous runs'
 function formatTokenCount(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
   return String(n)
+}
+
+function LastTurnCachePanel({ cache }: { cache: LastTurnCache }) {
+  const { t } = useTranslation()
+  const hitPct = Math.round(cache.hitRate * 100)
+  const total = cache.inputTokens || 1
+  const readPct = (cache.cacheReadTokens / total) * 100
+  const writePct = (cache.cacheWriteTokens / total) * 100
+  const freshPct = (cache.freshInputTokens / total) * 100
+  const turnAgo = useMemo(() => {
+    const ms = Date.now() - new Date(cache.turnAt).getTime()
+    const min = Math.round(ms / 60000)
+    if (min < 1) return t('chat.contextViewer.cache.justNow')
+    if (min < 60) return t('chat.contextViewer.cache.minAgo', { min })
+    const h = Math.round(min / 60)
+    return t('chat.contextViewer.cache.hAgo', { h })
+  }, [cache.turnAt, t])
+  return (
+    <div className="mb-4 rounded-lg border border-border/50 bg-card/50 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Layers className="size-3.5 text-chart-2" />
+          <span className="text-xs font-medium">{t('chat.contextViewer.cache.title')}</span>
+          <span className="text-[10px] text-muted-foreground">· {turnAgo}</span>
+        </div>
+        <div className="flex items-center gap-3 text-[11px]">
+          <span className="font-semibold text-chart-2">{hitPct}% {t('chat.contextViewer.cache.hit')}</span>
+          {cache.costSavingsPercent > 0 && (
+            <span className="rounded-full bg-chart-2/15 px-2 py-0.5 text-chart-2">
+              −{cache.costSavingsPercent.toFixed(0)}% {t('chat.contextViewer.cache.cost')}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="mb-2 flex h-2 overflow-hidden rounded-full bg-muted">
+        {readPct > 0 && (
+          <div className="h-full bg-chart-2/70" style={{ width: `${readPct}%` }} title={`${formatTokenCount(cache.cacheReadTokens)} read (×${cache.multipliers.read})`} />
+        )}
+        {writePct > 0 && (
+          <div className="h-full bg-chart-4/70" style={{ width: `${writePct}%` }} title={`${formatTokenCount(cache.cacheWriteTokens)} written (×${cache.multipliers.write})`} />
+        )}
+        {freshPct > 0 && (
+          <div className="h-full bg-chart-1/70" style={{ width: `${freshPct}%` }} title={`${formatTokenCount(cache.freshInputTokens)} fresh (×1.0)`} />
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-[11px]">
+        <div className="flex flex-col items-start">
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="inline-block size-2 rounded-full bg-chart-2/70" />
+            {t('chat.contextViewer.cache.read')}
+          </span>
+          <span className="font-medium">{formatTokenCount(cache.cacheReadTokens)} <span className="text-muted-foreground">×{cache.multipliers.read}</span></span>
+        </div>
+        <div className="flex flex-col items-start">
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="inline-block size-2 rounded-full bg-chart-4/70" />
+            {t('chat.contextViewer.cache.write')}
+          </span>
+          <span className="font-medium">{formatTokenCount(cache.cacheWriteTokens)} <span className="text-muted-foreground">×{cache.multipliers.write}</span></span>
+        </div>
+        <div className="flex flex-col items-start">
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="inline-block size-2 rounded-full bg-chart-1/70" />
+            {t('chat.contextViewer.cache.fresh')}
+          </span>
+          <span className="font-medium">{formatTokenCount(cache.freshInputTokens)} <span className="text-muted-foreground">×1.0</span></span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function formatDateShort(iso: string): string {
@@ -437,6 +520,10 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
               <p className="mb-4 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
                 {t('chat.contextViewer.structuredHint')}
               </p>
+
+              {data.lastTurnCache && (
+                <LastTurnCachePanel cache={data.lastTurnCache} />
+              )}
 
               {/* System prompt section (purple) */}
               <FadingSection

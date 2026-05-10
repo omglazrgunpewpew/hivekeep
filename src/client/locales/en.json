@@ -636,6 +636,17 @@
         "cronRuns": "Previous runs ({{count}})",
         "cronLearnings": "Learnings ({{count}})"
       },
+      "cache": {
+        "title": "Last turn cache",
+        "hit": "hit rate",
+        "cost": "cost",
+        "read": "Read from cache",
+        "write": "Written to cache",
+        "fresh": "Fresh input",
+        "justNow": "just now",
+        "minAgo": "{{min}}min ago",
+        "hAgo": "{{h}}h ago"
+      },
       "summariesTitle": "Conversation summaries ({{count}})",
       "cronRunsTitle": "Previous runs ({{count}})",
       "cronLearningsTitle": "Run learnings ({{count}})",

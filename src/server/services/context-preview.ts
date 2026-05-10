@@ -16,6 +16,67 @@ import { getActiveChannelsForKin } from '@/server/services/channels'
 import type { KinToolConfig, KinCompactingConfig } from '@/shared/types'
 import { getModelContextWindow } from '@/shared/model-context-windows'
 import { config } from '@/server/config'
+import { getCacheMultipliers } from '@/shared/billing'
+import { guessProviderType } from '@/shared/model-ref'
+
+interface MessageMetadataTokenUsage {
+  inputTokens?: number
+  outputTokens?: number
+  cacheReadTokens?: number
+  cacheWriteTokens?: number
+}
+
+/** Pull the most recent assistant turn that reported cache stats and compute
+ *  hit rate + cost savings. Returns null when no recent turn has cache data. */
+function buildLastTurnCache(
+  kinId: string,
+  modelId: string,
+  providerId: string | null,
+): ContextPreviewResult['lastTurnCache'] | undefined {
+  const recentAssistant = db
+    .select({ metadata: messages.metadata, createdAt: messages.createdAt })
+    .from(messages)
+    .where(and(
+      eq(messages.kinId, kinId),
+      eq(messages.role, 'assistant'),
+      isNull(messages.taskId),
+      isNull(messages.sessionId),
+    ))
+    .orderBy(desc(messages.createdAt))
+    .limit(20)
+    .all()
+  for (const m of recentAssistant) {
+    if (!m.metadata) continue
+    let tokenUsage: MessageMetadataTokenUsage | undefined
+    try {
+      const meta = JSON.parse(m.metadata as string) as { tokenUsage?: MessageMetadataTokenUsage }
+      tokenUsage = meta?.tokenUsage
+    } catch { continue }
+    if (!tokenUsage || tokenUsage.inputTokens == null) continue
+    const inputTokens = tokenUsage.inputTokens ?? 0
+    const cacheReadTokens = tokenUsage.cacheReadTokens ?? 0
+    const cacheWriteTokens = tokenUsage.cacheWriteTokens ?? 0
+    if (cacheReadTokens === 0 && cacheWriteTokens === 0) continue
+    const freshInputTokens = Math.max(0, inputTokens - cacheReadTokens - cacheWriteTokens)
+    const providerType = guessProviderType(modelId) ?? providerId ?? null
+    const mults = getCacheMultipliers(providerType)
+    const effectiveCost = freshInputTokens + cacheWriteTokens * mults.write + cacheReadTokens * mults.read
+    const noCacheCost = inputTokens
+    const costSavingsPercent = noCacheCost > 0 ? Math.max(0, (1 - effectiveCost / noCacheCost) * 100) : 0
+    return {
+      inputTokens,
+      outputTokens: tokenUsage.outputTokens ?? 0,
+      cacheReadTokens,
+      cacheWriteTokens,
+      freshInputTokens,
+      hitRate: inputTokens > 0 ? Math.min(1, cacheReadTokens / inputTokens) : 0,
+      costSavingsPercent: Math.round(costSavingsPercent * 10) / 10,
+      multipliers: mults,
+      turnAt: new Date(m.createdAt as unknown as number).toISOString(),
+    }
+  }
+  return undefined
+}
 
 interface ToolDefinition {
   name: string
@@ -91,6 +152,24 @@ interface ContextPreviewResult {
   compactingThresholdPercent: number | null
   messageCount: number
   generatedAt: number
+  /** Cache hit/miss breakdown of the most recent assistant turn that reported
+   *  cache stats. Null when no recent turn has tokenUsage with cache fields
+   *  (cold Kin, non-Anthropic provider, etc.). Used by the context viewer to
+   *  surface cache observability inline with the breakdown. */
+  lastTurnCache?: {
+    inputTokens: number
+    outputTokens: number
+    cacheReadTokens: number
+    cacheWriteTokens: number
+    freshInputTokens: number
+    hitRate: number
+    /** % cost saved vs sending the same input with no cache. 0 = no savings. */
+    costSavingsPercent: number
+    /** Provider cache multipliers used for the cost calc (display + tooltip). */
+    multipliers: { read: number; write: number }
+    /** ISO timestamp of the turn this snapshot is from. */
+    turnAt: string
+  }
 }
 
 /**
@@ -407,7 +486,8 @@ export async function buildContextPreview(kinId: string): Promise<ContextPreview
   const compactingThresholdPercent = perKinCompacting?.thresholdPercent ?? config.compacting.thresholdPercent
 
   const calibrationFactor = await getKinCalibrationFactor(kinId)
-  return formatResult(systemPrompt, toolDefinitions, messagesPreviews, totalMessageCount, getModelContextWindow(kin.model), combinedSummary, summaryPreviews, compactingThresholdPercent, [], [], calibrationFactor)
+  const lastTurnCache = buildLastTurnCache(kinId, kin.model, kin.providerId)
+  return formatResult(systemPrompt, toolDefinitions, messagesPreviews, totalMessageCount, getModelContextWindow(kin.model), combinedSummary, summaryPreviews, compactingThresholdPercent, [], [], calibrationFactor, lastTurnCache)
 }
 
 /** Extract JSON Schema tool definitions from a tools map */
@@ -454,6 +534,7 @@ function formatResult(
    *  what the navbar shows after calibration. Defaults to 1 when no roundtrip
    *  has been observed yet. */
   calibrationFactor: number = 1,
+  lastTurnCache?: ContextPreviewResult['lastTurnCache'],
 ): ContextPreviewResult {
   let fullPrompt = systemPrompt
   if (toolDefinitions.length > 0) {
@@ -517,6 +598,7 @@ function formatResult(
     compactingThresholdPercent,
     messageCount,
     generatedAt: Date.now(),
+    lastTurnCache,
   }
 }
 
