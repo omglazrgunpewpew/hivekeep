@@ -47,7 +47,7 @@ export async function createCron(params: CreateCronParams) {
     if (arg instanceof Date) {
       if (arg <= new Date()) throw new Error('Datetime must be in the future')
     } else {
-      new Cron(arg, { paused: true })
+      new Cron(arg, { paused: true, timezone: config.timezone })
     }
   } catch (err) {
     throw new Error(
@@ -132,7 +132,7 @@ export async function updateCron(
       if (arg instanceof Date) {
         if (arg <= new Date()) throw new Error('Datetime must be in the future')
       } else {
-        new Cron(arg, { paused: true })
+        new Cron(arg, { paused: true, timezone: config.timezone })
       }
     } catch (err) {
       throw new Error(
@@ -217,13 +217,46 @@ export async function approveCron(cronId: string) {
 
 // ─── Scheduler ───────────────────────────────────────────────────────────────
 
+/** Parse a wall-clock datetime string ("2026-05-11T14:00[:00]") in the given
+ *  IANA timezone and return the corresponding absolute Date. */
+function _parseWallClockInTz(s: string, timezone: string): Date {
+  // Treat the bare string as UTC to extract its calendar fields safely.
+  const padded = /T\d{2}:\d{2}(:\d{2})?/.test(s) ? s : s + 'T00:00:00'
+  const asUtc = new Date(padded + 'Z')
+  if (isNaN(asUtc.getTime())) return new Date(NaN)
+
+  // Compute the offset of `timezone` at that moment by formatting `asUtc`
+  // in the target zone and comparing the wall-clock fields it produces
+  // to the UTC fields we just parsed.
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  })
+  const parts = Object.fromEntries(
+    fmt.formatToParts(asUtc).filter((p) => p.type !== 'literal').map((p) => [p.type, p.value]),
+  ) as Record<string, string>
+  const hour = parts.hour === '24' ? '00' : parts.hour
+  const wallInTz = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(hour), Number(parts.minute), Number(parts.second),
+  )
+  const offsetMs = wallInTz - asUtc.getTime()
+  return new Date(asUtc.getTime() - offsetMs)
+}
+
 /**
  * Detect whether a schedule string is an ISO 8601 datetime or a cron expression.
  * Returns a Date for datetime strings, or the original string for cron expressions.
+ *
+ * Datetimes with an explicit offset (Z or ±HH:MM) are parsed natively; bare
+ * wall-clock datetimes are interpreted in the configured server timezone.
  */
 function _parseCronArg(schedule: string): string | Date {
   if (/^\d{4}-\d{2}-\d{2}/.test(schedule)) {
-    const d = new Date(schedule)
+    const hasOffset = /([Zz]|[+\-]\d{2}:?\d{2})$/.test(schedule)
+    const d = hasOffset ? new Date(schedule) : _parseWallClockInTz(schedule, config.timezone)
     if (!isNaN(d.getTime())) return d
   }
   return schedule
@@ -234,8 +267,12 @@ function scheduleJob(cron: typeof crons.$inferSelect) {
   if (scheduledJobs.has(cron.id)) return
 
   const cronArg = _parseCronArg(cron.schedule)
+  // Absolute Dates fire at a fixed UTC instant — passing timezone would be
+  // meaningless. For cron expressions, anchor wall-clock semantics in
+  // config.timezone so "0 14 * * *" means 14:00 server-time, not 14:00 UTC.
+  const cronOpts = cronArg instanceof Date ? undefined : { timezone: config.timezone }
 
-  const job = new Cron(cronArg, async () => {
+  const job = new Cron(cronArg, cronOpts ?? {}, async () => {
     try {
       await triggerCron(cron.id)
       // Auto-deactivate after first fire for one-shot crons

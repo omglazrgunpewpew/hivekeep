@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
 import { useTranslation } from 'react-i18next'
 import { useSSE } from '@/client/hooks/useSSE'
+import { useAuth } from '@/client/hooks/useAuth'
 import {
   Dialog,
   DialogContent,
@@ -94,6 +95,8 @@ export function CronDetailModal({
   onToggleActive,
 }: CronDetailModalProps) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
+  const serverTimezone = user?.serverTimezone
   const [executions, setExecutions] = useState<TaskSummary[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [historyError, setHistoryError] = useState(false)
@@ -239,7 +242,7 @@ export function CronDetailModal({
                   </p>
                 )}
                 {cron.isActive && !cron.requiresApproval && (() => {
-                  const next = cronNextRun(cron.schedule)
+                  const next = cronNextRun(cron.schedule, serverTimezone)
                   if (!next) return null
                   return (
                     <p className="text-[11px] text-primary/80">

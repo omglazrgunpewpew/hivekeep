@@ -5,6 +5,7 @@ import { userProfiles, user } from '@/server/db/schema'
 import { getUnreadCountsForUser } from '@/server/services/kin-read-state'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
+import { config } from '@/server/config'
 
 const log = createLogger('routes:me')
 const meRoutes = new Hono<{ Variables: AppVariables }>()
@@ -42,6 +43,7 @@ meRoutes.get('/', async (c) => {
   return c.json({
     ...profile,
     createdAt: profile.createdAt instanceof Date ? profile.createdAt.getTime() : profile.createdAt,
+    serverTimezone: config.timezone,
   })
 })
 

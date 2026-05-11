@@ -173,18 +173,20 @@ function formatMemoryLine(m: Memory): string {
 function buildContextBlock(): string {
   const now = new Date()
   const iso = now.toISOString()
-  // Human-readable format: "Monday, March 2, 2026 at 01:31 UTC"
+  // Human-readable format, rendered in the configured server timezone so the
+  // Kin reports wall-clock time consistent with crons and user expectations.
+  const tz = config.timezone
   const readable = now.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    timeZone: 'UTC',
+    timeZone: tz,
   })
   const time = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'UTC',
+    timeZone: tz,
     hour12: false,
   })
 
@@ -218,8 +220,9 @@ function buildContextBlock(): string {
   return (
     `## Context\n\n` +
     `Current date: ${readable}\n` +
-    `Current time: ${time} UTC\n` +
+    `Current time: ${time} (${tz})\n` +
     `ISO timestamp: ${iso}\n` +
+    `Timezone: ${tz} — interpret schedules and wall-clock times in this zone unless the user asks otherwise\n` +
     `Platform: KinBot v${config.version}\n` +
     `Installation: ${installLine}${envFileLine}\n` +
     `Data directory: ${config.dataDir}\n` +
@@ -992,8 +995,8 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
   // [6.9] Compacting summaries (older conversation context) — volatile (changes after each compaction)
   if (params.compactingSummaries && params.compactingSummaries.length > 0) {
     const summaryBlocks = params.compactingSummaries.map((s) => {
-      const fromDate = s.firstMessageAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
-      const toDate = s.lastMessageAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+      const fromDate = s.firstMessageAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: config.timezone })
+      const toDate = s.lastMessageAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: config.timezone })
       const compressed = s.depth > 0 ? ' [compressed]' : ''
       return `### Summary (${fromDate} → ${toDate})${compressed}\n\n${s.summary}`
     })

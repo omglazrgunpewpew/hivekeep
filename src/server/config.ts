@@ -143,6 +143,21 @@ function findServiceFilePath(): string | null {
   return null
 }
 
+/** Resolve the server-wide IANA timezone for all schedule interpretation.
+ *  Priority: KINBOT_TIMEZONE > TZ > system-resolved IANA > 'UTC'.
+ *  Used by croner (recurring crons) and for parsing bare wall-clock datetimes. */
+function resolveServerTimezone(): string {
+  const explicit = process.env.KINBOT_TIMEZONE || process.env.TZ
+  if (explicit) return explicit
+  try {
+    const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (resolved) return resolved
+  } catch {
+    // fall through
+  }
+  return 'UTC'
+}
+
 export const config = {
   version: appVersion,
   port: Number(process.env.PORT ?? 3333),
@@ -150,6 +165,9 @@ export const config = {
   encryptionKey: resolveEncryptionKey(),
   logLevel: (process.env.LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
   isDocker: existsSync('/.dockerenv') || process.env.KINBOT_DATA_DIR === '/app/data',
+  /** Server-wide IANA timezone (e.g. "Europe/Paris"). Applied to recurring cron
+   *  expressions and to bare wall-clock datetimes received from clients. */
+  timezone: resolveServerTimezone(),
 
   db: {
     path: process.env.DB_PATH ?? `${dataDir}/kinbot.db`,

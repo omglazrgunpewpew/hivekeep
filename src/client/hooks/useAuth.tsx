@@ -14,6 +14,8 @@ interface UserProfile {
   avatarUrl: string | null
   kinOrder: string | null
   createdAt: number | null
+  /** IANA timezone the server uses to interpret cron schedules. */
+  serverTimezone: string
 }
 
 interface AuthState {

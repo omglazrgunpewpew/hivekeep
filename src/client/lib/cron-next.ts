@@ -2,12 +2,13 @@ import { Cron } from 'croner'
 
 /**
  * Compute the next run date for a cron expression.
- * Returns null if the expression is invalid.
+ * `timezone` should match the server's configured timezone so the preview
+ * lines up with when the cron will actually fire. Returns null if invalid.
  */
-export function cronNextRun(expression: string): Date | null {
+export function cronNextRun(expression: string, timezone?: string): Date | null {
   if (!expression.trim()) return null
   try {
-    const job = new Cron(expression)
+    const job = timezone ? new Cron(expression, { timezone }) : new Cron(expression)
     return job.nextRun() ?? null
   } catch {
     return null
@@ -18,10 +19,10 @@ export function cronNextRun(expression: string): Date | null {
  * Compute the next N run dates for a cron expression.
  * Returns empty array if the expression is invalid.
  */
-export function cronNextRuns(expression: string, count: number = 3): Date[] {
+export function cronNextRuns(expression: string, count: number = 3, timezone?: string): Date[] {
   if (!expression.trim()) return []
   try {
-    const job = new Cron(expression)
+    const job = timezone ? new Cron(expression, { timezone }) : new Cron(expression)
     return job.nextRuns(count)
   } catch {
     return []

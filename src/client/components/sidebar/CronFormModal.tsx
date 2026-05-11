@@ -22,6 +22,7 @@ import { Loader2, Sparkles, Trash2 } from 'lucide-react'
 import { InfoTip } from '@/client/components/common/InfoTip'
 import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
 import { useUnsavedChanges } from '@/client/hooks/useUnsavedChanges'
+import { useAuth } from '@/client/hooks/useAuth'
 import { cn } from '@/client/lib/utils'
 import { getErrorMessage } from '@/client/lib/api'
 import { cronToHuman, isISODatetime } from '@/client/lib/cron-human'
@@ -84,6 +85,8 @@ export function CronFormModal({
   onDelete,
 }: CronFormModalProps) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
+  const serverTimezone = user?.serverTimezone
   const isEdit = !!cron
 
   // Unsaved changes guard
@@ -221,8 +224,8 @@ export function CronFormModal({
   }, [runOnce, scheduleDatetime, schedule, scheduleHuman])
   const nextRuns = useMemo(() => {
     if (runOnce && scheduleDatetime) return [] // one-shot: no recurring runs to preview
-    return scheduleHuman ? cronNextRuns(schedule, 3) : []
-  }, [runOnce, scheduleDatetime, schedule, scheduleHuman])
+    return scheduleHuman ? cronNextRuns(schedule, 3, serverTimezone) : []
+  }, [runOnce, scheduleDatetime, schedule, scheduleHuman, serverTimezone])
 
   return (
     <>

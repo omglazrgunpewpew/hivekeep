@@ -28,6 +28,7 @@ import { Switch } from '@/client/components/ui/switch'
 const CronFormModal = lazy(() => import('@/client/components/sidebar/CronFormModal').then(m => ({ default: m.CronFormModal })))
 const CronDetailModal = lazy(() => import('@/client/components/sidebar/CronDetailModal').then(m => ({ default: m.CronDetailModal })))
 import { useCrons } from '@/client/hooks/useCrons'
+import { useAuth } from '@/client/hooks/useAuth'
 import { cn } from '@/client/lib/utils'
 import { formatRelativeTime } from '@/client/lib/time'
 import { cronToHuman } from '@/client/lib/cron-human'
@@ -72,10 +73,12 @@ function CronCard({
   isRunning?: boolean
 }) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
+  const serverTimezone = user?.serverTimezone
   const initials = cron.kinName.slice(0, 2).toUpperCase()
   const isPaused = !cron.isActive && !cron.requiresApproval
   const humanSchedule = cronToHuman(cron.schedule, i18n.language)
-  const nextRun = cron.isActive && !cron.requiresApproval ? cronNextRun(cron.schedule) : null
+  const nextRun = cron.isActive && !cron.requiresApproval ? cronNextRun(cron.schedule, serverTimezone) : null
 
   return (
     <div
