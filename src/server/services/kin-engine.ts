@@ -2478,11 +2478,26 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Mo
   recentMessages.reverse()
 
   // Only include messages after the latest summary's cutoff
-  const postSnapshotMessages = cutoffTimestamp
+  const postSnapshotMessages = (cutoffTimestamp
     ? recentMessages.filter(
         (m) => m.createdAt && (m.createdAt as unknown as number) > cutoffTimestamp,
       )
     : recentMessages
+  ).filter((m) => {
+    // UI-only audit markers must not reach the LLM prompt. They live in DB
+    // so the conversation view can render them (channel handoff banners),
+    // but they have no semantic value for the model and would only confuse
+    // a turn. Discriminated via meta.systemEvent (same pattern as
+    // meta.isAddendum / meta.resolvedTaskId).
+    if (!m.metadata) return true
+    try {
+      const meta = JSON.parse(m.metadata as string)
+      const ev = meta?.systemEvent
+      return ev !== 'channel_transferred_out' && ev !== 'channel_transferred_in'
+    } catch {
+      return true
+    }
+  })
 
   // Token-budget trimming: drop oldest messages until we fit within the budget.
   // This is an emergency safety net — compacting + tool masking are the primary mechanisms.
@@ -2556,9 +2571,13 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Mo
           if (meta.isAddendum) {
             textContent += '\n\n[The user sent this additional context while you were in the middle of responding. Take it into account and continue.]'
           }
-          if (meta.channel && typeof meta.channel === 'object') {
-            const channelJson = JSON.stringify(meta.channel)
-            textContent = `<channel-context>\n${channelJson}\n</channel-context>\n${textContent}`
+          const hasChannel = meta.channel && typeof meta.channel === 'object'
+          const hasTransfer = meta.channelTransfer && typeof meta.channelTransfer === 'object'
+          if (hasChannel || hasTransfer) {
+            const blob: Record<string, unknown> = {}
+            if (hasChannel) blob.channel = meta.channel
+            if (hasTransfer) blob.channelTransfer = meta.channelTransfer
+            textContent = `<channel-context>\n${JSON.stringify(blob)}\n</channel-context>\n${textContent}`
           }
         } catch { /* ignore parse errors */ }
       }
