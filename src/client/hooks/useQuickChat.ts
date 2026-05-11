@@ -96,6 +96,8 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
           stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date(data.createdAt as number).toISOString(),
       }
       setMessages((prev) => [...prev, message])
@@ -129,6 +131,8 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
           stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date().toISOString(),
       }
 

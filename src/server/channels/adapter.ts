@@ -80,6 +80,29 @@ export interface OutboundMessageParams {
   replyToMessageId?: string
   /** Optional file attachments to send with the message */
   attachments?: OutboundAttachment[]
+  /**
+   * Locale of the Kin owner ('en', 'fr', …). Adapters may use it to localize
+   * the `contextLine` they return in the result. Optional for back-compat.
+   */
+  locale?: string
+}
+
+// ─── Outbound message result ────────────────────────────────────────────────
+
+export interface OutboundMessageResult {
+  platformMessageId: string
+  /**
+   * Optional human-readable, already-translated context describing the
+   * transport: TTS mode, voice, target channel, etc. Persisted on the kin
+   * message metadata and rendered as a subtle hint below the bubble.
+   * Adapters that don't produce one keep current behavior (nothing shown).
+   */
+  contextLine?: string
+  /**
+   * Optional raw structured info (mode, voice, channel name…) kept alongside
+   * `contextLine` for debug/audit. Not rendered directly.
+   */
+  deliveryMeta?: Record<string, unknown>
 }
 
 // ─── Platform adapter interface ─────────────────────────────────────────────
@@ -117,13 +140,27 @@ export interface ChannelAdapter {
 
   /**
    * Send a message to the platform.
-   * Returns the platform's message ID for linking.
+   * Returns the platform's message ID for linking, plus an optional
+   * `contextLine` describing how the message was transported (TTS vs text,
+   * voice used, target channel, etc.) for display in the conversation UI.
    */
   sendMessage(
     channelId: string,
     config: Record<string, unknown>,
     params: OutboundMessageParams,
-  ): Promise<{ platformMessageId: string }>
+  ): Promise<OutboundMessageResult>
+
+  /**
+   * Optional: turn the structured `metadata` produced for an inbound message
+   * into a short, already-localized line of context for the conversation UI
+   * (e.g. "Sent by Alice from #Gaming via voice (with Bob, Charlie)").
+   * The core passes the Kin owner's locale; adapters that don't implement
+   * this method simply won't surface a context line.
+   */
+  formatInboundContext?(
+    metadata: Record<string, unknown>,
+    locale: string,
+  ): string | null
 
   /**
    * Validate the configuration (e.g., test bot token).

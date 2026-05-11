@@ -93,6 +93,8 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date().toISOString(),
       })
     } else {
@@ -140,6 +142,8 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date().toISOString(),
       })
     }
@@ -206,6 +210,8 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         stepLimitReached: (data?.stepLimitReached as boolean) ?? false,
         tokenUsage: data?.tokenUsage ?? null,
         reasoning: streamingReasoningRef.current ? [{ offset: 0, text: streamingReasoningRef.current }] : null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date().toISOString(),
       }
     }

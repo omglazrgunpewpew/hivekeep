@@ -68,6 +68,14 @@ interface MessageBubbleProps {
   providerType?: string | null
   /** Reasoning/thinking segments with offsets into content */
   reasoning?: Array<{ offset: number; text: string }> | string
+  /** Adapter-provided, already-localized line of context describing how the
+   *  message was transported (e.g. "Sent on TeamSpeak via TTS, voice Kartal"). */
+  channelContextLine?: string | null
+  /** Brand color of the channel platform (used for the bubble accent border). */
+  channelBrandColor?: string | null
+  /** Channel platform identifier (e.g. "teamspeak", "telegram"). When provided,
+   *  takes precedence over the legacy regex extraction from message content. */
+  channelPlatformOverride?: string | null
 }
 
 /** A content part is either a text segment, a group of tool calls, or a reasoning block at the same offset. */
@@ -697,6 +705,17 @@ function MessageContextMenu({
 
 // ─── Message bubble ───────────────────────────────────────────────────────────
 
+/** Small, discreet line under a channel-routed message that surfaces the
+ *  adapter-supplied transport context (TTS vs text, voice, target channel…). */
+function ChannelContextLine({ platform, text }: { platform: string | null; text: string }) {
+  return (
+    <p className="mt-1.5 flex items-center gap-1 text-[10px] italic text-muted-foreground/80">
+      {platform && <PlatformIcon platform={platform} variant="mono" className="size-2.5 shrink-0" />}
+      <span>{text}</span>
+    </p>
+  )
+}
+
 export const MessageBubble = memo(function MessageBubble({
   role,
   content,
@@ -724,6 +743,9 @@ export const MessageBubble = memo(function MessageBubble({
   tokenUsage,
   providerType,
   reasoning,
+  channelContextLine,
+  channelBrandColor,
+  channelPlatformOverride,
 }: MessageBubbleProps) {
   const handleToggleReaction = useCallback((emoji: string) => {
     if (onToggleReaction && messageId) onToggleReaction(messageId, emoji)
@@ -737,8 +759,14 @@ export const MessageBubble = memo(function MessageBubble({
   const isFromOtherKin = sourceType === 'kin' && role === 'user'
   const isFromChannel = sourceType === 'channel'
   const { t } = useTranslation()
-  // Extract platform from content prefix [telegram:Name] or [discord:Name]
-  const channelPlatform = isFromChannel ? content.match(/^\[(\w+):/)?.[1] ?? 'channel' : null
+  // Server-provided platform takes precedence; fall back to legacy regex
+  // extraction so old persisted messages keep their icon.
+  const channelPlatform = channelPlatformOverride
+    ?? (isFromChannel ? content.match(/^\[(\w+):/)?.[1] ?? 'channel' : null)
+  // Also surface the platform brand on outbound kin messages that were sent
+  // through a channel (channelBrandColor is populated server-side via
+  // channel_message_links).
+  const hasChannelBrand = Boolean(channelBrandColor)
   const isTaskResult = sourceType === 'task'
   const isWebhook = sourceType === 'webhook'
   const isSystem = sourceType === 'system' || sourceType === 'cron'
@@ -829,6 +857,7 @@ export const MessageBubble = memo(function MessageBubble({
               <div
                 key={`text-${i}`}
                 className={cn('rounded-2xl px-4 py-2.5', bubbleClass, i === 0 && 'rounded-tl-md')}
+                style={hasChannelBrand && i === 0 ? { borderLeft: `3px solid ${channelBrandColor}` } : undefined}
               >
                 {isRedacted ? redactedContent : <MarkdownContent content={part.text} isUser={false} />}
               </div>
@@ -848,6 +877,11 @@ export const MessageBubble = memo(function MessageBubble({
             <div className={cn('rounded-2xl px-4 py-2', bubbleClass)}>
               <MessageFiles files={files} isUser={false} />
             </div>
+          )}
+
+          {/* Channel transport context (platform-supplied, already localized) */}
+          {channelContextLine && (
+            <ChannelContextLine platform={channelPlatform} text={channelContextLine} />
           )}
 
           {/* Injected memories indicator */}
@@ -908,6 +942,7 @@ export const MessageBubble = memo(function MessageBubble({
                 ? cn('bg-accent text-accent-foreground border border-chart-4/30', !isGrouped && 'rounded-tl-md')
                 : cn('bg-muted text-foreground', !isGrouped && 'rounded-tl-md'),
         )}
+        style={hasChannelBrand ? { borderLeft: `3px solid ${channelBrandColor}` } : undefined}
       >
         <CopyMessageButton content={content} isUser={isUser} />
         {isUser && onEditResend && <EditResendButton content={content} onEditResend={onEditResend} />}
@@ -924,6 +959,11 @@ export const MessageBubble = memo(function MessageBubble({
         {isRedacted ? redactedContent : <MarkdownContent content={content} isUser={isUser} />}
 
         {!isRedacted && hasFiles && <MessageFiles files={files} isUser={isUser} />}
+
+        {/* Channel transport context (platform-supplied, already localized) */}
+        {!isRedacted && channelContextLine && (
+          <ChannelContextLine platform={channelPlatform} text={channelContextLine} />
+        )}
 
         {/* Injected memories indicator */}
         {!isRedacted && hasMemories && <InjectedMemoriesIndicator memories={injectedMemories} />}

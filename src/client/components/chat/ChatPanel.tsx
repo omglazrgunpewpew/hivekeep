@@ -936,6 +936,9 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                       tokenUsage={msg.tokenUsage}
                       providerType={currentProviderType}
                       reasoning={streamingMessage && msg.id === streamingMessage.id ? streamingReasoning : msg.reasoning ?? undefined}
+                      channelContextLine={msg.channelContextLine}
+                      channelBrandColor={msg.channelMeta?.brandColor ?? null}
+                      channelPlatformOverride={msg.channelMeta?.platform ?? null}
                     />
                     </div>
                     </React.Fragment>

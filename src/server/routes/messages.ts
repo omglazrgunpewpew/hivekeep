@@ -1,13 +1,14 @@
 import { Hono } from 'hono'
 import { eq, and, isNull, lt, desc, inArray } from 'drizzle-orm'
 import { db } from '@/server/db/index'
-import { messages, kins, compactingSnapshots, compactingSummaries, memories as kinMemories, files, humanPrompts, messageReactions } from '@/server/db/schema'
+import { messages, kins, channels, channelMessageLinks, compactingSnapshots, compactingSummaries, memories as kinMemories, files, humanPrompts, messageReactions } from '@/server/db/schema'
 import { enqueueMessage, getPendingQueueItems, removeQueueItem } from '@/server/services/queue'
 import { abortKinStream } from '@/server/services/kin-engine'
 import { sseManager } from '@/server/sse/index'
 import { getFilesForMessages, serializeFile } from '@/server/services/files'
 import { resolveKinId } from '@/server/services/kin-resolver'
 import { parseMentions, notifyMentionedUsers } from '@/server/services/mentions'
+import { channelAdapters } from '@/server/channels/index'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 import { MAX_MESSAGE_LENGTH } from '@/shared/constants'
@@ -136,6 +137,70 @@ messageRoutes.get('/', async (c) => {
     }
   }
 
+  // ─── Channel metadata enrichment ─────────────────────────────────────────
+  // For each message that transited through a channel (inbound user OR outbound
+  // kin), look up the platform + adapter brand color so the UI can render the
+  // bubble with a brand-colored accent and the adapter-supplied context line.
+  // Inbound: messages.sourceType === 'channel' && sourceId === channelId.
+  // Outbound: linked via channel_message_links.direction === 'outbound'.
+  const platformByMessageId = new Map<string, string>()
+
+  // Inbound: sourceId points to the channel for sourceType='channel'
+  const inboundChannelIds = [
+    ...new Set(
+      messageList
+        .filter((m) => m.sourceType === 'channel' && m.sourceId)
+        .map((m) => m.sourceId!),
+    ),
+  ]
+  const channelPlatformById = new Map<string, string>()
+  if (inboundChannelIds.length > 0) {
+    const rows = await db
+      .select({ id: channels.id, platform: channels.platform })
+      .from(channels)
+      .where(inArray(channels.id, inboundChannelIds))
+      .all()
+    for (const r of rows) channelPlatformById.set(r.id, r.platform)
+    for (const m of messageList) {
+      if (m.sourceType === 'channel' && m.sourceId) {
+        const p = channelPlatformById.get(m.sourceId)
+        if (p) platformByMessageId.set(m.id, p)
+      }
+    }
+  }
+
+  // Outbound: join channel_message_links → channels for assistant messages
+  if (messageIds.length > 0) {
+    const links = await db
+      .select({
+        messageId: channelMessageLinks.messageId,
+        platform: channels.platform,
+      })
+      .from(channelMessageLinks)
+      .innerJoin(channels, eq(channelMessageLinks.channelId, channels.id))
+      .where(and(inArray(channelMessageLinks.messageId, messageIds), eq(channelMessageLinks.direction, 'outbound')))
+      .all()
+    for (const link of links) {
+      if (!platformByMessageId.has(link.messageId)) {
+        platformByMessageId.set(link.messageId, link.platform)
+      }
+    }
+  }
+
+  // Resolve adapter meta (displayName, brandColor) once per platform
+  const platformMetaCache = new Map<string, { platform: string; displayName: string; brandColor: string | null }>()
+  function getPlatformMeta(platform: string) {
+    if (platformMetaCache.has(platform)) return platformMetaCache.get(platform)!
+    const adapter = channelAdapters.get(platform)
+    const meta = {
+      platform,
+      displayName: adapter?.meta?.displayName ?? platform,
+      brandColor: adapter?.meta?.brandColor ?? null,
+    }
+    platformMetaCache.set(platform, meta)
+    return meta
+  }
+
   return c.json({
     messages: messageList.map((m) => {
       const kinInfo = (m.sourceType === 'kin' || m.sourceType === 'task') && m.sourceId ? kinInfoMap.get(m.sourceId) : null
@@ -145,6 +210,15 @@ messageRoutes.get('/', async (c) => {
       try { meta = m.metadata ? JSON.parse(m.metadata as string) : null } catch { /* corrupted metadata */ }
       try { toolCalls = m.toolCalls ? JSON.parse(m.toolCalls as string) : null } catch { /* corrupted toolCalls */ }
       try { reasoning = m.reasoning ? JSON.parse(m.reasoning as string) : null } catch { /* corrupted reasoning */ }
+
+      // Channel context line: inbound was persisted at top-level
+      // (channelContextLine); outbound under channelDelivery.contextLine.
+      const channelDelivery = meta?.channelDelivery as { contextLine?: string } | undefined
+      const channelContextLine = (meta?.channelContextLine as string | undefined) ?? channelDelivery?.contextLine ?? null
+
+      const platform = platformByMessageId.get(m.id) ?? null
+      const channelMeta = platform ? getPlatformMeta(platform) : null
+
       return {
         id: m.id,
         role: m.role,
@@ -164,6 +238,8 @@ messageRoutes.get('/', async (c) => {
         reasoning,
         files: (fileMap.get(m.id) ?? []).map(serializeFile),
         reactions: reactionMap.get(m.id) ?? [],
+        channelContextLine,
+        channelMeta,
         createdAt: m.createdAt,
       }
     }),

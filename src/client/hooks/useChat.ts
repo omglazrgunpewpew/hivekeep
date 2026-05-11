@@ -13,6 +13,12 @@ export interface MessageReaction {
   createdAt: string
 }
 
+export interface ChannelMeta {
+  platform: string
+  displayName: string
+  brandColor: string | null
+}
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -32,6 +38,11 @@ export interface ChatMessage {
   reasoning: Array<{ offset: number; text: string }> | null
   files: MessageFile[]
   reactions: MessageReaction[]
+  /** Adapter-provided, already-localized context for channel messages
+   *  (e.g. "Sent on TeamSpeak via TTS with voice Kartal"). */
+  channelContextLine: string | null
+  /** Platform identity for channel messages (used to render brand accent). */
+  channelMeta: ChannelMeta | null
   createdAt: string
 }
 
@@ -343,6 +354,8 @@ export function useChat(kinId: string | null) {
           stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: (data.channelContextLine as string) ?? null,
+        channelMeta: (data.channelMeta as ChatMessage['channelMeta']) ?? null,
         createdAt: new Date(data.createdAt as number).toISOString(),
       }
       setMessages((prev) => [...prev, message])
@@ -460,6 +473,30 @@ export function useChat(kinId: string | null) {
       resetStreaming()
     },
 
+    'channel:message-sent': (data) => {
+      if (data.kinId !== kinId) return
+      // The kin response has just been delivered to the external platform; the
+      // adapter may have produced a `contextLine` describing how (TTS/text,
+      // voice, target channel). Merge it into the existing message so the UI
+      // shows the hint without waiting for the next history fetch.
+      const messageId = data.messageId as string | undefined
+      const contextLine = (data.contextLine as string | null | undefined) ?? null
+      const platform = (data.platform as string | undefined) ?? null
+      if (!messageId) return
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== messageId) return m
+          const nextMeta: ChannelMeta | null =
+            m.channelMeta ?? (platform ? { platform, displayName: platform, brandColor: null } : null)
+          return {
+            ...m,
+            channelContextLine: contextLine ?? m.channelContextLine,
+            channelMeta: nextMeta,
+          }
+        }),
+      )
+    },
+
     'reaction:added': (data) => {
       if (data.kinId !== kinId) return
       const { messageId, userId, userName, emoji, reactionId } = data as {
@@ -517,6 +554,8 @@ export function useChat(kinId: string | null) {
           stepLimitReached: false,
         tokenUsage: null,
         reasoning: null,
+        channelContextLine: null,
+        channelMeta: null,
         createdAt: new Date().toISOString(),
       }
 

@@ -2,7 +2,7 @@ import { eq, and, desc, count } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
 import { createLogger } from '@/server/logger'
-import { channels, channelUserMappings, channelMessageLinks, contactPlatformIds, contactNicknames, kins, contacts } from '@/server/db/schema'
+import { messages, channels, channelUserMappings, channelMessageLinks, contactPlatformIds, contactNicknames, kins, contacts, userProfiles } from '@/server/db/schema'
 import { enqueueMessage } from '@/server/services/queue'
 import { downloadChannelAttachments } from '@/server/services/files'
 import { createSecret, deleteSecret, getSecretValue, getSecretByKey } from '@/server/services/vault'
@@ -66,6 +66,30 @@ export function getChannelOriginMeta(originId: string): ChannelOriginMeta | unde
     return undefined
   }
   return meta
+}
+
+// ─── Locale resolution (channel → kin → owner → user_profiles.language) ─────
+
+const DEFAULT_LOCALE = 'en'
+
+/**
+ * Resolve the locale to use when an adapter localizes a `contextLine` for a
+ * channel. The owner of the Kin attached to the channel sees the chat UI, so
+ * we pick that user's `user_profiles.language`. Falls back to 'en'.
+ */
+export function resolveChannelLocale(channelId: string): string {
+  try {
+    const row = db
+      .select({ language: userProfiles.language })
+      .from(channels)
+      .innerJoin(kins, eq(channels.kinId, kins.id))
+      .innerJoin(userProfiles, eq(kins.createdBy, userProfiles.userId))
+      .where(eq(channels.id, channelId))
+      .get()
+    return row?.language ?? DEFAULT_LOCALE
+  } catch {
+    return DEFAULT_LOCALE
+  }
 }
 
 // ─── CRUD ───────────────────────────────────────────────────────────────────
@@ -442,14 +466,35 @@ export async function handleIncomingChannelMessage(channelId: string, incoming: 
   // Pre-generate ID so the queue item can self-reference as its own channelOriginId
   const originId = uuid()
 
+  // Adapter-provided context line (already localized) for the conversation UI.
+  // Built from the same `incoming.metadata` the LLM gets via <channel-context>,
+  // but rendered as a subtle hint below the bubble — not injected in the prompt.
+  let inboundContextLine: string | null = null
+  if (incoming.metadata && Object.keys(incoming.metadata).length > 0) {
+    const adapter = channelAdapters.get(channel.platform)
+    if (adapter?.formatInboundContext) {
+      try {
+        const locale = resolveChannelLocale(channelId)
+        inboundContextLine = adapter.formatInboundContext(incoming.metadata, locale)
+      } catch (err) {
+        log.warn({ channelId, err }, 'formatInboundContext threw, ignoring')
+      }
+    }
+  }
+
   // Enqueue message to Kin's queue.
   // Channel adapters can attach free-form structured context via incoming.metadata
   // (modality, presence, channel info, etc.). It is stored under the `channel`
   // key of the user message metadata so the kin-engine can inject it as a
   // <channel-context> block in the prompt.
-  const messageMetadata = incoming.metadata && Object.keys(incoming.metadata).length > 0
-    ? { channel: incoming.metadata }
-    : undefined
+  const messageMetadata: Record<string, unknown> | undefined = (() => {
+    const hasChannelMeta = incoming.metadata && Object.keys(incoming.metadata).length > 0
+    if (!hasChannelMeta && !inboundContextLine) return undefined
+    const out: Record<string, unknown> = {}
+    if (hasChannelMeta) out.channel = incoming.metadata
+    if (inboundContextLine) out.channelContextLine = inboundContextLine
+    return out
+  })()
 
   const { id: queueItemId } = await enqueueMessage({
     id: originId,
@@ -575,11 +620,13 @@ export async function deliverChannelResponse(
   const cfg = JSON.parse(channel.platformConfig) as Record<string, unknown>
 
   try {
+    const locale = resolveChannelLocale(meta.channelId)
     const result = await adapter.sendMessage(meta.channelId, cfg, {
       chatId: meta.platformChatId,
       content,
       replyToMessageId: meta.platformMessageId,
       attachments: attachments?.length ? attachments : undefined,
+      locale,
     })
 
     // Record the outbound link
@@ -593,6 +640,34 @@ export async function deliverChannelResponse(
       createdAt: new Date(),
     })
 
+    // Persist delivery context on the Kin's message so the UI can render a
+    // "Sent on X via Y" hint under the bubble. Merge with whatever metadata
+    // the engine already wrote.
+    if (result.contextLine || result.deliveryMeta) {
+      try {
+        const existing = await db
+          .select({ metadata: messages.metadata })
+          .from(messages)
+          .where(eq(messages.id, assistantMessageId))
+          .get()
+        let merged: Record<string, unknown> = {}
+        if (existing?.metadata) {
+          try { merged = JSON.parse(existing.metadata as string) as Record<string, unknown> } catch { /* corrupted, overwrite */ }
+        }
+        merged.channelDelivery = {
+          platform: channel.platform,
+          ...(result.contextLine ? { contextLine: result.contextLine } : {}),
+          ...(result.deliveryMeta ? { meta: result.deliveryMeta } : {}),
+        }
+        await db
+          .update(messages)
+          .set({ metadata: JSON.stringify(merged) })
+          .where(eq(messages.id, assistantMessageId))
+      } catch (err) {
+        log.warn({ messageId: assistantMessageId, err }, 'Failed to persist channelDelivery metadata')
+      }
+    }
+
     // Update stats
     await db
       .update(channels)
@@ -603,11 +678,16 @@ export async function deliverChannelResponse(
       })
       .where(eq(channels.id, meta.channelId))
 
-    // Emit SSE
+    // Emit SSE — include contextLine so the UI can refresh the message hint
     sseManager.sendToKin(channel.kinId, {
       type: 'channel:message-sent',
       kinId: channel.kinId,
-      data: { channelId: meta.channelId, platform: channel.platform, messageId: assistantMessageId },
+      data: {
+        channelId: meta.channelId,
+        platform: channel.platform,
+        messageId: assistantMessageId,
+        contextLine: result.contextLine ?? null,
+      },
     })
 
     log.info({ channelId: meta.channelId, kinId: channel.kinId, platform: channel.platform }, 'Channel response delivered')

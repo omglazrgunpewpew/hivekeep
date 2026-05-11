@@ -136,6 +136,68 @@ function presentInChannel(state: CachedState, channelId: number, excludeBot = tr
   return out
 }
 
+// ─── i18n ───────────────────────────────────────────────────────────────────
+// All adapter-produced context lines are localized in-plugin. The KinBot core
+// passes the Kin owner's locale via `formatInboundContext(meta, locale)` and
+// `sendMessage({ locale })`. Unsupported locales fall back to English.
+
+type SupportedLocale = 'en' | 'fr'
+type ContextKey =
+  | 'inboundVoicePublic'         // {name}, {channel}, {present}
+  | 'inboundVoicePublicAlone'    // {name}, {channel}
+  | 'inboundVoicePrivate'        // {name}  (rare: should not normally happen)
+  | 'inboundTextPublic'          // {name}, {channel}
+  | 'inboundTextPublicWithPresence' // {name}, {channel}, {present}
+  | 'inboundTextPrivate'         // {name}
+  | 'outboundTtsPublic'          // {channel}, {voice}
+  | 'outboundTtsPublicDefaultVoice' // {channel}
+  | 'outboundTextPublic'         // {channel}
+  | 'outboundTextPrivate'        // {name}
+  | 'outboundTtsTooLong'         // {channel}
+
+const I18N: Record<SupportedLocale, Record<ContextKey, string>> = {
+  en: {
+    inboundVoicePublic: 'Sent by {name} from #{channel} via voice (with {present})',
+    inboundVoicePublicAlone: 'Sent by {name} from #{channel} via voice',
+    inboundVoicePrivate: 'Sent by {name} via voice in private',
+    inboundTextPublic: 'Sent by {name} in #{channel}',
+    inboundTextPublicWithPresence: 'Sent by {name} in #{channel} (with {present})',
+    inboundTextPrivate: 'Sent by {name} as a private message',
+    outboundTtsPublic: 'Sent on TeamSpeak via TTS in #{channel} with voice {voice}',
+    outboundTtsPublicDefaultVoice: 'Sent on TeamSpeak via TTS in #{channel}',
+    outboundTextPublic: 'Sent on TeamSpeak as text in #{channel}',
+    outboundTextPrivate: 'Sent on TeamSpeak as a private message to {name}',
+    outboundTtsTooLong: 'Sent on TeamSpeak: short voice notice + full text in #{channel} chat',
+  },
+  fr: {
+    inboundVoicePublic: 'Envoyé par {name} depuis #{channel} en vocal (avec {present})',
+    inboundVoicePublicAlone: 'Envoyé par {name} depuis #{channel} en vocal',
+    inboundVoicePrivate: 'Envoyé par {name} en vocal en privé',
+    inboundTextPublic: 'Envoyé par {name} dans #{channel}',
+    inboundTextPublicWithPresence: 'Envoyé par {name} dans #{channel} (avec {present})',
+    inboundTextPrivate: 'Envoyé par {name} en message privé',
+    outboundTtsPublic: 'Envoyé sur TeamSpeak en TTS dans #{channel} avec la voix {voice}',
+    outboundTtsPublicDefaultVoice: 'Envoyé sur TeamSpeak en TTS dans #{channel}',
+    outboundTextPublic: 'Envoyé sur TeamSpeak en texte dans #{channel}',
+    outboundTextPrivate: 'Envoyé sur TeamSpeak en message privé à {name}',
+    outboundTtsTooLong: 'Envoyé sur TeamSpeak : court avis vocal + texte complet dans le chat de #{channel}',
+  },
+}
+
+function pickLocale(raw: string | undefined): SupportedLocale {
+  if (raw === 'fr' || raw === 'en') return raw
+  if (raw && raw.toLowerCase().startsWith('fr')) return 'fr'
+  return 'en'
+}
+
+function tt(locale: SupportedLocale, key: ContextKey, vars: Record<string, string | number>): string {
+  let s = I18N[locale][key]
+  for (const [k, v] of Object.entries(vars)) {
+    s = s.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+  }
+  return s
+}
+
 // ─── Chat ID encoding ───────────────────────────────────────────────────────
 // We encode the platformChatId as `channel:<id>` for public channels and
 // `private:<sender_id>` for private messages. The adapter parses this back
@@ -343,12 +405,47 @@ export default function (ctx: PluginCtx) {
 
   // ─── ChannelAdapter implementation ───────────────────────────────────────
 
+  // ─── Inbound context line builder (i18n) ─────────────────────────────────
+  const formatInboundContext = (
+    metadata: Record<string, unknown>,
+    rawLocale: string,
+  ): string | null => {
+    const locale = pickLocale(rawLocale)
+    const modality = metadata.modality === 'voice' ? 'voice' : 'text'
+    const chatType = metadata.chatType
+    const sender = (metadata.sender ?? {}) as { name?: string }
+    const senderName = sender.name ?? 'Unknown'
+    const channel = (metadata.channel ?? null) as { name?: string } | null
+    const channelName = channel?.name ?? 'channel'
+    const presentList = (metadata.present ?? []) as Array<{ name?: string }>
+    const presentNames = presentList.map((p) => p.name).filter((n): n is string => !!n)
+    const presentStr = presentNames.length > 0 ? presentNames.join(', ') : ''
+
+    if (modality === 'voice') {
+      if (chatType === 'public_channel') {
+        return presentStr
+          ? tt(locale, 'inboundVoicePublic', { name: senderName, channel: channelName, present: presentStr })
+          : tt(locale, 'inboundVoicePublicAlone', { name: senderName, channel: channelName })
+      }
+      return tt(locale, 'inboundVoicePrivate', { name: senderName })
+    }
+    // text
+    if (chatType === 'private') {
+      return tt(locale, 'inboundTextPrivate', { name: senderName })
+    }
+    return presentStr
+      ? tt(locale, 'inboundTextPublicWithPresence', { name: senderName, channel: channelName, present: presentStr })
+      : tt(locale, 'inboundTextPublic', { name: senderName, channel: channelName })
+  }
+
   const adapter = {
     platform: 'teamspeak',
     meta: {
       displayName: 'TeamSpeak',
       brandColor: '#2580C3',
     },
+
+    formatInboundContext,
 
     async start(
       channelId: string,
@@ -409,8 +506,8 @@ export default function (ctx: PluginCtx) {
     async sendMessage(
       _channelId: string,
       _channelConfig: Record<string, unknown>,
-      params: { chatId: string; content: string; replyToMessageId?: string },
-    ): Promise<{ platformMessageId: string }> {
+      params: { chatId: string; content: string; replyToMessageId?: string; locale?: string },
+    ): Promise<{ platformMessageId: string; contextLine?: string; deliveryMeta?: Record<string, unknown> }> {
       const parsed = parseChatId(params.chatId)
       if (!parsed) throw new Error(`Invalid teamspeak chatId: ${params.chatId}`)
 
@@ -423,6 +520,7 @@ export default function (ctx: PluginCtx) {
       }
 
       const isPrivate = parsed.kind === 'private'
+      const locale = pickLocale(params.locale)
 
       // Always send chat copy. For private MPs target the user, otherwise the
       // current channel of the bot.
@@ -439,10 +537,15 @@ export default function (ctx: PluginCtx) {
         await client!.sendCommand(cmd, { expectIntermediate: false })
       }
 
+      // Track which delivery path was taken so the core can persist a hint
+      // ("Sent via TTS in #Gaming with voice Kartal") on the kin's message.
+      let mode: 'text-private' | 'text-public' | 'tts' | 'tts-too-long' = 'text-public'
+
       try {
         if (isPrivate) {
           // Private → chat only
           await sendChat(text)
+          mode = 'text-private'
         } else {
           // Public channel → ts-bot already echoes TTS to channel chat
           // automatically (see ts-bot main.rs: "Echo TTS text to TS3 channel
@@ -459,15 +562,18 @@ export default function (ctx: PluginCtx) {
               await sendTts(cfg.ttsTooLongNotice).catch((e) => {
                 ctx.log.warn({ err: String(e) }, 'TTS short-notice failed')
               })
+              mode = 'tts-too-long'
             } else {
               // Speak full text — ts-bot echoes it to channel chat itself.
               await sendTts(text).catch((e) => {
                 ctx.log.warn({ err: String(e) }, 'TTS send failed')
               })
+              mode = 'tts'
             }
           } else {
             // TTS disabled by config → explicit chat only
             await sendChat(text)
+            mode = 'text-public'
           }
         }
       } catch (err) {
@@ -475,8 +581,47 @@ export default function (ctx: PluginCtx) {
         throw err
       }
 
+      // Resolve display names for the context line. Public modes use the bot's
+      // current channel; private mode uses the recipient client name from the
+      // local state cache (best-effort, falls back to "user").
+      const botLoc = botLocation(state)
+      const channelName = botLoc.channel_name ?? 'channel'
+      const recipientName = isPrivate
+        ? (state.clients.get(parsed.id)?.name ?? 'user')
+        : null
+      const voice = cfg.defaultVoice ?? null
+
+      let contextLine: string
+      switch (mode) {
+        case 'text-private':
+          contextLine = tt(locale, 'outboundTextPrivate', { name: recipientName ?? 'user' })
+          break
+        case 'text-public':
+          contextLine = tt(locale, 'outboundTextPublic', { channel: channelName })
+          break
+        case 'tts':
+          contextLine = voice
+            ? tt(locale, 'outboundTtsPublic', { channel: channelName, voice })
+            : tt(locale, 'outboundTtsPublicDefaultVoice', { channel: channelName })
+          break
+        case 'tts-too-long':
+          contextLine = tt(locale, 'outboundTtsTooLong', { channel: channelName })
+          break
+      }
+
+      const deliveryMeta: Record<string, unknown> = {
+        mode,
+        chatType: isPrivate ? 'private' : 'public_channel',
+      }
+      if (!isPrivate) deliveryMeta.channel = { id: botLoc.channel_id, name: channelName }
+      if (mode === 'tts' || mode === 'tts-too-long') {
+        deliveryMeta.voice = voice
+        deliveryMeta.ttsMaxChars = cfg.ttsMaxChars
+      }
+      if (isPrivate) deliveryMeta.recipient = { id: parsed.id, name: recipientName }
+
       // We don't have a real platform message ID — synthesize one.
-      return { platformMessageId: randomUUID() }
+      return { platformMessageId: randomUUID(), contextLine, deliveryMeta }
     },
 
     async validateConfig(channelConfig: Record<string, unknown>): Promise<{ valid: boolean; error?: string }> {
