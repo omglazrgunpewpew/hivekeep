@@ -618,6 +618,7 @@ export function MiniAppViewer() {
           key={iframeKey}
           src={iframeSrc}
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          allow="microphone; camera; clipboard-read; clipboard-write; autoplay"
           className="min-h-0 flex-1 w-full border-0"
           title={app?.name ?? 'Mini App'}
           onLoad={handleIframeLoad}
@@ -771,6 +772,7 @@ export function MiniAppViewer() {
                 key={iframeKey}
                 src={iframeSrc}
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                allow="microphone; camera; clipboard-read; clipboard-write; autoplay"
                 className="min-h-0 flex-1 w-full border-0"
                 title={app?.name ?? 'Mini App'}
                 onLoad={handleIframeLoad}
