@@ -202,7 +202,8 @@ function tt(locale: SupportedLocale, key: ContextKey, vars: Record<string, strin
 // We encode the platformChatId as `channel:<id>` for public channels and
 // `private:<sender_id>` for private messages. The adapter parses this back
 // when sending replies. Keeping the sender_id (numeric session ID) in the
-// chatId lets us send private replies via `send_message { target:'user', recipient:N }`.
+// chatId lets us send private replies via `send_message { target:'private', recipient:"N" }`
+// (ts-bot expects the recipient as a string, see websocket-api-reference.md).
 
 function encodeChannelChatId(channelId: number): string {
   return `channel:${channelId}`
@@ -523,10 +524,12 @@ export default function (ctx: PluginCtx) {
       const locale = pickLocale(params.locale)
 
       // Always send chat copy. For private MPs target the user, otherwise the
-      // current channel of the bot.
+      // current channel of the bot. ts-bot expects target:'private' and the
+      // recipient session id as a string; a number is silently dropped on the
+      // Rust side (serde rejects the type, no response, plugin times out).
       const sendChat = async (content: string): Promise<void> => {
         const cmd: Record<string, unknown> = isPrivate
-          ? { type: 'send_message', target: 'user', recipient: parsed.id, content }
+          ? { type: 'send_message', target: 'private', recipient: String(parsed.id), content }
           : { type: 'send_message', target: 'channel', content }
         await client!.sendCommand(cmd, { expectIntermediate: true })
       }
@@ -737,25 +740,25 @@ export default function (ctx: PluginCtx) {
       create: () =>
         tool({
           description:
-            'Send a text chat message to TeamSpeak. By default sends to the bot\'s current channel. Set target="user" with recipient=<client_id> to send a private message.',
+            'Send a text chat message to TeamSpeak. By default sends to the bot\'s current channel. Set target="private" with recipient=<client_id> to send a private message.',
           inputSchema: z.object({
             text: z.string().min(1).max(8192).describe('Message body (≤ 8192 chars).'),
-            target: z.enum(['channel', 'user']).default('channel').describe('"channel" (current channel chat) or "user" (private message).'),
+            target: z.enum(['channel', 'private']).default('channel').describe('"channel" (current channel chat) or "private" (private message).'),
             recipient: z
               .number()
               .int()
               .positive()
               .optional()
-              .describe('Required when target="user": session client ID of the recipient (use get_status to find it).'),
+              .describe('Required when target="private": session client ID of the recipient (use get_status to find it).'),
           }),
           execute: async ({ text, target, recipient }) => {
             const c = ensureClient()
-            if (target === 'user' && (recipient == null || recipient <= 0)) {
-              return { error: 'recipient (positive client id) is required when target="user"' }
+            if (target === 'private' && (recipient == null || recipient <= 0)) {
+              return { error: 'recipient (positive client id) is required when target="private"' }
             }
             const cmd: Record<string, unknown> =
-              target === 'user'
-                ? { type: 'send_message', target: 'user', recipient, content: text }
+              target === 'private'
+                ? { type: 'send_message', target: 'private', recipient: String(recipient), content: text }
                 : { type: 'send_message', target: 'channel', content: text }
             const resp = await c.sendCommand(cmd, { expectIntermediate: true })
             return { success: resp.success, message: resp.message }
