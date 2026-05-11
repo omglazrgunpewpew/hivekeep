@@ -117,6 +117,11 @@ export class SignalAdapter implements ChannelAdapter {
   readonly platform = 'signal'
   readonly meta: ChannelAdapterMeta = { displayName: 'Signal', brandColor: '#3A76F0' }
   readonly configSchema = signalConfigSchema
+  // signal-cli and the underlying Signal protocol do not expose an API to
+  // change the bot account's display name per chat (and updating the
+  // profile name globally requires re-registration). Fall back to the
+  // core's "[Kin Name] " prefix.
+  readonly identitySwitchMode = 'prefix' as const
 
   /** Store message handlers for webhook processing */
   private handlers = new Map<string, { onMessage: IncomingMessageHandler; cfg: SignalChannelConfig }>()

@@ -98,6 +98,10 @@ export default function twilioSmsPlugin(ctx: PluginCtx): {
       displayName: 'Twilio SMS',
       brandColor: '#F22F46',
     },
+    // SMS has no concept of a bot display name on the recipient's side: the
+    // From is just a phone number. Fall back to the core's "[Kin Name] "
+    // prefix on outbound texts so the recipient knows which Kin is replying.
+    identitySwitchMode: 'prefix',
 
     async start(
       channelId: string,

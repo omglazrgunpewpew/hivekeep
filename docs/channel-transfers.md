@@ -184,20 +184,117 @@ introducing a separate "current Kin" pointer or a binding-history table)
 was deliberate: the audit-trail rows give us the history view; the live
 binding is just whatever `channels.kinId` currently says.
 
+## Identity switching
+
+A transfer is more than a routing change: when the channel is re-bound,
+the bot identity on the external platform should reflect the new Kin so
+the human on the other side immediately sees who is speaking. The core
+ships two complementary mechanisms.
+
+### The three modes
+
+Every `ChannelAdapter` declares an `identitySwitchMode`:
+
+- **`'native'`** — the adapter implements `onIdentityChange(channelId,
+  config, { kinSlug, kinName, avatarUrl })` and pushes the new identity
+  to the external platform (display name, avatar, or the closest
+  equivalent the platform supports). The core does NOT add a prefix to
+  outbound messages on these adapters.
+- **`'prefix'`** — the adapter cannot switch identity natively. The core
+  prepends `[Kin Name] ` to every outbound text message in
+  `deliverChannelResponse`, so the recipient always knows which Kin
+  is talking after a handoff.
+- **`'none'`** — neither switch nor prefix. Reserved for cases where
+  neither is appropriate (rare).
+
+Default when `identitySwitchMode` is `undefined`: `'prefix'`. Precedence:
+`'native'` > `'prefix'` > `'none'`.
+
+The prefix is applied **once**, in the central outbound delivery path
+(`deliverChannelResponse`), on Kin replies only. System-driven
+outbound calls (approval-pending notices, `/start` welcome,
+post-approval notifications) bypass the prefix. Attachments-only
+messages (empty content) are also skipped.
+
+### Per-adapter matrix
+
+| Adapter | Mode | Display name | Avatar | Scope | API used |
+| --- | --- | --- | --- | --- | --- |
+| Telegram (built-in) | `native` | yes | no (BotFather only) | global to the bot | `setMyName` |
+| Discord (built-in) | `native` | yes | yes (base64 data URI) | global to the bot user | `PATCH /users/@me` |
+| Slack (built-in) | `native` | yes | yes | per-message | `chat.postMessage` `username` + `icon_url` |
+| Matrix (built-in) | `native` | yes | yes (mxc:// upload) | global to the bot account | `PUT /profile/{userId}/displayname` + `PUT /profile/{userId}/avatar_url` |
+| TeamSpeak (plugin) | `native` | yes (nickname) | no (file-transfer not exposed by ts-bot) | per-server (the bot's nickname) | ts-bot `set_nickname` |
+| WhatsApp (built-in) | `prefix` | n/a | n/a | n/a | core prefix |
+| Signal (built-in) | `prefix` | n/a | n/a | n/a | core prefix |
+| Twilio SMS (plugin) | `prefix` | n/a | n/a | n/a | core prefix |
+
+### Global-scope caveat (Telegram, Discord, Matrix)
+
+On these platforms, the bot identity is a single global property of the
+bot user / bot account. There is no per-chat or per-room identity API.
+Transferring a channel on a multi-instance bot (e.g. the same Telegram
+bot serving several humans, with each human having their own KinBot
+Kin) flips the displayed name **for everyone**, not just the user who
+triggered the transfer. This is a platform limitation that the owner
+explicitly accepted when designing the feature; document it for your
+users if it matters in your setup.
+
+### Slack: per-message identity
+
+Slack has no global "set bot identity" API: `chat.postMessage` accepts
+a per-call `username` and `icon_url`. The adapter stores the latest
+identity in a per-channel in-memory sideband (`slackIdentityOverrides`)
+and injects it on every outbound text. This avoids the
+global-scope caveat but has two consequences:
+
+- `files.upload` does not accept those fields, so attachment-only
+  messages still surface under the bot app's default identity.
+- After a server restart, the override is lost until the next
+  `transfer_channel` call (or the bot app's default identity comes
+  back into effect, which is the safer behaviour anyway).
+
+### Avatar URL
+
+The core builds the avatar URL by combining `config.publicUrl` with
+the relative `/api/uploads/kins/{id}/avatar.{ext}?v={updatedAtMs}`
+path returned by the `kinAvatarUrl` helper. Native adapters fetch
+this URL when they need to forward the avatar to the platform. If the
+target Kin has no avatar (`kins.avatarPath` is null), `avatarUrl` is
+`undefined` and the adapter is free to skip the avatar update.
+
+### Guidance for plugin authors
+
+Pick the mode that matches your platform's capability:
+
+- If the platform exposes a way to flip a bot's display name (and
+  ideally its avatar) at runtime, implement `onIdentityChange` and
+  declare `identitySwitchMode: 'native'`. Errors from the method are
+  caught and logged at warn level by `transfer_channel`; they do not
+  fail the transfer, so feel free to throw on genuinely unrecoverable
+  conditions.
+- If the platform has no such API (SMS, classic webhook-only setups,
+  IRC ops with fixed nicks, etc.), declare `identitySwitchMode:
+  'prefix'`. Do not implement `onIdentityChange`. The core takes care
+  of `[Kin Name] ` automatically.
+- Only use `'none'` if neither makes sense, for example a one-way
+  receive-only adapter where outbound never happens.
+
+## Migration
+
+None required. The existing `channels.kinId` column is the same column;
+only its mutability semantics changed. Pre-existing channels keep working
+unchanged. No DB migration, no data backfill.
+
+The decision to keep `channels.kinId` as the source of truth (rather than
+introducing a separate "current Kin" pointer or a binding-history table)
+was deliberate: the audit-trail rows give us the history view; the live
+binding is just whatever `channels.kinId` currently says.
+
 ## Future work (out of scope for this commit)
 
-- **Issue 2: Adapter identity switch.** When a channel transfers, the bot
-  identity exposed to the external platform (display name, avatar) should
-  follow the new Kin where the adapter supports it. The plan is an
-  optional `onIdentityChange(identity)` hook on `ChannelAdapter`. For
-  adapters that cannot switch identity (SMS, classic webhook-only setups),
-  a prefix fallback ("[Kube Master] ...") will be injected by the core
-  before delivering outbound replies.
 - **Issue 3: UI badges.** The sidebar Kin rows and the channel page need
   visible binding badges, and a transfer-history surface (filterable by
   channel or by Kin) so the user can audit past handoffs. The SSE event
-  and the audit-trail rows added here are the foundation; the UI work
-  consumes them.
-
-Both follow-ups are independent of each other and of this issue, and can
-be implemented in either order.
+  and the audit-trail rows added in Issue 1 are the foundation; the UI
+  work consumes them.
