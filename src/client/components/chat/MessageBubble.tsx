@@ -25,7 +25,7 @@ import { RelativeTimestamp } from '@/client/components/chat/RelativeTimestamp'
 import type { MessageFile, MessageTokenUsage } from '@/shared/types'
 import type { MessageReaction, ChannelTransferSystemEvent } from '@/client/hooks/useChat'
 import { PRESET_EMOJIS } from '@/client/hooks/useReactions'
-import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react'
+import { ArrowRightFromLine, ArrowRightToLine } from 'lucide-react'
 
 interface InjectedMemory {
   id: string
@@ -772,7 +772,11 @@ function ChannelTransferCard({
         iconColor: 'text-success',
         indicator: 'IN',
       }
-  const DirectionalIcon = isOut ? ArrowRightFromLine : ArrowLeftFromLine
+  // Both arrows point RIGHT (channel moves source → destination in both views;
+  // only "who is on the line" flips). OUT uses ArrowRightFromLine (line on the
+  // left, current Kin = source); IN uses ArrowRightToLine (line on the right,
+  // current Kin = destination).
+  const DirectionalIcon = isOut ? ArrowRightFromLine : ArrowRightToLine
   // Avatar sizing reflects who "owns" the action in this row:
   //   out: current Kin (left, big) handed off to other Kin (right, small)
   //   in:  current Kin (right, big) received from other Kin (left, small)
