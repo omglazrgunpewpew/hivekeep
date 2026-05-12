@@ -21,6 +21,8 @@ import { decrypt } from '@/server/services/encryption'
 import { deleteMemory, createMemory, updateMemory } from '@/server/services/memory'
 import { getMCPToolsForConfig } from '@/server/services/mcp'
 import { toolRegistry } from '@/server/tools/index'
+import { pluginManager } from '@/server/services/plugins'
+import { buildKinToolBuckets } from '@/server/services/kin-tools'
 import { TOOL_DOMAIN_MAP, TOOL_DOMAIN_META } from '@/shared/constants'
 import type { KinToolConfig, KinThinkingConfig, ToolDomain, MemoryCategory, MemoryScope } from '@/shared/types'
 import { sseManager } from '@/server/sse/index'
@@ -856,39 +858,23 @@ kinRoutes.get('/:id/tools', async (c) => {
     ? JSON.parse(kin.toolConfig)
     : null
 
-  // Native tools grouped by domain
-  const allNative = toolRegistry.list()
-  const domainGroupsMap = new Map<ToolDomain, Array<{ name: string; enabled: boolean; defaultDisabled: boolean }>>()
-
-  for (const t of allNative) {
-    const domain = TOOL_DOMAIN_MAP[t.name]
-    if (!domain) continue
-    if (!domainGroupsMap.has(domain)) domainGroupsMap.set(domain, [])
-
-    // Compute enabled state based on opt-in vs deny-list model
-    let enabled: boolean
-    if (t.defaultDisabled) {
-      // Opt-in tool: enabled only if explicitly listed in enabledOptInTools
-      enabled = toolConfig?.enabledOptInTools?.includes(t.name) ?? false
-    } else {
-      // Standard tool: enabled unless in disabledNativeTools
-      enabled = !toolConfig?.disabledNativeTools?.includes(t.name)
-    }
-
-    domainGroupsMap.get(domain)!.push({ name: t.name, enabled, defaultDisabled: t.defaultDisabled })
-  }
-
-  const nativeTools = Array.from(domainGroupsMap.entries()).map(([domain, tools]) => ({
-    domain,
-    tools,
-  }))
+  // Split the flat registry into native and per-plugin buckets via the
+  // shared helper. The route used to filter on TOOL_DOMAIN_MAP only, which
+  // silently dropped any tool registered by a plugin (prefix
+  // plugin_<name>_<tool>) since the static map cannot know those names.
+  const { nativeTools, pluginTools } = buildKinToolBuckets({
+    registered: toolRegistry.list(),
+    pluginGroups: pluginManager.listToolsByPlugin(),
+    toolConfig,
+    toolDomainMap: TOOL_DOMAIN_MAP,
+  })
 
   // MCP tools with enabled state
   const mcpTools = await getMCPToolsForConfig(kin.id, toolConfig)
 
-  log.debug({ kinId: kin.id, nativeCount: nativeTools.length, mcpCount: mcpTools.length }, 'GET /tools response')
+  log.debug({ kinId: kin.id, nativeCount: nativeTools.length, pluginCount: pluginTools.length, mcpCount: mcpTools.length }, 'GET /tools response')
 
-  return c.json({ nativeTools, mcpTools })
+  return c.json({ nativeTools, pluginTools, mcpTools })
 })
 
 // ─── Compacting routes ───────────────────────────────────────────────────────

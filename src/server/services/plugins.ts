@@ -1273,6 +1273,26 @@ class PluginManager {
     return Array.from(this.plugins.values()).flatMap(p => p.registeredTools)
   }
 
+  /**
+   * Tools registered by each loaded plugin, grouped by plugin name. Returns
+   * one entry per plugin that currently has at least one registered tool.
+   * Used by the Kin Tools route to render plugin tools as their own UI
+   * groups (the static TOOL_DOMAIN_MAP only knows core tools).
+   *
+   * The grouping is sourced from `LoadedPlugin.registeredTools` directly,
+   * so plugin names containing hyphens and tool names containing
+   * underscores both round-trip safely; we never parse them back from the
+   * concatenated `plugin_<name>_<tool>` identifier.
+   */
+  listToolsByPlugin(): Array<{ pluginName: string; toolNames: string[] }> {
+    const groups: Array<{ pluginName: string; toolNames: string[] }> = []
+    for (const [name, plugin] of this.plugins) {
+      if (plugin.registeredTools.length === 0) continue
+      groups.push({ pluginName: name, toolNames: [...plugin.registeredTools] })
+    }
+    return groups
+  }
+
   /** Reload all plugins (rescan) */
   async reload(): Promise<void> {
     // Deactivate all
