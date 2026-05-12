@@ -18,12 +18,14 @@ export const ConversationSearch = React.memo(function ConversationSearch({ onClo
   const [currentIndex, setCurrentIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Compute matches
+  // Compute matches. Some messages legitimately have null content (e.g.
+  // channel-transfer audit-trail system rows). Treat them as empty so the
+  // search filter just skips them instead of crashing.
   const matches = query.trim().length >= 2
     ? messages
         .map((msg, i) => ({ msgIndex: i, msgId: msg.id }))
         .filter(({ msgIndex }) =>
-          messages[msgIndex]!.content.toLowerCase().includes(query.toLowerCase()),
+          (messages[msgIndex]!.content ?? '').toLowerCase().includes(query.toLowerCase()),
         )
     : []
 

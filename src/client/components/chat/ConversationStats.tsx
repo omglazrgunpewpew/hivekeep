@@ -148,9 +148,12 @@ export const ConversationStats = memo(function ConversationStats({ messages, too
     const assistantMessages = messages.filter((m) => m.role === 'assistant')
     const systemMessages = messages.filter((m) => m.role === 'system' || m.sourceType === 'system' || m.sourceType === 'cron')
 
-    // Total word count
+    // Total word count. Some messages legitimately have null content
+    // (e.g. channel-transfer audit-trail system rows — sourceType='system',
+    // metadata.systemEvent set, content=null). Guard against null so the
+    // stats panel keeps working when the conversation contains them.
     const totalWords = messages.reduce((sum, m) => {
-      const words = m.content.trim().split(/\s+/).filter(Boolean).length
+      const words = (m.content ?? '').trim().split(/\s+/).filter(Boolean).length
       return sum + words
     }, 0)
 

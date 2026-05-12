@@ -636,7 +636,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     }
     // Find the matching message id
     const lowerQuery = query.toLowerCase()
-    const matchingMessages = displayMessages.filter((m) => m.content.toLowerCase().includes(lowerQuery))
+    const matchingMessages = displayMessages.filter((m) => (m.content ?? '').toLowerCase().includes(lowerQuery))
     if (matchingMessages[matchIndex]) {
       setSearchHighlightId(matchingMessages[matchIndex].id)
     }
@@ -676,7 +676,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
       const showTimeGap = !showDateSeparator && idx > 0 && !!msg.createdAt && !!displayMessages[idx - 1]?.createdAt
       const prevTimestamp = idx > 0 ? displayMessages[idx - 1]?.createdAt : undefined
 
-      const isSearchMatch = lowerSearch !== '' && msg.content.toLowerCase().includes(lowerSearch)
+      const isSearchMatch = lowerSearch !== '' && (msg.content ?? '').toLowerCase().includes(lowerSearch)
       const isCurrentMatch = searchHighlightId === msg.id
 
       // Only animate messages that haven't been rendered before.
