@@ -75,17 +75,75 @@ interface PluginCtx {
 // One entry per active card. We keep the AbortController so the abort button
 // can interrupt cleanly, and the most recent sessionId so follow-up actions
 // (send-message) can resume the right Claude Code session.
+//
+// Recently completed runs are mirrored into recentRuns so the inspection
+// tools (list_sessions, get_session) can still surface them after activeRuns
+// has dropped them. Bounded with FIFO eviction; lost on process restart.
 
-interface ActiveRun {
+interface SessionState {
+  cardInstanceId: string
+  sessionId: string | null
+  workingDir: string
+  startedAt: number
+  numTurns: number
+  totalCostUsd: number
+  currentStep: string | null
+  phase: RunPhase
+  logs: string[]
+  finalMessage: string | null
+  error: string | null
+}
+
+interface ActiveRun extends SessionState {
   abortController: AbortController
   kinId: string
-  sessionId: string | null
-  logs: string[]
-  workingDir: string
+}
+
+interface RecentRun extends SessionState {
+  completedAt: number
+  durationMs: number
 }
 
 const activeRuns = new Map<string, ActiveRun>()
+const recentRuns = new Map<string, RecentRun>()
 const MAX_LOG_BUFFER = 200
+const MAX_RECENT_RUNS = 50
+
+function archiveRun(
+  run: ActiveRun,
+  finalState: {
+    phase: RunPhase
+    finalMessage?: string | null
+    error?: string | null
+    numTurns: number
+    totalCostUsd: number
+  },
+): void {
+  const now = Date.now()
+  const entry: RecentRun = {
+    cardInstanceId: run.cardInstanceId,
+    sessionId: run.sessionId,
+    workingDir: run.workingDir,
+    startedAt: run.startedAt,
+    numTurns: finalState.numTurns,
+    totalCostUsd: finalState.totalCostUsd,
+    currentStep: run.currentStep,
+    phase: finalState.phase,
+    logs: run.logs.slice(),
+    finalMessage: finalState.finalMessage ?? null,
+    error: finalState.error ?? null,
+    completedAt: now,
+    durationMs: now - run.startedAt,
+  }
+  recentRuns.set(run.cardInstanceId, entry)
+  if (recentRuns.size > MAX_RECENT_RUNS) {
+    // FIFO eviction: Map preserves insertion order, so the first key is
+    // the oldest. Re-inserting the same key on update would shift its
+    // position, which we accept here since session ids are unique per run.
+    const oldest = recentRuns.keys().next().value
+    if (oldest !== undefined) recentRuns.delete(oldest)
+  }
+}
 
 // ─── Card layout ────────────────────────────────────────────────────────────
 // Strings in {{key}} form are replaced by the renderer with the value held
@@ -178,11 +236,19 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
   }): Promise<RunCompletion> {
     const abortController = new AbortController()
     const run: ActiveRun = {
+      cardInstanceId: params.cardInstanceId,
       abortController,
       kinId: params.kinId,
       sessionId: params.resumeSessionId ?? null,
-      logs: [],
       workingDir: params.workingDir,
+      startedAt: Date.now(),
+      numTurns: 0,
+      totalCostUsd: 0,
+      currentStep: 'Queued',
+      phase: 'starting',
+      logs: [],
+      finalMessage: null,
+      error: null,
     }
     activeRuns.set(params.cardInstanceId, run)
 
@@ -203,6 +269,8 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
       })
     }
 
+    run.phase = 'running'
+    run.currentStep = 'Spawning Claude Code...'
     await flush({ phase: 'running', currentStep: 'Spawning Claude Code...' })
 
     const apiKey = authMode === 'apiKey' && config.apiKey ? config.apiKey : undefined
@@ -224,6 +292,8 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
             run.logs.splice(0, run.logs.length - MAX_LOG_BUFFER * 2)
           }
         }
+        if (u.phase) run.phase = u.phase
+        if (u.currentStep) run.currentStep = u.currentStep
         const phase = u.phase
         const stepUpdate = u.currentStep ? { currentStep: u.currentStep } : {}
         // Fire-and-forget update; we never await per-token to keep the SDK
@@ -253,6 +323,13 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
       ? `Done in ${completion.numTurns} turn(s)`
       : (completion.error ?? 'Failed')
 
+    run.phase = finalPhase
+    run.currentStep = finalStep
+    run.numTurns = completion.numTurns
+    run.totalCostUsd = completion.totalCostUsd
+    run.finalMessage = completion.finalMessage
+    run.error = completion.error
+
     await ctx.cards.update({
       cardInstanceId: params.cardInstanceId,
       state: {
@@ -266,6 +343,13 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
       },
     })
 
+    archiveRun(run, {
+      phase: finalPhase,
+      finalMessage: completion.finalMessage,
+      error: completion.error,
+      numTurns: completion.numTurns,
+      totalCostUsd: completion.totalCostUsd,
+    })
     activeRuns.delete(params.cardInstanceId)
     return completion
   }
