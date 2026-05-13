@@ -1507,6 +1507,10 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     let wasAborted = false
     let silentStopAfterTools = false
     const stepResults: Array<ReturnType<typeof streamText>> = []
+    // One entry per streamText() call. Captured from the SDK 'finish' part so
+    // future incidents (silent stops, runaway tools, abnormal terminations)
+    // can be classified from get_platform_logs without rerunning a turn.
+    const stepFinishReasons: string[] = []
 
     let step = 0
     for (; step < maxSteps; step++) {
@@ -1630,6 +1634,11 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
               throw new Error(extractApiErrorMessage(err))
             }
 
+            case 'finish': {
+              stepFinishReasons.push(part.finishReason)
+              break
+            }
+
             default:
               log.debug({ kinId, partType: part.type }, 'Unhandled stream part type')
           }
@@ -1731,7 +1740,16 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       }, 'Prompt cache stats')
     }
 
-    log.info({ kinId, messageId: assistantMessageId, contentLength: fullContent.length, toolCalls: toolCallsLog.length, wasAborted, silentStopAfterTools }, 'LLM turn completed')
+    log.info({
+      kinId,
+      messageId: assistantMessageId,
+      stepCount: step + 1,
+      finishReasons: stepFinishReasons,
+      contentLength: fullContent.length,
+      toolCalls: toolCallsLog.length,
+      wasAborted,
+      silentStopAfterTools,
+    }, 'LLM turn completed')
 
     // Surface silent-stop: the provider closed the stream with no text after
     // tool execution. Produce a user-visible fallback so the row is not
@@ -2230,6 +2248,8 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     let wasAborted = false
     let silentStopAfterTools = false
     const stepResults: Array<ReturnType<typeof streamText>> = []
+    // See processNextMessage for rationale.
+    const stepFinishReasons: string[] = []
 
     let step = 0
     for (; step < maxSteps; step++) {
@@ -2319,6 +2339,10 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
               if (err instanceof Error) throw err
               throw new Error(extractApiErrorMessage(err))
             }
+            case 'finish': {
+              stepFinishReasons.push(part.finishReason)
+              break
+            }
             default:
               break
           }
@@ -2394,6 +2418,18 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
         stepCount: stepResults.length,
       })
     }
+
+    log.info({
+      kinId,
+      sessionId,
+      messageId: assistantMessageId,
+      stepCount: step + 1,
+      finishReasons: stepFinishReasons,
+      contentLength: fullContent.length,
+      toolCalls: toolCallsLog.length,
+      wasAborted,
+      silentStopAfterTools,
+    }, 'Quick session LLM turn completed')
 
     // Surface silent-stop (same rationale as main path)
     if (silentStopAfterTools) {

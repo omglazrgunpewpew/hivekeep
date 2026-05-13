@@ -665,6 +665,8 @@ async function executeSubKin(taskId: string, isNudge = false) {
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : 100) : 1
     const stepResults: Array<ReturnType<typeof streamText>> = []
     let silentStopAfterTools = false
+    // See processNextMessage in kin-engine.ts for rationale.
+    const stepFinishReasons: string[] = []
 
     let step = 0
     for (; step < maxSteps; step++) {
@@ -782,6 +784,10 @@ async function executeSubKin(taskId: string, isNudge = false) {
               })
               break
             }
+            case 'finish': {
+              stepFinishReasons.push(part.finishReason)
+              break
+            }
           }
         }
       } catch (err) {
@@ -863,6 +869,18 @@ async function executeSubKin(taskId: string, isNudge = false) {
 
     activeTaskAbortControllers.delete(taskId)
     activeTaskStreams.delete(taskId)
+
+    log.info({
+      taskId,
+      messageId: assistantMessageId,
+      stepCount: step + 1,
+      finishReasons: stepFinishReasons,
+      contentLength: fullContent.length,
+      toolCalls: toolCallsLog.length,
+      wasAborted: abortController.signal.aborted,
+      streamError: streamError ? streamError.message : null,
+      silentStopAfterTools,
+    }, 'Sub-Kin LLM turn completed')
 
     // Aggregate token usage (awaited so we can persist in metadata + SSE)
     const taskModelId = task.model ?? kinIdentity.model
