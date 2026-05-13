@@ -736,6 +736,40 @@ body {
   100% { transform: translateX(100%); }
 }
 
+/* ─── PLUGIN CARD STATUS BANNER SHIMMER ──────────────── */
+/* Sweeps a soft highlight across the banner to signal that
+   something is running. Used by the plugin-card status-banner
+   primitive with `animated: "shimmer"`. */
+
+@keyframes plugin-card-shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  35% { opacity: 0.4; }
+  65% { opacity: 0.4; }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-plugin-card-shimmer {
+  animation: plugin-card-shimmer 2s ease-in-out infinite;
+}
+
+/* Continuous bar sweep for an indeterminate progress bar — a small
+   coloured chunk slides across the empty track so users see motion. */
+
+@keyframes plugin-card-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.animate-plugin-card-progress-indeterminate {
+  animation: plugin-card-progress-indeterminate 1.4s ease-in-out infinite;
+}
+
 @keyframes progress-stripes {
   0% { background-position: 1rem 0; }
   100% { background-position: 0 0; }

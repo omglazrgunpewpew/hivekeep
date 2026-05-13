@@ -59,3 +59,26 @@ export function statValueClass(variant: PluginCardVariant = 'default'): string {
     default: return 'text-foreground'
   }
 }
+
+/**
+ * Background and border classes for a prominent variant-tinted block
+ * (status banner). Returns explicit static classes per variant so the
+ * Tailwind purger keeps them in the production bundle.
+ */
+export function bannerSurfaceClass(variant: PluginCardVariant = 'default'): string {
+  switch (variant) {
+    case 'success':
+      return 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40'
+    case 'warning':
+      return 'border-amber-200 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/40'
+    case 'destructive':
+      return 'border-destructive/30 bg-destructive/10'
+    case 'primary':
+      return 'border-primary/30 bg-primary/10'
+    case 'muted':
+      return 'border-border bg-muted/40'
+    case 'default':
+    default:
+      return 'border-border bg-card'
+  }
+}

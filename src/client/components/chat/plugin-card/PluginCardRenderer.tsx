@@ -3,12 +3,15 @@ import type {
   PluginCard,
   PluginCardPrimitive,
   PluginCardStatItem,
+  PluginCardInfoGridItem,
   PluginCardAction,
 } from '@/shared/types/plugin-cards'
 import { usePluginCardLiveUpdates } from '@/client/hooks/usePluginCardLiveUpdates'
 import { interpolate } from './interpolate'
 import { Header } from './primitives/Header'
 import { StatRow } from './primitives/StatRow'
+import { InfoGrid } from './primitives/InfoGrid'
+import { StatusBanner } from './primitives/StatusBanner'
 import { Progress } from './primitives/Progress'
 import { LogStream } from './primitives/LogStream'
 import { ActionRow } from './primitives/ActionRow'
@@ -34,6 +37,25 @@ function renderPrimitive(prim: unknown, cardInstanceId: string, key: number | st
       return <Header key={key} title={p.title ?? ''} icon={p.icon} accent={p.accent} />
     case 'stat-row':
       return <StatRow key={key} items={Array.isArray(p.items) ? (p.items as PluginCardStatItem[]) : []} />
+    case 'info-grid':
+      return (
+        <InfoGrid
+          key={key}
+          columns={p.columns === 3 ? 3 : 2}
+          items={Array.isArray(p.items) ? (p.items as PluginCardInfoGridItem[]) : []}
+        />
+      )
+    case 'status-banner':
+      return (
+        <StatusBanner
+          key={key}
+          label={p.label ?? ''}
+          sublabel={p.sublabel}
+          variant={p.variant}
+          icon={p.icon}
+          animated={p.animated}
+        />
+      )
     case 'progress':
       return <Progress key={key} value={p.value} max={p.max} indeterminate={p.indeterminate} label={p.label} />
     case 'log-stream':
