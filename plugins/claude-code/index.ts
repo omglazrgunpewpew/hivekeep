@@ -354,6 +354,113 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
     return completion
   }
 
+  // ─── Control helpers (shared by UI actions and exposed tools) ──────────
+  // Both onCardAction handlers and the claude_code_send_message /
+  // claude_code_abort tools delegate here so the two surfaces stay in
+  // lockstep.
+
+  type SendMessageResult =
+    | { ok: true; cardInstanceId: string; message: string }
+    | {
+        ok: boolean
+        cardInstanceId: string
+        sessionId: string | null
+        finalMessage: string | null
+        numTurns: number
+        durationMs: number
+        totalCostUsd: number
+        error: string | null
+      }
+    | { ok: false; error: string }
+
+  async function sendMessageToSession(params: {
+    cardInstanceId: string
+    message: string
+    wait: boolean
+    kinId: string
+  }): Promise<SendMessageResult> {
+    const text = params.message.trim()
+    if (!text) {
+      return { ok: false, error: 'A follow-up message is required.' }
+    }
+
+    if (activeRuns.has(params.cardInstanceId)) {
+      return { ok: false, error: 'Session still running. Abort it first or wait for completion.' }
+    }
+
+    const prior = recentRuns.get(params.cardInstanceId)
+    if (!prior) {
+      return { ok: false, error: 'Session not found. It may have been evicted from the in-memory cache or never existed in this process.' }
+    }
+
+    const resolvedWorkingDir = prior.workingDir || config.defaultWorkingDir || ''
+    if (!resolvedWorkingDir) {
+      return { ok: false, error: 'No working directory available to continue this session.' }
+    }
+
+    const runPromise = launchSession({
+      cardInstanceId: params.cardInstanceId,
+      kinId: params.kinId,
+      prompt: text,
+      workingDir: resolvedWorkingDir,
+      maxTurns: config.defaultMaxTurns ?? 50,
+      permissionMode: config.permissionMode ?? 'bypassPermissions',
+      resumeSessionId: prior.sessionId ?? undefined,
+    }).catch((err) => {
+      ctx.log.error({ err: err instanceof Error ? err.message : String(err), cardInstanceId: params.cardInstanceId }, 'follow-up session crashed')
+      return null
+    })
+
+    if (!params.wait) {
+      return {
+        ok: true,
+        cardInstanceId: params.cardInstanceId,
+        message: 'Follow-up sent. Watch the card or call claude_code_get_session for progress.',
+      }
+    }
+
+    const completion = await runPromise
+    if (!completion) {
+      return { ok: false, error: 'Follow-up session launch crashed before completion. Check the card logs.' }
+    }
+    return {
+      ok: completion.success,
+      cardInstanceId: params.cardInstanceId,
+      sessionId: completion.sessionId,
+      finalMessage: completion.finalMessage,
+      numTurns: completion.numTurns,
+      durationMs: completion.durationMs,
+      totalCostUsd: completion.totalCostUsd,
+      error: completion.error,
+    }
+  }
+
+  function abortSession(params: { cardInstanceId: string; reason?: string }): {
+    ok: boolean
+    cardInstanceId: string
+    wasRunning: boolean
+    error?: string
+  } {
+    const active = activeRuns.get(params.cardInstanceId)
+    if (active) {
+      const reason = params.reason?.slice(0, 200)
+      if (reason && reason.trim()) {
+        active.logs.push(`[aborted] ${reason.trim()}`)
+      }
+      active.abortController.abort()
+      return { ok: true, cardInstanceId: params.cardInstanceId, wasRunning: true }
+    }
+    if (recentRuns.has(params.cardInstanceId)) {
+      return { ok: true, cardInstanceId: params.cardInstanceId, wasRunning: false }
+    }
+    return {
+      ok: false,
+      cardInstanceId: params.cardInstanceId,
+      wasRunning: false,
+      error: 'Session not found. It may have been evicted from the in-memory cache or never existed in this process.',
+    }
+  }
+
   // ─── Inspection helpers + tools ──────────────────────────────────────────
   // Both list_sessions and get_session derive their output from the same
   // session shape, so we share a serializer to keep formats in sync.
@@ -412,7 +519,10 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
       execute: async ({ status, limit }) => {
         const all: Array<ReturnType<typeof serializeSession>> = []
         for (const run of activeRuns.values()) all.push(serializeSession(run))
-        for (const run of recentRuns.values()) all.push(serializeSession(run))
+        for (const [id, run] of recentRuns) {
+          if (activeRuns.has(id)) continue
+          all.push(serializeSession(run))
+        }
         all.sort((a, b) => b.startedAt - a.startedAt)
         const filtered = status === 'all' ? all : all.filter((s) => s.status === status)
         return {
@@ -450,6 +560,49 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
           finalMessage: run.finalMessage,
           error: run.error,
         }
+      },
+    }),
+  }
+
+  const sendMessageTool: ToolRegistration = {
+    availability: ['main', 'sub-kin'],
+    readOnly: false,
+    concurrencySafe: false,
+    create: (toolCtx: ToolExecutionContext) => tool({
+      description:
+        'Send a follow-up prompt to a previously completed Claude Code session, reusing the same card. ' +
+        'Refuses if the target session is still running (abort or wait for completion first). ' +
+        'Returns immediately by default (wait: false); pass wait: true to block until the new turn finishes.',
+      inputSchema: z.object({
+        cardInstanceId: z.string().min(1).describe('The cardInstanceId of the completed session to continue.'),
+        message: z.string().min(1).describe('The follow-up prompt to send.'),
+        wait: z.boolean().optional().default(false).describe('If true, block until the session finishes and return its final message. Default false (fire-and-forget).'),
+      }),
+      execute: async ({ cardInstanceId, message, wait }) => {
+        return sendMessageToSession({
+          cardInstanceId,
+          message,
+          wait,
+          kinId: toolCtx.kinId,
+        })
+      },
+    }),
+  }
+
+  const abortTool: ToolRegistration = {
+    availability: ['main', 'sub-kin'],
+    readOnly: false,
+    concurrencySafe: false,
+    create: () => tool({
+      description:
+        'Stop a running Claude Code session by cardInstanceId. ' +
+        'Returns wasRunning: true if an active session was actually interrupted, or wasRunning: false if the session had already completed (no-op).',
+      inputSchema: z.object({
+        cardInstanceId: z.string().min(1).describe('The cardInstanceId of the session to abort.'),
+        reason: z.string().max(200).optional().describe('Optional human-readable reason, recorded as a log line on the card.'),
+      }),
+      execute: async ({ cardInstanceId, reason }) => {
+        return abortSession({ cardInstanceId, reason })
       },
     }),
   }
@@ -543,46 +696,33 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
       claude_code_run: claudeCodeRunTool,
       claude_code_list_sessions: listSessionsTool,
       claude_code_get_session: getSessionTool,
+      claude_code_send_message: sendMessageTool,
+      claude_code_abort: abortTool,
     },
 
     onCardAction: async (action: PluginCardActionContext): Promise<PluginCardActionResult> => {
       switch (action.actionId) {
         case 'abort': {
-          const run = activeRuns.get(action.cardInstanceId)
-          if (!run) {
+          const result = abortSession({ cardInstanceId: action.cardInstanceId })
+          if (!result.ok) {
+            return { ok: false, error: result.error ?? 'Failed to abort session.' }
+          }
+          if (!result.wasRunning) {
             return { ok: false, error: 'No active session for this card.' }
           }
-          run.abortController.abort()
           return { ok: true }
         }
         case 'send-message': {
           const text = (action.input ?? '').trim()
-          if (!text) {
-            return { ok: false, error: 'A follow-up message is required.' }
-          }
-          // The card holds the last sessionId in its state, but we cannot
-          // read it from here without an extra round trip. Resume is best
-          // effort: the SDK falls back to a fresh session if the resume id
-          // is invalid. We pull it from the active run map if still cached.
-          const prior = activeRuns.get(action.cardInstanceId)
-          const resumeSessionId = prior?.sessionId ?? undefined
-          const resolvedWorkingDir = prior?.workingDir ?? config.defaultWorkingDir ?? ''
-          if (!resolvedWorkingDir) {
-            return { ok: false, error: 'No working directory available to continue this session.' }
-          }
-          // Fire and forget so the action returns fast; the card will keep
-          // updating as the new run streams.
-          void launchSession({
+          const result = await sendMessageToSession({
             cardInstanceId: action.cardInstanceId,
+            message: text,
+            wait: false,
             kinId: action.kinId,
-            prompt: text,
-            workingDir: resolvedWorkingDir,
-            maxTurns: config.defaultMaxTurns ?? 50,
-            permissionMode: config.permissionMode ?? 'bypassPermissions',
-            resumeSessionId,
-          }).catch((err) => {
-            ctx.log.error({ err: err instanceof Error ? err.message : String(err), cardInstanceId: action.cardInstanceId }, 'follow-up session crashed')
           })
+          if (!result.ok) {
+            return { ok: false, error: (result as { error?: string }).error ?? 'Failed to send follow-up.' }
+          }
           return { ok: true }
         }
         default:
