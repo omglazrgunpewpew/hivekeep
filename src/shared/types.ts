@@ -670,6 +670,14 @@ export interface Project {
   updatedAt: number
 }
 
+export interface RunningKinOnTicket {
+  kinId: string
+  kinName: string
+  kinSlug: string | null
+  avatarUrl: string | null
+  taskId: string
+}
+
 export interface TicketSummary {
   id: string
   projectId: string
@@ -680,6 +688,9 @@ export interface TicketSummary {
   tags: ProjectTag[]
   taskCount: number
   runningTaskCount: number
+  /** Kins currently executing a task on this ticket (status queued/pending/in_progress).
+   *  One entry per running task — same Kin can appear twice if it has multiple in flight. */
+  runningKins: RunningKinOnTicket[]
   createdAt: number
   updatedAt: number
 }

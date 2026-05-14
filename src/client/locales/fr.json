@@ -2446,6 +2446,13 @@
       "tooltip": "{{name}} a ce projet en actif",
       "openThread": "Ouvrir le thread de {{name}}"
     },
+    "ticketCard": {
+      "running_one": "{{count}} en cours",
+      "running_other": "{{count}} en cours",
+      "taskCount_one": "{{count}} tâche",
+      "taskCount_other": "{{count}} tâches",
+      "kinRunning": "{{name}} travaille dessus"
+    },
     "edit": {
       "title": "Modifier le projet",
       "description": "Modifie les détails du projet, gère les tags, ou supprime le projet entièrement.",

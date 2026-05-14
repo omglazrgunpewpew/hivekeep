@@ -12,6 +12,7 @@ import type {
   TicketSummary,
   TicketTaskSummary,
   ProjectTag,
+  RunningKinOnTicket,
 } from '@/shared/types'
 import type { TicketAssignmentInfo } from '@/server/services/prompt-builder'
 
@@ -84,10 +85,54 @@ async function fetchTaskCountsForTickets(
   return result
 }
 
+/** For each ticket, fetch the Kins currently executing a task on it (one entry per running task). */
+async function fetchRunningKinsForTickets(
+  ticketIds: string[],
+): Promise<Map<string, RunningKinOnTicket[]>> {
+  if (ticketIds.length === 0) return new Map()
+  const rows = db
+    .select({
+      ticketId: tasks.ticketId,
+      taskId: tasks.id,
+      kinId: kins.id,
+      kinName: kins.name,
+      kinSlug: kins.slug,
+      avatarPath: kins.avatarPath,
+      avatarUpdatedAt: kins.updatedAt,
+    })
+    .from(tasks)
+    .innerJoin(kins, eq(tasks.parentKinId, kins.id))
+    .where(
+      and(
+        inArray(tasks.ticketId, ticketIds),
+        inArray(tasks.status, ['queued', 'pending', 'in_progress']),
+      ),
+    )
+    .all()
+
+  const result = new Map<string, RunningKinOnTicket[]>()
+  for (const row of rows) {
+    if (!row.ticketId) continue
+    const list = result.get(row.ticketId) ?? []
+    list.push({
+      kinId: row.kinId,
+      kinName: row.kinName,
+      kinSlug: row.kinSlug,
+      avatarUrl: row.avatarPath
+        ? `/api/uploads/kins/${row.kinId}/avatar.${row.avatarPath.split('.').pop() ?? 'png'}?v=${toMillis(row.avatarUpdatedAt)}`
+        : null,
+      taskId: row.taskId,
+    })
+    result.set(row.ticketId, list)
+  }
+  return result
+}
+
 async function rowToTicketSummary(
   row: typeof tickets.$inferSelect,
   tags: ProjectTag[],
   taskCounts: { total: number; running: number },
+  runningKins: RunningKinOnTicket[] = [],
 ): Promise<TicketSummary> {
   return {
     id: row.id,
@@ -99,6 +144,7 @@ async function rowToTicketSummary(
     tags,
     taskCount: taskCounts.total,
     runningTaskCount: taskCounts.running,
+    runningKins,
     createdAt: toMillis(row.createdAt),
     updatedAt: toMillis(row.updatedAt),
   }
@@ -149,9 +195,10 @@ export async function listTickets(
   const slice = hasMore ? rows.slice(0, limit) : rows
 
   const ids = slice.map((r) => r.id)
-  const [tagsByTicket, taskCountsByTicket] = await Promise.all([
+  const [tagsByTicket, taskCountsByTicket, runningKinsByTicket] = await Promise.all([
     fetchTagsForTickets(ids),
     fetchTaskCountsForTickets(ids),
+    fetchRunningKinsForTickets(ids),
   ])
 
   const items = await Promise.all(
@@ -160,6 +207,7 @@ export async function listTickets(
         row,
         tagsByTicket.get(row.id) ?? [],
         taskCountsByTicket.get(row.id) ?? { total: 0, running: 0 },
+        runningKinsByTicket.get(row.id) ?? [],
       ),
     ),
   )
@@ -190,8 +238,12 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
       .all(),
   ])
 
-  const taskCountsMap = await fetchTaskCountsForTickets([ticketId])
+  const [taskCountsMap, runningKinsMap] = await Promise.all([
+    fetchTaskCountsForTickets([ticketId]),
+    fetchRunningKinsForTickets([ticketId]),
+  ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
+  const runningKins = runningKinsMap.get(ticketId) ?? []
 
   const ticketTasks: TicketTaskSummary[] = taskRows.map((t) => ({
     id: t.id,
@@ -213,6 +265,7 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
     tags,
     taskCount: counts.total,
     runningTaskCount: counts.running,
+    runningKins,
     tasks: ticketTasks,
     createdAt: toMillis(row.createdAt),
     updatedAt: toMillis(row.updatedAt),
@@ -301,6 +354,7 @@ export async function createTicket(input: CreateTicketInput): Promise<TicketSumm
     tags,
     taskCount: 0,
     runningTaskCount: 0,
+    runningKins: [],
     createdAt: now.getTime(),
     updatedAt: now.getTime(),
   }
@@ -356,10 +410,14 @@ export async function updateTicket(
   if (!refreshed) return null
 
   const tags = await fetchTagsForTicket(ticketId)
-  const taskCountsMap = await fetchTaskCountsForTickets([ticketId])
+  const [taskCountsMap, runningKinsMap] = await Promise.all([
+    fetchTaskCountsForTickets([ticketId]),
+    fetchRunningKinsForTickets([ticketId]),
+  ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
+  const runningKins = runningKinsMap.get(ticketId) ?? []
 
-  const summary = await rowToTicketSummary(refreshed, tags, counts)
+  const summary = await rowToTicketSummary(refreshed, tags, counts, runningKins)
 
   sseManager.broadcast({
     type: 'ticket:updated',
@@ -412,9 +470,13 @@ async function getTicketSummary(ticketId: string): Promise<TicketSummary | null>
   const row = db.select().from(tickets).where(eq(tickets.id, ticketId)).get()
   if (!row) return null
   const tags = await fetchTagsForTicket(ticketId)
-  const taskCountsMap = await fetchTaskCountsForTickets([ticketId])
+  const [taskCountsMap, runningKinsMap] = await Promise.all([
+    fetchTaskCountsForTickets([ticketId]),
+    fetchRunningKinsForTickets([ticketId]),
+  ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
-  return rowToTicketSummary(row, tags, counts)
+  const runningKins = runningKinsMap.get(ticketId) ?? []
+  return rowToTicketSummary(row, tags, counts, runningKins)
 }
 
 // ─── Prompt block info ────────────────────────────────────────────────────────

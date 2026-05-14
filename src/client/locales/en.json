@@ -2445,6 +2445,13 @@
       "tooltip": "{{name}} has this project active",
       "openThread": "Open {{name}}'s thread"
     },
+    "ticketCard": {
+      "running_one": "{{count}} running",
+      "running_other": "{{count}} running",
+      "taskCount_one": "{{count}} task",
+      "taskCount_other": "{{count}} tasks",
+      "kinRunning": "{{name}} is working on this"
+    },
     "edit": {
       "title": "Edit project",
       "description": "Modify the project details, manage tags, or delete the project entirely.",

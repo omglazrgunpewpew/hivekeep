@@ -1,8 +1,11 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Badge } from '@/client/components/ui/badge'
-import { Loader2, Play, ListChecks } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/client/components/ui/tooltip'
+import { Loader2, ListChecks } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
+import { useTranslation } from 'react-i18next'
 import type { TicketSummary } from '@/shared/types'
 
 interface TicketCardProps {
@@ -12,6 +15,7 @@ interface TicketCardProps {
 }
 
 export function TicketCard({ ticket, onClick, isOverlay = false }: TicketCardProps) {
+  const { t } = useTranslation()
   const {
     attributes,
     listeners,
@@ -29,6 +33,10 @@ export function TicketCard({ ticket, onClick, isOverlay = false }: TicketCardPro
     transition,
   }
 
+  const hasRunning = ticket.runningKins.length > 0
+  const visibleRunning = ticket.runningKins.slice(0, 3)
+  const overflowRunning = ticket.runningKins.length - visibleRunning.length
+
   return (
     <article
       ref={setNodeRef}
@@ -37,6 +45,8 @@ export function TicketCard({ ticket, onClick, isOverlay = false }: TicketCardPro
         'group relative cursor-grab rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow active:cursor-grabbing',
         isDragging && !isOverlay && 'opacity-30',
         isOverlay && 'shadow-lg',
+        // Running emphasis: subtle pulse glow ring while a task is in flight
+        hasRunning && 'ring-1 ring-primary/40 shadow-primary/10 animate-running-pulse',
       )}
       {...attributes}
       {...listeners}
@@ -77,21 +87,58 @@ export function TicketCard({ ticket, onClick, isOverlay = false }: TicketCardPro
           </div>
         )}
 
-        {(ticket.taskCount > 0 || ticket.runningTaskCount > 0) && (
-          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-            {ticket.runningTaskCount > 0 ? (
-              <span className="inline-flex items-center gap-1 text-primary">
-                <Loader2 className="size-3 animate-spin" />
-                {ticket.runningTaskCount} running
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+          {/* Left side: running indicator OR plain task count */}
+          {hasRunning ? (
+            <span className="inline-flex items-center gap-1 text-primary">
+              <Loader2 className="size-3 animate-spin" />
+              <span className="font-medium">
+                {t('projects.ticketCard.running', { count: ticket.runningTaskCount })}
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1">
-                <ListChecks className="size-3" />
-                {ticket.taskCount} task{ticket.taskCount > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        )}
+            </span>
+          ) : ticket.taskCount > 0 ? (
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              <ListChecks className="size-3" />
+              {t('projects.ticketCard.taskCount', { count: ticket.taskCount })}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {/* Right side: running Kins avatar stack */}
+          {hasRunning && (
+            <div
+              className="flex items-center -space-x-1.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {visibleRunning.map((rk, i) => {
+                const initials = rk.kinName.slice(0, 2).toUpperCase()
+                return (
+                  <Tooltip key={`${rk.taskId}-${i}`}>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Avatar className="size-5 ring-2 ring-card">
+                          {rk.avatarUrl && <AvatarImage src={rk.avatarUrl} alt={rk.kinName} />}
+                          <AvatarFallback className="text-[9px] bg-secondary">{initials}</AvatarFallback>
+                        </Avatar>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <span className="text-xs">
+                        {t('projects.ticketCard.kinRunning', { name: rk.kinName })}
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
+              {overflowRunning > 0 && (
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground ring-2 ring-card">
+                  +{overflowRunning}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </button>
     </article>
   )
