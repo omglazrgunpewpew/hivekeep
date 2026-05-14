@@ -381,6 +381,14 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
     }
     activeRuns.set(params.cardInstanceId, run)
 
+    // Wrap the whole body so any synchronous error (bad working dir, SDK
+    // refusing the binary, DB error on the first card update, etc.)
+    // still produces a final destructive-themed card update before
+    // re-throwing. Without this guard, an early reject would leave the
+    // card visually frozen on "Starting" forever because the
+    // claude_code_run executor's .catch swallows the error to a null.
+    try {
+
     const flush = async (overrides?: { phase?: RunPhase; currentStep?: string }) => {
       const phase = overrides?.phase ?? run.phase
       const currentStep = overrides?.currentStep ?? run.currentStep
@@ -490,6 +498,53 @@ export default function claudeCodePlugin(ctx: PluginCtx) {
     })
     activeRuns.delete(params.cardInstanceId)
     return completion
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      ctx.log.error(
+        { err: message, cardInstanceId: params.cardInstanceId },
+        'launchSession threw before completion',
+      )
+      run.phase = 'error'
+      run.error = message
+      run.currentStep = 'Crashed before completion'
+      // Push a final destructive state so the card never stays on
+      // "Starting". The inner update is itself wrapped so a DB failure
+      // here cannot mask the original error.
+      try {
+        await ctx.cards.update({
+          cardInstanceId: params.cardInstanceId,
+          state: buildCardState({
+            phase: 'error',
+            workingDir: run.workingDir,
+            sessionId: run.sessionId,
+            numTurns: run.numTurns,
+            totalCostUsd: run.totalCostUsd,
+            currentStep: 'Crashed before completion',
+            errorMessage: message,
+            logs: run.logs,
+            isRunning: false,
+          }),
+        })
+      } catch (updateErr) {
+        ctx.log.error(
+          {
+            err: updateErr instanceof Error ? updateErr.message : String(updateErr),
+            cardInstanceId: params.cardInstanceId,
+          },
+          'failed to push error state to card after launchSession crash',
+        )
+      }
+      archiveRun(run, {
+        phase: 'error',
+        finalMessage: null,
+        error: message,
+        numTurns: run.numTurns,
+        totalCostUsd: run.totalCostUsd,
+      })
+      activeRuns.delete(params.cardInstanceId)
+      throw err
+    }
   }
 
   // ─── Control helpers (shared by UI actions and exposed tools) ──────────

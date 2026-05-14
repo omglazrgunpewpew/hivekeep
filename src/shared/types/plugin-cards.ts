@@ -32,12 +32,6 @@ export interface PluginCardAction {
   confirm?: boolean
 }
 
-export interface PluginCardStatItem {
-  label: string
-  value: string
-  variant?: PluginCardVariant
-}
-
 export interface PluginCardInfoGridItem {
   label: string
   value: string
@@ -65,7 +59,6 @@ export type PluginCardPrimitive =
       icon?: string
       accent?: PluginCardVariant
     }
-  | { type: 'stat-row'; items: PluginCardStatItem[] }
   | {
       type: 'info-grid'
       columns?: 2 | 3

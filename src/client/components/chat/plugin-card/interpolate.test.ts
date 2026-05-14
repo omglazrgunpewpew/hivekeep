@@ -22,7 +22,7 @@ describe('interpolate', () => {
 
   test('walks arrays and objects recursively', () => {
     const layout = {
-      type: 'stat-row',
+      type: 'info-grid',
       items: [
         { label: 'Status', value: '{{phase}}', variant: '{{phaseVariant}}' },
         { label: 'Count', value: '{{count}}' },
@@ -30,7 +30,7 @@ describe('interpolate', () => {
     }
     const state = { phase: 'Running', phaseVariant: 'primary', count: '7' }
     expect(interpolate(layout, state)).toEqual({
-      type: 'stat-row',
+      type: 'info-grid',
       items: [
         { label: 'Status', value: 'Running', variant: 'primary' },
         { label: 'Count', value: '7' },

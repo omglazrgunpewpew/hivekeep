@@ -508,20 +508,40 @@ locally so live progress feels instant.
 
 | Primitive | Props | Purpose |
 |---|---|---|
-| `header` | `title`, `icon?` (Lucide name), `accent?` | Title row |
-| `stat-row` | `items[]: { label, value, variant? }` | Compact stats grid |
-| `progress` | `value?`, `max?`, `indeterminate?`, `label?` | Progress bar |
-| `collapsible` | `label`, `defaultOpen?`, `content` | Foldable section |
-| `log-stream` | `lines[]`, `autoscroll?`, `maxHeight?` | Monospace log view |
+| `header` | `title`, `icon?`, `accent?` | Title row |
+| `status-banner` | `label`, `sublabel?`, `variant?`, `icon?`, `animated?` | Prominent state block with animated icon |
+| `info-grid` | `columns?: 2 \| 3`, `items[]: { label, value, variant?, truncate?, icon? }` | Label/value grid, no border, optional ellipsis + tooltip |
+| `progress` | `value?`, `max?`, `indeterminate?`, `label?` | Progress bar (indeterminate animates by default) |
+| `collapsible` | `label`, `defaultOpen?`, `content` | Foldable section, auto count badge when wrapping a `log-stream` |
+| `log-stream` | `lines[]`, `autoscroll?`, `maxHeight?` | Monospace log view, terminal-style auto-scroll |
 | `action-row` | `actions[]: { id, label, variant?, input?, confirm? }` | Buttons |
 | `markdown` | `content` | Rendered markdown block |
 | `spinner` | `label?` | Inline loading indicator |
-| `badge` | `text`, `variant?` | Small colored tag |
+| `badge` | `text`, `variant?`, `icon?` | Small colored tag |
 | `divider` | `label?` | Section separator |
 
 Variant tokens: `default`, `success`, `warning`, `destructive`,
 `primary`, `muted`. They map onto semantic design tokens so cards look
 correct across all palettes and both light/dark modes.
+
+Banner animations: `pulse`, `shimmer`, `spin`, `none` (default).
+
+#### Icon naming
+
+Every `icon?` prop accepts two forms:
+
+- A **Lucide** icon name, e.g. `"Sparkles"`, `"CheckCircle2"`,
+  `"XCircle"`. Anything from `lucide-react` works.
+- A **react-icons** id of the form `"<collection>/<ComponentName>"`,
+  e.g. `"bs/BsClaude"`, `"si/SiOpenai"`, `"fa6/FaGithub"`. The
+  collection prefix (`ai`, `bi`, `bs`, `fa`, `fa6`, `fi`, `hi`, `hi2`,
+  `lu`, `md`, `pi`, `ri`, `si`, `tb`, `vsc`, etc.) selects the
+  react-icons module, which is dynamically imported on demand. Unknown
+  collections or component names fall back to a Lucide `HelpCircle`
+  with a `console.warn` once per name.
+
+This lets plugins use brand marks (Claude, OpenAI, GitHub, AWS…) without
+shipping the whole react-icons catalogue in the initial bundle.
 
 ### Emit and update from a plugin
 

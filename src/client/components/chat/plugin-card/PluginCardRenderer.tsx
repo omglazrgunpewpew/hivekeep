@@ -2,14 +2,12 @@ import { memo, useMemo } from 'react'
 import type {
   PluginCard,
   PluginCardPrimitive,
-  PluginCardStatItem,
   PluginCardInfoGridItem,
   PluginCardAction,
 } from '@/shared/types/plugin-cards'
 import { usePluginCardLiveUpdates } from '@/client/hooks/usePluginCardLiveUpdates'
 import { interpolate } from './interpolate'
 import { Header } from './primitives/Header'
-import { StatRow } from './primitives/StatRow'
 import { InfoGrid } from './primitives/InfoGrid'
 import { StatusBanner } from './primitives/StatusBanner'
 import { Progress } from './primitives/Progress'
@@ -35,8 +33,6 @@ function renderPrimitive(prim: unknown, cardInstanceId: string, key: number | st
   switch (p.type) {
     case 'header':
       return <Header key={key} title={p.title ?? ''} icon={p.icon} accent={p.accent} />
-    case 'stat-row':
-      return <StatRow key={key} items={Array.isArray(p.items) ? (p.items as PluginCardStatItem[]) : []} />
     case 'info-grid':
       return (
         <InfoGrid
