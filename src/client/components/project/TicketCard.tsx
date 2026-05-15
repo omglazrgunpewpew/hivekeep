@@ -17,6 +17,9 @@ interface TicketCardProps {
   /** Lowercased, trimmed search query. When non-empty, matching substrings in
    *  the title and tag labels are wrapped in a `<mark>` for visual feedback. */
   highlightQuery?: string
+  /** Called with the tag label when a tag chip is clicked. Used by the kanban
+   *  to pre-fill the search filter so the user can pivot from a single tag. */
+  onTagClick?: (label: string) => void
 }
 
 /**
@@ -53,7 +56,7 @@ function highlightMatches(text: string, query: string) {
   )
 }
 
-export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery }: TicketCardProps) {
+export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery, onTagClick }: TicketCardProps) {
   const { t } = useTranslation()
   const {
     attributes,
@@ -83,12 +86,27 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery 
   const displayedTs = wasEdited ? ticket.updatedAt : ticket.createdAt
   const fullDate = new Date(displayedTs).toLocaleString()
 
+  // Click anywhere on the card (except interactive children that stop propagation)
+  // opens the side panel. We don't wrap in a <button> anymore so we can render
+  // tag chips as their own real buttons (HTML forbids nesting buttons).
+  function handleCardClick() {
+    onClick?.()
+  }
+  function handleCardKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick?.()
+    }
+  }
+
   return (
     <article
       ref={setNodeRef}
       style={style}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
       className={cn(
-        'group relative cursor-grab rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow active:cursor-grabbing',
+        'group relative cursor-grab rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isDragging && !isOverlay && 'opacity-30',
         isOverlay && 'shadow-lg',
         // Running emphasis: subtle pulse glow ring while a task is in flight
@@ -97,30 +115,29 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery 
       {...attributes}
       {...listeners}
     >
-      <button
-        type="button"
-        // Use pointer-up on a tiny click instead of full click, so drag doesn't trigger
-        onClick={(e) => {
-          // dnd-kit blocks click while dragging; this still fires for short clicks
-          e.stopPropagation()
-          onClick?.()
-        }}
-        className="block w-full text-left"
-      >
-        <div className="flex items-start gap-1.5">
-          <h3 className="line-clamp-2 flex-1 text-sm font-medium leading-snug">
-            {highlightMatches(ticket.title, normalizedQuery)}
-          </h3>
-          {ticket.reporter && (
-            <TicketReporterBadge reporter={ticket.reporter} variant="compact" size="size-4" />
-          )}
-        </div>
+      <div className="flex items-start gap-1.5">
+        <h3 className="line-clamp-2 flex-1 text-sm font-medium leading-snug">
+          {highlightMatches(ticket.title, normalizedQuery)}
+        </h3>
+        {ticket.reporter && (
+          <TicketReporterBadge reporter={ticket.reporter} variant="compact" size="size-4" />
+        )}
+      </div>
 
-        {ticket.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {ticket.tags.slice(0, 4).map((tag) => (
+      {ticket.tags.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {ticket.tags.slice(0, 4).map((tag) => (
+            <button
+              key={tag.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onTagClick?.(tag.label)
+              }}
+              className="rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              title={onTagClick ? `Filter by ${tag.label}` : undefined}
+            >
               <Badge
-                key={tag.id}
                 variant="secondary"
                 className="px-1.5 py-0 text-[10px] font-normal"
                 style={{
@@ -131,14 +148,15 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery 
               >
                 {tag.label}
               </Badge>
-            ))}
-            {ticket.tags.length > 4 && (
-              <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-                +{ticket.tags.length - 4}
-              </Badge>
-            )}
-          </div>
-        )}
+            </button>
+          ))}
+          {ticket.tags.length > 4 && (
+            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
+              +{ticket.tags.length - 4}
+            </Badge>
+          )}
+        </div>
+      )}
 
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
           {/* Left side: running indicator OR plain task count */}
@@ -214,7 +232,6 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery 
             </Tooltip>
           )}
         </div>
-      </button>
     </article>
   )
 }

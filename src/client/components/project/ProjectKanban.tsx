@@ -254,6 +254,7 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
                 tickets={byStatus[status]}
                 onTicketClick={handleTicketClick}
                 highlightQuery={normalizedQuery}
+                onTagClick={(label) => setSearchQuery(label)}
               />
             ))}
           </div>
