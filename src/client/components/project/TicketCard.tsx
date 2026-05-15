@@ -80,6 +80,15 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
   const overflowRunning = ticket.runningKins.length - visibleRunning.length
   const normalizedQuery = (highlightQuery ?? '').trim().toLowerCase()
 
+  // Short snippet of the description, shown in a tooltip on title hover so users
+  // can preview context without opening the side panel. Cap at ~240 chars to keep
+  // the tooltip skim-friendly and avoid huge floating boxes.
+  const trimmedDescription = ticket.description.trim()
+  const descriptionPreview =
+    trimmedDescription.length > 240
+      ? trimmedDescription.slice(0, 240).trimEnd() + '…'
+      : trimmedDescription
+
   // Distinguish created vs. updated: if updated more than 1 minute after creation
   // we treat it as a meaningful edit and prefer surfacing that timestamp.
   const wasEdited = ticket.updatedAt - ticket.createdAt > 60_000
@@ -116,9 +125,22 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
       {...listeners}
     >
       <div className="flex items-start gap-1.5">
-        <h3 className="line-clamp-2 flex-1 text-sm font-medium leading-snug">
-          {highlightMatches(ticket.title, normalizedQuery)}
-        </h3>
+        {descriptionPreview ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h3 className="line-clamp-2 flex-1 cursor-help text-sm font-medium leading-snug">
+                {highlightMatches(ticket.title, normalizedQuery)}
+              </h3>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="start" className="max-w-sm">
+              <p className="whitespace-pre-wrap text-xs leading-relaxed">{descriptionPreview}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <h3 className="line-clamp-2 flex-1 text-sm font-medium leading-snug">
+            {highlightMatches(ticket.title, normalizedQuery)}
+          </h3>
+        )}
         {ticket.reporter && (
           <TicketReporterBadge reporter={ticket.reporter} variant="compact" size="size-4" />
         )}
