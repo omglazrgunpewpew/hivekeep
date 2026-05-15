@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/client/components/ui/
 import { Loader2, ListChecks } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { TicketReporterBadge } from '@/client/components/project/TicketReporterBadge'
 import type { TicketSummary } from '@/shared/types'
 
 interface TicketCardProps {
@@ -61,7 +62,12 @@ export function TicketCard({ ticket, onClick, isOverlay = false }: TicketCardPro
         }}
         className="block w-full text-left"
       >
-        <h3 className="line-clamp-2 text-sm font-medium leading-snug">{ticket.title}</h3>
+        <div className="flex items-start gap-1.5">
+          <h3 className="line-clamp-2 flex-1 text-sm font-medium leading-snug">{ticket.title}</h3>
+          {ticket.reporter && (
+            <TicketReporterBadge reporter={ticket.reporter} variant="compact" size="size-4" />
+          )}
+        </div>
 
         {ticket.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">

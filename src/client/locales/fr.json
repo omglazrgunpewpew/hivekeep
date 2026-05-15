@@ -2453,6 +2453,13 @@
       "taskCount_other": "{{count}} tâches",
       "kinRunning": "{{name}} travaille dessus"
     },
+    "reporter": {
+      "label": "Rapporté par",
+      "byUser": "Rapporté par {{name}}",
+      "byKin": "Rapporté par le Kin {{name}}",
+      "tooltip": "{{name}}",
+      "unknown": "Inconnu"
+    },
     "edit": {
       "title": "Modifier le projet",
       "description": "Modifie les détails du projet, gère les tags, ou supprime le projet entièrement.",

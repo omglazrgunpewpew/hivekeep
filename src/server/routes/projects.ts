@@ -137,8 +137,12 @@ projectRoutes.post('/:projectId/tickets', async (c) => {
     : undefined
   const tagIds = Array.isArray(body.tagIds) ? body.tagIds.filter((t: unknown): t is string => typeof t === 'string') : undefined
 
+  // Reporter = the session user who triggered the create (UI path)
+  const sessionUser = c.get('user') as { id: string } | undefined
+  const reporter = sessionUser ? ({ type: 'user' as const, id: sessionUser.id }) : null
+
   try {
-    const ticket = await createTicket({ projectId, title, description, status, tagIds })
+    const ticket = await createTicket({ projectId, title, description, status, tagIds, reporter })
     return c.json({ ticket }, 201)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

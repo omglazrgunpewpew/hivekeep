@@ -1,7 +1,7 @@
 import { eq, and, inArray, max, count, desc } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
-import { tickets, ticketTags, projectTags, projects, tasks, kins } from '@/server/db/schema'
+import { tickets, ticketTags, projectTags, projects, tasks, kins, user, userProfiles } from '@/server/db/schema'
 import { sseManager } from '@/server/sse/index'
 import { config } from '@/server/config'
 import { TICKET_STATUSES } from '@/shared/constants'
@@ -13,6 +13,7 @@ import type {
   TicketTaskSummary,
   ProjectTag,
   RunningKinOnTicket,
+  TicketReporter,
 } from '@/shared/types'
 import type { TicketAssignmentInfo } from '@/server/services/prompt-builder'
 
@@ -128,11 +129,64 @@ async function fetchRunningKinsForTickets(
   return result
 }
 
+/** Resolve a reporter (user or kin) into the public-facing shape. Null if neither set. */
+async function fetchReporterForTicket(
+  reporterUserId: string | null,
+  reporterKinId: string | null,
+): Promise<TicketReporter | null> {
+  if (reporterKinId) {
+    const k = db
+      .select({ id: kins.id, slug: kins.slug, name: kins.name, avatarPath: kins.avatarPath, updatedAt: kins.updatedAt })
+      .from(kins)
+      .where(eq(kins.id, reporterKinId))
+      .get()
+    if (k) {
+      return {
+        type: 'kin',
+        id: k.id,
+        slug: k.slug,
+        name: k.name,
+        avatarUrl: k.avatarPath
+          ? `/api/uploads/kins/${k.id}/avatar.${k.avatarPath.split('.').pop() ?? 'png'}?v=${toMillis(k.updatedAt)}`
+          : null,
+      }
+    }
+  }
+  if (reporterUserId) {
+    const row = db
+      .select({
+        id: user.id,
+        userName: user.name,
+        userImage: user.image,
+        profileFirstName: userProfiles.firstName,
+        profileLastName: userProfiles.lastName,
+        profilePseudonym: userProfiles.pseudonym,
+      })
+      .from(user)
+      .leftJoin(userProfiles, eq(userProfiles.userId, user.id))
+      .where(eq(user.id, reporterUserId))
+      .get()
+    if (row) {
+      const fullName = row.profileFirstName && row.profileLastName
+        ? `${row.profileFirstName} ${row.profileLastName}`
+        : row.profilePseudonym ?? row.userName
+      return {
+        type: 'user',
+        id: row.id,
+        name: fullName,
+        avatarUrl: row.userImage ?? null,
+      }
+    }
+  }
+  return null
+}
+
 async function rowToTicketSummary(
   row: typeof tickets.$inferSelect,
   tags: ProjectTag[],
   taskCounts: { total: number; running: number },
   runningKins: RunningKinOnTicket[] = [],
+  reporter: TicketReporter | null = null,
 ): Promise<TicketSummary> {
   return {
     id: row.id,
@@ -145,6 +199,7 @@ async function rowToTicketSummary(
     taskCount: taskCounts.total,
     runningTaskCount: taskCounts.running,
     runningKins,
+    reporter,
     createdAt: toMillis(row.createdAt),
     updatedAt: toMillis(row.updatedAt),
   }
@@ -202,12 +257,13 @@ export async function listTickets(
   ])
 
   const items = await Promise.all(
-    slice.map((row) =>
+    slice.map(async (row) =>
       rowToTicketSummary(
         row,
         tagsByTicket.get(row.id) ?? [],
         taskCountsByTicket.get(row.id) ?? { total: 0, running: 0 },
         runningKinsByTicket.get(row.id) ?? [],
+        await fetchReporterForTicket(row.reporterUserId, row.reporterKinId),
       ),
     ),
   )
@@ -244,6 +300,7 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
   ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
   const runningKins = runningKinsMap.get(ticketId) ?? []
+  const reporter = await fetchReporterForTicket(row.reporterUserId, row.reporterKinId)
 
   const ticketTasks: TicketTaskSummary[] = taskRows.map((t) => ({
     id: t.id,
@@ -266,6 +323,7 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
     taskCount: counts.total,
     runningTaskCount: counts.running,
     runningKins,
+    reporter,
     tasks: ticketTasks,
     createdAt: toMillis(row.createdAt),
     updatedAt: toMillis(row.updatedAt),
@@ -313,6 +371,8 @@ export interface CreateTicketInput {
   description?: string
   status?: TicketStatus
   tagIds?: string[]
+  /** Who's creating this ticket — set exactly one (or neither for system seeds). */
+  reporter?: { type: 'user'; id: string } | { type: 'kin'; id: string } | null
 }
 
 export async function createTicket(input: CreateTicketInput): Promise<TicketSummary> {
@@ -326,6 +386,9 @@ export async function createTicket(input: CreateTicketInput): Promise<TicketSumm
   const now = new Date()
   const position = await computeNextPositionInColumn(input.projectId, status)
 
+  const reporterUserId = input.reporter?.type === 'user' ? input.reporter.id : null
+  const reporterKinId = input.reporter?.type === 'kin' ? input.reporter.id : null
+
   db.insert(tickets)
     .values({
       id,
@@ -334,6 +397,8 @@ export async function createTicket(input: CreateTicketInput): Promise<TicketSumm
       description: input.description ?? '',
       status,
       position,
+      reporterUserId,
+      reporterKinId,
       createdAt: now,
       updatedAt: now,
     })
@@ -344,6 +409,7 @@ export async function createTicket(input: CreateTicketInput): Promise<TicketSumm
   }
 
   const tags = await fetchTagsForTicket(id)
+  const reporter = await fetchReporterForTicket(reporterUserId, reporterKinId)
   const summary: TicketSummary = {
     id,
     projectId: input.projectId,
@@ -355,6 +421,7 @@ export async function createTicket(input: CreateTicketInput): Promise<TicketSumm
     taskCount: 0,
     runningTaskCount: 0,
     runningKins: [],
+    reporter,
     createdAt: now.getTime(),
     updatedAt: now.getTime(),
   }
@@ -416,8 +483,9 @@ export async function updateTicket(
   ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
   const runningKins = runningKinsMap.get(ticketId) ?? []
+  const reporter = await fetchReporterForTicket(refreshed.reporterUserId, refreshed.reporterKinId)
 
-  const summary = await rowToTicketSummary(refreshed, tags, counts, runningKins)
+  const summary = await rowToTicketSummary(refreshed, tags, counts, runningKins, reporter)
 
   sseManager.broadcast({
     type: 'ticket:updated',
@@ -476,7 +544,8 @@ async function getTicketSummary(ticketId: string): Promise<TicketSummary | null>
   ])
   const counts = taskCountsMap.get(ticketId) ?? { total: 0, running: 0 }
   const runningKins = runningKinsMap.get(ticketId) ?? []
-  return rowToTicketSummary(row, tags, counts, runningKins)
+  const reporter = await fetchReporterForTicket(row.reporterUserId, row.reporterKinId)
+  return rowToTicketSummary(row, tags, counts, runningKins, reporter)
 }
 
 // ─── Prompt block info ────────────────────────────────────────────────────────

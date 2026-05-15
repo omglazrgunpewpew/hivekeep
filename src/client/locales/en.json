@@ -2452,6 +2452,13 @@
       "taskCount_other": "{{count}} tasks",
       "kinRunning": "{{name}} is working on this"
     },
+    "reporter": {
+      "label": "Reported by",
+      "byUser": "Reported by {{name}}",
+      "byKin": "Reported by Kin {{name}}",
+      "tooltip": "{{name}}",
+      "unknown": "Unknown"
+    },
     "edit": {
       "title": "Edit project",
       "description": "Modify the project details, manage tags, or delete the project entirely.",

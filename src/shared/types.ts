@@ -678,6 +678,11 @@ export interface RunningKinOnTicket {
   taskId: string
 }
 
+/** Whoever created a ticket — either a platform user (UI) or a Kin (tool). */
+export type TicketReporter =
+  | { type: 'user'; id: string; name: string; avatarUrl: string | null }
+  | { type: 'kin'; id: string; slug: string | null; name: string; avatarUrl: string | null }
+
 export interface TicketSummary {
   id: string
   projectId: string
@@ -691,6 +696,8 @@ export interface TicketSummary {
   /** Kins currently executing a task on this ticket (status queued/pending/in_progress).
    *  One entry per running task — same Kin can appear twice if it has multiple in flight. */
   runningKins: RunningKinOnTicket[]
+  /** Who created this ticket. Null for legacy rows. */
+  reporter: TicketReporter | null
   createdAt: number
   updatedAt: number
 }

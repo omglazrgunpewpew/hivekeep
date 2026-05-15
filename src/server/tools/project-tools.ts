@@ -341,9 +341,9 @@ export const deleteTagTool: ToolRegistration = {
 export const createTicketTool: ToolRegistration = {
   availability: ['main'],
   condition: mainOnlyCondition,
-  create: () =>
+  create: (ctx) =>
     tool({
-      description: 'Create a new ticket in a project. Status defaults to "backlog".',
+      description: 'Create a new ticket in a project. Status defaults to "backlog". You are recorded as the reporter.',
       inputSchema: z.object({
         project_id: z.string(),
         title: z.string(),
@@ -359,6 +359,7 @@ export const createTicketTool: ToolRegistration = {
             description,
             status,
             tagIds: tag_ids,
+            reporter: { type: 'kin', id: ctx.kinId },
           })
           return { ticket }
         } catch (err) {

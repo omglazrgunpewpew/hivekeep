@@ -10,6 +10,7 @@ import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import { formatRelativeTime } from '@/client/lib/time'
 import { StartTaskDialog } from '@/client/components/project/StartTaskDialog'
 import { EditTicketModal } from '@/client/components/project/EditTicketModal'
+import { TicketReporterBadge } from '@/client/components/project/TicketReporterBadge'
 import { getErrorMessage } from '@/client/lib/api'
 import { toast } from 'sonner'
 import { cn } from '@/client/lib/utils'
@@ -120,6 +121,20 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
       <div className="flex-1 overflow-y-auto p-3">
         {/* Title */}
         <h1 className="mb-2 text-base font-semibold leading-tight">{ticket.title}</h1>
+
+        {/* Reporter (created by ...) + created date */}
+        {(ticket.reporter || ticket.createdAt) && (
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>{t('projects.reporter.label')}</span>
+            {ticket.reporter ? (
+              <TicketReporterBadge reporter={ticket.reporter} variant="full" />
+            ) : (
+              <span className="italic">{t('projects.reporter.unknown')}</span>
+            )}
+            <span>·</span>
+            <span>{formatRelativeTime(ticket.createdAt)}</span>
+          </div>
+        )}
 
         {/* Status + tags */}
         <div className="mb-4 flex flex-wrap items-center gap-1.5">

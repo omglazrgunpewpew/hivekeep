@@ -843,6 +843,10 @@ export const tickets = sqliteTable('tickets', {
   description: text('description').notNull().default(''),
   status: text('status').notNull().default('backlog'), // 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'done'
   position: integer('position').notNull().default(0),
+  /** Reporter — who created this ticket. Exactly one of reporter_user_id /
+   *  reporter_kin_id is set (or both NULL for legacy/seeded rows). */
+  reporterUserId: text('reporter_user_id').references(() => user.id, { onDelete: 'set null' }),
+  reporterKinId: text('reporter_kin_id').references(() => kins.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
