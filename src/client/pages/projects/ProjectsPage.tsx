@@ -12,6 +12,7 @@ import { CreateTicketModal } from '@/client/components/project/CreateTicketModal
 import { EditProjectModal } from '@/client/components/project/EditProjectModal'
 import { ActiveKinsIndicator } from '@/client/components/project/ActiveKinsIndicator'
 import { EmptyState } from '@/client/components/common/EmptyState'
+import { cn } from '@/client/lib/utils'
 import { getErrorMessage } from '@/client/lib/api'
 import { toast } from 'sonner'
 
@@ -94,6 +95,18 @@ export function ProjectsPage() {
           const total = Object.values(project.ticketCounts).reduce((a, b) => a + b, 0)
           const done = project.ticketCounts.done ?? 0
           const percent = total > 0 ? Math.round((done / total) * 100) : 0
+          // Segmented progress bar — each ticket status gets a slice proportional
+          // to its share of the total, using the same color tokens as the kanban
+          // column accents so the bar reads as a compact mini-map of the board.
+          const segments = total > 0
+            ? ([
+                { status: 'backlog', count: project.ticketCounts.backlog ?? 0, color: 'bg-muted-foreground/60' },
+                { status: 'todo', count: project.ticketCounts.todo ?? 0, color: 'bg-info' },
+                { status: 'in_progress', count: project.ticketCounts.in_progress ?? 0, color: 'bg-primary' },
+                { status: 'blocked', count: project.ticketCounts.blocked ?? 0, color: 'bg-destructive' },
+                { status: 'done', count: project.ticketCounts.done ?? 0, color: 'bg-success' },
+              ] as const).filter((s) => s.count > 0)
+            : []
           return (
           <div className="flex h-full flex-col">
             <header className="flex items-start gap-3 border-b border-border px-4 py-3">
@@ -104,21 +117,25 @@ export function ProjectsPage() {
                     {project.description}
                   </p>
                 )}
-                {/* Project progress — at-a-glance done/total with a slim bar.
-                    The bar uses palette-aware success tint so it ties to the
-                    Done column accent in the kanban below. */}
+                {/* Stacked segmented progress — shows ticket distribution across all
+                    five statuses, not just done/total. Reads as a mini-map of the
+                    kanban below since it reuses the same status accent colors. */}
                 <div className="mt-2 flex max-w-md items-center gap-2">
                   <div
-                    className="h-1 flex-1 overflow-hidden rounded-full bg-muted"
+                    className="flex h-1 flex-1 overflow-hidden rounded-full bg-muted"
                     role="progressbar"
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={percent}
                   >
-                    <div
-                      className="h-full rounded-full bg-success transition-[width] duration-300"
-                      style={{ width: `${percent}%` }}
-                    />
+                    {segments.map((seg) => (
+                      <div
+                        key={seg.status}
+                        className={cn('h-full transition-[width] duration-300', seg.color)}
+                        style={{ width: `${(seg.count / total) * 100}%` }}
+                        title={`${t(`projects.status.${seg.status}`)}: ${seg.count}`}
+                      />
+                    ))}
                   </div>
                   <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
                     {total === 0
