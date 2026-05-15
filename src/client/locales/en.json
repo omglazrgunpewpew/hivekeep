@@ -939,6 +939,7 @@
     "close": "Close",
     "viewPrompt": "Prompt",
     "viewPromptTooltip": "View full task prompt",
+    "toolCalls": "Tool calls",
     "prompt": "Task prompt",
     "promptDescription": "Full task prompt content",
     "forceStart": "Force start",
@@ -2472,6 +2473,8 @@
       "panel": {
         "heading": "Ticket",
         "description": "Description",
+        "descriptionExpand": "Show more",
+        "descriptionCollapse": "Show less",
         "noDescription": "No description.",
         "tasksHistory": "Tasks ({{count}})",
         "startTask": "Start a task",

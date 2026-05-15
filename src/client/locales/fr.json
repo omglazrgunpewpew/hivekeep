@@ -939,6 +939,7 @@
     "close": "Fermer",
     "viewPrompt": "Prompt",
     "viewPromptTooltip": "Voir le prompt complet de la tâche",
+    "toolCalls": "Appels d'outils",
     "prompt": "Prompt de la tâche",
     "promptDescription": "Contenu complet du prompt de la tâche",
     "forceStart": "Démarrer immédiatement",
@@ -2473,6 +2474,8 @@
       "panel": {
         "heading": "Ticket",
         "description": "Description",
+        "descriptionExpand": "Voir plus",
+        "descriptionCollapse": "Voir moins",
         "noDescription": "Pas de description.",
         "tasksHistory": "Tâches ({{count}})",
         "startTask": "Démarrer une tâche",

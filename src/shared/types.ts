@@ -186,6 +186,8 @@ export interface TaskSummary {
   providerId: string | null
   cronId: string | null
   depth: number
+  thinkingEnabled?: boolean
+  thinkingEffort?: KinThinkingEffort | null
   concurrencyGroup: string | null
   concurrencyMax: number | null
   queuePosition: number | null

@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTicket, useTickets } from '@/client/hooks/useTickets'
 import { useProject } from '@/client/hooks/useProjects'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
-import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil, Sparkles } from 'lucide-react'
+import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
+import { cn } from '@/client/lib/utils'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
 import { TaskTimelineItem } from '@/client/components/common/TaskTimelineItem'
@@ -188,9 +189,7 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
             {t('projects.ticket.panel.description')}
           </h3>
           {ticket.description.trim() ? (
-            <div className="text-sm text-foreground">
-              <MarkdownContent content={ticket.description} isUser={false} />
-            </div>
+            <CollapsibleDescription content={ticket.description} />
           ) : (
             <p className="text-sm italic text-muted-foreground">
               {t('projects.ticket.panel.noDescription')}
@@ -272,6 +271,67 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
             closeTicket()
           }}
         />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Collapsible markdown description with a "show more" affordance.
+ *
+ * Defaults to a clamped height (~20 lines) and lets the user expand on demand
+ * so the tasks history stays visible without scrolling on long descriptions.
+ */
+function CollapsibleDescription({ content }: { content: string }) {
+  const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
+  const [needsClamp, setNeedsClamp] = useState(false)
+  const innerRef = useRef<HTMLDivElement | null>(null)
+
+  // ~20 lines @ 1.5 line-height with text-sm (14px) ≈ 420px. Stay slightly
+  // under to make the gradient hint noticeable without hiding too much.
+  const MAX_PX = 420
+
+  useLayoutEffect(() => {
+    if (!innerRef.current) return
+    setNeedsClamp(innerRef.current.scrollHeight > MAX_PX + 4)
+  }, [content])
+
+  return (
+    <div className="text-sm text-foreground">
+      <div
+        className={cn('relative overflow-hidden')}
+        style={!expanded && needsClamp ? { maxHeight: `${MAX_PX}px` } : undefined}
+      >
+        <div ref={innerRef}>
+          <MarkdownContent content={content} isUser={false} />
+        </div>
+        {needsClamp && !expanded && (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background to-transparent"
+            aria-hidden="true"
+          />
+        )}
+      </div>
+      {needsClamp && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-1 h-6 gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? (
+            <>
+              <ChevronUp className="size-3" />
+              {t('projects.ticket.panel.descriptionCollapse')}
+            </>
+          ) : (
+            <>
+              <ChevronDown className="size-3" />
+              {t('projects.ticket.panel.descriptionExpand')}
+            </>
+          )}
+        </Button>
       )}
     </div>
   )

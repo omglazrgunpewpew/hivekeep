@@ -271,10 +271,14 @@ export function TaskPanelContent({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Header info */}
-      <div className="shrink-0 border-b border-border px-3 py-2">
-        <div className="flex items-start gap-2">
-          <Avatar className="size-7 shrink-0 mt-0.5">
+      {/* Header info — restructured into 3 calm rows:
+          1) avatar + title + status badge
+          2) kin name · depth · mode · model · thinking effort · cron run selector
+          3) action chips (tool calls, prompt, context) — only when relevant */}
+      <div className="shrink-0 border-b border-border px-3 py-2.5 space-y-1.5">
+        {/* Row 1: identity + status */}
+        <div className="flex items-center gap-2">
+          <Avatar className="size-7 shrink-0">
             {kinAvatarUrl ? (
               <AvatarImage src={kinAvatarUrl} alt={kinName ?? ''} />
             ) : (
@@ -286,159 +290,205 @@ export function TaskPanelContent({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-xs font-medium">
+              <span className="truncate text-sm font-medium leading-tight">
                 {task?.title ??
                   (task?.description && task.description.length > 60
                     ? task.description.slice(0, 60) + '...'
                     : task?.description) ??
                   t('common.loading')}
               </span>
-              {statusConfig && StatusIcon && (
-                <Badge variant={statusConfig.badgeVariant} className="shrink-0 gap-0.5 text-[10px] px-1.5 py-0">
-                  <StatusIcon className={cn('size-2.5', statusConfig.iconClass)} />
-                  {t(`sidebar.tasks.status.${task!.status}`)}
-                </Badge>
-              )}
             </div>
+            {kinName && (
+              <div className="flex items-center gap-1 mt-0.5 text-[11px] text-muted-foreground">
+                <GitBranch className="size-2.5 shrink-0" />
+                <span className="truncate">{kinName}</span>
+              </div>
+            )}
+          </div>
 
-            {task && (
-              <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                {kinName && (
-                  <span className="flex items-center gap-0.5">
-                    <GitBranch className="size-2.5" />
-                    {kinName}
-                  </span>
-                )}
-                {cronId && (
-                  <Popover open={isRunSelectorOpen} onOpenChange={setIsRunSelectorOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 gap-0.5 px-1 text-[9px]"
-                      >
-                        <History className="size-2.5" />
-                        {t('taskDetail.runSelector.trigger', { count: siblingRuns.length || 1 })}
-                        <ChevronDown className="size-2.5 opacity-60" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-72 p-0">
-                      <div className="px-3 py-2 border-b border-border">
-                        <p className="text-xs font-medium">{t('taskDetail.runSelector.title')}</p>
-                      </div>
-                      <div className="max-h-72 overflow-y-auto py-1">
-                        {isLoadingRuns ? (
-                          <div className="flex justify-center py-4">
-                            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : siblingRuns.length === 0 ? (
-                          <p className="px-3 py-4 text-center text-[11px] text-muted-foreground">
-                            {t('taskDetail.runSelector.empty')}
-                          </p>
-                        ) : (
-                          siblingRuns.map((run) => {
-                            const runStatusCfg = STATUS_CONFIG[run.status]
-                            const RunStatusIcon = runStatusCfg.icon
-                            const isFinished = run.status === 'completed' || run.status === 'failed' || run.status === 'cancelled'
-                            const duration = isFinished ? formatDurationBetween(run.createdAt, run.updatedAt) : undefined
-                            const isCurrent = run.id === taskId
-                            return (
-                              <button
-                                type="button"
-                                key={run.id}
-                                onClick={() => handleSelectRun(run)}
-                                className={cn(
-                                  'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] transition-colors',
-                                  isCurrent ? 'bg-primary/10 text-foreground' : 'hover:bg-accent/50',
-                                )}
-                              >
-                                <RunStatusIcon className={cn('size-3 shrink-0', runStatusCfg.iconClass)} />
-                                <span className="min-w-0 flex-1 truncate">
-                                  {run.title ?? run.description.slice(0, 50)}
-                                </span>
-                                {duration && (
-                                  <span className="text-[9px] text-muted-foreground shrink-0">{duration}</span>
-                                )}
-                                <span className="text-[9px] text-muted-foreground shrink-0">
-                                  {formatRelativeTime(new Date(run.createdAt).getTime(), { suffix: true })}
-                                </span>
-                              </button>
-                            )
-                          })
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-                <span className="flex items-center gap-0.5">
-                  <Layers className="size-2.5" />
-                  {t('taskDetail.depth')}: {task.depth}
-                </span>
-                <Badge variant="outline" size="xs">
-                  {task.mode === 'await'
-                    ? t('taskDetail.modeAwait')
-                    : t('taskDetail.modeAsync')}
+          {statusConfig && StatusIcon && task && (
+            <Badge variant={statusConfig.badgeVariant} className="shrink-0 gap-1 text-[10px] px-1.5 py-0.5 h-5">
+              <StatusIcon className={cn('size-2.5', statusConfig.iconClass)} />
+              {t(`sidebar.tasks.status.${task.status}`)}
+            </Badge>
+          )}
+        </div>
+
+        {/* Row 2: meta facts — depth, mode, model, thinking, cron runs */}
+        {task && (
+          <div className="flex items-center gap-1 flex-wrap pl-9">
+            {/* Mode */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="h-5 gap-1 px-1.5 py-0 text-[10px] font-normal">
+                  {task.mode === 'await' ? t('taskDetail.modeAwait') : t('taskDetail.modeAsync')}
                 </Badge>
-                {task.model && (
-                  <span className="flex items-center gap-0.5">
+              </TooltipTrigger>
+              <TooltipContent>{t('taskDetail.mode')}</TooltipContent>
+            </Tooltip>
+
+            {/* Depth */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="h-5 gap-1 px-1.5 py-0 text-[10px] font-normal">
+                  <Layers className="size-2.5" />
+                  {task.depth}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>{t('taskDetail.depth')}</TooltipContent>
+            </Tooltip>
+
+            {/* Model */}
+            {task.model && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="h-5 gap-1 px-1.5 py-0 text-[10px] font-normal max-w-[150px]">
                     {resolvedModel ? (
-                      <ProviderIcon providerType={resolvedModel.providerType} className="size-2.5" />
+                      <ProviderIcon providerType={resolvedModel.providerType} className="size-2.5 shrink-0" />
                     ) : (
-                      <Cpu className="size-2.5" />
+                      <Cpu className="size-2.5 shrink-0" />
                     )}
-                    <span className="truncate max-w-[100px]">{resolvedModel?.name ?? task.model}</span>
-                  </span>
-                )}
-                {task.thinkingEnabled && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Sparkles className="size-2.5 text-chart-4" />
-                    </TooltipTrigger>
-                    <TooltipContent>{t('chat.thinkingToggle')}</TooltipContent>
-                  </Tooltip>
-                )}
-                {toolCallCount > 0 && (
+                    <span className="truncate">{resolvedModel?.name ?? task.model}</span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{resolvedModel?.name ?? task.model}</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Thinking effort */}
+            {task.thinkingEnabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 px-1.5 py-0 text-[10px] font-normal border-chart-4/40 bg-chart-4/10 text-chart-4"
+                  >
+                    <Sparkles className="size-2.5" />
+                    {task.thinkingEffort
+                      ? t(`chat.thinkingPicker.effort.${task.thinkingEffort}`)
+                      : t('chat.thinkingPicker.effort.medium')}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('chat.thinkingPicker.title')}
+                  {task.thinkingEffort ? `: ${t(`chat.thinkingPicker.effort.${task.thinkingEffort}`)}` : ''}
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Cron run selector */}
+            {cronId && (
+              <Popover open={isRunSelectorOpen} onOpenChange={setIsRunSelectorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-5 gap-1 px-1.5 text-[10px] font-normal"
+                  >
+                    <History className="size-2.5" />
+                    {t('taskDetail.runSelector.trigger', { count: siblingRuns.length || 1 })}
+                    <ChevronDown className="size-2.5 opacity-60" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 p-0">
+                  <div className="px-3 py-2 border-b border-border">
+                    <p className="text-xs font-medium">{t('taskDetail.runSelector.title')}</p>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {isLoadingRuns ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : siblingRuns.length === 0 ? (
+                      <p className="px-3 py-4 text-center text-[11px] text-muted-foreground">
+                        {t('taskDetail.runSelector.empty')}
+                      </p>
+                    ) : (
+                      siblingRuns.map((run) => {
+                        const runStatusCfg = STATUS_CONFIG[run.status]
+                        const RunStatusIcon = runStatusCfg.icon
+                        const isFinished = run.status === 'completed' || run.status === 'failed' || run.status === 'cancelled'
+                        const duration = isFinished ? formatDurationBetween(run.createdAt, run.updatedAt) : undefined
+                        const isCurrent = run.id === taskId
+                        return (
+                          <button
+                            type="button"
+                            key={run.id}
+                            onClick={() => handleSelectRun(run)}
+                            className={cn(
+                              'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] transition-colors',
+                              isCurrent ? 'bg-primary/10 text-foreground' : 'hover:bg-accent/50',
+                            )}
+                          >
+                            <RunStatusIcon className={cn('size-3 shrink-0', runStatusCfg.iconClass)} />
+                            <span className="min-w-0 flex-1 truncate">
+                              {run.title ?? run.description.slice(0, 50)}
+                            </span>
+                            {duration && (
+                              <span className="text-[9px] text-muted-foreground shrink-0">{duration}</span>
+                            )}
+                            <span className="text-[9px] text-muted-foreground shrink-0">
+                              {formatRelativeTime(new Date(run.createdAt).getTime(), { suffix: true })}
+                            </span>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+        )}
+
+        {/* Row 3: action chips — only rendered when at least one is visible */}
+        {task && (toolCallCount > 0 || task.description || contextData) && (
+          <div className="flex items-center gap-1.5 flex-wrap pl-9">
+            {toolCallCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
                     variant={isToolCallsOpen ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="h-4 gap-0.5 px-1 text-[9px]"
+                    className="h-5 gap-1 px-1.5 text-[10px]"
                     onClick={toggleToolCalls}
                   >
                     <Wrench className="size-2.5" />
                     {toolCallCount}
                   </Button>
-                )}
-                {task.description && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 gap-0.5 px-1 text-[9px]"
-                        onClick={() => setIsPromptOpen(true)}
-                      >
-                        <FileText className="size-2.5" />
-                        {t('taskDetail.viewPrompt')}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('taskDetail.viewPromptTooltip')}</TooltipContent>
-                  </Tooltip>
-                )}
-                {contextData && (
-                  <ContextBar
-                    kinId={task.parentKinId}
-                    taskId={task.id}
-                    estimatedTokens={contextData.tokenEstimate.total}
-                    maxTokens={contextData.contextWindow}
-                    apiContextTokens={contextData.apiContextTokens}
-                    contextBreakdown={contextData.tokenEstimate}
-                    compact
-                  />
-                )}
-              </div>
+                </TooltipTrigger>
+                <TooltipContent>{t('taskDetail.toolCalls', { defaultValue: 'Tool calls' })}</TooltipContent>
+              </Tooltip>
+            )}
+            {task.description && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 gap-1 px-1.5 text-[10px]"
+                    onClick={() => setIsPromptOpen(true)}
+                  >
+                    <FileText className="size-2.5" />
+                    {t('taskDetail.viewPrompt')}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('taskDetail.viewPromptTooltip')}</TooltipContent>
+              </Tooltip>
+            )}
+            {contextData && (
+              <ContextBar
+                kinId={task.parentKinId}
+                taskId={task.id}
+                estimatedTokens={contextData.tokenEstimate.total}
+                maxTokens={contextData.contextWindow}
+                apiContextTokens={contextData.apiContextTokens}
+                contextBreakdown={contextData.tokenEstimate}
+                compact
+              />
             )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Middle: messages + optional tool calls panel */}

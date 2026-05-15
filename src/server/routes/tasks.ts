@@ -60,6 +60,7 @@ taskRoutes.get('/', async (c) => {
         cronId: t.cronId ?? null,
         depth: t.depth,
         thinkingEnabled: t.thinkingConfig ? (JSON.parse(t.thinkingConfig)?.enabled ?? false) : false,
+        thinkingEffort: t.thinkingConfig ? (JSON.parse(t.thinkingConfig)?.effort ?? null) : null,
         concurrencyGroup: t.concurrencyGroup ?? null,
         concurrencyMax: t.concurrencyMax ?? null,
         queuePosition: null, // Computed on-demand for queued tasks
@@ -122,6 +123,7 @@ taskRoutes.get('/:id', async (c) => {
       mode: task.mode,
       model: effectiveModel,
       thinkingEnabled: task.thinkingConfig ? (JSON.parse(task.thinkingConfig)?.enabled ?? false) : false,
+      thinkingEffort: task.thinkingConfig ? (JSON.parse(task.thinkingConfig)?.effort ?? null) : null,
       depth: task.depth,
       result: task.result,
       error: task.error,
