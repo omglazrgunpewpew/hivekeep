@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { api } from '@/client/lib/api'
 import { SidePanelProvider } from '@/client/contexts/SidePanelContext'
+import { TicketMentionShell } from '@/client/contexts/TicketMentionShell'
 import { ActivityBar } from '@/client/components/layout/ActivityBar'
 import { AppTopBar } from '@/client/components/layout/AppTopBar'
 import { TooltipProvider } from '@/client/components/ui/tooltip'
@@ -169,6 +170,7 @@ function AuthenticatedShell() {
   return (
     <TooltipProvider delayDuration={0}>
     <SidePanelProvider>
+    <TicketMentionShell>
       <div className="flex h-screen w-screen flex-col overflow-hidden">
         <AppTopBar
           onOpenSettings={handleOpenSettings}
@@ -220,6 +222,7 @@ function AuthenticatedShell() {
           />
         </Suspense>
       </div>
+    </TicketMentionShell>
     </SidePanelProvider>
     </TooltipProvider>
   )

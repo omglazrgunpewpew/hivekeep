@@ -7,6 +7,8 @@ import { useCopyToClipboard } from '@/client/hooks/useCopyToClipboard'
 import { cn } from '@/client/lib/utils'
 import { HighlightText } from '@/client/components/chat/HighlightText'
 import { ImageLightbox } from '@/client/components/chat/ImageLightbox'
+import { TicketMention } from '@/client/components/chat/TicketMention'
+import { remarkTicketMentions } from '@/client/lib/remark-ticket-mentions'
 
 interface MarkdownContentProps {
   content: string
@@ -15,7 +17,7 @@ interface MarkdownContentProps {
   className?: string
 }
 
-const defaultRemarkPlugins = [remarkGfm]
+const defaultRemarkPlugins = [remarkGfm, remarkTicketMentions]
 
 // ─── Lazy-loaded plugins ──────────────────────────────────────────────────────
 // rehype-highlight (~170 KB), remark-math + rehype-katex (~260 KB) are loaded
@@ -437,7 +439,23 @@ function MarkdownImage({ src, alt, title }: ImgHTMLAttributes<HTMLImageElement>)
   )
 }
 
-const markdownComponents = {
+/**
+ * Renderer for the synthetic `ticket-mention` element emitted by the
+ * remarkTicketMentions plugin. The plugin attaches the original raw text as a
+ * `data-raw` HTML attribute, which react-markdown forwards verbatim. We pull
+ * it back out and hand it to the TicketMention component.
+ *
+ * Falls back to literal text if `data-raw` is missing (defensive — should
+ * never happen in practice).
+ */
+function MentionElement(props: HTMLAttributes<HTMLElement> & { 'data-raw'?: string }) {
+  const raw = props['data-raw']
+  if (!raw) return <>{props.children}</>
+  return <TicketMention raw={raw} />
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: registering a custom tag name in the components map
+const markdownComponents: any = {
   pre: PreBlock,
   p: withHighlight('p'),
   li: withHighlight('li'),
@@ -455,6 +473,7 @@ const markdownComponents = {
   h5: withHighlight('h5'),
   h6: withHighlight('h6'),
   blockquote: withHighlight('blockquote'),
+  'ticket-mention': MentionElement,
 }
 
 // ─── Inner markdown renderer (uses hooks for lazy rehype plugins) ─────────────
@@ -495,9 +514,12 @@ export const MarkdownContent = memo(function MarkdownContent({
   // Strip leading whitespace — LLMs sometimes start with \n
   const trimmed = content.trimStart()
 
-  // Skip markdown rendering for very short / plain messages
+  // Skip markdown rendering for very short / plain messages.
+  //
+  // Note: `#` is part of the markdown-marker check, so any string containing a
+  // potential ticket mention (`#42` or `slug#42`) already takes the markdown
+  // path and runs through remarkTicketMentions — no extra branch needed here.
   const isPlainText = useMemo(() => {
-    // No markdown markers at all → render as-is
     return !/[*_`#\[!\-|>~$\\]/.test(trimmed) && !/^\d+\.\s/m.test(trimmed)
   }, [trimmed])
 

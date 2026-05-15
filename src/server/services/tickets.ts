@@ -323,6 +323,214 @@ export async function resolveTicketRef(
   return { ok: true, ticketId: ticket.id }
 }
 
+// ─── Mention resolution (batch, public) ────────────────────────────────────────
+
+/** Maximum number of refs accepted per batch call. Anything above is rejected
+ *  to keep `resolveMentions` cheap and predictable for the chat hot-path. */
+export const RESOLVE_MENTIONS_MAX_REFS = 50
+
+/** Resolved mention info exposed to the client. Snapshot at resolution time —
+ *  the client may rely on SSE for live updates. */
+export interface ResolvedMention {
+  found: true
+  id: string
+  number: number
+  title: string
+  status: TicketStatus
+  projectId: string
+  projectSlug: string
+  projectName: string
+}
+
+export interface UnresolvedMention {
+  found: false
+  /** Why it could not be resolved. Useful for debugging / future UX. */
+  reason: TicketResolutionErrorCode
+}
+
+export type MentionResolution = ResolvedMention | UnresolvedMention
+
+/**
+ * Resolve a list of free-form ticket refs in batch. Refs that fail to parse,
+ * point to a missing project or ticket, or use a bare `#N` without an active
+ * project context, are returned with `found: false` rather than throwing.
+ *
+ * Duplicate refs are collapsed to a single DB lookup — callers can pass the
+ * same ref multiple times safely.
+ *
+ * Returns an object keyed by the original ref strings, preserving the input
+ * casing so the client can match each mention exactly as it was written.
+ */
+export async function resolveMentions(
+  refs: string[],
+  ctx: { activeProjectId?: string | null } = {},
+): Promise<Record<string, MentionResolution>> {
+  const out: Record<string, MentionResolution> = {}
+  if (!Array.isArray(refs) || refs.length === 0) return out
+
+  // De-dup while preserving the original input strings (case-sensitive: callers
+  // already enforced lowercase slugs upstream, but we keep the keys verbatim
+  // for round-tripping in the client cache).
+  const unique = Array.from(new Set(refs.filter((r) => typeof r === 'string' && r.length > 0)))
+  const capped = unique.slice(0, RESOLVE_MENTIONS_MAX_REFS)
+
+  // Group lookups: collect slugs and bare numbers separately to minimize roundtrips.
+  type Parsed = { raw: string; parsed: ReturnType<typeof parseTicketRef> }
+  const parsedRefs: Parsed[] = capped.map((raw) => ({ raw, parsed: parseTicketRef(raw) }))
+
+  const slugs = new Set<string>()
+  for (const { parsed } of parsedRefs) {
+    if (parsed.kind === 'qualified') slugs.add(parsed.slug)
+  }
+
+  // Bare refs need the active project resolved upfront so they can join the
+  // same ticket lookup path as qualified refs.
+  let activeProject: { id: string; slug: string; name: string } | null = null
+  if (ctx.activeProjectId) {
+    const row = db
+      .select({ id: projects.id, slug: projects.slug, name: projects.title })
+      .from(projects)
+      .where(eq(projects.id, ctx.activeProjectId))
+      .get()
+    if (row && row.slug) {
+      activeProject = { id: row.id, slug: row.slug, name: row.name }
+    }
+  }
+
+  // Fetch all referenced projects (qualified slugs + active project) in a single query.
+  const projectRows = slugs.size > 0
+    ? db
+        .select({ id: projects.id, slug: projects.slug, name: projects.title })
+        .from(projects)
+        .where(inArray(projects.slug, Array.from(slugs)))
+        .all()
+    : []
+  const projectsBySlug = new Map<string, { id: string; slug: string; name: string }>()
+  for (const p of projectRows) {
+    if (p.slug) projectsBySlug.set(p.slug, { id: p.id, slug: p.slug, name: p.name })
+  }
+  if (activeProject) projectsBySlug.set(activeProject.slug, activeProject)
+
+  // Build the list of (projectId, number) we need to look up.
+  type Lookup = { raw: string; projectId: string; projectSlug: string; projectName: string; number: number }
+  const lookups: Lookup[] = []
+
+  for (const { raw, parsed } of parsedRefs) {
+    if (parsed.kind === 'invalid') {
+      out[raw] = { found: false, reason: 'INVALID_TICKET_REF' }
+      continue
+    }
+    if (parsed.kind === 'uuid') {
+      // Single-shot UUID lookup. Cheap enough to do inline.
+      const row = db
+        .select({
+          id: tickets.id,
+          number: tickets.number,
+          title: tickets.title,
+          status: tickets.status,
+          projectId: tickets.projectId,
+        })
+        .from(tickets)
+        .where(eq(tickets.id, parsed.id))
+        .get()
+      if (!row || row.number === null) {
+        out[raw] = { found: false, reason: 'TICKET_NOT_FOUND' }
+        continue
+      }
+      const proj = db
+        .select({ slug: projects.slug, name: projects.title })
+        .from(projects)
+        .where(eq(projects.id, row.projectId))
+        .get()
+      out[raw] = {
+        found: true,
+        id: row.id,
+        number: row.number,
+        title: row.title,
+        status: row.status as TicketStatus,
+        projectId: row.projectId,
+        projectSlug: proj?.slug ?? '',
+        projectName: proj?.name ?? '',
+      }
+      continue
+    }
+    if (parsed.kind === 'qualified') {
+      const proj = projectsBySlug.get(parsed.slug)
+      if (!proj) {
+        out[raw] = { found: false, reason: 'PROJECT_NOT_FOUND' }
+        continue
+      }
+      lookups.push({
+        raw,
+        projectId: proj.id,
+        projectSlug: proj.slug,
+        projectName: proj.name,
+        number: parsed.number,
+      })
+      continue
+    }
+    // bare
+    if (!activeProject) {
+      out[raw] = { found: false, reason: 'NO_ACTIVE_PROJECT' }
+      continue
+    }
+    lookups.push({
+      raw,
+      projectId: activeProject.id,
+      projectSlug: activeProject.slug,
+      projectName: activeProject.name,
+      number: parsed.number,
+    })
+  }
+
+  if (lookups.length > 0) {
+    // Fetch all candidate tickets in a single IN-list per project.
+    const byProject = new Map<string, Lookup[]>()
+    for (const l of lookups) {
+      const arr = byProject.get(l.projectId) ?? []
+      arr.push(l)
+      byProject.set(l.projectId, arr)
+    }
+
+    for (const [projectId, items] of byProject) {
+      const numbers = Array.from(new Set(items.map((i) => i.number)))
+      const rows = db
+        .select({
+          id: tickets.id,
+          number: tickets.number,
+          title: tickets.title,
+          status: tickets.status,
+        })
+        .from(tickets)
+        .where(and(eq(tickets.projectId, projectId), inArray(tickets.number, numbers)))
+        .all()
+      const byNumber = new Map<number, typeof rows[number]>()
+      for (const r of rows) {
+        if (r.number !== null) byNumber.set(r.number, r)
+      }
+      for (const item of items) {
+        const row = byNumber.get(item.number)
+        if (!row) {
+          out[item.raw] = { found: false, reason: 'TICKET_NOT_FOUND' }
+          continue
+        }
+        out[item.raw] = {
+          found: true,
+          id: row.id,
+          number: item.number,
+          title: row.title,
+          status: row.status as TicketStatus,
+          projectId,
+          projectSlug: item.projectSlug,
+          projectName: item.projectName,
+        }
+      }
+    }
+  }
+
+  return out
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export interface ListTicketsFilters {

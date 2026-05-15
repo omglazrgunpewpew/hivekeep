@@ -249,6 +249,10 @@ export const fullMockSchema = {
   pluginStorage: {},
   cronLearnings: {},
   llmUsage: {},
+  projects: {},
+  projectTags: {},
+  tickets: {},
+  ticketTags: {},
 }
 
 /**
@@ -272,6 +276,9 @@ export const fullMockDrizzleOrm = {
   asc: unary,
   desc: unary,
   count: unary,
+  max: unary,
+  min: unary,
+  sum: unary,
   inArray: identity,
   notInArray: identity,
   isNull: unary,

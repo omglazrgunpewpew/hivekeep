@@ -5,6 +5,8 @@ import {
   deleteTicket,
   startTicketTask,
   startTicketEnrichment,
+  resolveMentions,
+  RESOLVE_MENTIONS_MAX_REFS,
 } from '@/server/services/tickets'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
@@ -14,6 +16,64 @@ import type { TicketStatus } from '@/shared/types'
 const log = createLogger('routes:tickets')
 
 export const ticketRoutes = new Hono<{ Variables: AppVariables }>()
+
+/**
+ * Batch-resolve ticket mention refs from free text. Used by the chat client to
+ * turn `#42` and `kinbot#42` patterns into clickable badges in a single round
+ * trip per rendered message. Accepts both query strings (`?refs=a,b,c`) and
+ * POST bodies (`{ refs: [...] }`) — POST is preferred when N > 10 to avoid
+ * URL length limits.
+ *
+ * Optional `activeProjectId` resolves bare `#N` refs against a specific
+ * project. The client is expected to pass the current Kin's active project id.
+ */
+ticketRoutes.get('/resolve-mentions', async (c) => {
+  const refsParam = c.req.query('refs') ?? ''
+  const refs = refsParam
+    .split(',')
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0)
+  if (refs.length === 0) {
+    return c.json({ resolutions: {} })
+  }
+  if (refs.length > RESOLVE_MENTIONS_MAX_REFS) {
+    return c.json(
+      {
+        error: {
+          code: 'TOO_MANY_REFS',
+          message: `Too many refs (max ${RESOLVE_MENTIONS_MAX_REFS}). Use POST or split the request.`,
+        },
+      },
+      400,
+    )
+  }
+  const activeProjectId = c.req.query('activeProjectId') ?? null
+  const resolutions = await resolveMentions(refs, { activeProjectId })
+  return c.json({ resolutions })
+})
+
+ticketRoutes.post('/resolve-mentions', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  const rawRefs = Array.isArray(body.refs) ? body.refs : []
+  const refs = rawRefs
+    .filter((r: unknown): r is string => typeof r === 'string')
+    .map((r: string) => r.trim())
+    .filter((r: string) => r.length > 0)
+  if (refs.length > RESOLVE_MENTIONS_MAX_REFS) {
+    return c.json(
+      {
+        error: {
+          code: 'TOO_MANY_REFS',
+          message: `Too many refs (max ${RESOLVE_MENTIONS_MAX_REFS}). Split the request.`,
+        },
+      },
+      400,
+    )
+  }
+  const activeProjectId = typeof body.activeProjectId === 'string' ? body.activeProjectId : null
+  const resolutions = await resolveMentions(refs, { activeProjectId })
+  return c.json({ resolutions })
+})
 
 ticketRoutes.get('/:id', async (c) => {
   const id = c.req.param('id')
