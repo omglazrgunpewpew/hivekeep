@@ -75,15 +75,22 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
     transition,
   }
 
-  const hasRunning = ticket.runningKins.length > 0
-  const visibleRunning = ticket.runningKins.slice(0, 3)
-  const overflowRunning = ticket.runningKins.length - visibleRunning.length
+  // Defensive defaults — SSE / optimistic update paths can occasionally produce
+  // partial tickets without these arrays. Falling back to empty values keeps the
+  // kanban from crashing instead of failing the whole page.
+  const runningKins = ticket.runningKins ?? []
+  const tags = ticket.tags ?? []
+  const description = ticket.description ?? ''
+
+  const hasRunning = runningKins.length > 0
+  const visibleRunning = runningKins.slice(0, 3)
+  const overflowRunning = runningKins.length - visibleRunning.length
   const normalizedQuery = (highlightQuery ?? '').trim().toLowerCase()
 
   // Short snippet of the description, shown in a tooltip on title hover so users
   // can preview context without opening the side panel. Cap at ~240 chars to keep
   // the tooltip skim-friendly and avoid huge floating boxes.
-  const trimmedDescription = ticket.description.trim()
+  const trimmedDescription = description.trim()
   const descriptionPreview =
     trimmedDescription.length > 240
       ? trimmedDescription.slice(0, 240).trimEnd() + '…'
@@ -148,9 +155,9 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
         )}
       </div>
 
-      {ticket.tags.length > 0 && (
+      {tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
-          {ticket.tags.slice(0, 4).map((tag) => (
+          {tags.slice(0, 4).map((tag) => (
             <button
               key={tag.id}
               type="button"
@@ -174,19 +181,19 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
               </Badge>
             </button>
           ))}
-          {ticket.tags.length > 4 && (
+          {tags.length > 4 && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge
                   variant="secondary"
                   className="cursor-help px-1.5 py-0 text-[10px] font-normal"
                 >
-                  +{ticket.tags.length - 4}
+                  +{tags.length - 4}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-xs">
                 <div className="flex flex-wrap gap-1">
-                  {ticket.tags.slice(4).map((tag) => (
+                  {tags.slice(4).map((tag) => (
                     <span
                       key={tag.id}
                       className="rounded px-1.5 py-0.5 text-[10px]"

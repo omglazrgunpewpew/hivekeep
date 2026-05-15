@@ -110,7 +110,7 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
     for (const ticket of displayTickets) {
       if (normalizedQuery) {
         const titleMatch = ticket.title.toLowerCase().includes(normalizedQuery)
-        const tagMatch = ticket.tags.some((tg) => tg.label.toLowerCase().includes(normalizedQuery))
+        const tagMatch = (ticket.tags ?? []).some((tg) => tg.label.toLowerCase().includes(normalizedQuery))
         if (!titleMatch && !tagMatch) continue
       }
       const s = ticket.status as TicketStatus
