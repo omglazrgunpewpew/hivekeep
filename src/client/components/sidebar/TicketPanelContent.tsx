@@ -4,13 +4,14 @@ import { useTicket, useTickets } from '@/client/hooks/useTickets'
 import { useProject } from '@/client/hooks/useProjects'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
-import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil } from 'lucide-react'
+import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil, Sparkles } from 'lucide-react'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
 import { TaskTimelineItem } from '@/client/components/common/TaskTimelineItem'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import { formatRelativeTime } from '@/client/lib/time'
 import { StartTaskDialog } from '@/client/components/project/StartTaskDialog'
+import { EnrichTicketDialog } from '@/client/components/project/EnrichTicketDialog'
 import { EditTicketModal } from '@/client/components/project/EditTicketModal'
 import { TicketReporterBadge } from '@/client/components/project/TicketReporterBadge'
 import { getErrorMessage } from '@/client/lib/api'
@@ -36,9 +37,23 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
   const { updateTicket, deleteTicket } = useTickets(ticket?.projectId ?? null)
   const { closeTicket, activeTicket, openTask } = useSidePanel()
   const [startTaskOpen, setStartTaskOpen] = useState(false)
+  const [enrichOpen, setEnrichOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
 
   const parent = activeTicket?.parent
+
+  // Detect an in-flight enrichment so we can disable the button + show a hint.
+  const RUNNING_STATUSES = new Set([
+    'queued',
+    'pending',
+    'in_progress',
+    'paused',
+    'awaiting_human_input',
+    'awaiting_kin_response',
+  ])
+  const enrichmentRunning = !!ticket?.tasks?.some(
+    (tk) => tk.kind === 'enrich' && RUNNING_STATUSES.has(tk.status as string),
+  )
 
   if (isLoading && !ticket) {
     return (
@@ -89,6 +104,24 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
         <h2 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t('projects.ticket.panel.heading')}
         </h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={() => setEnrichOpen(true)}
+          disabled={enrichmentRunning}
+          title={
+            enrichmentRunning
+              ? t('projects.enrich.alreadyRunning')
+              : t('projects.enrich.action')
+          }
+        >
+          {enrichmentRunning ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="size-3.5" />
+          )}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -209,6 +242,13 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
       <StartTaskDialog
         open={startTaskOpen}
         onOpenChange={setStartTaskOpen}
+        ticketId={ticket.id}
+        projectId={ticket.projectId}
+      />
+
+      <EnrichTicketDialog
+        open={enrichOpen}
+        onOpenChange={setEnrichOpen}
         ticketId={ticket.id}
         projectId={ticket.projectId}
       />

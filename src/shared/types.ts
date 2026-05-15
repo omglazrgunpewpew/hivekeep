@@ -718,6 +718,9 @@ export interface TicketTaskSummary {
   parentKinName: string
   status: TaskStatus
   mode: TaskMode
+  /** Task variant. 'execute' is a regular ticket task; 'enrich' is a
+   *  ticket-enrichment pass that rewrites title/description/tags. */
+  kind: 'execute' | 'enrich'
   createdAt: number
   updatedAt: number
 }

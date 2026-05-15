@@ -26,6 +26,7 @@ import {
   addTicketTag,
   removeTicketTag,
   startTicketTask,
+  startTicketEnrichment,
   resolveTicketRef,
 } from '@/server/services/tickets'
 import { db } from '@/server/db/index'
@@ -524,6 +525,49 @@ export const startTicketTaskTool: ToolRegistration = {
           return result
         } catch (err) {
           return { error: err instanceof Error ? err.message : 'Unknown error' }
+        }
+      },
+    }),
+}
+
+// ─── Enrich ticket (main only) ────────────────────────────────────────────────
+
+export const enrichTicketTool: ToolRegistration = {
+  availability: ['main'],
+  condition: mainOnlyCondition,
+  create: (ctx) =>
+    tool({
+      description:
+        'Spawn a dedicated enrichment sub-Kin on a ticket. The agent gathers context (repo, related tickets, history) ' +
+        'and rewrites the ticket title, description, and tags to make it actionable. Runs in await mode — you get a turn back when it finishes. ' +
+        'Refuses if another enrichment is already in flight on the same ticket. ' +
+        'Accepts a UUID, a qualified id like "kinbot#42", or a bare "#42".',
+      inputSchema: z.object({
+        ticket_id: z.string(),
+        focus: z
+          .string()
+          .optional()
+          .describe(
+            'Optional free-form orientation for the enrichment (e.g. "creuse plus côté tests" or "propose une approche de migration DB").',
+          ),
+      }),
+      execute: async ({ ticket_id, focus }) => {
+        const resolved = await resolveTicketRef(ticket_id, {
+          activeProjectId: getActiveProjectIdFor(ctx.kinId),
+        })
+        if (!resolved.ok) return { error: resolved.code, message: resolved.message }
+        try {
+          const result = await startTicketEnrichment(resolved.ticketId, ctx.kinId, { focus })
+          return result
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown error'
+          if (msg === 'ENRICHMENT_ALREADY_RUNNING') {
+            return {
+              error: 'ENRICHMENT_ALREADY_RUNNING',
+              message: 'An enrichment task is already running on this ticket. Wait for it to finish before launching another.',
+            }
+          }
+          return { error: msg }
         }
       },
     }),

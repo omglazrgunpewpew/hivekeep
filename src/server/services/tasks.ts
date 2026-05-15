@@ -286,6 +286,8 @@ interface SpawnParams {
   channelOriginId?: string
   webhookId?: string
   ticketId?: string
+  /** Specialized task variant — see schema. Defaults to 'execute'. */
+  kind?: 'execute' | 'enrich'
   thinkingConfig?: KinThinkingConfig
   concurrencyGroup?: string
   concurrencyMax?: number
@@ -335,6 +337,7 @@ export async function spawnTask(params: SpawnParams) {
     parentKinId: params.parentKinId,
     sourceKinId: params.sourceKinId ?? null,
     spawnType: params.spawnType,
+    kind: params.kind ?? 'execute',
     mode: params.mode,
     model: params.model ?? null,
     providerId: params.providerId ?? null,

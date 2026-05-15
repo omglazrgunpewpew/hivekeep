@@ -4,6 +4,7 @@ import {
   updateTicket,
   deleteTicket,
   startTicketTask,
+  startTicketEnrichment,
 } from '@/server/services/tickets'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
@@ -86,6 +87,44 @@ ticketRoutes.post('/:id/start-task', async (c) => {
       return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Kin not found' } }, 404)
     }
     log.warn({ err }, 'startTicketTask failed')
+    return c.json({ error: { code: 'INTERNAL', message: msg } }, 500)
+  }
+})
+
+ticketRoutes.post('/:id/enrich', async (c) => {
+  const ticketId = c.req.param('id')
+  const body = await c.req.json().catch(() => ({}))
+  const kinId = typeof body.kinId === 'string' ? body.kinId.trim() : ''
+  const focus = typeof body.focus === 'string' && body.focus.trim().length > 0
+    ? body.focus.trim()
+    : undefined
+  if (!kinId) {
+    return c.json({ error: { code: 'INVALID_INPUT', message: 'kinId is required' } }, 400)
+  }
+
+  try {
+    const task = await startTicketEnrichment(ticketId, kinId, { focus })
+    return c.json({ task }, 201)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    if (msg === 'TICKET_NOT_FOUND') {
+      return c.json({ error: { code: 'TICKET_NOT_FOUND', message: 'Ticket not found' } }, 404)
+    }
+    if (msg === 'KIN_NOT_FOUND') {
+      return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Kin not found' } }, 404)
+    }
+    if (msg === 'ENRICHMENT_ALREADY_RUNNING') {
+      return c.json(
+        {
+          error: {
+            code: 'ENRICHMENT_ALREADY_RUNNING',
+            message: 'An enrichment task is already running on this ticket.',
+          },
+        },
+        409,
+      )
+    }
+    log.warn({ err }, 'startTicketEnrichment failed')
     return c.json({ error: { code: 'INTERNAL', message: msg } }, 500)
   }
 })

@@ -2126,7 +2126,8 @@
       "add_ticket_tag": "Ajouter un tag au ticket",
       "remove_ticket_tag": "Retirer un tag du ticket",
       "delete_ticket": "Supprimer un ticket",
-      "start_ticket_task": "Démarrer une tâche sur un ticket"
+      "start_ticket_task": "Démarrer une tâche sur un ticket",
+      "enrich_ticket": "Enrichir un ticket"
     },
     "renderers": {
       "rawJson": "JSON brut",
@@ -2497,6 +2498,17 @@
       "kinPlaceholder": "Sélectionner un Kin",
       "activeOnProject": "actif ici",
       "start": "Démarrer"
+    },
+    "enrich": {
+      "action": "Enrichir le ticket",
+      "alreadyRunning": "Un enrichment est déjà en cours sur ce ticket.",
+      "title": "Enrichir ce ticket",
+      "description": "Spawn un agent dédié qui lit le repo, les tickets liés et l'historique, puis réécrit le titre, la description et les tags pour rendre le ticket actionable.",
+      "focusField": "Focus particulier (optionnel)",
+      "focusPlaceholder": "ex. creuse plus côté tests, ou propose une approche de migration DB",
+      "focusHelp": "Optionnel. Une courte orientation passée à l'agent.",
+      "start": "Enrichir",
+      "started": "Enrichment lancé. Le ticket se mettra à jour en direct quand l'agent committera ses modifs."
     },
     "chip": {
       "tooltip": "Projet actif : {{title}}. Clique pour ouvrir le kanban."

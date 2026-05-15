@@ -280,6 +280,10 @@ export const tasks = sqliteTable('tasks', {
   parentKinId: text('parent_kin_id').notNull().references(() => kins.id),
   sourceKinId: text('source_kin_id').references(() => kins.id),
   spawnType: text('spawn_type').notNull(), // 'self' | 'other'
+  /** Specialized variant of a task. 'execute' (default) is the regular sub-Kin
+   *  run; 'enrich' is a ticket-enrichment task that rewrites title/description/tags
+   *  rather than executing the ticket. Always paired with a non-null ticketId. */
+  kind: text('kind').notNull().default('execute'), // 'execute' | 'enrich'
   mode: text('mode').notNull().default('await'), // 'await' | 'async'
   model: text('model'),
   providerId: text('provider_id'),

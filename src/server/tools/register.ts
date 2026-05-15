@@ -113,6 +113,7 @@ import {
   removeTicketTagTool,
   deleteTicketTool,
   startTicketTaskTool,
+  enrichTicketTool,
 } from '@/server/tools/project-tools'
 import { generateImageTool, listImageModelsTool } from '@/server/tools/image-tools'
 import { listProvidersTool, listModelsTool } from '@/server/tools/provider-tools'
@@ -356,6 +357,7 @@ export function registerAllTools(): void {
   toolRegistry.register('remove_ticket_tag', removeTicketTagTool)
   toolRegistry.register('delete_ticket', deleteTicketTool)
   toolRegistry.register('start_ticket_task', startTicketTaskTool)
+  toolRegistry.register('enrich_ticket', enrichTicketTool)
   // Phase 19: Custom tools (main only)
   toolRegistry.register('register_tool', registerToolTool)
   toolRegistry.register('run_custom_tool', runCustomToolTool)

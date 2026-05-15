@@ -402,6 +402,7 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
         parentKinName: kins.name,
         status: tasks.status,
         mode: tasks.mode,
+        kind: tasks.kind,
         createdAt: tasks.createdAt,
         updatedAt: tasks.updatedAt,
       })
@@ -426,6 +427,7 @@ export async function getTicket(ticketId: string): Promise<Ticket | null> {
     parentKinName: t.parentKinName,
     status: t.status as TicketTaskSummary['status'],
     mode: t.mode as TicketTaskSummary['mode'],
+    kind: (t.kind as TicketTaskSummary['kind']) ?? 'execute',
     createdAt: toMillis(t.createdAt),
     updatedAt: toMillis(t.updatedAt),
   }))
@@ -763,6 +765,147 @@ export async function startTicketTask(
     parentKinId,
     status: row.status,
     mode: 'await',
+    createdAt: row.createdAt instanceof Date ? row.createdAt.getTime() : Number(row.createdAt),
+  }
+}
+
+// ─── Ticket enrichment ────────────────────────────────────────────────────────
+
+/** Description length threshold above which the enrich agent should append a
+ *  new section rather than rewrite the existing description from scratch. */
+export const TICKET_ENRICH_REWRITE_THRESHOLD = 500
+
+export interface StartTicketEnrichmentResult {
+  taskId: string
+  ticketId: string
+  parentKinId: string
+  status: string
+  mode: 'await'
+  kind: 'enrich'
+  createdAt: number
+}
+
+/** Returns true if an enrichment task is already in flight on this ticket. */
+export async function hasActiveEnrichment(ticketId: string): Promise<boolean> {
+  const row = db
+    .select({ id: tasks.id })
+    .from(tasks)
+    .where(
+      and(
+        eq(tasks.ticketId, ticketId),
+        eq(tasks.kind, 'enrich'),
+        inArray(tasks.status, [
+          'queued',
+          'pending',
+          'in_progress',
+          'paused',
+          'awaiting_human_input',
+          'awaiting_kin_response',
+        ]),
+      ),
+    )
+    .limit(1)
+    .get()
+  return !!row
+}
+
+/** Build the system mission used by the dedicated enrichment sub-Kin.
+ *  This is injected as the task description (= "## Your mission" block) so we
+ *  don't need a new prompt-builder branch — the regular `## Ticket assignment`
+ *  block already carries the current ticket state. */
+export function buildEnrichmentBrief(input: {
+  ticketTitle: string
+  descriptionLength: number
+  focus?: string | null
+}): string {
+  const today = new Date().toISOString().slice(0, 10)
+  const longDescription = input.descriptionLength > TICKET_ENRICH_REWRITE_THRESHOLD
+  const writeMode = longDescription
+    ? `The current description is already substantial (> ${TICKET_ENRICH_REWRITE_THRESHOLD} chars). ` +
+      `Do NOT rewrite it from scratch. Instead, APPEND a new "## Enrichment (${today})" section at the end ` +
+      `that adds missing context, spec, acceptance criteria, repro steps, file pointers, effort estimate. ` +
+      `Preserve everything that was already there.`
+    : `The current description is short or empty. Rewrite it entirely with: ` +
+      `clear context, symptom/repro if bug, proposed spec or design, acceptance criteria, ` +
+      `relevant files/lines, estimated effort.`
+
+  const focusBlock = input.focus && input.focus.trim().length > 0
+    ? `\n\n## Specific focus\n\nThe user asked for an enrichment with this orientation:\n> ${input.focus.trim()}\n\nKeep this focus in mind while writing the new content.`
+    : ''
+
+  return (
+    `Enrich ticket: ${input.ticketTitle}\n\n` +
+    `You are a ticket-enrichment agent. Your job is NOT to implement or fix anything — only to make this ticket actionable for whoever picks it up next.\n\n` +
+    `## What to do\n\n` +
+    `1. Read the existing ticket title, description, and tags (visible in the "Ticket you are working on" block above).\n` +
+    `2. Gather context. Use any tool that helps:\n` +
+    `   - read_file / grep / list_directory on the project repo (kinbot-dev/) for code and docs\n` +
+    `   - search_history if the ticket might have been discussed in chat\n` +
+    `   - list_tickets / get_ticket to cross-check related tickets in the same project\n` +
+    `   - If a GitHub URL is set on the project, you may consult GitHub issues for additional context.\n` +
+    `3. Rewrite the ticket to make it executable:\n` +
+    `   - **Title**: rewrite only if it is vague or misleading. Keep it short and specific.\n` +
+    `   - **Description**: ${writeMode}\n` +
+    `   - **Tags**: add missing tags (bug / feature / chore / doc / refactor / ...) or remove incorrect ones. Use list_project_tags to discover the palette. Do not invent new tags.\n` +
+    `4. Apply your changes via update_ticket(). All three fields (title, description, tag_ids) can be passed in a single call.\n` +
+    `5. Append a small audit footer to the description (a final line):\n` +
+    `   \`> _Enriched on ${today} by agent._\`\n` +
+    `   This makes it visible at a glance that the ticket was touched by an enrichment pass.${focusBlock}\n\n` +
+    `## Guard rails\n\n` +
+    `- Do NOT change the ticket status — leave it where it is.\n` +
+    `- Do NOT create new tickets, do NOT delete tickets, do NOT delete tags.\n` +
+    `- Do NOT spawn sub-tasks of your own.\n` +
+    `- Be concise. The goal is clarity, not verbosity. Avoid em-dashes per repo conventions.\n` +
+    `- If after investigation you have nothing meaningful to add (ticket already clear), say so in your final result via update_task_status("completed", "...") and skip the update_ticket call.\n\n` +
+    `## When you are done\n\n` +
+    `Call update_task_status("completed", "<one-line summary of what you changed>"). ` +
+    `If you could not enrich (e.g. ticket was deleted, no context found), call update_task_status("failed", undefined, "<reason>").`
+  )
+}
+
+/** Spawn a dedicated enrichment sub-Kin on a ticket. Always in await mode.
+ *  Refuses if another enrichment is already in flight on the same ticket. */
+export async function startTicketEnrichment(
+  ticketId: string,
+  parentKinId: string,
+  options: { focus?: string | null } = {},
+): Promise<StartTicketEnrichmentResult> {
+  const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get()
+  if (!ticket) throw new Error('TICKET_NOT_FOUND')
+
+  const kin = db.select({ id: kins.id }).from(kins).where(eq(kins.id, parentKinId)).get()
+  if (!kin) throw new Error('KIN_NOT_FOUND')
+
+  if (await hasActiveEnrichment(ticketId)) {
+    throw new Error('ENRICHMENT_ALREADY_RUNNING')
+  }
+
+  const description = buildEnrichmentBrief({
+    ticketTitle: ticket.title,
+    descriptionLength: ticket.description?.length ?? 0,
+    focus: options.focus ?? null,
+  })
+
+  const result = await spawnTask({
+    parentKinId,
+    description,
+    title: `Enrich ticket: ${ticket.title}`,
+    mode: 'await',
+    spawnType: 'self',
+    ticketId,
+    kind: 'enrich',
+  })
+
+  const row = db.select().from(tasks).where(eq(tasks.id, result.taskId)).get()
+  if (!row) throw new Error('TASK_NOT_FOUND_AFTER_SPAWN')
+
+  return {
+    taskId: row.id,
+    ticketId,
+    parentKinId,
+    status: row.status,
+    mode: 'await',
+    kind: 'enrich',
     createdAt: row.createdAt instanceof Date ? row.createdAt.getTime() : Number(row.createdAt),
   }
 }

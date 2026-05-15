@@ -2126,7 +2126,8 @@
       "add_ticket_tag": "Add Ticket Tag",
       "remove_ticket_tag": "Remove Ticket Tag",
       "delete_ticket": "Delete Ticket",
-      "start_ticket_task": "Start Ticket Task"
+      "start_ticket_task": "Start Ticket Task",
+      "enrich_ticket": "Enrich Ticket"
     },
     "renderers": {
       "rawJson": "Raw JSON",
@@ -2496,6 +2497,17 @@
       "kinPlaceholder": "Select a Kin",
       "activeOnProject": "active here",
       "start": "Start"
+    },
+    "enrich": {
+      "action": "Enrich ticket",
+      "alreadyRunning": "An enrichment is already in progress on this ticket.",
+      "title": "Enrich this ticket",
+      "description": "Spawn a dedicated agent that reads the repo, related tickets, and history, then rewrites the title, description, and tags so the ticket is actionable.",
+      "focusField": "Specific focus (optional)",
+      "focusPlaceholder": "e.g. dig deeper on the test strategy, or propose a DB migration approach",
+      "focusHelp": "Optional. A short orientation passed to the agent.",
+      "start": "Enrich",
+      "started": "Enrichment started. The ticket will update live when the agent commits its changes."
     },
     "chip": {
       "tooltip": "Active project: {{title}}. Click to view the kanban."

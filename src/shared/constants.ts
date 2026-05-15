@@ -350,6 +350,7 @@ export const TOOL_DOMAIN_MAP: Record<string, ToolDomain> = {
   remove_ticket_tag: 'projects',
   delete_ticket: 'projects',
   start_ticket_task: 'projects',
+  enrich_ticket: 'projects',
 } as const
 
 // ---------------------------------------------------------------------------

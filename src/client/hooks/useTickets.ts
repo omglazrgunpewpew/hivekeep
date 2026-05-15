@@ -29,6 +29,18 @@ interface StartTicketTaskResult {
   }
 }
 
+interface EnrichTicketResult {
+  task: {
+    id: string
+    parentKinId: string
+    ticketId: string
+    status: string
+    mode: 'await'
+    kind: 'enrich'
+    createdAt: number
+  }
+}
+
 export function useTickets(projectId: string | null) {
   const [tickets, setTickets] = useState<TicketSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -117,6 +129,18 @@ export function useTickets(projectId: string | null) {
     [],
   )
 
+  const enrichTicket = useCallback(
+    async (
+      ticketId: string,
+      kinId: string,
+      focus?: string,
+    ): Promise<EnrichTicketResult['task']> => {
+      const data = await api.post<EnrichTicketResult>(`/tickets/${ticketId}/enrich`, { kinId, focus })
+      return data.task
+    },
+    [],
+  )
+
   return {
     tickets,
     isLoading,
@@ -125,6 +149,7 @@ export function useTickets(projectId: string | null) {
     updateTicket,
     deleteTicket,
     startTicketTask,
+    enrichTicket,
   }
 }
 
