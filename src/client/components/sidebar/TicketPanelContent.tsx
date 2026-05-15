@@ -7,6 +7,7 @@ import { Badge } from '@/client/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/client/components/ui/avatar'
 import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil } from 'lucide-react'
 import { EmptyState } from '@/client/components/common/EmptyState'
+import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import { formatRelativeTime } from '@/client/lib/time'
 import { StartTaskDialog } from '@/client/components/project/StartTaskDialog'
@@ -164,7 +165,9 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
             {t('projects.ticket.panel.description')}
           </h3>
           {ticket.description.trim() ? (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{ticket.description}</p>
+            <div className="text-sm text-foreground">
+              <MarkdownContent content={ticket.description} isUser={false} />
+            </div>
           ) : (
             <p className="text-sm italic text-muted-foreground">
               {t('projects.ticket.panel.noDescription')}
