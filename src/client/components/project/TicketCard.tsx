@@ -151,9 +151,32 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
             </button>
           ))}
           {ticket.tags.length > 4 && (
-            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-              +{ticket.tags.length - 4}
-            </Badge>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className="cursor-help px-1.5 py-0 text-[10px] font-normal"
+                >
+                  +{ticket.tags.length - 4}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <div className="flex flex-wrap gap-1">
+                  {ticket.tags.slice(4).map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="rounded px-1.5 py-0.5 text-[10px]"
+                      style={{
+                        backgroundColor: `${tag.color}20`,
+                        color: tag.color,
+                      }}
+                    >
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       )}
