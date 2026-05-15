@@ -373,7 +373,7 @@ export const config = {
   },
 
   tools: {
-    maxSteps: Number(process.env.TOOLS_MAX_STEPS ?? 0), // 0 = unlimited (capped at 100 internally)
+    maxSteps: Number(process.env.TOOLS_MAX_STEPS ?? 0), // 0 (default) = truly unlimited (no cap); > 0 = hard cap at this value
     // Max parallel concurrency-safe tool calls within a single batch.
     // KINBOT_MAX_TOOL_USE_CONCURRENCY is the canonical name (aligned with
     // Claude Code's CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY). TOOLS_CONCURRENCY_CAP

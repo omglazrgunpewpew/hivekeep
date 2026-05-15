@@ -680,7 +680,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
     // cache-eligible for Anthropic prompt caching.
     const toolSchemas = hasTools ? markLastToolCacheable(stripToolExecute(tools)) : undefined
 
-    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : 100) : 1
+    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
     const stepResults: Array<ReturnType<typeof streamText>> = []
     let silentStopAfterTools = false
     // See processNextMessage in kin-engine.ts for rationale.

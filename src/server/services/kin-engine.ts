@@ -1533,7 +1533,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     // cache-eligible for Anthropic prompt caching.
     const toolSchemas = hasTools ? markLastToolCacheable(stripToolExecute(tools)) : undefined
 
-    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : 100) : 1
+    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
     let wasAborted = false
     let silentStopAfterTools = false
     const stepResults: Array<ReturnType<typeof streamText>> = []
@@ -2280,7 +2280,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     // then mark the last tool as cache-eligible for Anthropic prompt caching.
     const toolSchemas = hasTools ? markLastToolCacheable(stripToolExecute(tools)) : undefined
 
-    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : 100) : 1
+    const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
     let wasAborted = false
     let silentStopAfterTools = false
     const stepResults: Array<ReturnType<typeof streamText>> = []
