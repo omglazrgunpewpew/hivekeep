@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   DndContext,
@@ -51,6 +51,31 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
   const [displayTickets, setDisplayTickets] = useState<TicketSummary[]>(tickets)
   const [activeTicket, setActiveTicket] = useState<TicketSummary | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Keyboard shortcuts for the search bar:
+  //  - `/` focuses it (when the user isn't already typing in another field)
+  //  - Escape clears + blurs it when it's the active element
+  // We listen on `window` so the shortcut works no matter where focus is in the kanban.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const isTypingElsewhere =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable === true
+      if (e.key === '/' && !isTypingElsewhere && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        searchInputRef.current?.select()
+      } else if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
+        setSearchQuery('')
+        searchInputRef.current?.blur()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Sync local state with server truth whenever the upstream list changes
   // (SSE events, refetch, etc.). During a drag this is fine — useTickets debounces
@@ -208,6 +233,7 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
         <div className="relative max-w-xs flex-1">
           <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,7 +241,7 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
             className="h-8 pl-7 pr-7 text-sm"
             aria-label={t('projects.kanban.searchPlaceholder')}
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
@@ -224,6 +250,16 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
             >
               <X className="size-3.5" />
             </button>
+          ) : (
+            // Discreet hint that "/" focuses the search bar. Mirrors the GitHub
+            // pattern most devs are familiar with. Hidden on small screens to
+            // avoid colliding with the placeholder text.
+            <kbd
+              aria-hidden
+              className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-border bg-muted/60 px-1 text-[10px] font-medium text-muted-foreground sm:inline-block"
+            >
+              /
+            </kbd>
           )}
         </div>
         {normalizedQuery && (
