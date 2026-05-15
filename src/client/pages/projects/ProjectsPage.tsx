@@ -87,7 +87,11 @@ export function ProjectsPage() {
           </div>
         )}
 
-        {routeProjectId && project && (
+        {routeProjectId && project && (() => {
+          const total = Object.values(project.ticketCounts).reduce((a, b) => a + b, 0)
+          const done = project.ticketCounts.done ?? 0
+          const percent = total > 0 ? Math.round((done / total) * 100) : 0
+          return (
           <div className="flex h-full flex-col">
             <header className="flex items-start gap-3 border-b border-border px-4 py-3">
               <div className="min-w-0 flex-1">
@@ -97,6 +101,28 @@ export function ProjectsPage() {
                     {project.description}
                   </p>
                 )}
+                {/* Project progress — at-a-glance done/total with a slim bar.
+                    The bar uses palette-aware success tint so it ties to the
+                    Done column accent in the kanban below. */}
+                <div className="mt-2 flex max-w-md items-center gap-2">
+                  <div
+                    className="h-1 flex-1 overflow-hidden rounded-full bg-muted"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={percent}
+                  >
+                    <div
+                      className="h-full rounded-full bg-success transition-[width] duration-300"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                    {total === 0
+                      ? t('projects.kanban.progressEmpty')
+                      : `${t('projects.kanban.progress', { done, total })} · ${percent}%`}
+                  </span>
+                </div>
               </div>
               <ActiveKinsIndicator projectId={routeProjectId} size="size-7" maxVisible={5} />
             </header>
@@ -107,7 +133,8 @@ export function ProjectsPage() {
               />
             </div>
           </div>
-        )}
+          )
+        })()}
       </main>
 
       {/* Side panel (task/ticket detail) — rendered here so it's available in Projects mode too */}
