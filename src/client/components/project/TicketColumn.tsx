@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useTranslation } from 'react-i18next'
 import { Inbox, ListTodo, Loader2, Ban, CheckCircle2, SearchX, type LucideIcon } from 'lucide-react'
 import { TicketCard } from './TicketCard'
+import { QuickAddTicket } from './QuickAddTicket'
 import { cn } from '@/client/lib/utils'
 import type { TicketStatus, TicketSummary } from '@/shared/types'
 
@@ -15,6 +16,10 @@ interface TicketColumnProps {
   highlightQuery?: string
   /** Forwarded to ticket cards: invoked when a tag chip is clicked. */
   onTagClick?: (label: string) => void
+  /** Inline quick-add. When provided, an in-column placeholder is rendered at
+   *  the bottom of the column, allowing users to create a ticket directly in
+   *  that status without opening the full modal. */
+  onQuickCreate?: (input: { title: string; status: TicketStatus }) => Promise<unknown>
 }
 
 /**
@@ -65,7 +70,7 @@ const STATUS_ACCENT: Record<
   },
 }
 
-export function TicketColumn({ status, label, tickets, onTicketClick, highlightQuery, onTagClick }: TicketColumnProps) {
+export function TicketColumn({ status, label, tickets, onTicketClick, highlightQuery, onTagClick, onQuickCreate }: TicketColumnProps) {
   const { t } = useTranslation()
   // Column-level droppable so empty columns still accept drops
   const { setNodeRef, isOver } = useDroppable({
@@ -85,7 +90,10 @@ export function TicketColumn({ status, label, tickets, onTicketClick, highlightQ
   )
 
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col">
+    // `group/column` enables the bottom quick-add placeholder to fade in only on
+    // column hover, keeping the kanban visually clean by default. Named so it
+    // doesn't collide with nested `group` scopes (e.g. inside TicketCard).
+    <div className="group/column flex h-full w-72 shrink-0 flex-col">
       {/* The whole header tracks `isOver` during drag so users get a strong,
           column-wide cue (not just the dropzone border) when a ticket is about
           to be dropped here — title brightens, badge pulses subtly. */}
@@ -145,6 +153,16 @@ export function TicketColumn({ status, label, tickets, onTicketClick, highlightQ
             />
           ))}
         </SortableContext>
+        {/* Inline quick-add — rendered AFTER ticket cards (only when the column
+            isn't empty + not searching) so the dotted placeholder visually
+            invites a follow-up entry without overwhelming the column. */}
+        {onQuickCreate && tickets.length > 0 && !highlightQuery && (
+          <QuickAddTicket
+            status={status}
+            onCreate={onQuickCreate}
+            accentBorderClass={accent.border}
+          />
+        )}
         {tickets.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-2 px-4 pt-8 pb-4 text-center">
             {/* When filtering, the column-specific hint ("Ideas land here…") is misleading
@@ -171,6 +189,18 @@ export function TicketColumn({ status, label, tickets, onTicketClick, highlightQ
                 <p className="text-xs text-muted-foreground/70 leading-snug">
                   {t(`projects.kanban.empty.${status}`)}
                 </p>
+                {/* In the empty state we render the quick-add prominently — there's
+                    no hover target above it, so we don't rely on column hover here. */}
+                {onQuickCreate && (
+                  <div className="mt-1 w-full max-w-[16rem]">
+                    <QuickAddTicket
+                      status={status}
+                      onCreate={onQuickCreate}
+                      accentBorderClass={accent.border}
+                      prominent
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>

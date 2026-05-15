@@ -45,8 +45,19 @@ interface ProjectKanbanProps {
  */
 export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
   const { t } = useTranslation()
-  const { tickets, updateTicket } = useTickets(projectId)
+  const { tickets, updateTicket, createTicket } = useTickets(projectId)
   const { openTicket } = useSidePanel()
+
+  /**
+   * Quick inline create from a kanban column. Pre-binds the status so the new
+   * ticket lands in the column the user clicked. We intentionally don't open
+   * the side panel afterwards — the value of the quick-add is to stay in flow.
+   * If the user wants to enrich the ticket (description, tags), they can click
+   * the card to open it.
+   */
+  async function handleQuickCreate({ title, status }: { title: string; status: TicketStatus }) {
+    await createTicket({ title, status })
+  }
 
   const [displayTickets, setDisplayTickets] = useState<TicketSummary[]>(tickets)
   const [activeTicket, setActiveTicket] = useState<TicketSummary | null>(null)
@@ -291,6 +302,7 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
                 onTicketClick={handleTicketClick}
                 highlightQuery={normalizedQuery}
                 onTagClick={(label) => setSearchQuery(label)}
+                onQuickCreate={handleQuickCreate}
               />
             ))}
           </div>

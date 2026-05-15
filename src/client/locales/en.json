@@ -2419,7 +2419,11 @@
         "blocked": "Stuck? Drop blocked tickets here so they stay visible.",
         "done": "Completed tickets pile up here."
       },
-      "emptySearchInColumn": "No matches in this column."
+      "emptySearchInColumn": "No matches in this column.",
+      "quickAdd": {
+        "label": "Add ticket",
+        "inputPlaceholder": "Ticket title (Enter to add, Esc to cancel)"
+      }
     },
     "status": {
       "backlog": "Backlog",

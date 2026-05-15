@@ -2420,7 +2420,11 @@
         "blocked": "Bloqué ? Dépose-le ici pour qu'il reste visible.",
         "done": "Les tickets terminés s'empilent ici."
       },
-      "emptySearchInColumn": "Aucun résultat dans cette colonne."
+      "emptySearchInColumn": "Aucun résultat dans cette colonne.",
+      "quickAdd": {
+        "label": "Ajouter un ticket",
+        "inputPlaceholder": "Titre du ticket (Entrée pour ajouter, Échap pour annuler)"
+      }
     },
     "status": {
       "backlog": "Backlog",
