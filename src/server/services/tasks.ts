@@ -20,6 +20,7 @@ import { getGlobalPrompt } from '@/server/services/app-settings'
 import { wrapToolsWithSpill } from '@/server/services/tool-output-spill'
 import { executeToolBatch } from '@/server/services/tool-executor'
 import { recordUsage, aggregateStepUsage } from '@/server/services/token-usage'
+import { runStreamStep } from '@/server/services/stream-runner'
 import type { TaskStatus, TaskMode, KinToolConfig, KinThinkingConfig } from '@/shared/types'
 import { guessProviderType } from '@/shared/model-ref'
 
@@ -631,10 +632,8 @@ async function executeSubKin(taskId: string, isNudge = false) {
     const assistantMessageId = uuid()
     let fullContent = ''
     const reasoningSegments: Array<{ offset: number; text: string }> = []
-    let currentReasoning = ''
     const toolCallsLog: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }> = []
     let streamError: Error | null = null
-    let lastCheckpointAt = Date.now()
 
     // In-memory snapshot for clients that connect mid-stream — see activeTaskStreams above.
     // Arrays are shared by reference so server-side mutations are visible immediately.
@@ -702,123 +701,44 @@ async function executeSubKin(taskId: string, isNudge = false) {
       })
       stepResults.push(result)
 
-      // Collect tool call intents from this step
-      const stepToolCalls: Array<{ id: string; name: string; args: unknown; offset: number }> = []
-      // Per-step text. fullContent keeps accumulating across steps for
-      // persistence, offset math, and UI rendering, but only stepText is
-      // pushed into the assistant history block so the model never sees
-      // its own prior-step narration repeated back to it.
-      let stepText = ''
-
-      try {
-        for await (const part of result.fullStream) {
-          // Handle tool-call-streaming-start (not yet in AI SDK type union)
-          if ((part.type as string) === 'tool-call-streaming-start') {
-            const p = part as unknown as { toolCallId: string; toolName: string }
-            sseManager.sendToKin(task.parentKinId, {
-              type: 'chat:tool-call-start',
-              kinId: task.parentKinId,
-              data: {
-                messageId: assistantMessageId,
-                toolCallId: p.toolCallId,
-                toolName: p.toolName,
-                contentOffset: fullContent.length,
-                taskId,
-              },
-            })
-            continue
-          }
-
-          // Handle reasoning/thinking stream parts
-          if ((part.type as string) === 'reasoning-start') {
-            currentReasoning = ''
-            continue
-          }
-          if ((part.type as string) === 'reasoning-delta') {
-            const p = part as unknown as { text: string }
-            currentReasoning += p.text
-            sseManager.sendToKin(task.parentKinId, {
-              type: 'chat:reasoning-token',
-              kinId: task.parentKinId,
-              data: { messageId: assistantMessageId, token: p.text, taskId },
-            })
-            continue
-          }
-          if ((part.type as string) === 'reasoning-end') {
-            if (currentReasoning) {
-              reasoningSegments.push({ offset: fullContent.length, text: currentReasoning })
-              currentReasoning = ''
-            }
-            sseManager.sendToKin(task.parentKinId, {
-              type: 'chat:reasoning-done',
-              kinId: task.parentKinId,
-              data: { messageId: assistantMessageId, taskId },
-            })
-            continue
-          }
-
-          switch (part.type) {
-            case 'text-delta': {
-              fullContent += part.text
-              stepText += part.text
-              streamSnapshot.content = fullContent
-              sseManager.sendToKin(task.parentKinId, {
-                type: 'chat:token',
-                kinId: task.parentKinId,
-                data: { messageId: assistantMessageId, token: part.text, taskId, contentLength: fullContent.length },
+      // Buffer text per step until finishReason is known — see stream-runner.ts.
+      // The 500ms DB checkpoint that used to live inline in `text-delta` is
+      // now driven by `ctx.checkpoint` and persists only *committed* content
+      // (the in-flight buffer is never written to DB).
+      const outcome = await runStreamStep(result, {
+        kinId: task.parentKinId,
+        assistantMessageId,
+        abortController,
+        extraSseFields: { taskId },
+        reasoningSegments,
+        contentSnapshot: streamSnapshot,
+        onCommittedText: (delta) => { fullContent += delta },
+        onDroppedText: (txt, idx) => log.debug(
+          { taskId, kinId: task.parentKinId, assistantMessageId, step: idx, droppedChars: txt.length, preview: txt.slice(0, 200) },
+          'Dropped pre-narration from intermediate step (sub-Kin)',
+        ),
+        checkpoint: {
+          intervalMs: 500,
+          persist: () => {
+            db.update(messages)
+              .set({
+                content: fullContent,
+                toolCalls: toolCallsLog.length > 0 ? JSON.stringify(toolCallsLog) : null,
               })
+              .where(eq(messages.id, assistantMessageId))
+              .then(() => {}, () => {})
+          },
+        },
+      }, step)
 
-              // Periodic checkpoint: persist partial content every 500ms so a page
-              // refresh can show accumulated text instead of an empty message.
-              const now = Date.now()
-              if (now - lastCheckpointAt >= 500) {
-                lastCheckpointAt = now
-                db.update(messages)
-                  .set({
-                    content: fullContent,
-                    toolCalls: toolCallsLog.length > 0 ? JSON.stringify(toolCallsLog) : null,
-                  })
-                  .where(eq(messages.id, assistantMessageId))
-                  .then(() => {}, () => {})
-              }
-              break
-            }
-            case 'tool-call': {
-              const contentOffset = fullContent.length
-              stepToolCalls.push({
-                id: part.toolCallId,
-                name: part.toolName,
-                args: part.input,
-                offset: contentOffset,
-              })
-              sseManager.sendToKin(task.parentKinId, {
-                type: 'chat:tool-call',
-                kinId: task.parentKinId,
-                data: {
-                  messageId: assistantMessageId,
-                  toolCallId: part.toolCallId,
-                  toolName: part.toolName,
-                  args: part.input,
-                  contentOffset,
-                  taskId,
-                },
-              })
-              break
-            }
-            case 'finish': {
-              stepFinishReasons.push(part.finishReason)
-              break
-            }
-          }
-        }
-      } catch (err) {
-        // If the stream was aborted (user cancelled), handle gracefully
-        if (abortController.signal.aborted) {
-          log.info({ taskId }, 'Sub-Kin stream aborted by cancellation')
-        } else {
-          streamError = err instanceof Error ? err : new Error(String(err))
-        }
+      if (outcome.error) {
+        streamError = outcome.error
+      } else if (outcome.wasAborted) {
+        log.info({ taskId }, 'Sub-Kin stream aborted by cancellation')
       }
+      if (outcome.finishReason !== undefined) stepFinishReasons.push(outcome.finishReason)
+      const stepText = outcome.stepText
+      const stepToolCalls = outcome.stepToolCalls
 
       // No tool calls this step or error/abort → exit loop.
       // Silent-stop detection: provider closed the stream with no text and no

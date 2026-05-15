@@ -52,6 +52,7 @@ import { getGlobalPrompt, getHubKinId, getSetting, setSetting } from '@/server/s
 import { wrapToolsWithSpill } from '@/server/services/tool-output-spill'
 import { executeToolBatch } from '@/server/services/tool-executor'
 import { recordUsage, aggregateStepUsage } from '@/server/services/token-usage'
+import { runStreamStep } from '@/server/services/stream-runner'
 import { channelAdapters } from '@/server/channels/index'
 import { getModelContextWindow } from '@/shared/model-context-windows'
 
@@ -445,7 +446,7 @@ const lastCompactingProximity = new Map<string, { compactingPercent: number; com
  * Extract a human-readable message from a raw API error object.
  * Handles nested structures like { error: { message: "..." } } from Anthropic/OpenAI.
  */
-function extractApiErrorMessage(err: unknown): string {
+export function extractApiErrorMessage(err: unknown): string {
   if (typeof err === 'string') return err
   if (typeof err !== 'object' || err === null) return String(err)
   const obj = err as Record<string, unknown>
@@ -1573,7 +1574,6 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     const assistantMessageId = uuid()
     let fullContent = ''
     const reasoningSegments: Array<{ offset: number; text: string }> = []
-    let currentReasoning = ''
     const toolCallsLog: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }> = []
 
     // In-memory snapshot for clients that mount mid-stream (see activeKinStreams
@@ -1618,133 +1618,33 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       })
       stepResults.push(result)
 
-      // Collect tool call intents from this step
-      const stepToolCalls: Array<{ id: string; name: string; args: unknown; offset: number }> = []
-      // Per-step text. fullContent keeps accumulating across steps for
-      // persistence, offset math, and UI rendering, but only stepText is
-      // pushed into the assistant history block so the model never sees
-      // its own prior-step narration repeated back to it.
-      let stepText = ''
+      // Buffer text per step until finishReason is known — see stream-runner.ts.
+      // Intermediate steps (with tool_use) drop their text; final pure-text
+      // steps flush it. Tool-call / reasoning events are forwarded immediately.
+      const outcome = await runStreamStep(result, {
+        kinId,
+        assistantMessageId,
+        abortController,
+        firstTokenAttribution: {
+          sourceType: 'kin',
+          sourceId: kinId,
+          sourceName: kin.name,
+          sourceAvatarUrl: kin.avatarPath ? `/api/uploads/kins/${kin.id}/avatar.${kin.avatarPath.split('.').pop()}` : null,
+        },
+        reasoningSegments,
+        contentSnapshot: kinStreamSnapshot,
+        onCommittedText: (delta) => { fullContent += delta },
+        onDroppedText: (txt, idx) => log.debug(
+          { kinId, assistantMessageId, step: idx, droppedChars: txt.length, preview: txt.slice(0, 200) },
+          'Dropped pre-narration from intermediate step',
+        ),
+      }, step)
 
-      try {
-        for await (const part of result.fullStream) {
-          // Handle tool-call-streaming-start (not yet in AI SDK type union)
-          if ((part.type as string) === 'tool-call-streaming-start') {
-            const p = part as unknown as { toolCallId: string; toolName: string }
-            sseManager.sendToKin(kinId, {
-              type: 'chat:tool-call-start',
-              kinId,
-              data: {
-                messageId: assistantMessageId,
-                toolCallId: p.toolCallId,
-                toolName: p.toolName,
-                contentOffset: fullContent.length,
-              },
-            })
-            continue
-          }
-
-          // Handle reasoning/thinking stream parts
-          if ((part.type as string) === 'reasoning-start') {
-            currentReasoning = ''
-            continue
-          }
-          if ((part.type as string) === 'reasoning-delta') {
-            const p = part as unknown as { text: string }
-            currentReasoning += p.text
-            sseManager.sendToKin(kinId, {
-              type: 'chat:reasoning-token',
-              kinId,
-              data: { messageId: assistantMessageId, token: p.text },
-            })
-            continue
-          }
-          if ((part.type as string) === 'reasoning-end') {
-            if (currentReasoning) {
-              reasoningSegments.push({ offset: fullContent.length, text: currentReasoning })
-              currentReasoning = ''
-            }
-            sseManager.sendToKin(kinId, {
-              type: 'chat:reasoning-done',
-              kinId,
-              data: { messageId: assistantMessageId },
-            })
-            continue
-          }
-
-          switch (part.type) {
-            case 'text-delta': {
-              const isFirstToken = fullContent.length === 0
-              fullContent += part.text
-              stepText += part.text
-              kinStreamSnapshot.content = fullContent
-              sseManager.sendToKin(kinId, {
-                type: 'chat:token',
-                kinId,
-                data: {
-                  messageId: assistantMessageId,
-                  token: part.text,
-                  // Include source metadata on first token so the client can
-                  // render correct attribution from the start
-                  ...(isFirstToken && {
-                    sourceType: 'kin',
-                    sourceId: kinId,
-                    sourceName: kin.name,
-                    sourceAvatarUrl: kin.avatarPath ? `/api/uploads/kins/${kin.id}/avatar.${kin.avatarPath.split('.').pop()}` : null,
-                  }),
-                },
-              })
-              break
-            }
-
-            case 'tool-call': {
-              const contentOffset = fullContent.length
-              stepToolCalls.push({
-                id: part.toolCallId,
-                name: part.toolName,
-                args: part.input,
-                offset: contentOffset,
-              })
-              sseManager.sendToKin(kinId, {
-                type: 'chat:tool-call',
-                kinId,
-                data: {
-                  messageId: assistantMessageId,
-                  toolCallId: part.toolCallId,
-                  toolName: part.toolName,
-                  args: part.input,
-                  contentOffset,
-                },
-              })
-              break
-            }
-
-            case 'error': {
-              // API-level errors (e.g. context_length_exceeded) arrive as stream parts,
-              // not as thrown exceptions. Re-throw so the outer catch handles them
-              // with proper user-visible feedback.
-              const err = part.error
-              if (err instanceof Error) throw err
-              throw new Error(extractApiErrorMessage(err))
-            }
-
-            case 'finish': {
-              stepFinishReasons.push(part.finishReason)
-              break
-            }
-
-            default:
-              log.debug({ kinId, partType: part.type }, 'Unhandled stream part type')
-          }
-        }
-      } catch (streamError) {
-        // If the stream was aborted (user pressed Stop), handle gracefully
-        if (abortController.signal.aborted) {
-          wasAborted = true
-        } else {
-          throw streamError
-        }
-      }
+      if (outcome.error && !outcome.wasAborted) throw outcome.error
+      if (outcome.wasAborted) wasAborted = true
+      if (outcome.finishReason !== undefined) stepFinishReasons.push(outcome.finishReason)
+      const stepText = outcome.stepText
+      const stepToolCalls = outcome.stepToolCalls
 
       // No tool calls this step → LLM is done, exit loop.
       // Silent-stop detection: provider closed the stream with no text and no
@@ -2336,7 +2236,6 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     const assistantMessageId = uuid()
     let fullContent = ''
     const reasoningSegments: Array<{ offset: number; text: string }> = []
-    let currentReasoning = ''
     const toolCallsLog: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }> = []
 
     const abortController = new AbortController()
@@ -2366,96 +2265,28 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       })
       stepResults.push(result)
 
-      // Collect tool call intents from this step
-      const stepToolCalls: Array<{ id: string; name: string; args: unknown; offset: number }> = []
-      // Per-step text. fullContent keeps accumulating across steps for
-      // persistence, offset math, and UI rendering, but only stepText is
-      // pushed into the assistant history block so the model never sees
-      // its own prior-step narration repeated back to it.
-      let stepText = ''
+      // Buffer text per step until finishReason is known — see stream-runner.ts.
+      // Quick session has no mid-stream rehydration snapshot (no client-side
+      // remount support) and no first-token attribution payload — those are
+      // the only differences from the main Kin path.
+      const outcome = await runStreamStep(result, {
+        kinId,
+        assistantMessageId,
+        abortController,
+        extraSseFields: { sessionId },
+        reasoningSegments,
+        onCommittedText: (delta) => { fullContent += delta },
+        onDroppedText: (txt, idx) => log.debug(
+          { kinId, sessionId, assistantMessageId, step: idx, droppedChars: txt.length, preview: txt.slice(0, 200) },
+          'Dropped pre-narration from intermediate step (quick session)',
+        ),
+      }, step)
 
-      try {
-        for await (const part of result.fullStream) {
-          // Handle tool-call-streaming-start (not yet in AI SDK type union)
-          if ((part.type as string) === 'tool-call-streaming-start') {
-            const p = part as unknown as { toolCallId: string; toolName: string }
-            sseManager.sendToKin(kinId, {
-              type: 'chat:tool-call-start',
-              kinId,
-              data: { messageId: assistantMessageId, toolCallId: p.toolCallId, toolName: p.toolName, contentOffset: fullContent.length, sessionId },
-            })
-            continue
-          }
-
-          // Handle reasoning/thinking stream parts
-          if ((part.type as string) === 'reasoning-start') {
-            currentReasoning = ''
-            continue
-          }
-          if ((part.type as string) === 'reasoning-delta') {
-            const p = part as unknown as { text: string }
-            currentReasoning += p.text
-            sseManager.sendToKin(kinId, {
-              type: 'chat:reasoning-token',
-              kinId,
-              data: { messageId: assistantMessageId, token: p.text, sessionId },
-            })
-            continue
-          }
-          if ((part.type as string) === 'reasoning-end') {
-            if (currentReasoning) {
-              reasoningSegments.push({ offset: fullContent.length, text: currentReasoning })
-              currentReasoning = ''
-            }
-            sseManager.sendToKin(kinId, {
-              type: 'chat:reasoning-done',
-              kinId,
-              data: { messageId: assistantMessageId, sessionId },
-            })
-            continue
-          }
-
-          switch (part.type) {
-            case 'text-delta': {
-              fullContent += part.text
-              stepText += part.text
-              sseManager.sendToKin(kinId, {
-                type: 'chat:token',
-                kinId,
-                data: { messageId: assistantMessageId, token: part.text, sessionId },
-              })
-              break
-            }
-            case 'tool-call': {
-              const contentOffset = fullContent.length
-              stepToolCalls.push({ id: part.toolCallId, name: part.toolName, args: part.input, offset: contentOffset })
-              sseManager.sendToKin(kinId, {
-                type: 'chat:tool-call',
-                kinId,
-                data: { messageId: assistantMessageId, toolCallId: part.toolCallId, toolName: part.toolName, args: part.input, contentOffset, sessionId },
-              })
-              break
-            }
-            case 'error': {
-              const err = part.error
-              if (err instanceof Error) throw err
-              throw new Error(extractApiErrorMessage(err))
-            }
-            case 'finish': {
-              stepFinishReasons.push(part.finishReason)
-              break
-            }
-            default:
-              break
-          }
-        }
-      } catch (streamError) {
-        if (abortController.signal.aborted) {
-          wasAborted = true
-        } else {
-          throw streamError
-        }
-      }
+      if (outcome.error && !outcome.wasAborted) throw outcome.error
+      if (outcome.wasAborted) wasAborted = true
+      if (outcome.finishReason !== undefined) stepFinishReasons.push(outcome.finishReason)
+      const stepText = outcome.stepText
+      const stepToolCalls = outcome.stepToolCalls
 
       // No tool calls this step → LLM is done, exit loop.
       // Silent-stop detection: see processNextMessage for rationale.
