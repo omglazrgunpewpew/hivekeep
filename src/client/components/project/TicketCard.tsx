@@ -117,7 +117,9 @@ export function TicketCard({ ticket, onClick, isOverlay = false, highlightQuery,
       className={cn(
         'group relative cursor-grab rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isDragging && !isOverlay && 'opacity-30',
-        isOverlay && 'shadow-lg',
+        // Drag overlay: slight tilt + stronger shadow + ring make the floating
+        // card feel like it's been picked up off the board (Trello/Linear vibe).
+        isOverlay && 'rotate-2 shadow-xl ring-1 ring-primary/30',
         // Running emphasis: subtle pulse glow ring while a task is in flight
         hasRunning && 'ring-1 ring-primary/40 shadow-primary/10 animate-running-pulse',
       )}
