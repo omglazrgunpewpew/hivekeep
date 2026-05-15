@@ -2426,6 +2426,8 @@
         "tasksHistory": "Tasks ({{count}})",
         "startTask": "Start a task",
         "noTasks": "No tasks have been spawned on this ticket yet.",
+        "noTasksTitle": "No tasks yet",
+        "noTasksDescription": "Spawn a Kin to work on this ticket and track the run here.",
         "notFound": "This ticket was not found — it may have been deleted.",
         "back": "Back to {{type}}",
         "editAction": "Edit ticket",

@@ -2427,6 +2427,8 @@
         "tasksHistory": "Tâches ({{count}})",
         "startTask": "Démarrer une tâche",
         "noTasks": "Aucune tâche n'a encore été lancée sur ce ticket.",
+        "noTasksTitle": "Aucune tâche pour l'instant",
+        "noTasksDescription": "Lance un Kin sur ce ticket pour suivre son exécution ici.",
         "notFound": "Ce ticket est introuvable — il a peut-être été supprimé.",
         "back": "Retour au/à la {{type}}",
         "editAction": "Modifier le ticket",

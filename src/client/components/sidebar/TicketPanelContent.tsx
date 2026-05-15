@@ -6,6 +6,7 @@ import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/client/components/ui/avatar'
 import { Play, ListChecks, Loader2, X, ChevronLeft, Pencil } from 'lucide-react'
+import { EmptyState } from '@/client/components/common/EmptyState'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import { formatRelativeTime } from '@/client/lib/time'
 import { StartTaskDialog } from '@/client/components/project/StartTaskDialog'
@@ -185,9 +186,14 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
           </header>
 
           {ticket.tasks.length === 0 ? (
-            <p className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-              {t('projects.ticket.panel.noTasks')}
-            </p>
+            <EmptyState
+              compact
+              icon={Play}
+              title={t('projects.ticket.panel.noTasksTitle')}
+              description={t('projects.ticket.panel.noTasksDescription')}
+              actionLabel={t('projects.ticket.panel.startTask')}
+              onAction={() => setStartTaskOpen(true)}
+            />
           ) : (
             <ul className="space-y-2">
               {ticket.tasks.map((task) => (
