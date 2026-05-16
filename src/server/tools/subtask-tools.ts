@@ -75,15 +75,22 @@ export const updateTaskStatusTool: ToolRegistration = {
 }
 
 /**
- * request_input — ask the parent Kin for clarification or a decision.
- * Available to sub-Kins only. Limited to max calls per sub-Kin.
+ * request_input — ask the parent Kin (non-ticket task) or the human user
+ * (ticket task) for clarification or a decision. Available to sub-Kins only,
+ * capped at `config.tasks.maxRequestInput` invocations per task.
+ *
+ * The tool **pauses the task**: the runner stops the multi-step loop and
+ * resumes the sub-Kin only once the response arrives. The `note` in the
+ * returned payload tells the model to emit nothing further on this turn —
+ * any tool call you'd make next would race the suspension and likely be
+ * the wrong move with the question still unanswered.
  */
 export const requestInputTool: ToolRegistration = {
   availability: ['sub-kin'],
   create: (ctx) =>
     tool({
       description:
-        'Ask the parent Kin for clarification or a decision. Limited calls per task.',
+        'Ask the parent Kin or the human user (when the task is linked to a ticket) for clarification or a decision. The task is suspended until the response arrives — DO NOT emit any further tool calls in this turn. Limited calls per task.',
       inputSchema: z.object({
         question: z.string(),
       }),
@@ -96,7 +103,12 @@ export const requestInputTool: ToolRegistration = {
         if (!result.success) {
           return { error: result.error }
         }
-        return { success: true }
+        return {
+          success: true,
+          paused: true as const,
+          note:
+            'Your task is now PAUSED waiting for the answer. Do NOT emit any further tool calls on this turn — the runner will stop the loop after this step and resume your sub-Kin once the response arrives in your message history. Acting on a guess before the human answers usually picks the wrong path; wait for the actual response.',
+        }
       },
     }),
 }

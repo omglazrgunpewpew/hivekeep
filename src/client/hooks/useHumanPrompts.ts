@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api } from '@/client/lib/api'
+import { toast } from 'sonner'
+import { api, toastError, ApiRequestError } from '@/client/lib/api'
 import { useSSE } from '@/client/hooks/useSSE'
 import type { HumanPromptSummary } from '@/shared/types'
 
@@ -57,6 +58,16 @@ export function useHumanPrompts(kinId: string | null, taskId?: string | null) {
       const promptId = data.promptId as string
       setPrompts((prev) => prev.filter((p) => p.id !== promptId))
     },
+    // Server-side late-response expiry: the user typed an answer but the
+    // task had already reached a terminal state. The prompt is dropped from
+    // the UI and the user sees a toast (raised below in `respond` when the
+    // POST returned TASK_ALREADY_FINISHED). This SSE handles the rare cross-
+    // tab / multi-client case where ANOTHER session expired the prompt.
+    'prompt:expired': (data) => {
+      if (data.kinId !== kinId) return
+      const promptId = data.promptId as string
+      setPrompts((prev) => prev.filter((p) => p.id !== promptId))
+    },
   })
 
   // Submit a response to a prompt
@@ -66,6 +77,18 @@ export function useHumanPrompts(kinId: string | null, taskId?: string | null) {
       await api.post(`/prompts/${promptId}/respond`, { response })
       // Optimistic removal
       setPrompts((prev) => prev.filter((p) => p.id !== promptId))
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.code === 'TASK_ALREADY_FINISHED') {
+        // The task ran to completion (or failed / was cancelled) before this
+        // answer arrived. The server marked the prompt as `expired` and
+        // recorded the response for audit. Drop the card client-side and
+        // surface a clear toast instead of the generic API error.
+        setPrompts((prev) => prev.filter((p) => p.id !== promptId))
+        toast.warning(err.message)
+        return
+      }
+      toastError(err)
+      throw err
     } finally {
       setIsResponding(false)
     }

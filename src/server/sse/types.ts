@@ -23,6 +23,7 @@ export type SSEEventType =
   | 'kin:deleted'
   | 'prompt:pending'
   | 'prompt:answered'
+  | 'prompt:expired'
   | 'webhook:created'
   | 'webhook:updated'
   | 'webhook:deleted'

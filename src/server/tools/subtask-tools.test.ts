@@ -176,10 +176,19 @@ describe('subtask-tools', () => {
       expect(mockRequestInput).not.toHaveBeenCalled()
     })
 
-    it('calls requestInput with taskId and question', async () => {
+    it('calls requestInput with taskId and question, returns the paused signal so the LLM stops', async () => {
       const tool = createTool(requestInputTool, { kinId: 'kin-1', taskId: 'task-99' })
-      const result = await tool.execute({ question: 'which format?' }, {} as any)
-      expect(result).toEqual({ success: true })
+      const result = await tool.execute({ question: 'which format?' }, {} as any) as {
+        success: boolean
+        paused?: boolean
+        note?: string
+      }
+      expect(result.success).toBe(true)
+      expect(result.paused).toBe(true)
+      // The `note` is what nudges the model to stop emitting tool calls this
+      // turn — the most important wire to keep intact (cf. prod task #22).
+      expect(result.note).toMatch(/PAUSED/)
+      expect(result.note).toMatch(/Do NOT emit any further tool calls/)
       expect(mockRequestInput).toHaveBeenCalledWith('task-99', 'which format?')
     })
 

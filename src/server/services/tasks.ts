@@ -842,6 +842,29 @@ async function executeSubKin(taskId: string, isNudge = false) {
 
       if (batch.wasAborted) break
 
+      // Suspension check: a tool in this batch may have transitioned the
+      // task into an awaiting state (request_input → awaiting_human_input,
+      // send_message request → awaiting_kin_response). Stop the multi-step
+      // loop NOW so the LLM doesn't run another step on a task that's
+      // logically paused. The sub-Kin resumes via resumeSubKin() once the
+      // response arrives (respondToHumanPrompt / respondToInterKinRequest).
+      // Without this, the LLM happily emits more tool calls — observed on
+      // prod task `4e4f1760` (ticket #22) where the agent kept going for 40+
+      // calls after request_input, including a `git commit --no-verify` that
+      // only stopped because the hook-bypass guard refused it.
+      const suspendedCheck = await db
+        .select({ status: tasks.status })
+        .from(tasks)
+        .where(eq(tasks.id, taskId))
+        .get()
+      if (suspendedCheck?.status === 'awaiting_human_input' || suspendedCheck?.status === 'awaiting_kin_response') {
+        log.info(
+          { taskId, status: suspendedCheck.status },
+          'Sub-Kin step suspended task — breaking multi-step loop',
+        )
+        break
+      }
+
       // Nudge: if this is a cron task and a tool returned an error, hint about save_run_learning
       if (task.cronId) {
         for (const tr of batch.toolResults) {
@@ -1004,10 +1027,12 @@ async function executeSubKin(taskId: string, isNudge = false) {
       data: { messageId: assistantMessageId, content: responseText, taskId, ...(tokenUsage ? { tokenUsage } : {}) },
     })
 
-    // If the task was suspended for an inter-Kin response, don't nudge — just return
+    // If the task was suspended for an inter-Kin response or a human prompt,
+    // don't nudge — just return. The runner resumes via resumeSubKin() when
+    // the response arrives (respondToHumanPrompt / interKin reply handler).
     const currentTask = await db.select().from(tasks).where(eq(tasks.id, taskId)).get()
-    if (currentTask && currentTask.status === 'awaiting_kin_response') {
-      log.info({ taskId }, 'Sub-Kin suspended awaiting inter-Kin response')
+    if (currentTask && (currentTask.status === 'awaiting_kin_response' || currentTask.status === 'awaiting_human_input')) {
+      log.info({ taskId, status: currentTask.status }, 'Sub-Kin suspended — exiting without nudge')
       return
     }
 

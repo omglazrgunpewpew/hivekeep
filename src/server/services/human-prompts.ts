@@ -107,6 +107,43 @@ export async function respondToHumanPrompt(promptId: string, response: unknown, 
   const validationError = validateResponse(prompt.promptType, response, options)
   if (validationError) return { success: false as const, error: validationError }
 
+  // Late-response guard: if the prompt is attached to a task that already
+  // reached a terminal state (the agent decided to proceed without the
+  // answer, or the task was cancelled / failed independently), we must NOT
+  // resurrect that task. Mark the prompt as `expired` and bail. The caller
+  // surfaces the explicit error code so the UI can render "too late".
+  // Observed on prod task `4e4f1760` (ticket #22): the agent finished at
+  // 11:58 without waiting, then a response at 13:13 force-reset the task
+  // to in_progress and ran a second time.
+  if (prompt.taskId) {
+    const linkedTask = await db.select().from(tasks).where(eq(tasks.id, prompt.taskId)).get()
+    if (linkedTask && (linkedTask.status === 'completed' || linkedTask.status === 'failed' || linkedTask.status === 'cancelled')) {
+      await db
+        .update(humanPrompts)
+        .set({
+          response: JSON.stringify(response),
+          status: 'expired',
+          respondedAt: new Date(),
+        })
+        .where(eq(humanPrompts.id, promptId))
+      log.warn(
+        { promptId, taskId: prompt.taskId, taskStatus: linkedTask.status },
+        'Human prompt answered after the task already reached a terminal state — marking prompt expired without resuming the task',
+      )
+      sseManager.sendToKin(prompt.kinId, {
+        type: 'prompt:expired',
+        kinId: prompt.kinId,
+        data: {
+          promptId,
+          kinId: prompt.kinId,
+          taskId: prompt.taskId,
+          taskStatus: linkedTask.status,
+        },
+      })
+      return { success: false as const, error: 'TASK_ALREADY_FINISHED', taskStatus: linkedTask.status }
+    }
+  }
+
   // Mark as answered
   await db
     .update(humanPrompts)

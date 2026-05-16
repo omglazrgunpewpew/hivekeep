@@ -22,6 +22,18 @@ promptRoutes.post('/:id/respond', async (c) => {
   const result = await respondToHumanPrompt(promptId, body.response, user.id)
 
   if (!result.success) {
+    if (result.error === 'TASK_ALREADY_FINISHED') {
+      return c.json(
+        {
+          error: {
+            code: 'TASK_ALREADY_FINISHED',
+            message:
+              `This task already reached the "${result.taskStatus}" status before your reply arrived — it can no longer resume from this prompt. The reply has been kept on the prompt for audit.`,
+          },
+        },
+        409,
+      )
+    }
     return c.json({ error: { code: 'PROMPT_ERROR', message: result.error } }, 400)
   }
 
