@@ -389,7 +389,13 @@ export function TaskPanelContent({
                 subtitle={t('taskDetail.tokenUsage.callCount', {
                   defaultValue: '{{count}} LLM call',
                   defaultValue_other: '{{count}} LLM calls',
-                  count: task.tokenUsage.callCount,
+                  // Use the sum of per-row stepCount, not COUNT(*) on
+                  // llm_usage: one row = one sub-Kin turn (the runner
+                  // collapses all tool-loop steps into a single roll-up),
+                  // so COUNT(*) reads "1" on a turn that made 46 real
+                  // HTTP calls to the provider. stepCount sums to the
+                  // actual count the user expects.
+                  count: task.tokenUsage.stepCount ?? task.tokenUsage.callCount,
                 })}
               />
             )}
@@ -957,7 +963,9 @@ function TaskTokenUsageFooter({
         {t('taskDetail.tokenUsage.callCount', {
           defaultValue: '{{count}} LLM call',
           defaultValue_other: '{{count}} LLM calls',
-          count: tokenUsage.callCount,
+          // See header indicator above — stepCount is the actual HTTP-call
+          // count, not COUNT(*) on llm_usage rows.
+          count: tokenUsage.stepCount ?? tokenUsage.callCount,
         })}
       </span>
       {hasCache && (
