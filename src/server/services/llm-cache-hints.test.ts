@@ -192,6 +192,36 @@ describe('buildSegmentedMessages', () => {
     expect(asAnthropic(last.providerOptions)?.cacheControl).toEqual({ type: 'ephemeral' })
   })
 
+  it('skips empty-text message as cross-turn anchor (Anthropic rejects cache_control on empty text blocks)', () => {
+    // Reproduces the sub-Kin resume failure after request_input: an assistant
+    // row with content="" sat between the original user message and the
+    // human-response user message. The natural anchor (idx 1) is empty, so
+    // cache_control must skip it and not crash the request.
+    const history: ModelMessage[] = [
+      { role: 'user', content: 'do the task' },
+      { role: 'assistant', content: '' },
+      { role: 'user', content: '[Human response]: yes' },
+    ]
+    const out = buildSegmentedMessages({ stable: 'STABLE', volatile: '' }, history)
+    expect(out).toHaveLength(4)
+    // Empty assistant must NOT carry cache_control
+    expect(asAnthropic(out[2]?.providerOptions)?.cacheControl).toBeUndefined()
+    // Anchor walks back to the prior user message instead
+    expect(asAnthropic(out[1]?.providerOptions)?.cacheControl).toEqual({ type: 'ephemeral' })
+  })
+
+  it('skips a single-empty-text content array as the last-message anchor', () => {
+    // Same hazard but on BP_LAST: if the final message is a single empty text
+    // block, we must not attach cache_control there either.
+    const history: ModelMessage[] = [
+      { role: 'user', content: 'hello' },
+      { role: 'assistant', content: [{ type: 'text', text: '' }] as never },
+    ]
+    const out = buildSegmentedMessages({ stable: 'STABLE', volatile: '' }, history)
+    expect(out).toHaveLength(3)
+    expect(asAnthropic(out[2]?.providerOptions)?.cacheControl).toBeUndefined()
+  })
+
   it('volatile is wrapped in <system-reminder> tags exactly', () => {
     const out = buildSegmentedMessages(
       { stable: 'STABLE', volatile: 'memories: foo, date: bar' },

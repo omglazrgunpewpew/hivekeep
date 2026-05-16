@@ -32,6 +32,27 @@
 import type { ModelMessage } from 'ai'
 import type { Tool } from '@ai-sdk/provider-utils'
 
+/**
+ * True when `message` would serialize to an empty content array, or to a single
+ * empty text block. The Anthropic API rejects `cache_control` on empty text
+ * blocks with `cache_control cannot be set for empty text blocks`, so callers
+ * that pick cache anchors should skip such messages.
+ */
+function isEffectivelyEmptyMessage(message: ModelMessage): boolean {
+  const c = (message as { content: unknown }).content
+  if (c == null) return true
+  if (typeof c === 'string') return c.length === 0
+  if (Array.isArray(c)) {
+    if (c.length === 0) return true
+    // A single text block with no text is the failure case.
+    if (c.length === 1) {
+      const only = c[0] as { type?: string; text?: string } | undefined
+      if (only && only.type === 'text' && (!only.text || only.text.length === 0)) return true
+    }
+  }
+  return false
+}
+
 /** Add an `ephemeral` cache_control breakpoint to a message. */
 export function withAnthropicCache<M extends ModelMessage>(message: M): M {
   return {
@@ -166,8 +187,15 @@ export function buildSegmentedMessages(
   // message. This anchor is what grows across turns: each new turn's history
   // includes the previous turn's user+assistant messages, extending the
   // cacheable prefix.
-  if (crossTurnAnchorIdx >= 0) {
-    out[crossTurnAnchorIdx] = withAnthropicCache(out[crossTurnAnchorIdx]!)
+  //
+  // Safety: walk back if the natural anchor would serialize to an empty text
+  // block — Anthropic rejects cache_control on empty text blocks. This should
+  // not happen if upstream history reconstruction is correct, but it shields
+  // the whole request from failing on a single corrupt row.
+  let anchorIdx = crossTurnAnchorIdx
+  while (anchorIdx >= 0 && isEffectivelyEmptyMessage(out[anchorIdx]!)) anchorIdx--
+  if (anchorIdx >= 0) {
+    out[anchorIdx] = withAnthropicCache(out[anchorIdx]!)
   }
 
   // BP_LAST: cache the entire request prefix including the new user message.
@@ -176,7 +204,7 @@ export function buildSegmentedMessages(
   // If the last message IS the cross-turn anchor (degenerate single-message
   // history), don't double-mark.
   const lastIdx = out.length - 1
-  if (lastIdx > 0 && lastIdx !== crossTurnAnchorIdx) {
+  if (lastIdx > 0 && lastIdx !== anchorIdx && !isEffectivelyEmptyMessage(out[lastIdx]!)) {
     out[lastIdx] = withAnthropicCache(out[lastIdx]!)
   }
 

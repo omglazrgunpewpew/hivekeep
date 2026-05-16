@@ -553,7 +553,7 @@ function isTextReadable(mimeType: string): boolean {
  * It is called from every place that rebuilds history from persisted
  * `toolCalls` JSON (buildMessageHistory + the quick-session resume path).
  */
-function sanitizePersistedToolCalls<T extends { id: unknown; name: unknown; args: unknown; result?: unknown }>(
+export function sanitizePersistedToolCalls<T extends { id: unknown; name: unknown; args: unknown; result?: unknown }>(
   toolCalls: T[],
   kinId: string,
 ): Array<T & { id: string; name: string; args: unknown }> {

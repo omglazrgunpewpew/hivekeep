@@ -11,7 +11,7 @@ import {
   buildSegmentedMessages,
   markLastToolCacheable,
 } from '@/server/services/llm-cache-hints'
-import { resolveLLMModel, buildThinkingProviderOptions, resolveThinkingConfig, isContextTooLargeError } from '@/server/services/kin-engine'
+import { resolveLLMModel, buildThinkingProviderOptions, resolveThinkingConfig, isContextTooLargeError, sanitizePersistedToolCalls } from '@/server/services/kin-engine'
 import { toolRegistry } from '@/server/tools/index'
 import { resolveMCPTools } from '@/server/services/mcp'
 import { resolveCustomTools } from '@/server/services/custom-tools'
@@ -636,13 +636,57 @@ async function executeSubKin(taskId: string, isNudge = false) {
       .orderBy(asc(messages.createdAt))
       .all()
 
-    const messageHistory: ModelMessage[] = taskMessages
-      // Filter out empty assistant messages left by aborted/paused streams
-      .filter((m) => !(m.role === 'assistant' && !m.content?.trim() && !m.toolCalls))
-      .map((m) => ({
-        role: m.role as 'user' | 'assistant' | 'system',
-        content: m.content ?? '',
-      }))
+    // Reconstruct ModelMessage[] from persisted rows. Mirrors the quick-session
+    // path in kin-engine.ts (~L2150): assistant rows with persisted tool calls
+    // are expanded into an assistant message carrying tool-call blocks plus a
+    // paired `tool`-role message with the results, so the LLM sees the same
+    // shape on resume that it saw mid-turn. The simple `{ role, content }` cast
+    // we used before dropped tool calls AND let empty-content rows reach
+    // `buildSegmentedMessages`, which then attached `cache_control` to an
+    // empty text block (Anthropic rejects this with
+    // `cache_control cannot be set for empty text blocks`). Observed when a
+    // sub-Kin called `request_input` (only a tool call, no text) and the
+    // response message arrived: the in-between assistant row had empty content
+    // and was picked as the cross-turn cache anchor.
+    const messageHistory: ModelMessage[] = []
+    for (const msg of taskMessages) {
+      if (msg.role === 'user') {
+        const text = msg.content ?? ''
+        if (!text.trim()) continue
+        messageHistory.push({ role: 'user', content: text })
+      } else if (msg.role === 'assistant') {
+        let parsedToolCalls: Array<{ id: string; name: string; args: unknown; result?: unknown }> | null = null
+        if (msg.toolCalls) {
+          try { parsedToolCalls = JSON.parse(msg.toolCalls as string) } catch { parsedToolCalls = null }
+        }
+        const validToolCalls = parsedToolCalls ? sanitizePersistedToolCalls(parsedToolCalls, task.parentKinId) : []
+        if (validToolCalls.length > 0) {
+          const assistantContent: Array<
+            | { type: 'text'; text: string }
+            | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
+          > = []
+          if (msg.content) assistantContent.push({ type: 'text', text: msg.content })
+          for (const tc of validToolCalls) {
+            assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+          }
+          messageHistory.push({ role: 'assistant', content: assistantContent })
+          messageHistory.push({
+            role: 'tool' as const,
+            content: validToolCalls.map((tc) => ({
+              type: 'tool-result' as const,
+              toolCallId: tc.id,
+              toolName: tc.name,
+              output: { type: 'json' as const, value: (tc.result ?? null) as import('ai').JSONValue },
+            })),
+          })
+        } else {
+          const text = msg.content ?? ''
+          if (text.trim()) {
+            messageHistory.push({ role: 'assistant', content: text })
+          }
+        }
+      }
+    }
 
     // Add initial task instruction as user message if no history yet
     if (messageHistory.length === 0) {
