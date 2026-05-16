@@ -1076,9 +1076,16 @@ export async function resolveTask(
 
   log.info({ taskId, status, mode: task.mode }, 'Task resolved')
 
-  // Drop per-task tool-call tracker state — the read_file/grep duplicate
-  // detector only cares about repeats inside an active task.
-  const { forgetTask } = await import('@/server/services/tool-call-tracker')
+  // Snapshot guard-fire telemetry before we drop tracker state. Surfaces
+  // whether the runtime guards (bash-wrapper refusal, banned commands,
+  // read-before-edit, duplicate reads, think / task_todos usage) fired on
+  // this task. Useful for validating whether agent behaviour shifted vs
+  // the baseline (task #32) — grep `Task guard telemetry` in the logs.
+  const { forgetTask, getTaskStats } = await import('@/server/services/tool-call-tracker')
+  const guardStats = getTaskStats(taskId)
+  if (guardStats) {
+    log.info({ taskId, status, ...guardStats }, 'Task guard telemetry')
+  }
   forgetTask(taskId)
 
   // Drop per-task structured todo list (TodoWrite-equivalent).

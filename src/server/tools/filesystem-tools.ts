@@ -5,7 +5,7 @@ import { existsSync, statSync, readdirSync } from 'fs'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
-import { noteCall, readFileSignature, recordReadPath, hasReadPath } from '@/server/services/tool-call-tracker'
+import { noteCall, readFileSignature, recordReadPath, hasReadPath, recordGuardFire } from '@/server/services/tool-call-tracker'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('filesystem-tools')
@@ -287,6 +287,7 @@ export const editFileTool: ToolRegistration = {
         const absPath = resolveAndValidate(filePath, workspace)
 
         if (!hasReadPath(ctx.taskId, filePath)) {
+          recordGuardFire(ctx.taskId, 'readBeforeEditRefusal')
           return {
             success: false,
             applied: false,

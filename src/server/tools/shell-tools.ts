@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { resolve } from 'path'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
+import { recordGuardFire } from '@/server/services/tool-call-tracker'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('shell-tools')
@@ -159,6 +160,10 @@ export const runShellTool: ToolRegistration = {
           log.warn(
             { kinId: ctx.kinId, command, binary: violation.binary, reason: violation.reason },
             'Refused shell command',
+          )
+          recordGuardFire(
+            ctx.taskId,
+            violation.reason === 'wrapper' ? 'bashWrapperRefusal' : 'bannedCommandRefusal',
           )
           const intro = violation.reason === 'wrapper'
             ? `Refusing to run \`${violation.binary}\` through run_shell — use the dedicated tool: ${violation.suggestion}.`

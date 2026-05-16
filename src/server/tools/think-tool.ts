@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { createLogger } from '@/server/logger'
+import { recordGuardFire } from '@/server/services/tool-call-tracker'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('think-tool')
@@ -40,6 +41,7 @@ export const thinkTool: ToolRegistration = {
       }),
       execute: async ({ thought }) => {
         log.info({ kinId: ctx.kinId, taskId: ctx.taskId, length: thought.length }, 'Thought recorded')
+        recordGuardFire(ctx.taskId, 'thinkCall')
         return {
           success: true,
           thought,

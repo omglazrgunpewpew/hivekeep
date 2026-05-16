@@ -6,7 +6,7 @@ import { readFile, writeFile } from 'fs/promises'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { resolveAndValidate } from '@/server/tools/filesystem-tools'
-import { hasReadPath } from '@/server/services/tool-call-tracker'
+import { hasReadPath, recordGuardFire } from '@/server/services/tool-call-tracker'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('multi-edit-tools')
@@ -56,6 +56,7 @@ export const multiEditTool: ToolRegistration = {
         const absPath = resolveAndValidate(filePath, workspace)
 
         if (!hasReadPath(ctx.taskId, filePath)) {
+          recordGuardFire(ctx.taskId, 'readBeforeEditRefusal')
           return {
             success: false,
             error: `Refusing to multi-edit \`${filePath}\` — you have not read this file in this task yet. Call read_file first, then retry the edits. This guard prevents hallucinated edits based on assumed content.`,

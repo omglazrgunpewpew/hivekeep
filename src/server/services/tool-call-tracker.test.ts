@@ -11,6 +11,8 @@ const {
   grepSignature,
   recordReadPath,
   hasReadPath,
+  recordGuardFire,
+  getTaskStats,
   _resetTracker,
   _peek,
 } = await import('./tool-call-tracker')
@@ -145,5 +147,78 @@ describe('read-before-edit tracking (recordReadPath / hasReadPath)', () => {
     expect(hasReadPath('task-1', 'src/foo.ts')).toBe(true)
     expect(hasReadPath('task-1', './src/foo.ts')).toBe(false)
     expect(hasReadPath('task-1', '/abs/src/foo.ts')).toBe(false)
+  })
+})
+
+describe('guard-fire telemetry (recordGuardFire / getTaskStats)', () => {
+  it('returns null when the task has no recorded activity', () => {
+    expect(getTaskStats('task-1')).toBeNull()
+  })
+
+  it('returns null for undefined taskId (main Kin)', () => {
+    expect(getTaskStats(undefined)).toBeNull()
+  })
+
+  it('initialises a zeroed stats bucket on first guard fire', () => {
+    recordGuardFire('task-1', 'bashWrapperRefusal')
+    const stats = getTaskStats('task-1')!
+    expect(stats.bashWrapperRefusals).toBe(1)
+    expect(stats.bannedCommandRefusals).toBe(0)
+    expect(stats.readBeforeEditRefusals).toBe(0)
+    expect(stats.thinkCalls).toBe(0)
+    expect(stats.todoUpdates).toBe(0)
+    expect(stats.duplicateReads).toBe(0)
+    expect(stats.duplicateGreps).toBe(0)
+  })
+
+  it('increments each counter independently', () => {
+    recordGuardFire('task-1', 'bashWrapperRefusal')
+    recordGuardFire('task-1', 'bashWrapperRefusal')
+    recordGuardFire('task-1', 'bannedCommandRefusal')
+    recordGuardFire('task-1', 'readBeforeEditRefusal')
+    recordGuardFire('task-1', 'thinkCall')
+    recordGuardFire('task-1', 'thinkCall')
+    recordGuardFire('task-1', 'thinkCall')
+    recordGuardFire('task-1', 'todoUpdate')
+    const stats = getTaskStats('task-1')!
+    expect(stats.bashWrapperRefusals).toBe(2)
+    expect(stats.bannedCommandRefusals).toBe(1)
+    expect(stats.readBeforeEditRefusals).toBe(1)
+    expect(stats.thinkCalls).toBe(3)
+    expect(stats.todoUpdates).toBe(1)
+  })
+
+  it('counts duplicate read_file / grep via noteCall', () => {
+    const r = readFileSignature({ path: 'a.ts' })
+    const g = grepSignature({ pattern: 'foo' })
+    noteCall('task-1', 'read_file', r)
+    noteCall('task-1', 'read_file', r) // duplicate
+    noteCall('task-1', 'read_file', r) // duplicate
+    noteCall('task-1', 'grep', g)
+    noteCall('task-1', 'grep', g) // duplicate
+    const stats = getTaskStats('task-1')!
+    expect(stats.duplicateReads).toBe(2)
+    expect(stats.duplicateGreps).toBe(1)
+  })
+
+  it('is per-task isolated', () => {
+    recordGuardFire('task-1', 'bashWrapperRefusal')
+    recordGuardFire('task-2', 'thinkCall')
+    expect(getTaskStats('task-1')?.bashWrapperRefusals).toBe(1)
+    expect(getTaskStats('task-1')?.thinkCalls).toBe(0)
+    expect(getTaskStats('task-2')?.thinkCalls).toBe(1)
+    expect(getTaskStats('task-2')?.bashWrapperRefusals).toBe(0)
+  })
+
+  it('forgetTask wipes the stats with the rest of the bucket', () => {
+    recordGuardFire('task-1', 'thinkCall')
+    expect(getTaskStats('task-1')?.thinkCalls).toBe(1)
+    forgetTask('task-1')
+    expect(getTaskStats('task-1')).toBeNull()
+  })
+
+  it('recordGuardFire with no taskId is a no-op', () => {
+    recordGuardFire(undefined, 'bashWrapperRefusal')
+    expect(getTaskStats(undefined)).toBeNull()
   })
 })

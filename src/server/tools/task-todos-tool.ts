@@ -5,6 +5,7 @@ import { db } from '@/server/db/index'
 import { tasks } from '@/server/db/schema'
 import { createLogger } from '@/server/logger'
 import { setTodosForTask } from '@/server/services/task-todos'
+import { recordGuardFire } from '@/server/services/tool-call-tracker'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('tool:task-todos')
@@ -57,6 +58,7 @@ export const taskTodosTool: ToolRegistration = {
             parentKinId: task.parentKinId,
             ticketId: task.ticketId ?? null,
           })
+          recordGuardFire(ctx.taskId, 'todoUpdate')
           log.debug({ taskId: ctx.taskId, count: stored.length }, 'task_todos updated')
           return {
             success: true,

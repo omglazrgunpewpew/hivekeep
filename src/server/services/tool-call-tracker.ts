@@ -29,6 +29,41 @@ interface PerTaskCounts {
   // edit/multi-edit "read-before-edit" guard (ported from opencode) to
   // prevent hallucinated edits on files the sub-Kin hasn't actually seen.
   readPaths: Set<string>
+  // Guard-fire telemetry. Each counter records how often the runtime
+  // intervened on the model's behalf during this task. Used to validate
+  // whether the iterations actually changed agent behaviour vs the
+  // baseline (task #32: ~25 PATH archaeology calls, ~15 redundant greps,
+  // ~10 file re-reads, ~12 bash wrappers). Logged on task resolve.
+  stats: TaskGuardStats
+}
+
+export interface TaskGuardStats {
+  /** read_file calls that hit a duplicate signature (i.e. the soft hint fired). */
+  duplicateReads: number
+  /** grep calls that hit a duplicate signature. */
+  duplicateGreps: number
+  /** edit_file / multi_edit refused because the path wasn't read first. */
+  readBeforeEditRefusals: number
+  /** run_shell refused for being a thin wrapper around a dedicated tool. */
+  bashWrapperRefusals: number
+  /** run_shell refused for invoking a banned binary (curl, wget, lynx, …). */
+  bannedCommandRefusals: number
+  /** `think` tool invocations (no-op reasoning slot). */
+  thinkCalls: number
+  /** `task_todos` bulk-set calls. */
+  todoUpdates: number
+}
+
+function freshStats(): TaskGuardStats {
+  return {
+    duplicateReads: 0,
+    duplicateGreps: 0,
+    readBeforeEditRefusals: 0,
+    bashWrapperRefusals: 0,
+    bannedCommandRefusals: 0,
+    thinkCalls: 0,
+    todoUpdates: 0,
+  }
 }
 
 const byTask = new Map<string, PerTaskCounts>()
@@ -36,7 +71,7 @@ const byTask = new Map<string, PerTaskCounts>()
 function bucket(taskId: string): PerTaskCounts {
   let entry = byTask.get(taskId)
   if (!entry) {
-    entry = { counts: new Map(), readPaths: new Set() }
+    entry = { counts: new Map(), readPaths: new Set(), stats: freshStats() }
     byTask.set(taskId, entry)
   }
   return entry
@@ -52,14 +87,59 @@ function bucket(taskId: string): PerTaskCounts {
  */
 export function noteCall(
   taskId: string | undefined,
-  _kind: TrackedKind,
+  kind: TrackedKind,
   signature: string,
 ): { previousCallCount: number } {
   if (!taskId) return { previousCallCount: 0 }
   const entry = bucket(taskId)
   const prev = entry.counts.get(signature) ?? 0
   entry.counts.set(signature, prev + 1)
+  if (prev > 0) {
+    if (kind === 'read_file') entry.stats.duplicateReads += 1
+    else if (kind === 'grep') entry.stats.duplicateGreps += 1
+  }
   return { previousCallCount: prev }
+}
+
+/**
+ * Increment one of the guard-fire counters for a task. No-ops outside a
+ * task context. Called from the tools at the point a guard fires (refusal)
+ * or a reasoning aid is invoked.
+ */
+export function recordGuardFire(
+  taskId: string | undefined,
+  kind:
+    | 'readBeforeEditRefusal'
+    | 'bashWrapperRefusal'
+    | 'bannedCommandRefusal'
+    | 'thinkCall'
+    | 'todoUpdate',
+): void {
+  if (!taskId) return
+  const stats = bucket(taskId).stats
+  switch (kind) {
+    case 'readBeforeEditRefusal':
+      stats.readBeforeEditRefusals += 1
+      break
+    case 'bashWrapperRefusal':
+      stats.bashWrapperRefusals += 1
+      break
+    case 'bannedCommandRefusal':
+      stats.bannedCommandRefusals += 1
+      break
+    case 'thinkCall':
+      stats.thinkCalls += 1
+      break
+    case 'todoUpdate':
+      stats.todoUpdates += 1
+      break
+  }
+}
+
+/** Snapshot the current guard-fire stats for a task. */
+export function getTaskStats(taskId: string | undefined): TaskGuardStats | null {
+  if (!taskId) return null
+  return byTask.get(taskId)?.stats ?? null
 }
 
 /**
