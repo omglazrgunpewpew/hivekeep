@@ -214,6 +214,8 @@ export const TOOL_DOMAIN_MAP: Record<string, ToolDomain> = {
   notify: 'tasks',
   save_run_learning: 'tasks',
   delete_run_learning: 'tasks',
+  think: 'tasks',
+  task_todos: 'tasks',
   // Inter-Kin
   send_message: 'inter-kin',
   reply: 'inter-kin',
