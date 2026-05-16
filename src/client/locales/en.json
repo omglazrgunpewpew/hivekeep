@@ -944,6 +944,8 @@
     "close": "Close",
     "viewPrompt": "Prompt",
     "viewPromptTooltip": "View full task prompt",
+    "runPrompt": "Run instructions",
+    "runPromptTooltip": "Run-specific instructions passed at spawn time",
     "toolCalls": "Tool calls",
     "prompt": "Task prompt",
     "promptDescription": "Full task prompt content",
@@ -2563,6 +2565,10 @@
       "kinField": "Which Kin should run this task?",
       "kinPlaceholder": "Select a Kin",
       "activeOnProject": "active here",
+      "runPromptField": "Run-specific instructions (optional)",
+      "runPromptPlaceholder": "e.g. focus only on the backend, leave the UI for the next Kin",
+      "runPromptHelp": "Optional. Scopes this particular run on top of the ticket. Useful when fanning out several agents in parallel, or stopping at a specific phase. Max 500 chars.",
+      "runPromptCounter": "{{count}} / 500",
       "start": "Start"
     },
     "enrich": {

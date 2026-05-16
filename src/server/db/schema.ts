@@ -307,6 +307,12 @@ export const tasks = sqliteTable('tasks', {
    *  (defaultPresetForTask). 'all' explicitly disables filtering. Null
    *  falls back to the auto-picker behaviour (ticket → code, else full). */
   toolPreset: text('tool_preset'), // 'code' | 'research' | 'ops' | 'all' | null
+  /** Optional run-specific instructions provided at task spawn (ticket tasks).
+   *  Injected as a dedicated block in the sub-Kin's brief so the agent can be
+   *  scoped to a slice of the ticket (e.g. "focus only on backend",
+   *  "stop after the DB migration phase"). Soft-limit 500 chars at the API
+   *  surface. Null on tasks spawned without a sur-prompt. */
+  runPrompt: text('run_prompt'),
   concurrencyGroup: text('concurrency_group'),
   concurrencyMax: integer('concurrency_max'),
   queuedAt: integer('queued_at', { mode: 'timestamp_ms' }),

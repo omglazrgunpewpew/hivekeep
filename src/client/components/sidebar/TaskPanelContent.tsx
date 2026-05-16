@@ -151,6 +151,7 @@ export function TaskPanelContent({
       .catch(() => {})
   }, [task?.parentKinId, task?.id])
   const [isPromptOpen, setIsPromptOpen] = useState(false)
+  const [isRunPromptOpen, setIsRunPromptOpen] = useState(false)
   const toggleToolCalls = useCallback(() => setIsToolCallsOpen((prev) => !prev), [])
 
   // Sibling runs of the same cron — for the run selector
@@ -496,6 +497,22 @@ export function TaskPanelContent({
                 <TooltipContent>{t('taskDetail.viewPromptTooltip')}</TooltipContent>
               </Tooltip>
             )}
+            {task.runPrompt && task.runPrompt.trim().length > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 gap-1 px-1.5 text-[10px]"
+                    onClick={() => setIsRunPromptOpen(true)}
+                  >
+                    <Sparkles className="size-2.5" />
+                    {t('taskDetail.runPrompt')}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('taskDetail.runPromptTooltip')}</TooltipContent>
+              </Tooltip>
+            )}
             {contextData && (
               <ContextBar
                 kinId={task.parentKinId}
@@ -719,6 +736,35 @@ export function TaskPanelContent({
           />
         </div>
       </div>
+
+      {/* Run-prompt viewer dialog — only relevant on ticket tasks with a sur-prompt */}
+      {task?.runPrompt && task.runPrompt.trim().length > 0 && (
+        <Dialog open={isRunPromptOpen} onOpenChange={setIsRunPromptOpen}>
+          <DialogContent className="sm:max-w-xl max-h-[80vh] flex flex-col gap-0">
+            <DialogHeader className="pb-3 border-b border-border">
+              <DialogTitle className="text-base flex items-center gap-2">
+                <Sparkles className="size-4" />
+                {t('taskDetail.runPrompt')}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                {t('taskDetail.runPromptTooltip')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto max-h-[60vh] py-4 px-1">
+              <div className="text-sm text-foreground whitespace-pre-wrap break-words">
+                {task.runPrompt}
+              </div>
+            </div>
+            <DialogFooter className="pt-3 border-t border-border">
+              <DialogClose asChild>
+                <Button variant="outline" size="sm">
+                  {t('taskDetail.close')}
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Prompt viewer dialog */}
       {task?.description && (

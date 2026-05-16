@@ -11,6 +11,7 @@ import {
 } from '@/client/components/ui/dialog'
 import { Button } from '@/client/components/ui/button'
 import { Label } from '@/client/components/ui/label'
+import { Textarea } from '@/client/components/ui/textarea'
 import { KinSelector } from '@/client/components/common/KinSelector'
 import { useTickets } from '@/client/hooks/useTickets'
 import { toast } from 'sonner'
@@ -30,11 +31,14 @@ interface StartTaskDialogProps {
   projectId: string
 }
 
+const RUN_PROMPT_MAX = 500
+
 export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: StartTaskDialogProps) {
   const { t } = useTranslation()
   const { startTicketTask } = useTickets(projectId)
   const [kins, setKins] = useState<KinFromApi[]>([])
   const [selectedKinId, setSelectedKinId] = useState<string>('')
+  const [runPrompt, setRunPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -55,11 +59,17 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
     }
   }, [open, projectId])
 
+  // Reset the sur-prompt whenever the dialog reopens so a previous draft does
+  // not leak into a fresh task spawn.
+  useEffect(() => {
+    if (!open) setRunPrompt('')
+  }, [open])
+
   async function handleSubmit() {
     if (!selectedKinId) return
     setSubmitting(true)
     try {
-      await startTicketTask(ticketId, selectedKinId)
+      await startTicketTask(ticketId, selectedKinId, runPrompt.trim() || undefined)
       onOpenChange(false)
     } catch (err) {
       toast.error(getErrorMessage(err))
@@ -83,6 +93,9 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
     avatarUrl: k.avatarUrl,
   }))
 
+  const runPromptLength = runPrompt.length
+  const runPromptOverLimit = runPromptLength > RUN_PROMPT_MAX
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -90,20 +103,39 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
           <DialogTitle>{t('projects.startTask.title')}</DialogTitle>
           <DialogDescription>{t('projects.startTask.description')}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2 py-2">
-          <Label>{t('projects.startTask.kinField')}</Label>
-          <KinSelector
-            value={selectedKinId}
-            onValueChange={setSelectedKinId}
-            kins={kinOptions}
-            placeholder={t('projects.startTask.kinPlaceholder')}
-          />
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>{t('projects.startTask.kinField')}</Label>
+            <KinSelector
+              value={selectedKinId}
+              onValueChange={setSelectedKinId}
+              kins={kinOptions}
+              placeholder={t('projects.startTask.kinPlaceholder')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="start-task-run-prompt">{t('projects.startTask.runPromptField')}</Label>
+            <Textarea
+              id="start-task-run-prompt"
+              value={runPrompt}
+              onChange={(e) => setRunPrompt(e.target.value.slice(0, RUN_PROMPT_MAX))}
+              placeholder={t('projects.startTask.runPromptPlaceholder')}
+              rows={3}
+              maxLength={RUN_PROMPT_MAX}
+            />
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('projects.startTask.runPromptHelp')}</p>
+              <p className={`text-xs tabular-nums ${runPromptOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {t('projects.startTask.runPromptCounter', { count: runPromptLength })}
+              </p>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t('common.cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={!selectedKinId || submitting}>
+          <Button onClick={handleSubmit} disabled={!selectedKinId || submitting || runPromptOverLimit}>
             {t('projects.startTask.start')}
           </Button>
         </DialogFooter>

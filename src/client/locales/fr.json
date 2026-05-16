@@ -944,6 +944,8 @@
     "close": "Fermer",
     "viewPrompt": "Prompt",
     "viewPromptTooltip": "Voir le prompt complet de la tâche",
+    "runPrompt": "Instructions de run",
+    "runPromptTooltip": "Instructions spécifiques fournies au lancement de la tâche",
     "toolCalls": "Appels d'outils",
     "prompt": "Prompt de la tâche",
     "promptDescription": "Contenu complet du prompt de la tâche",
@@ -2564,6 +2566,10 @@
       "kinField": "Quel Kin doit exécuter cette tâche ?",
       "kinPlaceholder": "Sélectionner un Kin",
       "activeOnProject": "actif ici",
+      "runPromptField": "Instructions spécifiques pour ce run (optionnel)",
+      "runPromptPlaceholder": "ex. occupe-toi seulement du backend, laisse l'UI au prochain Kin",
+      "runPromptHelp": "Optionnel. Cadre ce run précisément, en plus du ticket. Pratique quand tu lances plusieurs agents en parallèle, ou que tu veux t'arrêter à une phase précise. Max 500 caractères.",
+      "runPromptCounter": "{{count}} / 500",
       "start": "Démarrer"
     },
     "enrich": {

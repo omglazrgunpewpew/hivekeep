@@ -21,6 +21,10 @@ interface TaskDetail {
   concurrencyGroup: string | null
   concurrencyMax: number | null
   cronId: string | null
+  /** Optional run-specific sur-prompt captured at spawn time for ticket tasks.
+   *  Surfaced in the task panel so the user can audit what scope this run
+   *  was given, distinct from the ticket description itself. */
+  runPrompt?: string | null
   createdAt: string
   updatedAt: string
 }

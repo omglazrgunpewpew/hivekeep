@@ -643,6 +643,80 @@ describe('buildSystemPrompt', () => {
     expect(result).toContain('(45s)')
   })
 
+  // --- Ticket assignment block (ticket sub-Kin tasks) ---
+
+  describe('ticket assignment block', () => {
+    const baseAssignment = {
+      ticketId: 't-1',
+      ticketNumber: 42,
+      ticketTitle: 'Add a sur-prompt at task launch',
+      ticketDescription: 'Provide an optional run-specific prompt when spawning a ticket task.',
+      ticketStatus: 'todo',
+      ticketTags: ['feature', 'core'],
+      projectId: 'p-1',
+      projectSlug: 'kinbot',
+      projectTitle: 'KinBot',
+      projectDescription: 'Multi-agent platform.',
+      projectGithubUrl: null,
+      comments: [],
+    }
+
+    it('omits the run-specific block when no runPrompt is provided', () => {
+      const result = buildSystemPrompt(makeParams({
+        isSubKin: true,
+        taskDescription: 'Work on ticket: foo',
+        ticketAssignment: { ...baseAssignment },
+      }))
+      expect(result).toContain('## Ticket assignment')
+      expect(result).toContain('### Ticket you are working on')
+      expect(result).not.toContain('### Run-specific instructions for this task')
+    })
+
+    it('injects the runPrompt in its own labelled block when present', () => {
+      const result = buildSystemPrompt(makeParams({
+        isSubKin: true,
+        taskDescription: 'Work on ticket: foo',
+        ticketAssignment: {
+          ...baseAssignment,
+          runPrompt: 'Focus only on the backend; leave the UI for the next Kin.',
+        },
+      }))
+      expect(result).toContain('### Run-specific instructions for this task')
+      expect(result).toContain('Focus only on the backend; leave the UI for the next Kin.')
+      // Sanity: the block sits between the ticket section and the standard
+      // sub-task footer (Use update_ticket() ...) so the agent reads it after
+      // the ticket context and before the trailing instructions.
+      const runIdx = result.indexOf('### Run-specific instructions for this task')
+      const ticketIdx = result.indexOf('### Ticket you are working on')
+      const footerIdx = result.indexOf('Use update_ticket()')
+      expect(ticketIdx).toBeGreaterThan(-1)
+      expect(runIdx).toBeGreaterThan(ticketIdx)
+      expect(footerIdx).toBeGreaterThan(runIdx)
+    })
+
+    it('treats whitespace-only runPrompt as absent', () => {
+      const result = buildSystemPrompt(makeParams({
+        isSubKin: true,
+        taskDescription: 'Work on ticket: foo',
+        ticketAssignment: { ...baseAssignment, runPrompt: '   \n  ' },
+      }))
+      expect(result).not.toContain('### Run-specific instructions for this task')
+    })
+
+    it('renders multi-line runPrompt as a blockquote so it stands out from the ticket description', () => {
+      const result = buildSystemPrompt(makeParams({
+        isSubKin: true,
+        taskDescription: 'Work on ticket: foo',
+        ticketAssignment: {
+          ...baseAssignment,
+          runPrompt: 'Line one.\nLine two.',
+        },
+      }))
+      expect(result).toContain('> Line one.')
+      expect(result).toContain('> Line two.')
+    })
+  })
+
   // --- WhatsApp formatting hint ---
 
   it('includes whatsapp formatting hints', () => {

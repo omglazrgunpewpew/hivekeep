@@ -785,7 +785,9 @@ export async function buildTaskContextPreview(taskId: string): Promise<ContextPr
   let ticketAssignment = null
   if (task.ticketId) {
     const { buildTicketAssignmentInfo } = await import('@/server/services/tickets')
-    ticketAssignment = await buildTicketAssignmentInfo(task.ticketId)
+    ticketAssignment = await buildTicketAssignmentInfo(task.ticketId, {
+      runPrompt: task.runPrompt ?? null,
+    })
   }
 
   const systemPrompt = joinSystemPrompt(buildSystemPrompt({

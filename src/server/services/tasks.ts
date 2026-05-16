@@ -297,6 +297,9 @@ interface SpawnParams {
    *  auto-picked preset (ticket → 'code', else full surface). Use 'all' to
    *  explicitly disable filtering on a ticket task. */
   toolPreset?: 'code' | 'research' | 'ops' | 'all'
+  /** Optional run-specific sur-prompt persisted on the task row and injected
+   *  into the ticket-assignment block at prompt-build time. Ticket tasks only. */
+  runPrompt?: string | null
   /** When true, insert the task row but do NOT kick off `executeSubKin`. The
    *  caller is responsible for starting execution (e.g. after seeding cloned
    *  messages). Used by `retryTask`. */
@@ -363,6 +366,7 @@ export async function spawnTask(params: SpawnParams) {
     allowHumanPrompt: params.allowHumanPrompt ?? true,
     thinkingConfig: params.thinkingConfig ? JSON.stringify(params.thinkingConfig) : null,
     toolPreset: params.toolPreset ?? null,
+    runPrompt: params.runPrompt ?? null,
     concurrencyGroup,
     concurrencyMax,
     queuedAt: initialStatus === 'queued' ? now : null,
@@ -485,7 +489,9 @@ async function executeSubKin(taskId: string, isNudge = false) {
     let ticketAssignment = null
     if (task.ticketId) {
       const { buildTicketAssignmentInfo } = await import('@/server/services/tickets')
-      ticketAssignment = await buildTicketAssignmentInfo(task.ticketId)
+      ticketAssignment = await buildTicketAssignmentInfo(task.ticketId, {
+        runPrompt: task.runPrompt ?? null,
+      })
     }
 
     const { getTodosForTask } = await import('@/server/services/task-todos')

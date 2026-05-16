@@ -122,8 +122,16 @@ export function useTickets(projectId: string | null) {
   }, [])
 
   const startTicketTask = useCallback(
-    async (ticketId: string, kinId: string): Promise<StartTicketTaskResult['task']> => {
-      const data = await api.post<StartTicketTaskResult>(`/tickets/${ticketId}/start-task`, { kinId })
+    async (
+      ticketId: string,
+      kinId: string,
+      runPrompt?: string,
+    ): Promise<StartTicketTaskResult['task']> => {
+      const trimmed = runPrompt?.trim() ?? ''
+      const data = await api.post<StartTicketTaskResult>(
+        `/tickets/${ticketId}/start-task`,
+        trimmed.length > 0 ? { kinId, runPrompt: trimmed } : { kinId },
+      )
       return data.task
     },
     [],

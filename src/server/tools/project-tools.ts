@@ -516,17 +516,31 @@ export const startTicketTaskTool: ToolRegistration = {
       description:
         'Spawn a sub-Kin to work on a ticket. Always runs in await mode — you will get a turn when it finishes. ' +
         'NO side-effect on the ticket status: update it manually via update_ticket() before/after. ' +
-        'Accepts a UUID, a qualified id like "kinbot#42", or a bare "#42".',
+        'Accepts a UUID, a qualified id like "kinbot#42", or a bare "#42". ' +
+        'Optional `run_prompt` lets you scope this specific run (e.g. "only the backend", ' +
+        '"stop after the DB migration phase", "ignore the UI part for this pass"). Useful when ' +
+        'fanning out several agents on the same ticket with different scopes, or resuming after a ' +
+        'partial run. It is injected into the sub-Kin brief in a dedicated block, after the ticket ' +
+        'description and existing comments. It does NOT replace the ticket itself — keep it short.',
       inputSchema: z.object({
         ticket_id: z.string(),
+        run_prompt: z
+          .string()
+          .max(500)
+          .optional()
+          .describe(
+            'Optional run-specific instructions (max 500 chars). Scopes or focuses this particular run on top of the ticket description.',
+          ),
       }),
-      execute: async ({ ticket_id }) => {
+      execute: async ({ ticket_id, run_prompt }) => {
         const resolved = await resolveTicketRef(ticket_id, {
           activeProjectId: getActiveProjectIdFor(ctx.kinId),
         })
         if (!resolved.ok) return { error: resolved.code, message: resolved.message }
         try {
-          const result = await startTicketTask(resolved.ticketId, ctx.kinId)
+          const result = await startTicketTask(resolved.ticketId, ctx.kinId, {
+            runPrompt: run_prompt ?? null,
+          })
           return result
         } catch (err) {
           return { error: err instanceof Error ? err.message : 'Unknown error' }

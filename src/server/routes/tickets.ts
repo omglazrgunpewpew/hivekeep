@@ -201,9 +201,19 @@ ticketRoutes.post('/:id/start-task', async (c) => {
   if (!kinId) {
     return c.json({ error: { code: 'INVALID_INPUT', message: 'kinId is required' } }, 400)
   }
+  const rawRunPrompt = typeof body.runPrompt === 'string' ? body.runPrompt : null
+  // Soft length cap mirrored from TICKET_TASK_RUN_PROMPT_MAX so over-long
+  // payloads are rejected at the edge with an explicit code rather than being
+  // silently truncated server-side.
+  if (rawRunPrompt !== null && rawRunPrompt.length > 500) {
+    return c.json(
+      { error: { code: 'RUN_PROMPT_TOO_LONG', message: 'runPrompt must be 500 characters or fewer' } },
+      400,
+    )
+  }
 
   try {
-    const task = await startTicketTask(ticketId, kinId)
+    const task = await startTicketTask(ticketId, kinId, { runPrompt: rawRunPrompt })
     return c.json({ task }, 201)
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'

@@ -1108,8 +1108,16 @@ export async function broadcastTicketUpdated(ticketId: string): Promise<void> {
 // ─── Prompt block info ────────────────────────────────────────────────────────
 
 /** Fetch the current ticket + its project context for the sub-Kin prompt.
- *  Returns null if the ticket has been deleted (graceful fallback). */
-export async function buildTicketAssignmentInfo(ticketId: string): Promise<TicketAssignmentInfo | null> {
+ *  Returns null if the ticket has been deleted (graceful fallback).
+ *
+ *  `options.runPrompt` is the optional sur-prompt persisted on the task row
+ *  at spawn time. It is injected into the assignment block as its own
+ *  "Run-specific instructions" section so the agent can scope its run
+ *  without conflating it with the ticket description. */
+export async function buildTicketAssignmentInfo(
+  ticketId: string,
+  options: { runPrompt?: string | null } = {},
+): Promise<TicketAssignmentInfo | null> {
   const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get()
   if (!ticket) return null
 
@@ -1143,6 +1151,7 @@ export async function buildTicketAssignmentInfo(ticketId: string): Promise<Ticke
     projectDescription: project.description,
     projectGithubUrl: project.githubUrl,
     comments,
+    runPrompt: options.runPrompt ?? null,
   }
 }
 
@@ -1157,17 +1166,33 @@ export interface StartTicketTaskResult {
   createdAt: number
 }
 
+/** Maximum length of the optional run-specific sur-prompt accepted at task
+ *  spawn. Kept short on purpose: this is a focus hint, not a way to rewrite
+ *  the ticket from scratch. Enforced both at the API surface and in the
+ *  spawn helper to keep persisted rows bounded. */
+export const TICKET_TASK_RUN_PROMPT_MAX = 500
+
 /** Spawn a sub-Kin to work on a ticket. Always in await mode (projects.md § 5).
- *  No side-effect on the ticket — the Kin manages status manually. */
+ *  No side-effect on the ticket — the Kin manages status manually.
+ *
+ *  `options.runPrompt` is an optional free-form sur-prompt that scopes this
+ *  particular run (e.g. "only backend", "stop after migration phase"). It is
+ *  persisted on the task row and injected into the brief at prompt-build time. */
 export async function startTicketTask(
   ticketId: string,
   parentKinId: string,
+  options: { runPrompt?: string | null } = {},
 ): Promise<StartTicketTaskResult> {
   const ticket = db.select().from(tickets).where(eq(tickets.id, ticketId)).get()
   if (!ticket) throw new Error('TICKET_NOT_FOUND')
 
   const kin = db.select({ id: kins.id }).from(kins).where(eq(kins.id, parentKinId)).get()
   if (!kin) throw new Error('KIN_NOT_FOUND')
+
+  const trimmedRunPrompt = options.runPrompt?.trim() ?? ''
+  const runPrompt = trimmedRunPrompt.length > 0
+    ? trimmedRunPrompt.slice(0, TICKET_TASK_RUN_PROMPT_MAX)
+    : null
 
   // Description is intentionally short — the rich ticket context is injected
   // at prompt-build time from tasks.ticket_id (always the current version).
@@ -1180,6 +1205,7 @@ export async function startTicketTask(
     mode: 'await',
     spawnType: 'self',
     ticketId,
+    runPrompt,
   })
 
   // Re-read the row to expose status + createdAt without coupling to spawnTask's return shape.

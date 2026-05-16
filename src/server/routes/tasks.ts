@@ -134,6 +134,7 @@ taskRoutes.get('/:id', async (c) => {
       concurrencyGroup: task.concurrencyGroup ?? null,
       concurrencyMax: task.concurrencyMax ?? null,
       cronId: task.cronId ?? null,
+      runPrompt: task.runPrompt ?? null,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     },
