@@ -119,6 +119,15 @@ interface PromptParams {
    *  the environment. Cached at the service level — same value reused across
    *  every spawn until server restart. */
   systemContext?: SystemContext
+  /** Current structured plan for this sub-Kin task, as maintained via the
+   *  `task_todos` tool. Rendered in the volatile segment so the agent sees
+   *  the latest state on every turn — counters the tendency to drift off-plan
+   *  on long tasks or after compacting. */
+  taskTodos?: ReadonlyArray<{
+    id: string
+    subject: string
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  }>
 }
 
 export interface ActiveProjectPromptInfo {
@@ -549,6 +558,32 @@ function buildActiveProjectBlock(info: ActiveProjectPromptInfo): string {
   )
 
   return sections.join('\n\n')
+}
+
+function buildTaskTodosBlock(
+  todos: ReadonlyArray<{ id: string; subject: string; status: 'pending' | 'in_progress' | 'completed' | 'cancelled' }>,
+): string {
+  const completed = todos.filter((t) => t.status === 'completed').length
+  const total = todos.length
+  const inProgress = todos.find((t) => t.status === 'in_progress')
+
+  const lines: string[] = [
+    `## Current plan (${completed}/${total} done${inProgress ? `, in progress: "${inProgress.subject}"` : ''})`,
+    '',
+  ]
+  for (const t of todos) {
+    const marker =
+      t.status === 'completed' ? '[x]'
+      : t.status === 'in_progress' ? '[.]'
+      : t.status === 'cancelled' ? '[~]'
+      : '[ ]'
+    lines.push(`- ${marker} ${t.subject}`)
+  }
+  lines.push('')
+  lines.push(
+    '> This is the live state of your `task_todos`. Advance items as you work — mark one `in_progress` when you start it, `completed` immediately when it\'s done. Update via `task_todos` whenever the plan changes.',
+  )
+  return lines.join('\n')
 }
 
 function buildSystemContextBlock(ctx: SystemContext, workspacePath?: string): string {
@@ -1262,6 +1297,13 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
   // [7.8] Active project — volatile (changes when Kin switches project)
   if (params.activeProject) {
     volatileBlocks.push(buildActiveProjectBlock(params.activeProject))
+  }
+
+  // [7.9] Current sub-Kin plan — volatile (mutates each time the agent calls
+  // `task_todos`). Surfaces the live state right before the final reminder so
+  // the agent re-sees its own plan on every turn, even after compacting.
+  if (params.taskTodos && params.taskTodos.length > 0) {
+    volatileBlocks.push(buildTaskTodosBlock(params.taskTodos))
   }
 
   // [8] Date and context — volatile (changes every minute)

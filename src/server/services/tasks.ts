@@ -476,6 +476,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
       ticketAssignment = await buildTicketAssignmentInfo(task.ticketId)
     }
 
+    const { getTodosForTask } = await import('@/server/services/task-todos')
     const systemSegments = buildSystemPrompt({
       kin: {
         name: kinIdentity.name,
@@ -496,6 +497,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
       workspacePath: kinIdentity.workspacePath,
       ticketAssignment: ticketAssignment ?? undefined,
       systemContext: getSystemContext(),
+      taskTodos: getTodosForTask(taskId),
     })
 
     // Resolve model — use task's provider if stored, else Kin's provider when using Kin's own model

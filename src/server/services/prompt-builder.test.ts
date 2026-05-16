@@ -738,6 +738,34 @@ describe('buildSystemPrompt', () => {
       expect(volatile).toContain('Current date:')
     })
 
+    it('renders task_todos in the volatile segment when present', () => {
+      const { stable, volatile } = buildSystemPromptSegmented(makeParams({
+        isSubKin: true,
+        taskDescription: 'Ship the feature.',
+        taskTodos: [
+          { id: 'a', subject: 'Read the spec', status: 'completed' },
+          { id: 'b', subject: 'Implement the change', status: 'in_progress' },
+          { id: 'c', subject: 'Write the test', status: 'pending' },
+        ],
+      }))
+      expect(volatile).toContain('## Current plan')
+      expect(volatile).toContain('1/3 done')
+      expect(volatile).toContain('in progress: "Implement the change"')
+      expect(volatile).toContain('[x] Read the spec')
+      expect(volatile).toContain('[.] Implement the change')
+      expect(volatile).toContain('[ ] Write the test')
+      expect(stable).not.toContain('## Current plan')
+    })
+
+    it('omits the task_todos block when the list is empty', () => {
+      const { volatile } = buildSystemPromptSegmented(makeParams({
+        isSubKin: true,
+        taskDescription: 'Anything.',
+        taskTodos: [],
+      }))
+      expect(volatile).not.toContain('## Current plan')
+    })
+
     it('quick session: identity is stable, language and date are volatile', () => {
       const { stable, volatile } = buildSystemPromptSegmented(makeParams({
         isQuickSession: true,
