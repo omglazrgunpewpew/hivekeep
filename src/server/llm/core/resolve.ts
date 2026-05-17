@@ -7,7 +7,7 @@
  * decryption, and model-info fetching from every caller.
  */
 
-import { eq } from 'drizzle-orm'
+import { eq, or } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { providers } from '@/server/db/schema'
 import { decrypt } from '@/server/services/encryption'
@@ -27,8 +27,10 @@ export interface ResolvedLLM {
 
 interface ResolveOptions {
   modelId: string
-  /** When set, restrict the search to this provider. Otherwise pick the first
-   *  valid LLM provider that exposes the model. */
+  /** Restrict the search to this specific provider. Accepts either the
+   *  provider's UUID (`providers.id`) or its stable slug (`providers.slug`,
+   *  e.g. "openai-codex"). When omitted, the resolver scans every valid
+   *  LLM provider in subscription-first order. */
   providerId?: string | null
 }
 
@@ -68,14 +70,19 @@ async function findModelInProvider(
 export async function resolveLLM(opts: ResolveOptions): Promise<ResolvedLLM> {
   const { modelId, providerId } = opts
 
-  // Preferred provider path
+  // Preferred provider path. Accept UUID or slug — Kins prefer the slug
+  // because it's stable across renames and far easier to express in a tool call.
   if (providerId) {
-    const row = db.select().from(providers).where(eq(providers.id, providerId)).get()
+    const row = db
+      .select()
+      .from(providers)
+      .where(or(eq(providers.id, providerId), eq(providers.slug, providerId)))
+      .get()
     if (!row) {
       throw new InvalidRequestError(
         `Provider not found: "${providerId}". ` +
-          `Expected a provider UUID — use list_providers (or list_models for a model→provider mapping) to discover valid IDs, ` +
-          `or omit provider_id to let kinbot auto-detect the right provider from the model.`,
+          `Expected a provider slug (e.g. "openai-codex") or UUID — use list_providers ` +
+          `(or list_models for a model→provider mapping) to discover valid IDs.`,
       )
     }
     if (!row.isValid) throw new AuthError(`Provider ${providerId} is not valid`)

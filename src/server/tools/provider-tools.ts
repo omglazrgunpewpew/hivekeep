@@ -20,7 +20,8 @@ export const listProvidersTool: ToolRegistration = {
   create: (_ctx) =>
     tool({
       description:
-        'List all configured AI providers with their capabilities. Use this to discover which providers are available before selecting models.',
+        'List all configured AI providers with their capabilities. Use this to discover which providers are available before selecting models. ' +
+        'When calling another tool that takes a `provider_id` (e.g. spawn_self), pass the `slug` field below — it is stable and human-readable.',
       inputSchema: z.object({}),
       execute: async () => {
         const allProviders = await db.select().from(providers).all()
@@ -31,6 +32,7 @@ export const listProvidersTool: ToolRegistration = {
             try { capabilities = JSON.parse(p.capabilities) as string[] } catch { /* ignore */ }
             return {
               id: p.id,
+              slug: p.slug,
               name: p.name,
               type: p.type,
               capabilities,
@@ -53,7 +55,9 @@ export const listModelsTool: ToolRegistration = {
   create: (_ctx) =>
     tool({
       description:
-        'List all available models across all providers. Optionally filter by capability (llm, image, embedding, search, rerank). Returns providerId + modelId pairs needed for tool calls like generate_image or spawn_self.',
+        'List all available models across all providers. Optionally filter by capability (llm, image, embedding, search, rerank). ' +
+        'Each model entry includes `providerId` (UUID), `providerSlug` (human-readable, stable, preferred for tool calls like spawn_self), ' +
+        'and `providerName` (display name). When calling spawn_self/spawn_kin or any other tool needing a `provider_id`, pass the `providerSlug`.',
       inputSchema: z.object({
         capability: z
           .enum(['llm', 'image', 'embedding', 'search', 'rerank'])
@@ -66,6 +70,7 @@ export const listModelsTool: ToolRegistration = {
           id: string
           name: string
           providerId: string
+          providerSlug: string
           providerName: string
           providerType: string
           capability: string
@@ -83,6 +88,7 @@ export const listModelsTool: ToolRegistration = {
                 id: model.id,
                 name: model.name,
                 providerId: p.id,
+                providerSlug: p.slug,
                 providerName: p.name,
                 providerType: p.type,
                 capability: model.capability,

@@ -17,6 +17,7 @@ const CAPABILITY_ICONS: Record<string, typeof Brain> = {
 
 export interface ProviderData {
   id: string
+  slug: string
   name: string
   type: string
   capabilities: string[]

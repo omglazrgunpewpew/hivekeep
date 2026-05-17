@@ -498,6 +498,13 @@
       "when": 1779292800000,
       "tag": "0070_drop_legacy_providers",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "6",
+      "when": 1779465600000,
+      "tag": "0071_provider_slug",
+      "breakpoints": true
     }
   ]
 }

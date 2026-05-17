@@ -40,7 +40,7 @@ export const spawnSelfTool: ToolRegistration = {
           ),
         model: z.string().optional().describe('Model ID (e.g. "claude-sonnet-4-6", "gpt-5.5"). Omit to use the parent Kin\'s default model.'),
         provider_id: z.string().optional()
-          .describe('UUID of the provider to use — get it from list_providers or list_models (the `providerId` field). Omit to auto-detect the right provider from the model ID. Do NOT pass a provider type/slug like "openai-codex" here.'),
+          .describe('Provider slug (e.g. "openai-codex", "claude-max") or UUID — get it from list_providers or list_models (the `slug`/`providerSlug` field). Slug is preferred (stable, human-readable). Required whenever `model` is set, since the same model name can be served by several providers.'),
         allow_human_prompt: z.boolean().optional().describe('Default: true'),
         concurrency_group: z.string().optional()
           .describe('Queue name for concurrency control (e.g. "batch-issues", "api-calls"). ' +
@@ -105,7 +105,7 @@ export const spawnKinTool: ToolRegistration = {
           ),
         model: z.string().optional().describe('Model ID (e.g. "claude-sonnet-4-6", "gpt-5.5"). Omit to use the spawned Kin\'s default model.'),
         provider_id: z.string().optional()
-          .describe('UUID of the provider to use — get it from list_providers or list_models (the `providerId` field). Omit to auto-detect the right provider from the model ID. Do NOT pass a provider type/slug like "openai-codex" here.'),
+          .describe('Provider slug (e.g. "openai-codex", "claude-max") or UUID — get it from list_providers or list_models (the `slug`/`providerSlug` field). Slug is preferred (stable, human-readable). Required whenever `model` is set, since the same model name can be served by several providers.'),
         allow_human_prompt: z.boolean().optional().describe('Default: true'),
         concurrency_group: z.string().optional()
           .describe('Queue name for concurrency control (e.g. "batch-issues", "api-calls"). ' +

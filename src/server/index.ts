@@ -52,6 +52,10 @@ log.info('Virtual tables initialized')
 import { migrateModelProviders } from '@/server/services/migrate-model-providers'
 await migrateModelProviders()
 
+// Backfill placeholder provider slugs left by migration 0071 (idempotent)
+import { backfillProviderSlugs } from '@/server/services/provider-slug'
+await backfillProviderSlugs()
+
 // Register native tools
 log.info('Registering native tools...')
 registerAllTools()

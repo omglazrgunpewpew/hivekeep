@@ -13,6 +13,7 @@ import {
 import { PROVIDER_META } from '@/shared/provider-metadata'
 import { createLogger } from '@/server/logger'
 import { sseManager } from '@/server/sse/index'
+import { generateProviderSlug } from '@/server/services/provider-slug'
 
 const log = createLogger('routes:providers')
 const providerRoutes = new Hono()
@@ -24,6 +25,7 @@ providerRoutes.get('/', async (c) => {
   return c.json({
     providers: allProviders.map((p) => ({
       id: p.id,
+      slug: p.slug,
       name: p.name,
       type: p.type,
       capabilities: JSON.parse(p.capabilities),
@@ -96,6 +98,7 @@ providerRoutes.post('/', async (c) => {
   const testResult = await testProviderConnection(type, providerConfig)
 
   const id = uuid()
+  const slug = generateProviderSlug(name)
   const capabilities = testResult.valid
     ? getCapabilitiesForType(type)
     : []
@@ -104,6 +107,7 @@ providerRoutes.post('/', async (c) => {
 
   await db.insert(providers).values({
     id,
+    slug,
     name,
     type,
     configEncrypted,
@@ -114,16 +118,16 @@ providerRoutes.post('/', async (c) => {
     updatedAt: new Date(),
   })
 
-  log.info({ providerId: id, name, type, capabilities, isValid: testResult.valid }, 'Provider created')
+  log.info({ providerId: id, slug, name, type, capabilities, isValid: testResult.valid }, 'Provider created')
 
   sseManager.broadcast({
     type: 'provider:created',
-    data: { providerId: id, name, providerType: type, capabilities, isValid: testResult.valid },
+    data: { providerId: id, slug, name, providerType: type, capabilities, isValid: testResult.valid },
   })
 
   return c.json(
     {
-      provider: { id, name, type, capabilities, isValid: testResult.valid },
+      provider: { id, slug, name, type, capabilities, isValid: testResult.valid },
     },
     201,
   )
@@ -164,6 +168,7 @@ providerRoutes.patch('/:id', async (c) => {
     type: 'provider:updated',
     data: {
       providerId: updated!.id,
+      slug: updated!.slug,
       name: updated!.name,
       providerType: updated!.type,
       capabilities: JSON.parse(updated!.capabilities),
@@ -175,6 +180,7 @@ providerRoutes.patch('/:id', async (c) => {
   return c.json({
     provider: {
       id: updated!.id,
+      slug: updated!.slug,
       name: updated!.name,
       type: updated!.type,
       capabilities: JSON.parse(updated!.capabilities),

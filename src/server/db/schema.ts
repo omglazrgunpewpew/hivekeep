@@ -59,6 +59,11 @@ export const userProfiles = sqliteTable('user_profiles', {
 
 export const providers = sqliteTable('providers', {
   id: text('id').primaryKey(),
+  /** Stable human-readable identifier (e.g. "openai-codex", "claude-max").
+   *  Used in tool calls (spawn_self/spawn_kin) where a Kin would otherwise
+   *  have to manipulate the UUID. Auto-generated from `name` at creation,
+   *  unique across all providers. */
+  slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   type: text('type').notNull(),
   configEncrypted: text('config_encrypted').notNull(),
