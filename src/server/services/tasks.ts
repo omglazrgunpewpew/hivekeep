@@ -1004,7 +1004,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
     const { vercelToolsToKinbot: taskVercelToolsToKinbot, markLastKinbotToolCacheable: taskMarkLastKinbotToolCacheable, splitSystemFromVercelMessages: taskSplitSystemFromVercelMessages } =
       await import('@/server/llm/core/vercel-bridge')
     const taskKinbotTools = hasTools
-      ? taskMarkLastKinbotToolCacheable(taskVercelToolsToKinbot(stripToolExecute(tools)))
+      ? taskMarkLastKinbotToolCacheable(await taskVercelToolsToKinbot(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1

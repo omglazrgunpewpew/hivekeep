@@ -16,7 +16,7 @@
  * are pure data — no behavior is moved here.
  */
 
-import type { ModelMessage } from 'ai'
+import { asSchema, type ModelMessage } from 'ai'
 import type { Tool } from '@ai-sdk/provider-utils'
 import type {
   KinbotMessage,
@@ -30,36 +30,39 @@ import type {
 
 /**
  * Convert a Vercel `Record<string, Tool>` into the kinbot tool shape.
- * The `inputSchema` field of a Vercel `Tool` is a `Schema` wrapper around a
- * JSON Schema (or a zod schema converted to JSON Schema by the SDK on
- * registration). Either way it exposes a `.jsonSchema` property that we
- * lift straight into `KinbotTool.inputSchema`.
+ *
+ * Each tool's `inputSchema` can be a zod schema, a Vercel `Schema` wrapper,
+ * a JSON Schema raw object, or anything `asSchema()` accepts. We normalize
+ * via the SDK's `asSchema()` which always exposes `.jsonSchema` (sync for
+ * zod and JSON Schema, async for schemas with deferred resolution — rare,
+ * but supported here since the loops calling us are already async).
+ *
+ * Ensures the resulting schema is always an `object`-typed schema with a
+ * `properties` field, even when empty — required by OpenAI's strict tool
+ * schema validation ("object schema missing properties").
  */
-export function vercelToolsToKinbot(tools: Record<string, Tool>): KinbotTool[] {
+export async function vercelToolsToKinbot(tools: Record<string, Tool>): Promise<KinbotTool[]> {
   const out: KinbotTool[] = []
   for (const [name, tool] of Object.entries(tools)) {
     const description = (tool as { description?: string }).description ?? ''
-    const schema = (tool as { inputSchema?: unknown }).inputSchema
-    const json = extractJsonSchema(schema)
+    const raw = (tool as { inputSchema?: unknown }).inputSchema
+    let json: Record<string, unknown>
+    try {
+      const wrapped = asSchema(raw as Parameters<typeof asSchema>[0])
+      const resolved = await Promise.resolve(wrapped.jsonSchema)
+      json = (resolved && typeof resolved === 'object' ? resolved : {}) as Record<string, unknown>
+    } catch {
+      json = {}
+    }
+    // OpenAI rejects function tools whose schema lacks `properties`. Ensure
+    // both `type: 'object'` and `properties: {}` are set when missing.
+    if (!json.type) json.type = 'object'
+    if (json.type === 'object' && !('properties' in json)) {
+      json.properties = {}
+    }
     out.push({ name, description, inputSchema: json })
   }
   return out
-}
-
-/**
- * A Vercel `Schema` is `{ _type: 'schema'; jsonSchema: JSONSchema7; validate?: ... }`.
- * Older versions exposed it as `{ jsonSchema, validate }`. Some tools may
- * pass a raw JSON Schema object directly. Handle all three shapes.
- */
-function extractJsonSchema(schema: unknown): Record<string, unknown> {
-  if (!schema || typeof schema !== 'object') {
-    return { type: 'object', properties: {} }
-  }
-  const s = schema as { jsonSchema?: unknown }
-  if (s.jsonSchema && typeof s.jsonSchema === 'object') {
-    return s.jsonSchema as Record<string, unknown>
-  }
-  return schema as Record<string, unknown>
 }
 
 /**

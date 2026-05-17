@@ -156,7 +156,14 @@ function errorFromResponse(status: number, body: string): KinbotProviderError {
   if (status === 429) {
     return new RateLimitError(`Codex rate limit: ${body.slice(0, 200)}`)
   }
-  if (status === 400 && /context|too long|maximum/i.test(body)) {
+  // Context-overflow detection: match the actual OpenAI/Codex phrasings only
+  // ("maximum context length", "context_length_exceeded", "input is too long"),
+  // not any occurrence of the bare word "context" — schema-validation errors
+  // routinely include strings like "In context=()" and used to be misclassified.
+  if (
+    status === 400 &&
+    /(maximum (context|input) length|context[_ -]length[_ -]exceeded|input is too long|prompt is too long)/i.test(body)
+  ) {
     return new ContextOverflowError(`Codex context overflow: ${body.slice(0, 200)}`)
   }
   if (status >= 400 && status < 500) {

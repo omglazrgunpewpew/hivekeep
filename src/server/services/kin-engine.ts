@@ -1583,7 +1583,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     const { vercelToolsToKinbot, markLastKinbotToolCacheable, splitSystemFromVercelMessages } =
       await import('@/server/llm/core/vercel-bridge')
     const kinbotTools = hasTools
-      ? markLastKinbotToolCacheable(vercelToolsToKinbot(stripToolExecute(tools)))
+      ? markLastKinbotToolCacheable(await vercelToolsToKinbot(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
@@ -2254,7 +2254,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     const { vercelToolsToKinbot: qsVercelToolsToKinbot, markLastKinbotToolCacheable: qsMarkLastKinbotToolCacheable, splitSystemFromVercelMessages: qsSplitSystemFromVercelMessages } =
       await import('@/server/llm/core/vercel-bridge')
     const qsKinbotTools = hasTools
-      ? qsMarkLastKinbotToolCacheable(qsVercelToolsToKinbot(stripToolExecute(tools)))
+      ? qsMarkLastKinbotToolCacheable(await qsVercelToolsToKinbot(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
