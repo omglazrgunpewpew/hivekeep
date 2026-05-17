@@ -58,13 +58,6 @@ const CONFIG_SCHEMA: readonly ConfigField[] = [
     placeholder: 'sk-…',
     description: 'Get one at https://platform.openai.com/api-keys',
   },
-  {
-    key: 'baseUrl',
-    type: 'url',
-    label: 'Base URL (optional)',
-    placeholder: 'https://api.openai.com/v1',
-    description: 'Override only when proxying through an OpenAI-compatible gateway.',
-  },
 ]
 
 // ─── Convention-based model classification ───────────────────────────────────
@@ -125,10 +118,7 @@ function createClient(config: ProviderConfig): OpenAI {
   if (!apiKey) {
     throw new AuthError('Missing OpenAI API key')
   }
-  return new OpenAI({
-    apiKey,
-    baseURL: config['baseUrl'] || undefined,
-  })
+  return new OpenAI({ apiKey })
 }
 
 function mapFinishReason(

@@ -22,6 +22,18 @@ import { api, getErrorMessage } from '@/client/lib/api'
 import { PROVIDER_API_KEY_URLS, PROVIDER_CAPABILITIES, PROVIDER_DISPLAY_NAMES, PROVIDER_TYPES, PROVIDERS_WITHOUT_API_KEY, PROVIDERS_WITH_OPTIONAL_API_KEY } from '@/shared/constants'
 import type { ProviderType } from '@/shared/types'
 
+/**
+ * Per-provider placeholder for the credentials-file input shown when the
+ * provider doesn't take an API key (auto-detected OAuth credentials). The
+ * configSchema-driven form rendering — planned in a later phase — will
+ * derive this from each LLMProvider's declared schema; for now we mirror
+ * what the backend providers expect.
+ */
+const CREDENTIALS_PATH_PLACEHOLDERS: Record<string, string> = {
+  'anthropic-oauth': '~/.claude/.credentials.json',
+  'openai-codex': '~/.codex/auth.json',
+}
+
 interface EditProvider {
   id: string
   name: string
@@ -51,7 +63,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
   const [providerType, setProviderType] = useState<string>(defaultType)
   const [providerName, setProviderName] = useState('')
   const [apiKey, setApiKey] = useState('')
-  const [baseUrl, setBaseUrl] = useState('')
 
   // Populate form when editing
   useEffect(() => {
@@ -59,7 +70,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
       setProviderType(provider.type)
       setProviderName(provider.name)
       setApiKey('')
-      setBaseUrl('')
       setError('')
       setTestPassed(false)
     } else if (open && !provider) {
@@ -71,7 +81,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
     setProviderType(defaultType)
     setProviderName('')
     setApiKey('')
-    setBaseUrl('')
     setError('')
     setTestPassed(false)
     setIsTesting(false)
@@ -104,7 +113,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
     try {
       const config: Record<string, string> = {}
       if (apiKey) config.apiKey = apiKey
-      if (baseUrl) config.baseUrl = baseUrl
 
       // For edit mode without new apiKey, test the existing provider
       if (isEditing && !apiKey) {
@@ -144,7 +152,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
         if (providerName !== provider!.name) body.name = providerName || provider!.type
         const config: Record<string, string> = {}
         if (apiKey) config.apiKey = apiKey
-        if (baseUrl) config.baseUrl = baseUrl
         if (Object.keys(config).length > 0) body.config = config
         if (providerName !== provider!.name || Object.keys(config).length > 0) {
           await api.patch(`/providers/${provider!.id}`, body)
@@ -152,7 +159,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
       } else {
         const config: Record<string, string> = {}
         if (apiKey) config.apiKey = apiKey
-        if (baseUrl) config.baseUrl = baseUrl
         await api.post('/providers', {
           name: providerName || (PROVIDER_DISPLAY_NAMES[providerType] ?? providerType),
           type: providerType,
@@ -171,7 +177,7 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
 
   // In edit mode, the user can save name-only changes without re-testing
   const nameChanged = isEditing && providerName !== provider!.name
-  const configChanged = !!apiKey || !!baseUrl
+  const configChanged = !!apiKey
   const canSaveWithoutTest = isEditing && nameChanged && !configChanged
   const canSave = testPassed || canSaveWithoutTest
 
@@ -203,7 +209,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
               <Select value={providerType} onValueChange={(v) => {
                 setProviderType(v)
                 setProviderName('')
-                setBaseUrl('')
                 resetTest()
               }}>
                 <SelectTrigger className="w-full">
@@ -258,7 +263,7 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
                 value={apiKey}
                 onChange={(e) => { setApiKey(e.target.value); resetTest() }}
                 autoComplete="off"
-                placeholder="~/.claude/.credentials.json"
+                placeholder={CREDENTIALS_PATH_PLACEHOLDERS[providerType] ?? ''}
               />
             ) : (
               <PasswordInput
@@ -280,22 +285,6 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
                 <ExternalLink className="size-3" />
               </a>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="baseUrl" className="inline-flex items-center gap-1.5">
-              {t('onboarding.providers.baseUrl')}
-              <InfoTip content={t('onboarding.providers.baseUrlTip')} />
-              <span className="text-xs text-muted-foreground">
-                ({t('common.optional')})
-              </span>
-            </Label>
-            <Input
-              id="baseUrl"
-              value={baseUrl}
-              onChange={(e) => { setBaseUrl(e.target.value); resetTest() }}
-              placeholder={t('onboarding.providers.baseUrlHint')}
-            />
           </div>
 
           <DialogFooter>

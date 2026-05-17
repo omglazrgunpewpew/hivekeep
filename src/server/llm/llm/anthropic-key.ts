@@ -45,13 +45,6 @@ const CONFIG_SCHEMA: readonly ConfigField[] = [
     placeholder: 'sk-ant-…',
     description: 'Get one at https://console.anthropic.com/settings/keys',
   },
-  {
-    key: 'baseUrl',
-    type: 'url',
-    label: 'Base URL (optional)',
-    placeholder: 'https://api.anthropic.com',
-    description: 'Override only when proxying through a gateway.',
-  },
 ]
 
 // ─── Model metadata ──────────────────────────────────────────────────────────
@@ -75,10 +68,7 @@ function createClient(config: ProviderConfig): Anthropic {
   if (!apiKey) {
     throw new AuthError('Missing Anthropic API key')
   }
-  return new Anthropic({
-    apiKey,
-    baseURL: config['baseUrl'] || undefined,
-  })
+  return new Anthropic({ apiKey })
 }
 
 function mapApiError(err: unknown): KinbotProviderError {
