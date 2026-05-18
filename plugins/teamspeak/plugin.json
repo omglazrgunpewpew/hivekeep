@@ -1,4 +1,5 @@
 {
+  "$schema": "https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json",
   "name": "teamspeak",
   "version": "0.1.0",
   "description": "Bridge KinBot with a TeamSpeak server via the local ts-bot WebSocket API. Adds a 'teamspeak' channel adapter (chat + TTS) and tools to control the bot (move, speak, send chat, status).",
@@ -7,7 +8,13 @@
   "main": "index.ts",
   "icon": "🎙️",
   "kinbot": ">=0.39.0",
-  "tags": ["teamspeak", "voice", "chat", "tts", "channel"],
+  "tags": [
+    "teamspeak",
+    "voice",
+    "chat",
+    "tts",
+    "channel"
+  ],
   "permissions": [
     "storage"
   ],

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json",
   "name": "twilio-sms",
   "version": "0.1.0",
   "description": "Send and receive SMS via the Twilio REST API and webhooks. Adds a 'twilio-sms' channel adapter (outbound via Twilio Messages API, inbound via signed Twilio webhooks).",
@@ -7,7 +8,12 @@
   "main": "index.ts",
   "icon": "✉️",
   "kinbot": ">=0.40.0",
-  "tags": ["twilio", "sms", "channel", "webhook"],
+  "tags": [
+    "twilio",
+    "sms",
+    "channel",
+    "webhook"
+  ],
   "channels": {
     "twilio-sms": {
       "configSchema": {

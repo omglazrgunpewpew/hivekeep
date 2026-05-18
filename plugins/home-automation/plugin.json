@@ -1,4 +1,5 @@
 {
+  "$schema": "https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json",
   "name": "home-automation",
   "version": "1.0.0",
   "description": "Control your smart home via Home Assistant. Toggle lights, check sensors, run automations, and monitor your home.",
@@ -6,7 +7,13 @@
   "license": "MIT",
   "main": "index.ts",
   "icon": "🏠",
-  "tags": ["home", "automation", "iot", "tools", "smart-home"],
+  "tags": [
+    "home",
+    "automation",
+    "iot",
+    "tools",
+    "smart-home"
+  ],
   "permissions": [
     "http:*"
   ],

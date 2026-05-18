@@ -22,12 +22,13 @@ describe('generateManifest', () => {
   test('produces valid JSON with required fields', () => {
     const raw = generateManifest(defaultOpts)
     const manifest = JSON.parse(raw)
+    expect(manifest.$schema).toContain('plugin-manifest.schema.json')
     expect(manifest.name).toBe('test-plugin')
-    expect(manifest.version).toBe('1.0.0')
+    expect(manifest.version).toBe('0.1.0')
     expect(manifest.description).toBe('A test plugin')
     expect(manifest.author).toBe('Tester')
     expect(manifest.main).toBe('index.ts')
-    expect(manifest.kinbot).toBe('>=0.10.0')
+    expect(manifest.kinbot).toBe('>=0.40.0')
   })
 })
 
@@ -39,20 +40,30 @@ describe('generateIndex', () => {
     expect(code).toContain('inputSchema')
   })
 
-  test('includes hooks boilerplate for hooks type', () => {
+  test('includes hooks boilerplate for hooks type, only importing types', () => {
     const code = generateIndex({ ...defaultOpts, types: ['hooks'] })
     expect(code).toContain('afterChat')
-    expect(code).not.toContain("from '@kinbot-developer/sdk'")
+    // Hooks-only does not need any runtime import from the SDK (no tool() / no card.*)
+    expect(code).not.toContain("import { tool")
+    // But it DOES need the type imports for PluginContext / PluginExports.
+    expect(code).toContain("import type { PluginContext, PluginExports } from '@kinbot-developer/sdk'")
   })
 
-  test('includes providers section for providers type', () => {
+  test('includes a native LLMProvider skeleton for providers type', () => {
     const code = generateIndex({ ...defaultOpts, types: ['providers'] })
     expect(code).toContain('providers:')
+    expect(code).toContain('implements LLMProvider')
+    expect(code).toContain('chat(')
+    expect(code).toContain('listModels')
+    expect(code).toContain('AsyncIterable<ChatChunk>')
   })
 
-  test('includes channels section for channels type', () => {
+  test('includes a real ChannelAdapter skeleton for channels type', () => {
     const code = generateIndex({ ...defaultOpts, types: ['channels'] })
     expect(code).toContain('channels:')
+    expect(code).toContain('ChannelAdapter')
+    expect(code).toContain('sendMessage')
+    expect(code).toContain('validateConfig')
   })
 
   test('supports multiple types', () => {

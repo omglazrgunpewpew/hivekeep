@@ -94,74 +94,158 @@ async function gatherOptions(yes: boolean, overrides: Partial<ScaffoldOptions>):
 
 export function generateManifest(opts: ScaffoldOptions): string {
   const manifest: Record<string, any> = {
+    $schema: 'https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json',
     name: opts.name,
-    version: '1.0.0',
+    version: '0.1.0',
     description: opts.description,
     author: opts.author,
-    kinbot: '>=0.10.0',
+    kinbot: '>=0.40.0',
     main: 'index.ts',
-    permissions: ['storage'],
+    permissions: [],
     config: {},
   }
   return JSON.stringify(manifest, null, 2) + '\n'
 }
 
 export function generateIndex(opts: ScaffoldOptions): string {
-  const lines: string[] = [
-    `import type { PluginContext, PluginExports } from 'kinbot/plugin'`,
-  ]
-
-  if (opts.types.includes('tools')) {
-    lines.push(`import { tool, z } from '@kinbot-developer/sdk'`)
+  // Each `--type` produces its own dedicated section. The shared header
+  // imports only what is actually used downstream.
+  const importParts: string[] = []
+  if (opts.types.includes('tools')) importParts.push('tool', 'z')
+  const typeImports: string[] = ['PluginContext', 'PluginExports']
+  if (opts.types.includes('channels')) {
+    typeImports.push(
+      'ChannelAdapter',
+      'IncomingMessageHandler',
+      'OutboundMessageParams',
+      'OutboundMessageResult',
+    )
+  }
+  if (opts.types.includes('providers')) {
+    typeImports.push('LLMProvider', 'ChatRequest', 'ChatChunk')
   }
 
+  const lines: string[] = []
+  if (importParts.length > 0) {
+    lines.push(`import { ${importParts.join(', ')} } from '@kinbot-developer/sdk'`)
+  }
+  lines.push(`import type { ${typeImports.join(', ')} } from '@kinbot-developer/sdk'`)
   lines.push('')
-  lines.push(`export default function(ctx: PluginContext): PluginExports {`)
+
+  // ─── Channel adapter skeleton ────────────────────────────────────────────
+  if (opts.types.includes('channels')) {
+    lines.push(`// A starter channel adapter. Fill in the transport-specific bits.`)
+    lines.push(`const ${camelCase(opts.name)}Adapter: ChannelAdapter = {`)
+    lines.push(`  platform: '${opts.name}',`)
+    lines.push(`  meta: { displayName: '${opts.name}' },`)
+    lines.push(`  identitySwitchMode: 'prefix',`)
+    lines.push(``)
+    lines.push(`  async start(channelId, _config, _onMessage: IncomingMessageHandler) {`)
+    lines.push(`    // Open a connection / start polling. Call onMessage(...) when messages arrive.`)
+    lines.push(`  },`)
+    lines.push(``)
+    lines.push(`  async stop(channelId) {`)
+    lines.push(`    // Close the connection / cancel timers.`)
+    lines.push(`  },`)
+    lines.push(``)
+    lines.push(`  async sendMessage(`)
+    lines.push(`    _channelId,`)
+    lines.push(`    _config,`)
+    lines.push(`    _params: OutboundMessageParams,`)
+    lines.push(`  ): Promise<OutboundMessageResult> {`)
+    lines.push(`    return { platformMessageId: 'replace-me' }`)
+    lines.push(`  },`)
+    lines.push(``)
+    lines.push(`  async validateConfig(_config) {`)
+    lines.push(`    return { valid: true }`)
+    lines.push(`  },`)
+    lines.push(``)
+    lines.push(`  async getBotInfo(_config) {`)
+    lines.push(`    return { name: '${opts.name}' }`)
+    lines.push(`  },`)
+    lines.push(`}`)
+    lines.push('')
+  }
+
+  // ─── Native LLMProvider skeleton ─────────────────────────────────────────
+  if (opts.types.includes('providers')) {
+    lines.push(`// A starter native LLMProvider. Same interface as the built-in providers.`)
+    lines.push(`class ${pascalCase(opts.name)}LLMProvider implements LLMProvider {`)
+    lines.push(`  readonly type = '${opts.name}'`)
+    lines.push(`  readonly displayName = '${opts.name}'`)
+    lines.push(`  readonly configSchema = [`)
+    lines.push(`    { key: 'apiKey', type: 'secret', label: 'API Key', required: true },`)
+    lines.push(`  ] as const`)
+    lines.push(``)
+    lines.push(`  async authenticate(_config) {`)
+    lines.push(`    return { valid: true }`)
+    lines.push(`  }`)
+    lines.push(``)
+    lines.push(`  async listModels(_config) {`)
+    lines.push(`    return [{ id: 'default', name: 'Default model', contextWindow: 4096 }]`)
+    lines.push(`  }`)
+    lines.push(``)
+    lines.push(`  async *chat(_model, _request: ChatRequest, _config): AsyncIterable<ChatChunk> {`)
+    lines.push(`    yield { type: 'text-delta', text: 'Hello from ${opts.name}!' }`)
+    lines.push(`    yield {`)
+    lines.push(`      type: 'finish',`)
+    lines.push(`      reason: 'stop',`)
+    lines.push(`      usage: { inputTokens: 0, outputTokens: 0 },`)
+    lines.push(`    }`)
+    lines.push(`  }`)
+    lines.push(`}`)
+    lines.push('')
+  }
+
+  lines.push(`export default function (ctx: PluginContext): PluginExports {`)
+  lines.push(`  ctx.log.info('${opts.name} loaded')`)
+  lines.push(``)
   lines.push(`  return {`)
 
   if (opts.types.includes('tools')) {
     lines.push(`    tools: {`)
     lines.push(`      hello: {`)
     lines.push(`        availability: ['main', 'sub-kin'],`)
+    lines.push(`        readOnly: true,`)
+    lines.push(`        concurrencySafe: true,`)
     lines.push(`        create: () =>`)
     lines.push(`          tool({`)
-    lines.push(`            description: 'A sample tool from ${opts.name}',`)
+    lines.push(`            description: 'Say hello.',`)
     lines.push(`            inputSchema: z.object({`)
-    lines.push(`              name: z.string().describe('Name to greet'),`)
+    lines.push(`              name: z.string().describe('Who to greet'),`)
     lines.push(`            }),`)
-    lines.push(`            execute: async ({ name }) => {`)
-    lines.push(`              return { message: \`Hello, \${name}! From ${opts.name}\` }`)
-    lines.push(`            },`)
+    lines.push(`            execute: async ({ name }) => ({`)
+    lines.push(`              message: \`Hello, \${name}! From ${opts.name}\`,`)
+    lines.push(`            }),`)
     lines.push(`          }),`)
     lines.push(`      },`)
     lines.push(`    },`)
   }
 
-  if (opts.types.includes('providers')) {
-    lines.push(`    providers: {`)
-    lines.push(`      // Add your provider definitions here`)
+  if (opts.types.includes('channels')) {
+    lines.push(`    channels: {`)
+    lines.push(`      '${opts.name}': ${camelCase(opts.name)}Adapter,`)
     lines.push(`    },`)
   }
 
-  if (opts.types.includes('channels')) {
-    lines.push(`    channels: {`)
-    lines.push(`      // Add your channel adapters here`)
-    lines.push(`    },`)
+  if (opts.types.includes('providers')) {
+    lines.push(`    providers: [new ${pascalCase(opts.name)}LLMProvider()],`)
   }
 
   if (opts.types.includes('hooks')) {
     lines.push(`    hooks: {`)
-    lines.push(`      afterChat: async (hookCtx) => {`)
-    lines.push(`        ctx.log.info('afterChat hook fired')`)
+    lines.push(`      // Each hook handler receives the typed payload for its hook name —`)
+    lines.push(`      // see HookPayloadMap in @kinbot-developer/sdk.`)
+    lines.push(`      afterChat: (h) => {`)
+    lines.push(`        ctx.log.info({ kinId: h.kinId, responseLen: h.response.length }, 'afterChat')`)
     lines.push(`      },`)
     lines.push(`    },`)
   }
 
-  lines.push('')
+  lines.push(``)
   lines.push(`    async activate() {`)
   lines.push(`      ctx.log.info('${opts.name} activated')`)
   lines.push(`    },`)
-  lines.push('')
   lines.push(`    async deactivate() {`)
   lines.push(`      ctx.log.info('${opts.name} deactivated')`)
   lines.push(`    },`)
@@ -170,6 +254,15 @@ export function generateIndex(opts: ScaffoldOptions): string {
   lines.push('')
 
   return lines.join('\n')
+}
+
+function camelCase(s: string): string {
+  return s.replace(/[-_]([a-z0-9])/g, (_, c) => c.toUpperCase())
+}
+
+function pascalCase(s: string): string {
+  const camel = camelCase(s)
+  return camel.charAt(0).toUpperCase() + camel.slice(1)
 }
 
 export function generateReadme(opts: ScaffoldOptions): string {
