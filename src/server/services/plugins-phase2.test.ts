@@ -1,47 +1,64 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
-import { registerPluginProvider, unregisterPluginProvider, getProviderDefinition, getPluginProviderMeta } from '@/server/providers/index'
+import { describe, test, expect, afterEach } from 'bun:test'
+import {
+  registerLLMProvider,
+  unregisterLLMProvider,
+  getLLMProvider,
+} from '@/server/llm/llm/registry'
+import { getPluginProviderMeta, getCapabilitiesForType } from '@/server/providers/index'
 import { channelAdapters } from '@/server/channels/index'
+import type { LLMProvider, ChatRequest, ChatChunk } from '@kinbot-developer/sdk'
 
-describe('Plugin provider registration', () => {
-  const testType = 'plugin_test_provider'
+describe('Plugin LLM provider registration (native shape)', () => {
+  const fakeType = 'plugin:fake-test-plugin:test-llm'
 
-  beforeEach(() => {
-    // Clean up in case previous test failed
-    try { unregisterPluginProvider(testType) } catch {}
+  afterEach(() => {
+    unregisterLLMProvider(fakeType)
   })
 
-  test('registers and retrieves a plugin provider', () => {
-    const definition = {
-      type: testType,
-      testConnection: async () => ({ valid: true }),
-      listModels: async () => [{ id: 'test-model', name: 'Test Model', capability: 'llm' as const }],
+  test('registers, exposes meta, and unregisters a plugin LLM provider', () => {
+    const provider: LLMProvider = {
+      type: fakeType,
+      displayName: 'Fake Test LLM',
+      apiKeyUrl: 'https://example.com/keys',
+      configSchema: [{ key: 'apiKey', type: 'secret', label: 'API Key', required: true }],
+      async authenticate() { return { valid: true } },
+      async listModels() {
+        return [{ id: 'fake-1', name: 'Fake One', contextWindow: 4096 }]
+      },
+      // eslint-disable-next-line require-yield
+      async *chat(_model, _request: ChatRequest): AsyncIterable<ChatChunk> {
+        // never invoked in this test — registration shape check only
+      },
     }
 
-    registerPluginProvider(testType, definition, {
-      capabilities: ['llm'] as any,
-      displayName: 'Test Provider',
-    })
+    registerLLMProvider(provider)
 
-    expect(getProviderDefinition(testType)).toBe(definition)
-    const meta = getPluginProviderMeta()[testType]
+    expect(getLLMProvider(fakeType)).toBe(provider)
+    expect(getCapabilitiesForType(fakeType)).toEqual(['llm'])
+
+    const meta = getPluginProviderMeta()[fakeType]
     expect(meta).toBeDefined()
-    expect(meta!.displayName).toBe('Test Provider')
+    expect(meta!.displayName).toBe('Fake Test LLM')
+    expect(meta!.apiKeyUrl).toBe('https://example.com/keys')
 
-    unregisterPluginProvider(testType)
-    expect(getProviderDefinition(testType)).toBeUndefined()
+    unregisterLLMProvider(fakeType)
+    expect(getLLMProvider(fakeType)).toBeUndefined()
+    expect(getPluginProviderMeta()[fakeType]).toBeUndefined()
   })
 
-  test('cannot override built-in provider', () => {
-    const definition = {
-      type: 'openai',
-      testConnection: async () => ({ valid: true }),
-      listModels: async () => [],
+  test('cannot register the same provider type twice', () => {
+    const provider: LLMProvider = {
+      type: fakeType,
+      displayName: 'Fake',
+      configSchema: [],
+      async authenticate() { return { valid: true } },
+      async listModels() { return [] },
+      // eslint-disable-next-line require-yield
+      async *chat(_model, _request: ChatRequest): AsyncIterable<ChatChunk> {},
     }
 
-    expect(() => registerPluginProvider('openai', definition, {
-      capabilities: ['llm'] as any,
-      displayName: 'Fake OpenAI',
-    })).toThrow('Cannot override built-in provider')
+    registerLLMProvider(provider)
+    expect(() => registerLLMProvider(provider)).toThrow(`LLM provider already registered: ${fakeType}`)
   })
 })
 

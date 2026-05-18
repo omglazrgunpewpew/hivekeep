@@ -9,6 +9,10 @@ export function registerLLMProvider(provider: LLMProvider): void {
   registry.set(provider.type, provider)
 }
 
+export function unregisterLLMProvider(type: string): void {
+  registry.delete(type)
+}
+
 export function getLLMProvider(type: string): LLMProvider | undefined {
   return registry.get(type)
 }

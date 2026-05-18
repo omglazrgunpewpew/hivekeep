@@ -10,7 +10,11 @@ import {
   listModelsForProvider,
   getPluginProviderMeta,
 } from '@/server/providers/index'
+import { getLLMProvider } from '@/server/llm/llm/registry'
+import { getEmbeddingProvider } from '@/server/llm/embedding/registry'
+import { getImageProvider } from '@/server/llm/image/registry'
 import { PROVIDER_META } from '@/shared/provider-metadata'
+import type { ConfigField } from '@kinbot-developer/sdk'
 import { createLogger } from '@/server/logger'
 import { sseManager } from '@/server/sse/index'
 import { generateProviderSlug } from '@/server/services/provider-slug'
@@ -62,6 +66,24 @@ providerRoutes.get('/capabilities', async (c) => {
   })
 })
 
+/**
+ * Read the `configSchema` for a provider type from whichever native registry
+ * holds it. When a provider implements multiple families (rare — e.g. an
+ * OpenAI-compatible plugin that exposes both LLM and embeddings), the LLM
+ * one wins for the UI form (they share the same config in practice). The
+ * built-ins don't expose `configSchema` via this path yet — the UI keeps
+ * its hardcoded form for them — but the field is here for plugin providers
+ * to drive the dynamic-form rendering when the UI catches up.
+ */
+function readConfigSchema(type: string): ConfigField[] | undefined {
+  const provider =
+    getLLMProvider(type) ??
+    getEmbeddingProvider(type) ??
+    getImageProvider(type)
+  if (!provider) return undefined
+  return [...provider.configSchema]
+}
+
 // GET /api/providers/types — list all available provider types (built-in + plugin)
 providerRoutes.get('/types', async (c) => {
   const builtinTypes = Object.entries(PROVIDER_META).map(([type, meta]) => ({
@@ -71,6 +93,7 @@ providerRoutes.get('/types', async (c) => {
     noApiKey: (meta as any).noApiKey ?? false,
     apiKeyUrl: (meta as any).apiKeyUrl,
     source: 'builtin' as const,
+    configSchema: readConfigSchema(type),
   }))
 
   const pluginMeta = getPluginProviderMeta()
@@ -81,6 +104,7 @@ providerRoutes.get('/types', async (c) => {
     noApiKey: meta.noApiKey ?? false,
     apiKeyUrl: meta.apiKeyUrl,
     source: 'plugin' as const,
+    configSchema: readConfigSchema(type),
   }))
 
   return c.json({ types: [...builtinTypes, ...pluginTypes] })

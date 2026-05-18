@@ -1,82 +1,123 @@
 /**
- * Legacy provider dispatcher — adapter on top of the native LLMProvider
- * abstraction in src/server/llm/. Kept so the few remaining callers
- * (routes/providers, tools/provider-tools, image-tools, model-info-cache,
- * image-generation, routes/kins, llm/core/resolve) don't all need to migrate
- * in lockstep.
+ * Provider dispatcher — single front-door over the three native registries
+ * (`llm`, `embedding`, `image`). Built-in providers (Anthropic, OpenAI, …)
+ * and plugin-contributed providers register identically into these three
+ * registries; nothing here knows or cares about the difference.
  *
- * Built-in provider types (anthropic, anthropic-oauth, openai, openai-codex)
- * are dispatched to the new LLM/Embedding/Image registries; only unknown
- * types fall through to the plugin registry which still uses the
- * `ProviderDefinition` shape (LegacyProviderDefinition).
+ * Callers (routes/providers, tools/provider-tools, image-tools,
+ * model-info-cache, image-generation, routes/kins, llm/core/resolve) get a
+ * uniform `ProviderModel` shape regardless of which family answers, which
+ * keeps the per-model UI generic.
  */
 
-import type { ProviderDefinition, ProviderConfig, ProviderModel } from '@/server/providers/types'
+import type { ProviderConfig as KinbotProviderConfig } from '@/server/llm/core/types'
 import type { ProviderCapability } from '@/shared/types'
 import { PROVIDER_META, type ProviderType, type ProviderMeta } from '@/shared/provider-metadata'
 import { createLogger } from '@/server/logger'
 import { getLLMProvider, listLLMProviders } from '@/server/llm/llm/registry'
 import { getEmbeddingProvider, listEmbeddingProviders } from '@/server/llm/embedding/registry'
 import { getImageProvider, listImageProviders } from '@/server/llm/image/registry'
-import type { ProviderConfig as KinbotProviderConfig } from '@/server/llm/core/types'
 
 const log = createLogger('providers')
 
-// ─── Plugin registry (still on the legacy ProviderDefinition shape) ──────────
+// ─── Public types ───────────────────────────────────────────────────────────
 
-const pluginRegistry: Record<string, ProviderDefinition> = {}
-const pluginProviderMeta: Record<string, ProviderMeta> = {}
+/**
+ * The "lowest common denominator" model shape returned by the dispatcher.
+ * Used by the UI / tools / routes that just need {id, name, capability,
+ * contextWindow}. Family-specific fields (LLMModel.thinking, ImageModel
+ * .supportedSizes, …) are intentionally squashed here — callers that need
+ * them must reach into the native registry.
+ */
+export interface ProviderModel {
+  id: string
+  name: string
+  capability: 'llm' | 'embedding' | 'image' | 'rerank'
+  /** True if the image model accepts images as input (editing / inpainting). */
+  supportsImageInput?: boolean
+  /** Maximum input/context tokens. Populated when the provider's API exposes it. */
+  contextWindow?: number
+  /** Maximum output tokens. Populated when the provider's API exposes it. */
+  maxOutput?: number
+}
 
-export function registerPluginProvider(type: string, definition: ProviderDefinition, meta: ProviderMeta): void {
-  if (PROVIDER_META[type as ProviderType]) {
-    throw new Error(`Cannot override built-in provider "${type}"`)
+// ─── Metadata helpers ───────────────────────────────────────────────────────
+
+/**
+ * Derive a `ProviderMeta` for any provider type (built-in or plugin-
+ * contributed). Built-ins go through the hardcoded `PROVIDER_META` table;
+ * plugin-contributed providers (type prefix `plugin:`) get their meta
+ * built from their entry in the native registries.
+ */
+function metaForType(type: string): ProviderMeta | undefined {
+  const builtIn = PROVIDER_META[type as ProviderType]
+  if (builtIn) return builtIn
+
+  const capabilities: ProviderCapability[] = []
+  const llm = getLLMProvider(type)
+  if (llm) capabilities.push('llm')
+  const emb = getEmbeddingProvider(type)
+  if (emb) capabilities.push('embedding')
+  const img = getImageProvider(type)
+  if (img) capabilities.push('image')
+
+  if (capabilities.length === 0) return undefined
+
+  const first = llm ?? emb ?? img
+  return {
+    capabilities,
+    displayName: first?.displayName ?? type,
+    ...(first?.noApiKey ? { noApiKey: true } : {}),
+    ...(first?.optionalApiKey ? { optionalApiKey: true } : {}),
+    ...(first?.apiKeyUrl ? { apiKeyUrl: first.apiKeyUrl } : {}),
   }
-  pluginRegistry[type] = definition
-  pluginProviderMeta[type] = meta
-  log.info({ type, displayName: meta.displayName }, 'Plugin provider registered')
 }
 
-export function unregisterPluginProvider(type: string): void {
-  delete pluginRegistry[type]
-  delete pluginProviderMeta[type]
-  log.info({ type }, 'Plugin provider unregistered')
-}
-
+/**
+ * Listing of every plugin-contributed provider's metadata (keyed by type).
+ * Built-ins are NOT included — `PROVIDER_META` is the source for those.
+ * Used by the UI's "add provider" picker to surface plugin providers
+ * alongside built-ins.
+ */
 export function getPluginProviderMeta(): Record<string, ProviderMeta> {
-  return { ...pluginProviderMeta }
-}
-
-export function getProviderDefinition(type: string): ProviderDefinition | undefined {
-  return pluginRegistry[type]
+  const out: Record<string, ProviderMeta> = {}
+  for (const p of [...listLLMProviders(), ...listEmbeddingProviders(), ...listImageProviders()]) {
+    if (!p.type.startsWith('plugin:')) continue
+    if (out[p.type]) {
+      // Same type registered in multiple families (e.g. a single plugin
+      // provider that implements both llm and embedding) — merge capabilities.
+      const existing = out[p.type]!
+      out[p.type] = {
+        ...existing,
+        capabilities: [...new Set([...existing.capabilities, ...metaForType(p.type)!.capabilities])],
+      }
+    } else {
+      const meta = metaForType(p.type)
+      if (meta) out[p.type] = meta
+    }
+  }
+  return out
 }
 
 export function getCapabilitiesForType(type: string): ProviderCapability[] {
-  return [...(PROVIDER_META[type as ProviderType]?.capabilities ?? pluginProviderMeta[type]?.capabilities ?? [])]
+  return [...(metaForType(type)?.capabilities ?? [])]
 }
 
 // ─── Dispatcher helpers ──────────────────────────────────────────────────────
 
-function asKinbotConfig(config: ProviderConfig): KinbotProviderConfig {
-  // The legacy ProviderConfig is `{ apiKey, baseUrl? }`; the native shape is
-  // `Record<string, string | undefined>`. Compatible in practice.
-  return config as unknown as KinbotProviderConfig
-}
-
 /**
- * Look up a built-in provider across the three native registries and run
- * `fn` against the first match. Returns null when the type is unknown to all
- * three registries (caller falls back to plugins).
+ * Look up a provider across the three native registries and run `fn`
+ * against the first match. Returns null when the type is unknown.
  */
 async function tryDispatch<T>(
   type: string,
-  config: ProviderConfig,
+  _config: KinbotProviderConfig,
   fn: {
-    llm: (p: ReturnType<typeof getLLMProvider> extends infer X ? Exclude<X, undefined> : never) => Promise<T>
-    embedding: (p: ReturnType<typeof getEmbeddingProvider> extends infer X ? Exclude<X, undefined> : never) => Promise<T>
-    image: (p: ReturnType<typeof getImageProvider> extends infer X ? Exclude<X, undefined> : never) => Promise<T>
+    llm: (p: NonNullable<ReturnType<typeof getLLMProvider>>) => Promise<T>
+    embedding: (p: NonNullable<ReturnType<typeof getEmbeddingProvider>>) => Promise<T>
+    image: (p: NonNullable<ReturnType<typeof getImageProvider>>) => Promise<T>
   },
 ): Promise<T | null> {
-  void config
   const llm = getLLMProvider(type)
   if (llm) return fn.llm(llm)
   const emb = getEmbeddingProvider(type)
@@ -90,7 +131,7 @@ async function tryDispatch<T>(
 
 export async function testProviderConnection(
   type: string,
-  config: ProviderConfig,
+  config: KinbotProviderConfig,
 ): Promise<{ valid: boolean; capabilities: string[]; error?: string }> {
   // In E2E test mode, skip real provider connection tests
   if (process.env.E2E_SKIP_PROVIDER_TEST === 'true') {
@@ -99,48 +140,34 @@ export async function testProviderConnection(
     return { valid: true, capabilities }
   }
 
-  const cfg = asKinbotConfig(config)
   const result = await tryDispatch<{ valid: boolean; error?: string }>(type, config, {
-    llm: (p) => p.authenticate(cfg).then((r) => ({ valid: r.valid, error: r.error })),
-    embedding: (p) => p.authenticate(cfg).then((r) => ({ valid: r.valid, error: r.error })),
-    image: (p) => p.authenticate(cfg).then((r) => ({ valid: r.valid, error: r.error })),
+    llm: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
+    embedding: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
+    image: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
   })
 
-  if (result) {
-    log.info({ type, valid: result.valid, error: result.error }, 'Provider connection tested')
-    return {
-      valid: result.valid,
-      capabilities: result.valid ? getCapabilitiesForType(type) : [],
-      error: result.error,
-    }
-  }
-
-  // Fall back to legacy plugin definition.
-  const definition = pluginRegistry[type]
-  if (!definition) {
+  if (!result) {
     log.error({ type }, 'Unknown provider type')
     return { valid: false, capabilities: [], error: `Unknown provider type: ${type}` }
   }
 
-  const legacy = await definition.testConnection(config)
-  log.info({ type, valid: legacy.valid, error: legacy.error }, 'Plugin provider connection tested')
+  log.info({ type, valid: result.valid, error: result.error }, 'Provider connection tested')
   return {
-    valid: legacy.valid,
-    capabilities: legacy.valid ? getCapabilitiesForType(type) : [],
-    error: legacy.error,
+    valid: result.valid,
+    capabilities: result.valid ? getCapabilitiesForType(type) : [],
+    error: result.error,
   }
 }
 
 export async function listModelsForProvider(
   type: string,
-  config: ProviderConfig,
+  config: KinbotProviderConfig,
 ): Promise<ProviderModel[]> {
   log.debug({ type }, 'Listing models for provider')
 
-  const cfg = asKinbotConfig(config)
   const models = await tryDispatch<ProviderModel[]>(type, config, {
     llm: async (p) => {
-      const list = await p.listModels(cfg)
+      const list = await p.listModels(config)
       return list.map((m): ProviderModel => ({
         id: m.id,
         name: m.name,
@@ -151,7 +178,7 @@ export async function listModelsForProvider(
       }))
     },
     embedding: async (p) => {
-      const list = await p.listModels(cfg)
+      const list = await p.listModels(config)
       return list.map((m): ProviderModel => ({
         id: m.id,
         name: m.name,
@@ -160,7 +187,7 @@ export async function listModelsForProvider(
       }))
     },
     image: async (p) => {
-      const list = await p.listModels(cfg)
+      const list = await p.listModels(config)
       return list.map((m): ProviderModel => ({
         id: m.id,
         name: m.name,
@@ -170,37 +197,26 @@ export async function listModelsForProvider(
     },
   })
 
-  if (models) {
-    if (models.length > 0) {
-      // Auto-populate the model-info cache so callers of getModelContextWindow()
-      // get accurate values straight from the provider's API. Lazy import to
-      // avoid a circular dependency at module load.
-      const { populateFromProviderModels } = await import('@/server/services/model-info-cache')
-      populateFromProviderModels(models)
-    }
-    return models
-  }
-
-  // Fall back to legacy plugin.
-  const definition = pluginRegistry[type]
-  if (!definition) {
+  if (!models) {
     log.error({ type }, 'Cannot list models for unknown provider type')
     return []
   }
-  const list = await definition.listModels(config)
-  if (list.length > 0) {
+
+  if (models.length > 0) {
+    // Auto-populate the model-info cache so callers of
+    // getModelContextWindow() get accurate values straight from the
+    // provider's API. Lazy import to avoid a circular dependency.
     const { populateFromProviderModels } = await import('@/server/services/model-info-cache')
-    populateFromProviderModels(list)
+    populateFromProviderModels(models)
   }
-  return list
+  return models
 }
 
-/** For diagnostics — counts of providers registered in each registry. */
+/** For diagnostics — listing of providers in each native registry. */
 export function getRegistryStats() {
   return {
     llm: listLLMProviders().map((p) => p.type),
     embedding: listEmbeddingProviders().map((p) => p.type),
     image: listImageProviders().map((p) => p.type),
-    plugins: Object.keys(pluginRegistry),
   }
 }

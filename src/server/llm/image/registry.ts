@@ -9,6 +9,10 @@ export function registerImageProvider(provider: ImageProvider): void {
   registry.set(provider.type, provider)
 }
 
+export function unregisterImageProvider(type: string): void {
+  registry.delete(type)
+}
+
 export function getImageProvider(type: string): ImageProvider | undefined {
   return registry.get(type)
 }

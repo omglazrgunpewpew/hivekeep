@@ -20,8 +20,11 @@ import { sseManager } from '@/server/sse/index'
 import type { HookName, HookHandler } from '@/server/hooks/types'
 import type { PluginManifest, PluginConfigField, PluginSummary, PluginHealthStats, PluginProviderMeta, PluginChannelMeta, PluginInstallSource, PluginInstallMeta } from '@/shared/types/plugin'
 import { satisfiesSemver } from '@/shared/semver'
-import { registerPluginProvider, unregisterPluginProvider } from '@/server/providers/index'
+import { registerLLMProvider, unregisterLLMProvider } from '@/server/llm/llm/registry'
+import { registerEmbeddingProvider, unregisterEmbeddingProvider } from '@/server/llm/embedding/registry'
+import { registerImageProvider, unregisterImageProvider } from '@/server/llm/image/registry'
 import { channelAdapters } from '@/server/channels/index'
+import type { LLMProvider, EmbeddingProvider, ImageProvider, PluginProvider, ProviderCapability } from '@kinbot-developer/sdk'
 import { emitPluginCard, updatePluginCard } from '@/server/services/plugin-cards'
 import type {
   PluginContext,
@@ -40,6 +43,20 @@ import type {
 export type { PluginCardActionContext, PluginCardActionResult }
 
 const log = createLogger('plugins')
+
+/**
+ * Detect which native provider family a plugin-exported provider implements,
+ * based on the chat/embed/generate method it carries. Returns null when the
+ * shape doesn't match any of the three native interfaces.
+ */
+function detectProviderFamily(
+  p: PluginProvider,
+): 'llm' | 'embedding' | 'image' | null {
+  if (typeof (p as { chat?: unknown }).chat === 'function') return 'llm'
+  if (typeof (p as { embed?: unknown }).embed === 'function') return 'embedding'
+  if (typeof (p as { generate?: unknown }).generate === 'function') return 'image'
+  return null
+}
 
 /**
  * Build the `ctx.vault` API for a plugin.
@@ -803,24 +820,43 @@ class PluginManager {
         }
       }
 
-      // Register providers
+      // Register providers. Each entry is a native LLMProvider /
+      // EmbeddingProvider / ImageProvider — the same interfaces the
+      // built-in providers implement. The loader detects the family by
+      // inspecting which method the provider exposes and routes to the
+      // matching native registry. The provider's `type` field is prefixed
+      // with `plugin:<plugin-name>:` to avoid colliding with built-ins or
+      // other plugins.
       if (exports.providers) {
-        for (const [providerType, reg] of Object.entries(exports.providers)) {
-          const prefixedType = `plugin_${name}_${providerType}`
+        for (const rawProvider of exports.providers) {
+          const family = detectProviderFamily(rawProvider)
+          if (!family) {
+            log.warn(
+              { plugin: name, type: rawProvider.type },
+              'Plugin provider does not implement chat/embed/generate — skipping',
+            )
+            continue
+          }
+          const prefixedType = `plugin:${name}:${rawProvider.type}`
+          // Wrap the provider so its `type` reflects the prefixed name
+          // KinBot uses internally, without mutating the plugin's instance.
+          const wrapped = new Proxy(rawProvider, {
+            get(target, prop) {
+              if (prop === 'type') return prefixedType
+              return Reflect.get(target, prop)
+            },
+          }) as PluginProvider
           try {
-            registerPluginProvider(prefixedType, reg.definition, {
-              capabilities: reg.capabilities as any,
-              displayName: reg.displayName,
-              noApiKey: reg.noApiKey,
-              apiKeyUrl: reg.apiKeyUrl,
-            })
+            if (family === 'llm') registerLLMProvider(wrapped as LLMProvider)
+            else if (family === 'embedding') registerEmbeddingProvider(wrapped as EmbeddingProvider)
+            else if (family === 'image') registerImageProvider(wrapped as ImageProvider)
             plugin.registeredProviders.push({
               type: prefixedType,
-              displayName: reg.displayName,
-              capabilities: reg.capabilities,
+              displayName: rawProvider.displayName,
+              capabilities: [family satisfies ProviderCapability],
             })
           } catch (err) {
-            log.warn({ plugin: name, provider: providerType, err }, 'Failed to register plugin provider')
+            log.warn({ plugin: name, type: rawProvider.type, family, err }, 'Failed to register plugin provider')
           }
         }
       }
@@ -915,9 +951,14 @@ class PluginManager {
     }
     plugin.registeredTools = []
 
-    // Unregister providers
+    // Unregister providers. We track the family in the meta so we know
+    // which native registry to hit. (Built-in providers are never tracked
+    // here — only plugin-contributed ones.)
     for (const prov of plugin.registeredProviders) {
-      unregisterPluginProvider(prov.type)
+      const family = prov.capabilities[0]
+      if (family === 'llm') unregisterLLMProvider(prov.type)
+      else if (family === 'embedding') unregisterEmbeddingProvider(prov.type)
+      else if (family === 'image') unregisterImageProvider(prov.type)
     }
     plugin.registeredProviders = []
 

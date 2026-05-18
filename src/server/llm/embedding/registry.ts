@@ -9,6 +9,10 @@ export function registerEmbeddingProvider(provider: EmbeddingProvider): void {
   registry.set(provider.type, provider)
 }
 
+export function unregisterEmbeddingProvider(type: string): void {
+  registry.delete(type)
+}
+
 export function getEmbeddingProvider(type: string): EmbeddingProvider | undefined {
   return registry.get(type)
 }
