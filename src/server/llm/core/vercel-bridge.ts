@@ -1,22 +1,17 @@
 /**
  * Conversion helpers between the Vercel AI SDK shapes still used at the
- * boundary of kin-engine (tool definitions, message history) and the kinbot
- * `LLMProvider` abstraction.
+ * boundary of kin-engine and the kinbot `LLMProvider` abstraction.
  *
  * These helpers exist because:
  *   - Tool definitions still use the Vercel `tool({...})` shape — they're
  *     declared in ~37 `src/server/tools/*` files and all import the helper
  *     through `@/server/tools/tool-helper` (the one place where the Vercel
  *     SDK is still referenced).
- *   - Message history in kin-engine / tasks is accumulated as `ModelMessage[]`
- *     (the Vercel shape) because that's how the chat persistence + history
- *     reconstruction code reads/writes it. Migrating to `KinbotMessage[]`
- *     end-to-end would touch the Anthropic prompt-cache strategy and needs
- *     runtime validation, so it's deferred.
- *
- * For now: at the very last moment before calling `provider.chat()`, we
- * convert Vercel tools/messages into kinbot's own shapes. Both translations
- * are pure data — no behavior is moved here.
+ *   - `buildMessageHistory` internally builds `ModelMessage[]` to share its
+ *     mask + size-cap transformations with the rest of the Vercel-shape
+ *     codebase; it converts to `KinbotMessage[]` at the very end of the
+ *     function. Porting those transformations to `KinbotMessage` is the
+ *     final piece needed to drop `ai` from package.json.
  */
 
 import type { ModelMessage } from '@/server/tools/tool-helper'
@@ -26,8 +21,6 @@ import type {
   KinbotMessage,
   KinbotMessageBlock,
   KinbotTool,
-  SystemPrompt,
-  TextBlock,
 } from '@/server/llm/llm/types'
 
 // ─── Tools ───────────────────────────────────────────────────────────────────
@@ -90,31 +83,29 @@ export function markLastKinbotToolCacheable(tools: KinbotTool[]): KinbotTool[] {
  *   - `{ role: 'user', content: string | Array<TextPart|ImagePart|FilePart|ToolResultPart> }`
  *   - `{ role: 'assistant', content: string | Array<TextPart|ReasoningPart|ToolCallPart> }`
  *   - `{ role: 'tool', content: Array<ToolResultPart> }`  ← OpenAI-style tool messages
- *   - `{ role: 'system', content: string }`  ← rare in history, usually in system param
+ *   - `{ role: 'system', content: string }`  ← rare in history; the chat
+ *     request's `system` field is where the system prompt actually lives
  *
  * kinbot collapses `role: 'tool'` messages into `role: 'user'` messages whose
  * content is a list of `tool-result` blocks (Anthropic-style). Providers that
  * need OpenAI-style separate tool messages (openai-key) re-split internally.
  *
- * `providerOptions.anthropic.cacheControl` on a message is lifted to the
- * `cacheControl` of its first/last text block (where it lands on Anthropic's
- * wire anyway).
+ * Cache breakpoints are no longer carried at the `ModelMessage` level — the
+ * new pipeline (see `llm-cache-hints.ts`) places `cacheControl` directly on
+ * `KinbotMessageBlock`s. This function therefore makes no attempt to read
+ * `providerOptions.anthropic.cacheControl`.
  */
 export function modelMessagesToKinbot(messages: ModelMessage[]): KinbotMessage[] {
   const out: KinbotMessage[] = []
   for (const m of messages) {
     const role = m.role
-    if (role === 'system') {
-      // System messages in the history (rare — usually live in `system` param).
-      // Skip rather than guess where they should go.
-      continue
-    }
+    if (role === 'system') continue
     if (role === 'user') {
-      out.push({ role: 'user', content: userContentToBlocks(m.content, hasMessageCacheHint(m)) })
+      out.push({ role: 'user', content: userContentToBlocks(m.content) })
       continue
     }
     if (role === 'assistant') {
-      out.push({ role: 'assistant', content: assistantContentToBlocks(m.content, hasMessageCacheHint(m)) })
+      out.push({ role: 'assistant', content: assistantContentToBlocks(m.content) })
       continue
     }
     if (role === 'tool') {
@@ -141,43 +132,15 @@ export function modelMessagesToKinbot(messages: ModelMessage[]): KinbotMessage[]
 }
 
 /**
- * Split the output of `buildSegmentedMessages` into kinbot's expected
- * `{ system, messages }` pair.
+ * Convert any tool result value into the plain-text string that goes into a
+ * `KinbotMessage` `tool-result` block. Handles the wrapped shapes used by the
+ * Vercel SDK (`{ type: 'json', value }`, `{ type: 'text', value/text }`) and
+ * falls back to `JSON.stringify` for arbitrary objects.
  *
- * `buildSegmentedMessages` returns a `ModelMessage[]` where the first entry
- * is a `role: 'system'` block (when a stable system segment exists) carrying
- * the cache hint. The rest is the conversation history.
- *
- * kinbot's `ChatRequest` expects the system separately as a `SystemPrompt`
- * (= `TextBlock[]`). This helper does the split + the per-block cache hint
- * promotion in one pass.
+ * Exported for the in-loop appends in kin-engine / tasks where freshly
+ * executed tool results are appended directly to a `KinbotMessage[]` history.
  */
-export function splitSystemFromVercelMessages(
-  messages: ModelMessage[],
-): { system: SystemPrompt | undefined; messages: KinbotMessage[] } {
-  const systemBlocks: TextBlock[] = []
-  const rest: ModelMessage[] = []
-  for (const m of messages) {
-    if (m.role === 'system' && typeof m.content === 'string') {
-      const block: TextBlock = { type: 'text', text: m.content }
-      if (hasMessageCacheHint(m)) block.cacheControl = { type: 'ephemeral' }
-      systemBlocks.push(block)
-    } else {
-      rest.push(m)
-    }
-  }
-  return {
-    system: systemBlocks.length > 0 ? systemBlocks : undefined,
-    messages: modelMessagesToKinbot(rest),
-  }
-}
-
-function hasMessageCacheHint(m: ModelMessage): boolean {
-  const opts = (m as { providerOptions?: { anthropic?: { cacheControl?: unknown } } }).providerOptions
-  return !!opts?.anthropic?.cacheControl
-}
-
-function stringifyToolResult(output: unknown): string {
+export function stringifyToolResultValue(output: unknown): string {
   if (output == null) return ''
   if (typeof output === 'string') return output
   // OpenAI tool result outputs are sometimes wrapped: { type: 'json', value: ... } or
@@ -195,14 +158,14 @@ function stringifyToolResult(output: unknown): string {
   }
 }
 
-function userContentToBlocks(content: unknown, applyCacheHintToLast: boolean): KinbotMessageBlock[] {
+/** @internal Kept as a thin alias so internal callers don't need updating. */
+function stringifyToolResult(output: unknown): string {
+  return stringifyToolResultValue(output)
+}
+
+function userContentToBlocks(content: unknown): KinbotMessageBlock[] {
   if (typeof content === 'string') {
-    const blocks: KinbotMessageBlock[] = content ? [{ type: 'text', text: content }] : []
-    if (applyCacheHintToLast && blocks.length > 0) {
-      const last = blocks[blocks.length - 1]!
-      if (last.type === 'text') (last as { cacheControl?: { type: 'ephemeral' } }).cacheControl = { type: 'ephemeral' }
-    }
-    return blocks
+    return content ? [{ type: 'text', text: content }] : []
   }
   if (!Array.isArray(content)) return []
   const blocks: KinbotMessageBlock[] = []
@@ -223,21 +186,12 @@ function userContentToBlocks(content: unknown, applyCacheHintToLast: boolean): K
       })
     }
   }
-  if (applyCacheHintToLast && blocks.length > 0) {
-    const last = blocks[blocks.length - 1]!
-    if (last.type === 'text') (last as { cacheControl?: { type: 'ephemeral' } }).cacheControl = { type: 'ephemeral' }
-  }
   return blocks
 }
 
-function assistantContentToBlocks(content: unknown, applyCacheHintToLast: boolean): KinbotMessageBlock[] {
+function assistantContentToBlocks(content: unknown): KinbotMessageBlock[] {
   if (typeof content === 'string') {
-    const blocks: KinbotMessageBlock[] = content ? [{ type: 'text', text: content }] : []
-    if (applyCacheHintToLast && blocks.length > 0) {
-      const last = blocks[blocks.length - 1]!
-      if (last.type === 'text') (last as { cacheControl?: { type: 'ephemeral' } }).cacheControl = { type: 'ephemeral' }
-    }
-    return blocks
+    return content ? [{ type: 'text', text: content }] : []
   }
   if (!Array.isArray(content)) return []
   const blocks: KinbotMessageBlock[] = []
@@ -257,10 +211,6 @@ function assistantContentToBlocks(content: unknown, applyCacheHintToLast: boolea
     } else if (part?.type === 'tool-call' && part.toolCallId && part.toolName) {
       blocks.push({ type: 'tool-use', id: part.toolCallId, name: part.toolName, args: part.input })
     }
-  }
-  if (applyCacheHintToLast && blocks.length > 0) {
-    const last = blocks[blocks.length - 1]!
-    if (last.type === 'text') (last as { cacheControl?: { type: 'ephemeral' } }).cacheControl = { type: 'ephemeral' }
   }
   return blocks
 }

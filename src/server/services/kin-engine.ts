@@ -1,5 +1,6 @@
-import type { ModelMessage, UserContent } from '@/server/tools/tool-helper'
+import type { ModelMessage, UserContent, JSONValue } from '@/server/tools/tool-helper'
 import type { Tool } from '@/server/tools/tool-helper'
+import type { KinbotMessage, KinbotMessageBlock } from '@/server/llm/llm/types'
 import { eq, and, isNull, ne, asc, desc } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db, sqlite } from '@/server/db/index'
@@ -20,10 +21,8 @@ import { buildActiveProjectInfo } from '@/server/services/projects'
 import { getContactDisplayName } from '@/shared/contact-display'
 import { decrypt } from '@/server/services/encryption'
 import { buildSystemPrompt, joinSystemPrompt } from '@/server/services/prompt-builder'
-import {
-  buildSegmentedMessages,
-  markLastToolCacheable,
-} from '@/server/services/llm-cache-hints'
+import { buildSegmentedMessages } from '@/server/services/llm-cache-hints'
+import { stringifyToolResultValue } from '@/server/llm/core/vercel-bridge'
 import { dequeueMessage, markQueueItemDone, isKinProcessing, getQueueSize, recoverStaleProcessingItems, popQueueMessageMetadata } from '@/server/services/queue'
 import { recoverStaleTasks } from '@/server/services/tasks'
 import { sseManager } from '@/server/sse/index'
@@ -203,9 +202,8 @@ function capTools(
 function stripToolExecute(tools: Record<string, Tool>): Record<string, Tool> {
   const schemas: Record<string, Tool> = {}
   for (const [name, t] of Object.entries(tools)) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { execute, ...rest } = t as Record<string, unknown>
-    schemas[name] = rest as Tool
+    const { execute: _execute, ...rest } = t
+    schemas[name] = rest
   }
   return schemas
 }
@@ -619,7 +617,7 @@ function buildToolSchemaPayload(tools: Record<string, unknown>): Array<{ name: s
  */
 export function estimateContextTokens(
   systemPrompt: string,
-  messageHistory: ModelMessage[],
+  messageHistory: KinbotMessage[],
   tools: Record<string, unknown> | undefined,
   summaryTokens?: number,
 ): ContextTokenBreakdown {
@@ -628,51 +626,40 @@ export function estimateContextTokens(
   const systemPromptTokens = Math.max(0, rawSystemPromptTokens - summary)
   let messagesTokens = 0
   for (const msg of messageHistory) {
-    if (typeof msg.content === 'string') {
-      messagesTokens += estimateTokens(msg.content)
-    } else if (Array.isArray(msg.content)) {
-      for (const part of msg.content) {
-        if ('text' in part && typeof part.text === 'string') {
-          messagesTokens += estimateTokens(part.text)
-        } else if ('type' in part && part.type === 'image') {
+    for (const block of msg.content) {
+      switch (block.type) {
+        case 'text':
+          messagesTokens += estimateTokens(block.text)
+          break
+        case 'image': {
           // Anthropic vision pricing scales with pixel count. PNGs compress
           // to roughly 1 byte per pixel on average and Anthropic charges
           // ~1 token per 750 pixels, so bytes/750 is a usable heuristic.
-          // Floor at 1500 (≈ a typical 1280×720 screenshot) since the prior
-          // 85-token flat estimate was 15-60× too low and silently masked
+          // Floor at 1500 (≈ a typical 1280×720 screenshot) since a flat
+          // 85-token estimate was 15-60× too low and silently masked
           // huge contexts.
-          const img = (part as { image?: unknown }).image
-          const bytes = img instanceof Uint8Array
-            ? img.length
-            : typeof img === 'string' ? img.length * 0.75 // assume base64
-            : 0
+          const bytes = block.data.length
           messagesTokens += bytes > 0 ? Math.max(1500, Math.round(bytes / 750)) : 1500
-        } else if ('type' in part && part.type === 'file') {
-          // Rough estimate for PDF: ~500 tokens per page, ~3KB per page
-          const dataLen = 'data' in part && typeof part.data === 'string' ? part.data.length * 0.75 : 0
-          messagesTokens += Math.max(500, Math.ceil(dataLen / 3000) * 500)
-        } else if ('type' in part && part.type === 'tool-call') {
-          // Vercel AI SDK's tool-call part uses `input` (not `args`) for the
-          // serialized tool arguments. Counted because they reach the API as
-          // part of the assistant's tool_use block.
-          const input = (part as { input?: unknown }).input
-          const inputStr = input !== undefined ? JSON.stringify(input) : ''
-          messagesTokens += estimateTokens(inputStr)
-        } else if ('type' in part && part.type === 'tool-result') {
-          // tool-result part shape: `output: { type: 'json' | 'text', value: ... }`.
-          // The `value` is the actual tool result content — kubectl outputs,
-          // file reads, page_state YAMLs, etc. — and is typically the LARGEST
-          // unbilled hidden cost in tool-heavy Kins. Previous versions of this
-          // code looked for a non-existent `result` field and silently
-          // counted 0 tokens, leading to displayed context sizes that were
-          // 10-20× lower than reality.
-          const output = (part as { output?: { type?: string; value?: unknown } }).output
-          const value = output?.value
-          const valueStr = typeof value === 'string'
-            ? value
-            : value !== undefined ? JSON.stringify(value) : ''
-          messagesTokens += estimateTokens(valueStr)
+          break
         }
+        case 'tool-use': {
+          // Counted because the args reach the API as part of the
+          // assistant's tool_use block.
+          const inputStr = block.args !== undefined ? JSON.stringify(block.args) : ''
+          messagesTokens += estimateTokens(inputStr)
+          break
+        }
+        case 'tool-result':
+          // tool-result content is the actual tool output — kubectl outputs,
+          // file reads, page_state YAMLs, etc. — and is typically the
+          // LARGEST unbilled hidden cost in tool-heavy Kins. Previous
+          // versions silently counted 0 tokens here, producing displayed
+          // context sizes that were 10-20× lower than reality.
+          messagesTokens += estimateTokens(block.content)
+          break
+        case 'thinking':
+          // Thinking blocks billed as output, not input. Skip on input count.
+          break
       }
     }
   }
@@ -1592,7 +1579,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     // Convert tools to kinbot shape once (provider.chat() handles them natively).
     // markLastKinbotToolCacheable adds the per-tool cache_control hint Anthropic
     // uses to cache the whole tools block as a single prefix.
-    const { vercelToolsToKinbot, markLastKinbotToolCacheable, splitSystemFromVercelMessages } =
+    const { vercelToolsToKinbot, markLastKinbotToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
     const kinbotTools = hasTools
       ? markLastKinbotToolCacheable(await vercelToolsToKinbot(stripToolExecute(tools)))
@@ -1620,9 +1607,8 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     for (; step < maxSteps; step++) {
       if (abortController.signal.aborted) { wasAborted = true; break }
 
-      const vercelMessages = buildSegmentedMessages(systemSegments, messageHistory)
       const { system: kinbotSystem, messages: kinbotMessages } =
-        splitSystemFromVercelMessages(vercelMessages)
+        buildSegmentedMessages(systemSegments, messageHistory)
       const stream = resolved.provider.chat(
         resolved.model,
         {
@@ -1678,13 +1664,10 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       }
 
       // Build assistant content for history
-      const assistantContent: Array<
-        | { type: 'text'; text: string }
-        | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
-      > = []
-      if (stepText) assistantContent.push({ type: 'text', text: stepText })
+      const assistantBlocks: KinbotMessageBlock[] = []
+      if (stepText) assistantBlocks.push({ type: 'text', text: stepText })
       for (const tc of stepToolCalls) {
-        assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+        assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
       }
 
       // Execute tool calls (concurrently if all read-only, sequentially otherwise)
@@ -1698,9 +1681,18 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       toolCallsLog.push(...batch.toolCallsLog)
       if (batch.wasAborted) { wasAborted = true; break }
 
-      // Append assistant message (with tool calls) + tool results to history for next step
-      messageHistory.push({ role: 'assistant', content: assistantContent })
-      messageHistory.push({ role: 'tool' as const, content: batch.toolResults })
+      // Append assistant message (with tool calls) + tool results to history
+      // for next step. Tool results live as a user-role message in kinbot's
+      // shape (Anthropic-style).
+      messageHistory.push({ role: 'assistant', content: assistantBlocks })
+      messageHistory.push({
+        role: 'user',
+        content: batch.toolResults.map((tr) => ({
+          type: 'tool-result',
+          toolUseId: tr.toolCallId,
+          content: stringifyToolResultValue(tr.output.value),
+        })),
+      })
 
       // Text accumulates across steps so tool call offsets remain valid
     }
@@ -2169,10 +2161,12 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       .orderBy(asc(messages.createdAt))
       .all()
 
-    const messageHistory: ModelMessage[] = []
+    const messageHistory: KinbotMessage[] = []
     for (const msg of sessionMessages) {
       if (msg.role === 'user') {
-        messageHistory.push({ role: 'user', content: msg.content ?? '' })
+        const text = msg.content ?? ''
+        if (!text) continue
+        messageHistory.push({ role: 'user', content: [{ type: 'text', text }] })
       } else if (msg.role === 'assistant') {
         let toolCalls: Array<{ id: string; name: string; args: unknown; result?: unknown }> | null = null
         if (msg.toolCalls) {
@@ -2181,22 +2175,18 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
         // Sanitize defensively — see sanitizePersistedToolCalls for rationale (#355).
         const validToolCalls = toolCalls ? sanitizePersistedToolCalls(toolCalls, kinId) : []
         if (validToolCalls.length > 0) {
-          const assistantContent: Array<
-            | { type: 'text'; text: string }
-            | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
-          > = []
-          if (msg.content) assistantContent.push({ type: 'text', text: msg.content })
+          const assistantBlocks: KinbotMessageBlock[] = []
+          if (msg.content) assistantBlocks.push({ type: 'text', text: msg.content })
           for (const tc of validToolCalls) {
-            assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+            assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
           }
-          messageHistory.push({ role: 'assistant', content: assistantContent })
+          messageHistory.push({ role: 'assistant', content: assistantBlocks })
           messageHistory.push({
-            role: 'tool' as const,
+            role: 'user',
             content: validToolCalls.map((tc) => ({
-              type: 'tool-result' as const,
-              toolCallId: tc.id,
-              toolName: tc.name,
-              output: { type: 'json' as const, value: (tc.result ?? null) as import('ai').JSONValue },
+              type: 'tool-result',
+              toolUseId: tc.id,
+              content: stringifyToolResultValue(tc.result),
             })),
           })
         } else {
@@ -2204,7 +2194,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
           // blocks. See buildMessageHistory for the same defense.
           const text = msg.content ?? ''
           if (text) {
-            messageHistory.push({ role: 'assistant', content: text })
+            messageHistory.push({ role: 'assistant', content: [{ type: 'text', text }] })
           }
         }
       }
@@ -2263,7 +2253,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     quickAbortControllers.set(sessionId, abortController)
 
     // Convert tools to kinbot shape once.
-    const { vercelToolsToKinbot: qsVercelToolsToKinbot, markLastKinbotToolCacheable: qsMarkLastKinbotToolCacheable, splitSystemFromVercelMessages: qsSplitSystemFromVercelMessages } =
+    const { vercelToolsToKinbot: qsVercelToolsToKinbot, markLastKinbotToolCacheable: qsMarkLastKinbotToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
     const qsKinbotTools = hasTools
       ? qsMarkLastKinbotToolCacheable(await qsVercelToolsToKinbot(stripToolExecute(tools)))
@@ -2288,8 +2278,8 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     for (; step < maxSteps; step++) {
       if (abortController.signal.aborted) { wasAborted = true; break }
 
-      const vercelMessages = buildSegmentedMessages(systemSegments, messageHistory)
-      const { system: qsSystem, messages: qsMessages } = qsSplitSystemFromVercelMessages(vercelMessages)
+      const { system: qsSystem, messages: qsMessages } =
+        buildSegmentedMessages(systemSegments, messageHistory)
       const stream = qsResolved.provider.chat(
         qsResolved.model,
         {
@@ -2336,13 +2326,10 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       }
 
       // Build assistant content for history
-      const assistantContent: Array<
-        | { type: 'text'; text: string }
-        | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
-      > = []
-      if (stepText) assistantContent.push({ type: 'text', text: stepText })
+      const assistantBlocks: KinbotMessageBlock[] = []
+      if (stepText) assistantBlocks.push({ type: 'text', text: stepText })
       for (const tc of stepToolCalls) {
-        assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+        assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
       }
 
       // Execute tool calls (concurrently if all read-only, sequentially otherwise)
@@ -2357,9 +2344,17 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       toolCallsLog.push(...batch.toolCallsLog)
       if (batch.wasAborted) { wasAborted = true; break }
 
-      // Append assistant message (with tool calls) + tool results to history for next step
-      messageHistory.push({ role: 'assistant', content: assistantContent })
-      messageHistory.push({ role: 'tool' as const, content: batch.toolResults })
+      // Append assistant message (with tool calls) + tool results to history for next step.
+      // Tool results live as a user-role message in kinbot's shape (Anthropic-style).
+      messageHistory.push({ role: 'assistant', content: assistantBlocks })
+      messageHistory.push({
+        role: 'user',
+        content: batch.toolResults.map((tr) => ({
+          type: 'tool-result',
+          toolUseId: tr.toolCallId,
+          content: stringifyToolResultValue(tr.output.value),
+        })),
+      })
 
       // Text accumulates across steps so tool call offsets remain valid
     }
@@ -2529,7 +2524,7 @@ export interface ConversationParticipant {
   lastSeenAt: Date
 }
 
-export async function buildMessageHistory(kinId: string): Promise<{ messages: ModelMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number; trimmedUserContentCount: number; trimmedUserContentTokensSaved: number }> {
+export async function buildMessageHistory(kinId: string): Promise<{ messages: KinbotMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number; trimmedUserContentCount: number; trimmedUserContentTokensSaved: number }> {
   const history: ModelMessage[] = []
 
   // Fetch all active (in-context) summaries, ordered oldest to newest
@@ -2784,12 +2779,12 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Mo
         // otherwise the SDK schema validator rejects the whole history —
         // using the same `validToolCalls` array keeps this invariant.
         history.push({
-          role: 'tool' as const,
+          role: 'tool',
           content: validToolCalls.map((tc) => ({
-            type: 'tool-result' as const,
+            type: 'tool-result',
             toolCallId: tc.id,
             toolName: tc.name,
-            output: { type: 'json' as const, value: (tc.result ?? null) as import('ai').JSONValue },
+            output: { type: 'json', value: (tc.result ?? null) as JSONValue },
           })),
         })
       } else {
@@ -3024,8 +3019,13 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Mo
     : null
 
   const SIZE_CAP_PLACEHOLDER_TOKENS = 50  // approx tokens of the trim placeholder message
+  // Internal transformations (mask + caps) operate on the Vercel `ModelMessage`
+  // shape — see `maskOldToolResults` and the SIZE_CAP/ARGS_CAP/CONTENT_CAP
+  // blocks above. At the boundary we convert to kinbot's native shape so
+  // the loop callers don't need a bridge call.
+  const { modelMessagesToKinbot: bmhModelMessagesToKinbot } = await import('@/server/llm/core/vercel-bridge')
   return {
-    messages: maskedHistory,
+    messages: bmhModelMessagesToKinbot(maskedHistory),
     compactingSummaries: summariesForPrompt,
     participants,
     visibleMessageCount,

@@ -1,30 +1,9 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
 import { fullMockConfig, fullMockSchema, fullMockDrizzleOrm } from '../../test-helpers'
 
-// Mock all external dependencies before importing the module
-mock.module('ai', () => ({
-  generateImage: mock(() => Promise.resolve({ image: { base64: 'dGVzdA==', mediaType: 'image/png' } })),
-  generateText: mock(() => Promise.resolve({ text: 'A portrait of a character' })),
-}))
-
-mock.module('@ai-sdk/openai', () => ({
-  createOpenAI: mock(() => ({
-    image: (model: string) => ({ modelId: model, provider: 'openai' }),
-    call: mock(),
-  })),
-}))
-
-mock.module('@ai-sdk/anthropic', () => ({
-  createAnthropic: mock(() => (model: string) => ({ modelId: model, provider: 'anthropic' })),
-}))
-
-mock.module('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: mock(() => ({
-    image: (model: string) => ({ modelId: model, provider: 'google' }),
-    call: mock(),
-  })),
-}))
-
+// Mock external dependencies before importing the module. `ai`/`@ai-sdk/*`
+// are no longer used by image-generation — it talks to providers through
+// the native registry — so those mocks were dropped along with the deps.
 mock.module('drizzle-orm', () => ({
   ...fullMockDrizzleOrm,
   eq: mock((...args: unknown[]) => args),

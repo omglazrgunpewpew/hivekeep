@@ -167,8 +167,7 @@ The parsed `plugin.json` manifest object, read-only.
 Tools are AI-callable functions that Kins can use in conversations. They use the [Vercel AI SDK](https://sdk.vercel.ai/) tool format:
 
 ```typescript
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx) {
   return {
@@ -424,8 +423,7 @@ A complete example that registers a tool with configuration:
 
 ```typescript
 // plugins/example-weather/index.ts
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx) {
   const { apiKey, units = 'metric' } = ctx.config

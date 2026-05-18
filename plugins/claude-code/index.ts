@@ -17,7 +17,7 @@
  * per-Kin toolConfig, like MCP tools and other autonomy-heavy surfaces.
  */
 
-import { tool } from 'ai'
+import { tool } from '@kinbot/sdk'
 import { z } from 'zod'
 import type { ToolRegistration, ToolExecutionContext } from '@/server/tools/types'
 import type {

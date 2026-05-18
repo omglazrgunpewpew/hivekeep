@@ -148,6 +148,7 @@ function blockToAnthropic(block: KinbotMessageBlock): ContentBlockParam {
           data: uint8ToBase64(block.data),
         },
       }
+      if (block.cacheControl) param.cache_control = { type: 'ephemeral' }
       return param
     }
     case 'tool-use': {
@@ -157,6 +158,7 @@ function blockToAnthropic(block: KinbotMessageBlock): ContentBlockParam {
         name: block.name,
         input: block.args as Record<string, unknown>,
       }
+      if (block.cacheControl) param.cache_control = { type: 'ephemeral' }
       return param
     }
     case 'tool-result': {
@@ -166,6 +168,7 @@ function blockToAnthropic(block: KinbotMessageBlock): ContentBlockParam {
         content: block.content,
         ...(block.isError ? { is_error: true } : {}),
       }
+      if (block.cacheControl) param.cache_control = { type: 'ephemeral' }
       return param
     }
     case 'thinking': {

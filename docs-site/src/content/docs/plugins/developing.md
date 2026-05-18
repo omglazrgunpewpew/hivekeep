@@ -33,8 +33,7 @@ Create two files: a manifest and an entry point.
 ### `index.ts`
 
 ```typescript
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx) {
   ctx.log.info('My plugin loaded!')
@@ -162,8 +161,7 @@ All exports are optional. Include only what your plugin provides.
 Tools are AI-callable functions that Kins use in conversations. They use the [Vercel AI SDK](https://sdk.vercel.ai/) tool format:
 
 ```typescript
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx) {
   return {
@@ -388,8 +386,7 @@ A complete plugin with configuration, HTTP calls, and two tools:
 
 ```typescript
 // plugins/weather/index.ts
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx) {
   const { apiKey, units = 'metric' } = ctx.config

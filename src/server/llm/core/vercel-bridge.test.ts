@@ -4,7 +4,6 @@ import { tool } from '@/server/tools/tool-helper'
 import {
   vercelToolsToKinbot,
   markLastKinbotToolCacheable,
-  splitSystemFromVercelMessages,
   modelMessagesToKinbot,
 } from './vercel-bridge'
 import type { KinbotTool } from '@/server/llm/llm/types'
@@ -88,57 +87,10 @@ describe('markLastKinbotToolCacheable', () => {
   })
 })
 
-// ─── splitSystemFromVercelMessages ───────────────────────────────────────────
-
-describe('splitSystemFromVercelMessages', () => {
-  it('extracts the leading system message into a kinbot SystemPrompt', () => {
-    const { system, messages } = splitSystemFromVercelMessages([
-      { role: 'system', content: 'You are a helpful assistant.' },
-      { role: 'user', content: 'Hello' },
-    ])
-    expect(system).toBeDefined()
-    expect(system![0]).toMatchObject({ type: 'text', text: 'You are a helpful assistant.' })
-    expect(messages).toHaveLength(1)
-    expect(messages[0]!.role).toBe('user')
-  })
-
-  it('returns system undefined when there is no system message', () => {
-    const { system, messages } = splitSystemFromVercelMessages([
-      { role: 'user', content: 'Hello' },
-    ])
-    expect(system).toBeUndefined()
-    expect(messages).toHaveLength(1)
-  })
-
-  it('promotes anthropic cacheControl from message-level to the system block', () => {
-    const { system } = splitSystemFromVercelMessages([
-      {
-        role: 'system',
-        content: 'cached system',
-        providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
-      },
-    ])
-    expect(system![0]!.cacheControl).toEqual({ type: 'ephemeral' })
-  })
-
-  it('keeps multiple system blocks ordered', () => {
-    // buildSegmentedMessages can emit several system messages on Anthropic
-    // for multi-segment system prompts. The split must keep their order.
-    const { system } = splitSystemFromVercelMessages([
-      { role: 'system', content: 'one' },
-      { role: 'system', content: 'two' },
-      { role: 'user', content: 'go' },
-    ])
-    expect(system).toHaveLength(2)
-    expect(system![0]!.text).toBe('one')
-    expect(system![1]!.text).toBe('two')
-  })
-})
-
 // ─── modelMessagesToKinbot ───────────────────────────────────────────────────
 
 describe('modelMessagesToKinbot', () => {
-  it('drops system messages (handled separately by splitSystemFromVercelMessages)', () => {
+  it('drops system messages (system prompts travel via the chat request `system` field, not history)', () => {
     const out = modelMessagesToKinbot([
       { role: 'system', content: 'sys' },
       { role: 'user', content: 'hi' },

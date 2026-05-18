@@ -91,6 +91,8 @@ export interface ImageBlock {
   data: Uint8Array
   /** MIME type, e.g. 'image/png', 'image/jpeg'. */
   mediaType: string
+  /** Provider-side cache hint (Anthropic). Ignored where unsupported. */
+  cacheControl?: { type: 'ephemeral' }
 }
 
 /** A tool invocation emitted by the assistant. */
@@ -99,6 +101,8 @@ export interface ToolUseBlock {
   id: string
   name: string
   args: unknown
+  /** Provider-side cache hint (Anthropic). Ignored where unsupported. */
+  cacheControl?: { type: 'ephemeral' }
 }
 
 /** The result of executing a tool, fed back into the next user turn. */
@@ -109,6 +113,10 @@ export interface ToolResultBlock {
    *  caller before reaching this block. */
   content: string
   isError?: boolean
+  /** Provider-side cache hint (Anthropic). Ignored where unsupported.
+   *  Useful for the BP4 within-turn anchor during multi-step tool loops:
+   *  the final message of a step is often a tool-result-only user message. */
+  cacheControl?: { type: 'ephemeral' }
 }
 
 /** A thinking/reasoning segment emitted by the assistant. Surfaced to the

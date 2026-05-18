@@ -49,7 +49,7 @@ const mocksWorking = await (async () => {
     const t = sendMessageTool.create({ kinId: 'test', userId: 'test', isSubKin: false })
     const result = await t.execute!(
       { slug: 'test', message: 'probe', type: 'request' as const },
-      { toolCallId: 'probe', messages: [], abortSignal: new AbortController().signal },
+      { abortSignal: new AbortController().signal },
     )
     // If mocks work, we get { success: true, requestId: 'req-123' }
     return (result as any)?.success === true

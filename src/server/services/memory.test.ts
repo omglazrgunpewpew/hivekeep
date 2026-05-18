@@ -84,9 +84,8 @@ mock.module('uuid', () => ({
   v4: () => 'test-uuid-1234',
 }))
 
-mock.module('ai', () => ({
-  generateText: mock(() => Promise.resolve({ text: '[]' })),
-}))
+// `ai`/`@ai-sdk/*` are no longer used — memory.ts goes through the native
+// `resolveLLM` + `runOneShot` path.
 
 // Drizzle operators — just return the args for mock matching
 mock.module('drizzle-orm', () => ({

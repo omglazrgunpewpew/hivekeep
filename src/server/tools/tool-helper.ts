@@ -1,21 +1,83 @@
 /**
- * Kinbot's tool definition helper + shared types.
+ * KinBot's internal tool definition helper + legacy message-shape types.
  *
- * Every native tool, MCP-wrapped tool, and custom user tool is declared
- * through this module. Concentrating the Vercel coupling here means a
- * future swap (replace `tool()` with a native kinbot implementation that
- * doesn't reach into `ai`) is a one-file change rather than a 55-file
- * migration.
+ * The public surface (`tool`, `asSchema`, `Tool`, `JSONValue`) lives in
+ * `@kinbot/sdk` — this file simply re-exports from there so internal
+ * imports (`from '@/server/tools/tool-helper'`) keep working without
+ * touching the ~45 native tool files. Plugins should import directly
+ * from `@kinbot/sdk` instead.
  *
- * The shape returned by `tool()` from `ai` is what `tool-executor`,
- * `kin-engine`, `tool-output-spill`, `mcp`, `custom-tools` and
- * `vercelToolsToKinbot` all expect — we re-export it under our own names
- * to keep the imports kinbot-rooted without changing any runtime behaviour.
- *
- * If/when we drop the Vercel SDK entirely (Bloc 3 in the refactor plan),
- * this file becomes the seam to replace: implement `tool()` natively,
- * define `Tool` from scratch, and the rest of the codebase doesn't move.
+ * The `ModelMessage` / `UserContent` types and their part definitions
+ * are NOT exported from the SDK — they're internal to KinBot, used only
+ * by `kin-engine.buildMessageHistory`'s mask + size-cap pipeline while it
+ * is being progressively migrated to `KinbotMessage`. They live here so
+ * the rest of the codebase can keep its current import path.
  */
+export { tool, asSchema } from '@kinbot/sdk'
+export type { Tool, JSONValue, NormalizedSchema } from '@kinbot/sdk'
 
-export { tool, asSchema } from 'ai'
-export type { Tool, JSONValue, ModelMessage, UserContent } from 'ai'
+// ─── Message shapes (legacy parity, used by buildMessageHistory) ─────────────
+
+/**
+ * Discriminated union mirroring the Vercel `ModelMessage` shape KinBot used
+ * to consume. Kept here only because `kin-engine.buildMessageHistory` and
+ * its tributaries (`maskOldToolResults`, the SIZE/ARGS/CONTENT/USER caps)
+ * still operate on this shape. When that pipeline is migrated to
+ * `KinbotMessage`, this type and the parts below can be deleted.
+ */
+export type ModelMessage =
+  | { role: 'system'; content: string; providerOptions?: ProviderOptions }
+  | { role: 'user'; content: UserContent; providerOptions?: ProviderOptions }
+  | { role: 'assistant'; content: AssistantContent; providerOptions?: ProviderOptions }
+  | { role: 'tool'; content: ToolResultPart[]; providerOptions?: ProviderOptions }
+
+/** Free-form provider hints (Anthropic `cacheControl`, OpenAI `reasoningEffort`, …). */
+export type ProviderOptions = Record<string, Record<string, unknown>>
+
+export type UserContent = string | Array<TextPart | ImagePart | FilePart>
+export type AssistantContent = string | Array<TextPart | ReasoningPart | ToolCallPart>
+
+export interface TextPart {
+  type: 'text'
+  text: string
+  providerOptions?: ProviderOptions
+}
+
+export interface ImagePart {
+  type: 'image'
+  /** Raw bytes, base64 string, or data URL. */
+  image: Uint8Array | string
+  mediaType?: string
+  mimeType?: string
+}
+
+export interface FilePart {
+  type: 'file'
+  data: Uint8Array | string
+  filename?: string
+  mediaType: string
+}
+
+export interface ReasoningPart {
+  type: 'reasoning'
+  text: string
+  signature?: string
+}
+
+export interface ToolCallPart {
+  type: 'tool-call'
+  toolCallId: string
+  toolName: string
+  input: unknown
+}
+
+import type { JSONValue } from '@kinbot/sdk'
+
+export interface ToolResultPart {
+  type: 'tool-result'
+  toolCallId: string
+  toolName?: string
+  output:
+    | { type: 'json'; value: JSONValue }
+    | { type: 'text'; value: string }
+}

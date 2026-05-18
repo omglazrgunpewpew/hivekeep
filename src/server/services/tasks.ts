@@ -8,10 +8,9 @@ import { tasks, kins, messages, tickets, projects } from '@/server/db/schema'
 import { enqueueMessage } from '@/server/services/queue'
 import { buildSystemPrompt } from '@/server/services/prompt-builder'
 import { getSystemContext } from '@/server/services/system-context'
-import {
-  buildSegmentedMessages,
-  markLastToolCacheable,
-} from '@/server/services/llm-cache-hints'
+import { buildSegmentedMessages } from '@/server/services/llm-cache-hints'
+import { stringifyToolResultValue } from '@/server/llm/core/vercel-bridge'
+import type { KinbotMessage, KinbotMessageBlock } from '@/server/llm/llm/types'
 import { resolveThinkingConfig, isContextTooLargeError, sanitizePersistedToolCalls } from '@/server/services/kin-engine'
 import { toolRegistry } from '@/server/tools/index'
 import { resolveMCPTools } from '@/server/services/mcp'
@@ -35,9 +34,8 @@ const log = createLogger('tasks')
 function stripToolExecute(tools: Record<string, Tool>): Record<string, Tool> {
   const schemas: Record<string, Tool> = {}
   for (const [name, t] of Object.entries(tools)) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { execute, ...rest } = t as Record<string, unknown>
-    schemas[name] = rest as Tool
+    const { execute: _execute, ...rest } = t
+    schemas[name] = rest
   }
   return schemas
 }
@@ -865,24 +863,23 @@ async function executeSubKin(taskId: string, isNudge = false) {
       .orderBy(asc(messages.createdAt))
       .all()
 
-    // Reconstruct ModelMessage[] from persisted rows. Mirrors the quick-session
-    // path in kin-engine.ts (~L2150): assistant rows with persisted tool calls
-    // are expanded into an assistant message carrying tool-call blocks plus a
-    // paired `tool`-role message with the results, so the LLM sees the same
-    // shape on resume that it saw mid-turn. The simple `{ role, content }` cast
-    // we used before dropped tool calls AND let empty-content rows reach
-    // `buildSegmentedMessages`, which then attached `cache_control` to an
-    // empty text block (Anthropic rejects this with
-    // `cache_control cannot be set for empty text blocks`). Observed when a
+    // Reconstruct KinbotMessage[] from persisted rows. Mirrors the
+    // quick-session path in kin-engine.ts (~L2150): assistant rows with
+    // persisted tool calls are expanded into an assistant message carrying
+    // tool-use blocks plus a paired user-role message with the tool-result
+    // blocks, so the LLM sees the same shape on resume that it saw
+    // mid-turn. We also skip empty-content rows so they don't reach
+    // `buildSegmentedMessages` and get picked as a cache anchor (Anthropic
+    // rejects `cache_control` on empty text blocks). Observed when a
     // sub-Kin called `request_input` (only a tool call, no text) and the
-    // response message arrived: the in-between assistant row had empty content
-    // and was picked as the cross-turn cache anchor.
-    const messageHistory: ModelMessage[] = []
+    // response message arrived: the in-between assistant row had empty
+    // content and was picked as the cross-turn cache anchor.
+    const messageHistory: KinbotMessage[] = []
     for (const msg of taskMessages) {
       if (msg.role === 'user') {
         const text = msg.content ?? ''
         if (!text.trim()) continue
-        messageHistory.push({ role: 'user', content: text })
+        messageHistory.push({ role: 'user', content: [{ type: 'text', text }] })
       } else if (msg.role === 'assistant') {
         let parsedToolCalls: Array<{ id: string; name: string; args: unknown; result?: unknown }> | null = null
         if (msg.toolCalls) {
@@ -890,28 +887,24 @@ async function executeSubKin(taskId: string, isNudge = false) {
         }
         const validToolCalls = parsedToolCalls ? sanitizePersistedToolCalls(parsedToolCalls, task.parentKinId) : []
         if (validToolCalls.length > 0) {
-          const assistantContent: Array<
-            | { type: 'text'; text: string }
-            | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
-          > = []
-          if (msg.content) assistantContent.push({ type: 'text', text: msg.content })
+          const assistantBlocks: KinbotMessageBlock[] = []
+          if (msg.content) assistantBlocks.push({ type: 'text', text: msg.content })
           for (const tc of validToolCalls) {
-            assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+            assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
           }
-          messageHistory.push({ role: 'assistant', content: assistantContent })
+          messageHistory.push({ role: 'assistant', content: assistantBlocks })
           messageHistory.push({
-            role: 'tool' as const,
+            role: 'user',
             content: validToolCalls.map((tc) => ({
-              type: 'tool-result' as const,
-              toolCallId: tc.id,
-              toolName: tc.name,
-              output: { type: 'json' as const, value: (tc.result ?? null) as import('ai').JSONValue },
+              type: 'tool-result',
+              toolUseId: tc.id,
+              content: stringifyToolResultValue(tc.result),
             })),
           })
         } else {
           const text = msg.content ?? ''
           if (text.trim()) {
-            messageHistory.push({ role: 'assistant', content: text })
+            messageHistory.push({ role: 'assistant', content: [{ type: 'text', text }] })
           }
         }
       }
@@ -919,7 +912,10 @@ async function executeSubKin(taskId: string, isNudge = false) {
 
     // Add initial task instruction as user message if no history yet
     if (messageHistory.length === 0) {
-      messageHistory.push({ role: 'user', content: task.description })
+      messageHistory.push({
+        role: 'user',
+        content: [{ type: 'text', text: task.description }],
+      })
 
       // Save to DB
       const initialMsgId = uuid()
@@ -1002,7 +998,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
     activeTaskAbortControllers.set(taskId, abortController)
 
     // Convert tools to kinbot shape once.
-    const { vercelToolsToKinbot: taskVercelToolsToKinbot, markLastKinbotToolCacheable: taskMarkLastKinbotToolCacheable, splitSystemFromVercelMessages: taskSplitSystemFromVercelMessages } =
+    const { vercelToolsToKinbot: taskVercelToolsToKinbot, markLastKinbotToolCacheable: taskMarkLastKinbotToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
     const taskKinbotTools = hasTools
       ? taskMarkLastKinbotToolCacheable(await taskVercelToolsToKinbot(stripToolExecute(tools)))
@@ -1026,8 +1022,8 @@ async function executeSubKin(taskId: string, isNudge = false) {
     for (; step < maxSteps; step++) {
       if (abortController.signal.aborted) break
 
-      const vercelMessages = buildSegmentedMessages(systemSegments, messageHistory)
-      const { system: taskSystem, messages: taskMessages } = taskSplitSystemFromVercelMessages(vercelMessages)
+      const { system: taskSystem, messages: taskMessages } =
+        buildSegmentedMessages(systemSegments, messageHistory)
       const stream = taskResolved.provider.chat(
         taskResolved.model,
         {
@@ -1098,13 +1094,10 @@ async function executeSubKin(taskId: string, isNudge = false) {
       }
 
       // Build assistant content for history
-      const assistantContent: Array<
-        | { type: 'text'; text: string }
-        | { type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }
-      > = []
-      if (stepText) assistantContent.push({ type: 'text', text: stepText })
+      const assistantBlocks: KinbotMessageBlock[] = []
+      if (stepText) assistantBlocks.push({ type: 'text', text: stepText })
       for (const tc of stepToolCalls) {
-        assistantContent.push({ type: 'tool-call', toolCallId: tc.id, toolName: tc.name, input: tc.args })
+        assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
       }
 
       // Execute tool calls (concurrently if all read-only, sequentially otherwise)
@@ -1164,9 +1157,18 @@ async function executeSubKin(taskId: string, isNudge = false) {
         }
       }
 
-      // Append assistant message (with tool calls) + tool results to history for next step
-      messageHistory.push({ role: 'assistant', content: assistantContent })
-      messageHistory.push({ role: 'tool' as const, content: batch.toolResults })
+      // Append assistant message (with tool calls) + tool results to history
+      // for next step. Tool results live as a user-role message in kinbot's
+      // shape (Anthropic-style).
+      messageHistory.push({ role: 'assistant', content: assistantBlocks })
+      messageHistory.push({
+        role: 'user',
+        content: batch.toolResults.map((tr) => ({
+          type: 'tool-result',
+          toolUseId: tr.toolCallId,
+          content: stringifyToolResultValue(tr.output.value),
+        })),
+      })
 
       // Text accumulates across steps so tool call offsets remain valid
     }

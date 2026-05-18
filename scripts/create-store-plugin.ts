@@ -97,8 +97,7 @@ await writeFile(
 )
 
 // index.ts
-const indexTs = `import { tool } from 'ai'
-import { z } from 'zod'
+const indexTs = `import { tool, z } from '@kinbot/sdk'
 
 /**
  * ${description}
@@ -110,7 +109,7 @@ export default function(ctx: any) {
     tools: {
       example_tool: tool({
         description: 'An example tool. Replace this with your own.',
-        parameters: z.object({
+        inputSchema: z.object({
           input: z.string().describe('Input text'),
         }),
         execute: async ({ input }) => {

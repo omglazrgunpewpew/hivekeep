@@ -508,8 +508,7 @@ Settings are stored in the `plugin_configs` table (new), keyed by plugin name.
 **`plugins/weather/index.ts`**
 ```typescript
 import type { PluginContext, PluginExports } from 'kinbot/plugin'
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx: PluginContext): PluginExports {
   const { apiKey, units } = ctx.config
@@ -611,8 +610,7 @@ export default function(ctx: PluginContext): PluginExports {
 **`plugins/twilio-sms/index.ts`**
 ```typescript
 import type { PluginContext, PluginExports } from 'kinbot/plugin'
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 export default function(ctx: PluginContext): PluginExports {
   const { accountSid, authToken, fromNumber } = ctx.config

@@ -1,15 +1,14 @@
 /**
  * Helpers for annotating LLM requests with Anthropic prompt-caching hints.
  *
- * The Vercel AI SDK supports per-message and per-tool `providerOptions`. The
- * Anthropic provider translates `providerOptions.anthropic.cacheControl` into
- * the `cache_control` field on the underlying API blocks. Other providers
- * silently ignore unknown `providerOptions` keys, so these annotations are
- * multi-provider safe.
+ * Cache hints are encoded as `cacheControl: { type: 'ephemeral' }` on the
+ * individual `KinbotMessageBlock` carrying the breakpoint. The Anthropic
+ * provider promotes those hints to `cache_control` on the matching API
+ * block; other providers ignore them.
  *
  * The Anthropic API allows up to 4 cache breakpoints per request. KinBot uses:
  *   - end of the stable system segment           (BP1)
- *   - end of the tools list (last tool)          (BP2 — markLastToolCacheable)
+ *   - end of the tools list (last tool)          (BP2 — markLastKinbotToolCacheable)
  *   - last historical message before the new user msg  (BP3 — cross-turn cache)
  *   - very last message of the request           (BP4 — within-turn step cache)
  *
@@ -22,153 +21,183 @@
  * Pattern Anthropic's request looks like (with cache breakpoints):
  *
  *   [stable system, BP1]
- *   [user_1] [assistant_1] [tool_1] ... [assistant_(N-1), BP3]
+ *   [user_1] [assistant_1] [tool_1] ... [assistant_(N-1) last block, BP3]
  *   [user_N: <system-reminder>volatile</system-reminder> + actual content, BP4]
  *
  * Across turns, BP3 grows monotonically (each new turn extends the cached
  * prefix by one assistant/tool message). Within a turn (across tool steps),
  * BP4 ensures successive requests can read each other's cache.
  */
-import type { ModelMessage } from '@/server/tools/tool-helper'
-import type { Tool } from '@ai-sdk/provider-utils'
+import type {
+  KinbotMessage,
+  KinbotMessageBlock,
+  SystemPrompt,
+} from '@/server/llm/llm/types'
 
 /**
- * True when `message` would serialize to an empty content array, or to a single
- * empty text block. The Anthropic API rejects `cache_control` on empty text
- * blocks with `cache_control cannot be set for empty text blocks`, so callers
- * that pick cache anchors should skip such messages.
+ * True when no block in the message can carry a cache_control hint.
+ * Anthropic rejects `cache_control` on empty text blocks; non-text blocks
+ * (image, tool_use, tool_result, thinking) accept it. So a message is
+ * "effectively empty" only when all of its blocks are empty text blocks
+ * (or the block list is itself empty).
  */
-function isEffectivelyEmptyMessage(message: ModelMessage): boolean {
-  const c = (message as { content: unknown }).content
-  if (c == null) return true
-  if (typeof c === 'string') return c.length === 0
-  if (Array.isArray(c)) {
-    if (c.length === 0) return true
-    // A single text block with no text is the failure case.
-    if (c.length === 1) {
-      const only = c[0] as { type?: string; text?: string } | undefined
-      if (only && only.type === 'text' && (!only.text || only.text.length === 0)) return true
+function isEffectivelyEmptyMessage(message: KinbotMessage): boolean {
+  if (message.content.length === 0) return true
+  for (const block of message.content) {
+    if (block.type === 'text') {
+      if (block.text && block.text.length > 0) return false
+    } else {
+      return false
     }
   }
-  return false
-}
-
-/** Add an `ephemeral` cache_control breakpoint to a message. */
-export function withAnthropicCache<M extends ModelMessage>(message: M): M {
-  return {
-    ...message,
-    providerOptions: {
-      ...(message.providerOptions ?? {}),
-      anthropic: {
-        ...((message.providerOptions?.anthropic as Record<string, unknown> | undefined) ?? {}),
-        cacheControl: { type: 'ephemeral' as const },
-      },
-    },
-  }
+  return true
 }
 
 /**
- * Add a `cache_control: ephemeral` breakpoint on the last tool definition.
- * The Anthropic API caches the entire tools block as a single prefix, so
- * marking the last entry is sufficient to make the whole list cacheable.
+ * Find the index of the last block that can carry a `cache_control` hint.
+ * Prefers a non-empty text block; falls back to image, tool_use, or
+ * tool_result blocks when only those are available — useful for tool-loop
+ * steps where the last message is a `[{tool-result}]` user turn.
  *
- * Tool insertion order is deterministic (capTools preserves it: protected →
- * native → MCP → custom), so the "last tool" is stable across turns of the
- * same session.
+ * Thinking blocks are intentionally skipped: cache hints should anchor on
+ * stable, replayed content, and thinking blocks are stripped by some
+ * providers in subsequent turns.
+ *
+ * Returns -1 when no block in the message can carry the hint.
  */
-export function markLastToolCacheable(tools: Record<string, Tool> | undefined): Record<string, Tool> | undefined {
-  if (!tools) return tools
-  const entries = Object.entries(tools)
-  if (entries.length === 0) return tools
-  const lastEntry = entries[entries.length - 1]
-  if (!lastEntry) return tools
-  const [lastName, lastTool] = lastEntry
-  return {
-    ...tools,
-    [lastName]: {
-      ...lastTool,
-      providerOptions: {
-        ...(lastTool.providerOptions ?? {}),
-        anthropic: {
-          ...((lastTool.providerOptions?.anthropic as Record<string, unknown> | undefined) ?? {}),
-          cacheControl: { type: 'ephemeral' as const },
-        },
-      },
-    },
+function findCacheAnchorBlockIdx(blocks: readonly KinbotMessageBlock[]): number {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i]!
+    if (b.type === 'text') {
+      if (b.text && b.text.length > 0) return i
+      continue
+    }
+    if (b.type === 'thinking') continue
+    return i
   }
+  return -1
 }
 
 /**
- * Find the index of the last user message in a history array. Returns -1 if
- * none. This is "the new turn's message" — even during a multi-step tool loop,
- * the last user message is what triggered the current turn.
+ * Return a copy of the message with an `ephemeral` cache_control hint on
+ * the block returned by {@link findCacheAnchorBlockIdx}. No-op when the
+ * message has no carriable block.
  */
-function findLastUserMessageIndex(history: ModelMessage[]): number {
+function withCacheBreakpoint(message: KinbotMessage): KinbotMessage {
+  const idx = findCacheAnchorBlockIdx(message.content)
+  if (idx < 0) return message
+  const cloned: KinbotMessageBlock[] = message.content.slice()
+  const target = cloned[idx]!
+  // findCacheAnchorBlockIdx never returns a thinking block, so the target
+  // always has a `cacheControl` field in its type.
+  if (target.type === 'text') {
+    cloned[idx] = { ...target, cacheControl: { type: 'ephemeral' } }
+  } else if (target.type === 'image') {
+    cloned[idx] = { ...target, cacheControl: { type: 'ephemeral' } }
+  } else if (target.type === 'tool-use') {
+    cloned[idx] = { ...target, cacheControl: { type: 'ephemeral' } }
+  } else if (target.type === 'tool-result') {
+    cloned[idx] = { ...target, cacheControl: { type: 'ephemeral' } }
+  }
+  return { ...message, content: cloned }
+}
+
+/**
+ * True when a user message is purely a tool-result reply (no text, image,
+ * or other "real" user input). These messages are the user-role wrapper
+ * around tool outputs in the Anthropic convention — they are NOT what
+ * triggered the current turn.
+ */
+function isToolResultOnlyMessage(msg: KinbotMessage): boolean {
+  if (msg.role !== 'user') return false
+  if (msg.content.length === 0) return false
+  for (const block of msg.content) {
+    if (block.type !== 'tool-result') return false
+  }
+  return true
+}
+
+/**
+ * Find the index of the last "real" user message in a history array.
+ * Tool-result-only user messages are skipped — they are responses to the
+ * assistant's tool calls, not new user input. Returns -1 when none.
+ *
+ * Even during a multi-step tool loop, the last real user message is what
+ * triggered the current turn, which is where the volatile system reminder
+ * must be attached.
+ */
+function findLastUserMessageIndex(history: readonly KinbotMessage[]): number {
   for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i]!.role === 'user') return i
+    const msg = history[i]!
+    if (msg.role === 'user' && !isToolResultOnlyMessage(msg)) return i
   }
   return -1
 }
 
 /**
  * Wrap volatile context as a `<system-reminder>` block and prepend it to a
- * user message's content. Mirrors the convention Claude is trained to handle
- * for runtime hints injected outside the system prompt.
+ * user message's content. Mirrors the convention Claude is trained to
+ * handle for runtime hints injected outside the system prompt.
+ *
+ * Skipped (returns the input unchanged) when the message is not a user
+ * message — buildSegmentedMessages ensures this is only called on the
+ * last user message.
  */
-function prependVolatileToUserMessage(msg: ModelMessage, volatile: string): ModelMessage {
+function prependVolatileToUserMessage(
+  msg: KinbotMessage,
+  volatile: string,
+): KinbotMessage {
   if (msg.role !== 'user') return msg
   const reminder = `<system-reminder>\n${volatile}\n</system-reminder>`
-  if (typeof msg.content === 'string') {
-    return { ...msg, content: `${reminder}\n\n${msg.content}` }
+  return {
+    ...msg,
+    content: [{ type: 'text' as const, text: reminder }, ...msg.content],
   }
-  if (Array.isArray(msg.content)) {
-    return {
-      ...msg,
-      content: [
-        { type: 'text' as const, text: reminder },
-        ...msg.content,
-      ],
-    }
-  }
-  return msg
 }
 
 /**
- * Build the `messages` array sent to streamText.
+ * Build the request that goes to `LLMProvider.chat()`.
  *
- * Strategy:
- *   1. Stable system segment goes first with a cache breakpoint (BP1).
- *   2. Conversation history follows in its raw form (no rewriting between
- *      turns — see PROGRESSIVE_COMPACTION env flag).
- *   3. The volatile segment is wrapped in a `<system-reminder>` block and
- *      prepended to the new user message's content, so it sits AFTER the
- *      cacheable historical prefix.
- *   4. A cache breakpoint (BP_HISTORY) is placed on the message immediately
- *      BEFORE the new user message — this is the "cross-turn" cache anchor
- *      that grows monotonically as the conversation progresses.
- *   5. A cache breakpoint (BP_LAST) is placed on the very last message of the
- *      request — this is the "within-turn" cache anchor used across the
- *      multiple `streamText` calls of a single tool loop.
+ * Returns:
+ *   - `system`: the stable system segment as a single text block carrying
+ *     BP1, or `undefined` when the stable segment is empty.
+ *   - `messages`: the conversation history with BP3 and BP4 anchored on the
+ *     appropriate blocks, and the volatile segment prepended as a
+ *     `<system-reminder>` text block on the last user message.
  *
  * Edge cases:
- *   - Empty history: just the stable system block (BP1).
- *   - No volatile content: skip the system-reminder injection.
+ *   - Empty history: no messages. Volatile is dropped (it must sit AFTER
+ *     the cacheable prefix on a user message; there is no user message to
+ *     attach it to).
+ *   - No volatile content: skip the `<system-reminder>` injection.
  *   - No user message in history (degenerate): treat the last entry as the
- *     "new" message and skip BP_HISTORY.
+ *     "new" message and skip BP3.
+ *   - The natural BP3 anchor is an empty-text-only message (e.g. a
+ *     sub-Kin row created during `request_input` resume): walk back to a
+ *     prior message that has carriable content. Same safety for BP4.
  */
 export function buildSegmentedMessages(
   segments: { stable: string; volatile: string },
-  history: ModelMessage[],
-): ModelMessage[] {
-  const out: ModelMessage[] = []
-  if (segments.stable) {
-    out.push(withAnthropicCache({ role: 'system', content: segments.stable }))
+  history: KinbotMessage[],
+): { system: SystemPrompt | undefined; messages: KinbotMessage[] } {
+  const system: SystemPrompt | undefined = segments.stable
+    ? [
+        {
+          type: 'text',
+          text: segments.stable,
+          cacheControl: { type: 'ephemeral' },
+        },
+      ]
+    : undefined
+
+  if (history.length === 0) {
+    return { system, messages: [] }
   }
-  if (history.length === 0) return out
 
   const lastUserIdx = findLastUserMessageIndex(history)
+  const out: KinbotMessage[] = []
   // Index in `out` of the message just BEFORE the new user message.
-  // Used as the cross-turn cache breakpoint anchor.
+  // Used as the cross-turn cache breakpoint anchor (BP3).
   let crossTurnAnchorIdx = -1
 
   for (let i = 0; i < history.length; i++) {
@@ -183,30 +212,30 @@ export function buildSegmentedMessages(
     }
   }
 
-  // BP_HISTORY: cache the prefix up to (but not including) the new user
-  // message. This anchor is what grows across turns: each new turn's history
-  // includes the previous turn's user+assistant messages, extending the
-  // cacheable prefix.
-  //
-  // Safety: walk back if the natural anchor would serialize to an empty text
-  // block — Anthropic rejects cache_control on empty text blocks. This should
-  // not happen if upstream history reconstruction is correct, but it shields
-  // the whole request from failing on a single corrupt row.
+  // BP3 — cache the prefix up to (but not including) the new user message.
+  // This anchor is what grows across turns. Walk back if the natural anchor
+  // would have no carriable block.
   let anchorIdx = crossTurnAnchorIdx
-  while (anchorIdx >= 0 && isEffectivelyEmptyMessage(out[anchorIdx]!)) anchorIdx--
+  while (anchorIdx >= 0 && isEffectivelyEmptyMessage(out[anchorIdx]!)) {
+    anchorIdx--
+  }
   if (anchorIdx >= 0) {
-    out[anchorIdx] = withAnthropicCache(out[anchorIdx]!)
+    out[anchorIdx] = withCacheBreakpoint(out[anchorIdx]!)
   }
 
-  // BP_LAST: cache the entire request prefix including the new user message.
-  // Mainly useful for within-turn step caching (multi-step tool loops re-call
-  // streamText with the same prefix plus an appended assistant/tool result).
-  // If the last message IS the cross-turn anchor (degenerate single-message
-  // history), don't double-mark.
+  // BP4 — cache the entire prefix including the new user message. Useful
+  // for within-turn step caching (multi-step tool loops re-call chat() with
+  // the same prefix plus an appended assistant/tool result). If the last
+  // message IS the cross-turn anchor (degenerate single-message history),
+  // don't double-mark.
   const lastIdx = out.length - 1
-  if (lastIdx > 0 && lastIdx !== anchorIdx && !isEffectivelyEmptyMessage(out[lastIdx]!)) {
-    out[lastIdx] = withAnthropicCache(out[lastIdx]!)
+  if (
+    lastIdx > 0 &&
+    lastIdx !== anchorIdx &&
+    !isEffectivelyEmptyMessage(out[lastIdx]!)
+  ) {
+    out[lastIdx] = withCacheBreakpoint(out[lastIdx]!)
   }
 
-  return out
+  return { system, messages: out }
 }

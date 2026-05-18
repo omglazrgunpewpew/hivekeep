@@ -1,5 +1,4 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 
 /**
  * Home Automation plugin for KinBot.

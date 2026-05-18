@@ -16,8 +16,7 @@
  * context (modality, presence, channel info) without polluting `content`.
  */
 
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 import { randomUUID } from 'node:crypto'
 import {
   getOrCreateClient,

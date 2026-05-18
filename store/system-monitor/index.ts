@@ -1,5 +1,4 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool, z } from '@kinbot/sdk'
 import { execSync } from 'node:child_process'
 import * as os from 'node:os'
 import * as fs from 'node:fs'
