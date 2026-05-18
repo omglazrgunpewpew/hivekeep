@@ -66,7 +66,38 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
   const defaultType = types[0] ?? catalogue.types[0] ?? ''
   const [providerType, setProviderType] = useState<string>(defaultType)
   const [providerName, setProviderName] = useState('')
-  const [apiKey, setApiKey] = useState('')
+  /** Free-form per-field values, keyed by the provider's configSchema
+   *  field.key. Only fields the user actually touched end up in the
+   *  payload submitted to the server. */
+  const [configValues, setConfigValues] = useState<Record<string, string>>({})
+
+  // Reset config values when the selected type changes — each provider has
+  // its own configSchema with its own field names.
+  useEffect(() => {
+    setConfigValues({})
+    setTestPassed(false)
+    setError('')
+  }, [providerType])
+
+  const configSchema = catalogue.configSchemas[providerType] ?? []
+
+  /** Returns the resolved config object (only non-empty fields). Used by
+   *  both the test-connection action and the save action. */
+  const buildConfig = (): Record<string, string> => {
+    const out: Record<string, string> = {}
+    if (configSchema.length > 0) {
+      for (const field of configSchema) {
+        const v = configValues[field.key]?.trim()
+        if (v) out[field.key] = v
+      }
+    } else {
+      // Defensive fallback for legacy providers with no declared schema —
+      // ship whatever the user typed under the conventional `apiKey` key.
+      const v = configValues.apiKey?.trim()
+      if (v) out.apiKey = v
+    }
+    return out
+  }
   /** When the selected type advertises multiple families (LLM / Embeddings /
    *  Images), the user picks which ones to actually create. Defaults to all
    *  three on first render; reset to all whenever the type changes. */
@@ -77,7 +108,7 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
     if (open && provider) {
       setProviderType(provider.type)
       setProviderName(provider.name)
-      setApiKey('')
+      setConfigValues({})
       setError('')
       setTestPassed(false)
     } else if (open && !provider) {
@@ -88,7 +119,7 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
   const resetForm = () => {
     setProviderType(defaultType)
     setProviderName('')
-    setApiKey('')
+    setConfigValues({})
     setSelectedFamilies([])
     setError('')
     setTestPassed(false)
@@ -150,11 +181,10 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
     setTestPassed(false)
 
     try {
-      const config: Record<string, string> = {}
-      if (apiKey) config.apiKey = apiKey
+      const config = buildConfig()
 
-      // For edit mode without new apiKey, test the existing provider
-      if (isEditing && !apiKey) {
+      // For edit mode without new config, test the existing provider as-is.
+      if (isEditing && Object.keys(config).length === 0) {
         const result = await api.post<{ valid: boolean; error?: string }>(`/providers/${provider!.id}/test`)
         if (result.valid) {
           setTestPassed(true)
@@ -189,19 +219,16 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
       if (isEditing) {
         const body: Record<string, unknown> = {}
         if (providerName !== provider!.name) body.name = providerName || provider!.type
-        const config: Record<string, string> = {}
-        if (apiKey) config.apiKey = apiKey
+        const config = buildConfig()
         if (Object.keys(config).length > 0) body.config = config
         if (providerName !== provider!.name || Object.keys(config).length > 0) {
           await api.patch(`/providers/${provider!.id}`, body)
         }
       } else {
-        const config: Record<string, string> = {}
-        if (apiKey) config.apiKey = apiKey
         await api.post('/providers', {
           name: providerName || (catalogue.displayNames[providerType] ?? providerType),
           type: providerType,
-          config,
+          config: buildConfig(),
           // Only send `families` when the picker was actually shown — otherwise
           // the backend defaults to "every family the type supports", which is
           // exactly what we want for single-family providers.
@@ -220,7 +247,7 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
 
   // In edit mode, the user can save name-only changes without re-testing
   const nameChanged = isEditing && providerName !== provider!.name
-  const configChanged = !!apiKey
+  const configChanged = Object.keys(buildConfig()).length > 0
   const canSaveWithoutTest = isEditing && nameChanged && !configChanged
   // Block save when the family picker is shown and no family is selected —
   // the backend would reject this with NO_FAMILIES; surface the constraint
@@ -294,45 +321,59 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">
-              {isApiKeyOptional ? t('onboarding.providers.credentialsPath') : t('onboarding.providers.apiKey')}
-              {(isEditing || isApiKeyOptional) && (
-                <span className="ml-1 text-xs text-muted-foreground">
-                  ({isApiKeyOptional ? t('onboarding.providers.credentialsPathHint') : t('onboarding.providers.apiKeyEditHint')})
-                </span>
-              )}
-            </Label>
-            {isApiKeyOptional ? (
-              <Input
-                id="apiKey"
-                type="text"
-                value={apiKey}
-                onChange={(e) => { setApiKey(e.target.value); resetTest() }}
-                autoComplete="off"
-                placeholder={CREDENTIALS_PATH_PLACEHOLDERS[providerType] ?? ''}
-              />
-            ) : (
-              <PasswordInput
-                id="apiKey"
-                value={apiKey}
-                onChange={(e) => { setApiKey(e.target.value); resetTest() }}
-                autoComplete="off"
-                placeholder={isEditing ? '••••••••' : undefined}
-              />
-            )}
-            {apiKeyUrl && !isEditing && (
-              <a
-                href={apiKeyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                {t('onboarding.providers.getApiKey', { provider: catalogue.displayNames[providerType] ?? providerType })}
-                <ExternalLink className="size-3" />
-              </a>
-            )}
-          </div>
+          {/* Dynamic config form — one input per ConfigField declared by
+              the provider's `configSchema` (LLMProvider / EmbeddingProvider
+              / ImageProvider). Built-ins and plugin providers go through
+              the same path here, so a plugin author can declare `apiToken`,
+              `region`, `baseUrl`, … and the form renders accordingly. */}
+          {(configSchema.length > 0
+            ? configSchema
+            : [{ key: 'apiKey', type: 'secret' as const, label: t('onboarding.providers.apiKey'), required: true }]
+          ).map((field) => {
+            const isSecret = field.type === 'secret'
+            const Tag = isSecret ? PasswordInput : Input
+            return (
+              <div key={field.key} className="space-y-2">
+                <Label htmlFor={field.key}>
+                  {field.label}
+                  {isEditing && (
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      ({t('onboarding.providers.apiKeyEditHint')})
+                    </span>
+                  )}
+                </Label>
+                <Tag
+                  id={field.key}
+                  type={field.type === 'url' ? 'url' : 'text'}
+                  value={configValues[field.key] ?? ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setConfigValues((v) => ({ ...v, [field.key]: e.target.value }))
+                    resetTest()
+                  }}
+                  autoComplete="off"
+                  placeholder={
+                    field.placeholder
+                    ?? (isSecret && isEditing ? '••••••••' : undefined)
+                    ?? (field.type === 'path' ? CREDENTIALS_PATH_PLACEHOLDERS[providerType] ?? '' : undefined)
+                  }
+                />
+                {field.description && (
+                  <p className="text-xs text-muted-foreground">{field.description}</p>
+                )}
+              </div>
+            )
+          })}
+          {apiKeyUrl && !isEditing && (
+            <a
+              href={apiKeyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              {t('onboarding.providers.getApiKey', { provider: catalogue.displayNames[providerType] ?? providerType })}
+              <ExternalLink className="size-3" />
+            </a>
+          )}
 
           {showsFamilyPicker && (
             <div className="space-y-2">
@@ -375,7 +416,15 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
                 type="button"
                 variant="secondary"
                 onClick={handleTestConnection}
-                disabled={isTesting || (!isEditing && !isApiKeyOptional && !hasOptionalApiKey && !apiKey)}
+                disabled={
+                  isTesting
+                  || (!isEditing
+                    && !isApiKeyOptional
+                    && !hasOptionalApiKey
+                    // All required fields must have a value before testing.
+                    && configSchema.some((f) => f.required && !configValues[f.key]?.trim())
+                  )
+                }
               >
                 {isTesting ? (
                   <>
