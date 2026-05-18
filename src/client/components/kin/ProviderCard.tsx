@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { Card, CardContent } from '@/client/components/ui/card'
-import { AlertTriangle, Brain, Globe, Image, Loader2, Pencil, RefreshCw, Search } from 'lucide-react'
+import { AlertTriangle, Brain, Globe, Image, List, Loader2, Pencil, RefreshCw, Search } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { PROVIDER_DISPLAY_NAMES } from '@/shared/constants'
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
 import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteButton'
+import { ProviderModelsModal } from '@/client/components/kin/ProviderModelsModal'
 
 const CAPABILITY_ICONS: Record<string, typeof Brain> = {
   llm: Brain,
@@ -40,6 +42,7 @@ interface ProviderCardProps {
 
 export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: ProviderCardProps) {
   const { t } = useTranslation()
+  const [modelsOpen, setModelsOpen] = useState(false)
 
   return (
     <Card className="surface-card">
@@ -93,6 +96,25 @@ export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: 
               </Badge>
             )
           })}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => setModelsOpen(true)}
+                  disabled={!provider.isValid}
+                >
+                  <List className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {provider.isValid
+                  ? t('settings.providers.modelsModal.openTooltip', 'Browse models exposed by this provider')
+                  : t('settings.providers.modelsModal.invalidTooltip', 'Re-test this provider before browsing its models')}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {onTest && (
             <Button
               variant="ghost"
@@ -125,6 +147,12 @@ export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: 
           )}
         </div>
       </CardContent>
+      <ProviderModelsModal
+        open={modelsOpen}
+        onOpenChange={setModelsOpen}
+        providerId={provider.id}
+        providerName={provider.name}
+      />
     </Card>
   )
 }

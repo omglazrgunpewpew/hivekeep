@@ -410,4 +410,70 @@ providerRoutes.get('/models', async (c) => {
   return c.json({ models })
 })
 
+// GET /api/providers/:id/models — list every model the given provider
+// exposes, one entry per (family, model). Used by the "browse models"
+// modal on each provider card. Hits the provider's API live (same path
+// as the global /models endpoint) so the list reflects the current
+// catalogue, not a cache. A failed family is reported in `errors`
+// rather than failing the whole request — useful when one family's
+// catalogue endpoint is down but the others still work.
+providerRoutes.get('/:id/models', async (c) => {
+  const id = c.req.param('id')
+  const existing = await db.select().from(providers).where(eq(providers.id, id)).get()
+  if (!existing) {
+    return c.json({ error: { code: 'PROVIDER_NOT_FOUND', message: 'Provider not found' } }, 404)
+  }
+
+  const rowCaps = (JSON.parse(existing.capabilities) as string[]).filter(
+    (c): c is 'llm' | 'embedding' | 'image' => c === 'llm' || c === 'embedding' || c === 'image',
+  )
+
+  if (!existing.isValid) {
+    return c.json({
+      provider: { id: existing.id, name: existing.name, type: existing.type, slug: existing.slug },
+      capabilities: rowCaps,
+      models: [],
+      errors: [{ capability: '*', message: existing.lastError ?? 'Provider is marked invalid — re-test before browsing models.' }],
+    })
+  }
+
+  const providerConfig = JSON.parse(await decrypt(existing.configEncrypted))
+  const models: Array<{
+    id: string
+    name: string
+    capability: string
+    contextWindow?: number
+    maxOutput?: number
+    supportsImageInput?: boolean
+  }> = []
+  const errors: Array<{ capability: string; message: string }> = []
+
+  for (const family of rowCaps) {
+    try {
+      const list = await listModelsForProvider(existing.type, providerConfig, family)
+      for (const m of list) {
+        models.push({
+          id: m.id,
+          name: m.name,
+          capability: m.capability,
+          ...(m.contextWindow != null ? { contextWindow: m.contextWindow } : {}),
+          ...(m.maxOutput != null ? { maxOutput: m.maxOutput } : {}),
+          ...(m.capability === 'image' && m.supportsImageInput != null ? { supportsImageInput: m.supportsImageInput } : {}),
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      log.warn({ providerId: id, family, err: message }, 'listModels failed while building provider model browser')
+      errors.push({ capability: family, message })
+    }
+  }
+
+  return c.json({
+    provider: { id: existing.id, name: existing.name, type: existing.type, slug: existing.slug },
+    capabilities: rowCaps,
+    models,
+    errors,
+  })
+})
+
 export { providerRoutes }
