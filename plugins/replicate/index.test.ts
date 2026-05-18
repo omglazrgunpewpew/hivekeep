@@ -428,6 +428,82 @@ describe('replicate plugin — Image provider', () => {
     expect(models[1]?.supportsImageInput).toBe(true)
   })
 
+  it('falls back to /predictions + version hash when the model-routed endpoint 404s (non-official models, LoRAs, fine-tunes)', async () => {
+    const { ctx, calls, pushResponse } = makeCtx()
+    const image = pickProvider(replicatePlugin(ctx), isImage)
+
+    // 1) Model-routed prediction 404s — Replicate reserves
+    //    /models/{owner}/{name}/predictions for "official models".
+    pushResponse(404, { detail: 'The requested resource could not be found.', status: 404 })
+    // 2) Fallback: fetch the model to get its latest_version.id.
+    pushResponse(200, {
+      owner: 'marlburrow',
+      name: 'nicolas-lora',
+      latest_version: { id: 'abc123def456' },
+    })
+    // 3) Retry through /predictions with the version hash.
+    pushResponse(200, {
+      id: 'pred_lora',
+      status: 'succeeded',
+      output: ['https://replicate.delivery/lora/output.png'],
+      error: null,
+    })
+    // 4) Download the image.
+    pushResponse(200, new Uint8Array([0x89, 0x50, 0x4e, 0x47]), {
+      'Content-Type': 'image/png',
+    })
+
+    const result = await image.generate(
+      { id: 'marlburrow/nicolas-lora', name: 'Nicolas LoRA' },
+      { prompt: 'a portrait of Nicolas' },
+      { apiToken: 'r8_test' },
+    )
+
+    expect(result.mediaType).toBe('image/png')
+    expect(calls).toHaveLength(4)
+    expect(calls[0]!.url).toBe('https://api.replicate.com/v1/models/marlburrow/nicolas-lora/predictions')
+    expect(calls[1]!.url).toBe('https://api.replicate.com/v1/models/marlburrow/nicolas-lora')
+    expect(calls[2]!.url).toBe('https://api.replicate.com/v1/predictions')
+    // The retry body carries the version hash, not the model slug.
+    const retryBody = JSON.parse(calls[2]!.init!.body as string)
+    expect(retryBody.version).toBe('abc123def456')
+    expect(retryBody.model).toBeUndefined()
+    expect(retryBody.input.prompt).toBe('a portrait of Nicolas')
+  })
+
+  it('does NOT fall back when the model-routed endpoint returns a non-404 error', async () => {
+    const { ctx, calls, pushResponse } = makeCtx()
+    const image = pickProvider(replicatePlugin(ctx), isImage)
+
+    pushResponse(401, { detail: 'Unauthorized' })
+
+    await expect(
+      image.generate(
+        { id: 'whatever/model', name: 'Whatever' },
+        { prompt: 'x' },
+        { apiToken: 'r8_test' },
+      ),
+    ).rejects.toThrow(/401/)
+    // No retry — we only fall back on 404 specifically.
+    expect(calls).toHaveLength(1)
+  })
+
+  it('surfaces a friendly error when the fallback model has no published version', async () => {
+    const { ctx, pushResponse } = makeCtx()
+    const image = pickProvider(replicatePlugin(ctx), isImage)
+
+    pushResponse(404, { detail: 'not found' })
+    pushResponse(200, { owner: 'foo', name: 'bar', latest_version: null })
+
+    await expect(
+      image.generate(
+        { id: 'foo/bar', name: 'Foo' },
+        { prompt: 'x' },
+        { apiToken: 'r8_test' },
+      ),
+    ).rejects.toThrow(/no published version/)
+  })
+
   it('surfaces private LoRAs via customImageModels (real-world Replicate use case)', async () => {
     const { ctx, calls, pushResponse } = makeCtx()
     const image = pickProvider(replicatePlugin(ctx), isImage)

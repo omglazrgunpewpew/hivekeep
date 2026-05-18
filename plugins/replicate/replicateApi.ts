@@ -222,12 +222,51 @@ export class Replicate {
   /**
    * Convenience helper: create + wait. Always returns a `succeeded`
    * prediction. Throws on failure / cancellation / timeout.
+   *
+   * When called with `model: 'owner/name'` and Replicate replies 404,
+   * we transparently retry using the version-based path. Reason:
+   * `/v1/models/{owner}/{name}/predictions` only resolves for
+   * Replicate's "official models". Every other model — user-created
+   * fine-tunes, LoRAs, community models — needs the older
+   * `POST /v1/predictions` with `{ version: <latest_version.id> }`.
+   * The plugin doesn't know upfront which kind a model is, so we
+   * react to the 404 instead of branching ahead of time. One extra
+   * round-trip to fetch `latest_version.id` on first generation per
+   * non-official model; no caching since model versions can change.
    */
   async runPrediction<Output = unknown>(
     params: CreatePredictionParams,
     opts: { intervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {},
   ): Promise<ReplicatePrediction<Output>> {
-    const initial = await this.createPrediction<Output>({ ...params, wait: 60 })
+    let initial: ReplicatePrediction<Output>
+    try {
+      initial = await this.createPrediction<Output>({ ...params, wait: 60 })
+    } catch (err) {
+      if (
+        err instanceof ReplicateApiError
+        && err.status === 404
+        && params.model
+        && !params.version
+      ) {
+        const [owner, name] = params.model.split('/')
+        if (!owner || !name) throw err
+        const fresh = await this.getModel(owner, name)
+        const versionId = fresh.latest_version?.id
+        if (!versionId) {
+          throw new ReplicateApiError(
+            `Replicate model ${params.model} has no published version — cannot create a prediction.`,
+          )
+        }
+        initial = await this.createPrediction<Output>({
+          ...params,
+          model: undefined,
+          version: versionId,
+          wait: 60,
+        })
+      } else {
+        throw err
+      }
+    }
     if (initial.status === 'succeeded') return initial
     if (initial.status === 'failed' || initial.status === 'canceled') {
       throw new ReplicateApiError(
