@@ -82,7 +82,8 @@ const CONTEXT_BY_PREFIX: Array<[RegExp, number]> = [
   [/^o[0-9]/, 200_000],
 ]
 
-function inferContextWindow(modelId: string): number {
+/** @internal exported for tests. */
+export function inferContextWindow(modelId: string): number {
   for (const [pattern, value] of CONTEXT_BY_PREFIX) {
     if (pattern.test(modelId)) return value
   }
@@ -92,15 +93,19 @@ function inferContextWindow(modelId: string): number {
 /**
  * Reasoning models accept `low | medium | high`. OpenAI does not expose a
  * `max` level; kinbot's `max` downgrades to `high` at request time.
+ *
+ * @internal exported for tests.
  */
-function inferThinking(modelId: string): LLMModel['thinking'] | undefined {
+export function inferThinking(modelId: string): LLMModel['thinking'] | undefined {
   if (!REASONING_PATTERN.test(modelId)) return undefined
   return { efforts: ['low', 'medium', 'high'] }
 }
 
 /** Filter chat-completion-capable models out of the noise that `/v1/models`
- *  returns (embeddings, TTS, moderation, fine-tuning, etc.). */
-function isChatModel(id: string): boolean {
+ *  returns (embeddings, TTS, moderation, fine-tuning, etc.).
+ *
+ *  @internal exported for tests. */
+export function isChatModel(id: string): boolean {
   if (id.startsWith('text-embedding')) return false
   if (id.startsWith('tts-') || id.startsWith('whisper-')) return false
   if (id.startsWith('dall-e') || id.startsWith('gpt-image')) return false
