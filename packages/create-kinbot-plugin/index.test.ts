@@ -28,7 +28,7 @@ describe('generateManifest', () => {
     expect(manifest.description).toBe('A test plugin')
     expect(manifest.author).toBe('Tester')
     expect(manifest.main).toBe('index.ts')
-    expect(manifest.kinbot).toBe('>=0.40.0')
+    expect(manifest.kinbot).toBe('>=0.41.0')
   })
 })
 

@@ -17,7 +17,7 @@
  */
 
 import { tool, z } from '@kinbot-developer/sdk'
-import type { PluginContext } from '@kinbot-developer/sdk'
+import type { IncomingMessage, PluginContext } from '@kinbot-developer/sdk'
 import { randomUUID } from 'node:crypto'
 import {
   getOrCreateClient,
@@ -234,7 +234,7 @@ export default function (ctx: PluginContext) {
   // Channel adapter — only one TS server per KinBot install for the POC, so we
   // bind the singleton to whatever channel KinBot starts.
   let activeChannelId: string | null = null
-  let onMessage: ((m: import('@/server/channels/adapter').IncomingMessage) => Promise<void>) | null = null
+  let onMessage: ((m: IncomingMessage) => Promise<void>) | null = null
 
   // Restore last own_client_id from storage (purely informational, refresh on connect)
   const restoreOwnId = async (): Promise<void> => {
@@ -489,7 +489,7 @@ export default function (ctx: PluginContext) {
     async start(
       channelId: string,
       channelConfig: Record<string, unknown>,
-      msgHandler: (m: import('@/server/channels/adapter').IncomingMessage) => Promise<void>,
+      msgHandler: (m: IncomingMessage) => Promise<void>,
     ): Promise<void> {
       // The plugin is configured at plugin level, not per-channel. We use the
       // plugin config but also let the channel override wsUrl if it wants.

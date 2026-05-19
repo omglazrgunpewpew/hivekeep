@@ -99,7 +99,7 @@ export function generateManifest(opts: ScaffoldOptions): string {
     version: '0.1.0',
     description: opts.description,
     author: opts.author,
-    kinbot: '>=0.40.0',
+    kinbot: '>=0.41.0',
     main: 'index.ts',
     permissions: [],
     config: {},

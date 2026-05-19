@@ -51,14 +51,12 @@ export function useModels() {
   const llmModels = useMemo(() => models.filter((m) => m.capability === 'llm'), [models])
   const imageModels = useMemo(() => models.filter((m) => m.capability === 'image'), [models])
   const embeddingModels = useMemo(() => models.filter((m) => m.capability === 'embedding'), [models])
-  const searchModels = useMemo(() => models.filter((m) => m.capability === 'search'), [models])
 
   return {
     models,
     llmModels,
     imageModels,
     embeddingModels,
-    searchModels,
     isLoading,
     refetch: fetchModels,
   }
