@@ -24,7 +24,7 @@ import {
   OAUTH_HEADERS,
   getOAuthUserId,
   buildBillingHeaderText,
-} from '@/server/providers/anthropic-oauth'
+} from '@/server/llm/llm/_anthropic-oauth-auth'
 
 const args = process.argv.slice(2)
 const includeTools = !args.includes('--no-tools')
