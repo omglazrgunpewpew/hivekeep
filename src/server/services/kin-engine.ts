@@ -23,6 +23,7 @@ import { decrypt } from '@/server/services/encryption'
 import { buildSystemPrompt, joinSystemPrompt } from '@/server/services/prompt-builder'
 import { buildSegmentedMessages } from '@/server/services/llm-cache-hints'
 import { stringifyToolResultValue } from '@/server/llm/core/vercel-bridge'
+import { getLLMProvider } from '@/server/llm/llm/registry'
 import { dequeueMessage, markQueueItemDone, isKinProcessing, getQueueSize, recoverStaleProcessingItems, popQueueMessageMetadata } from '@/server/services/queue'
 import { recoverStaleTasks } from '@/server/services/tasks'
 import { sseManager } from '@/server/sse/index'
@@ -100,25 +101,20 @@ function isProtectedToolName(name: string): boolean {
 }
 
 /**
- * Return the max number of tools the given provider type accepts in a single
- * LLM call.
+ * Return the max number of tools the given provider type accepts in a
+ * single LLM call. Reads the value the provider declared on itself via
+ * `LLMProvider.defaultMaxTools`; falls back to `DEFAULT_MAX_LLM_TOOLS`
+ * (128 — the OpenAI-compatible conservative limit) when the provider
+ * is unknown or declined to declare one.
  *
- * - OpenAI / openai-codex: hard limit of 128 tools (rejected above that).
- * - Anthropic / anthropic-oauth: no documented hard limit — supports hundreds of
- *   tools in practice. We use a high soft cap (512) purely as a safety net.
- * - Unknown / null: fall back to the OpenAI-compatible 128 limit.
+ * Provider-agnostic on purpose: zero hardcoded type names here. New
+ * providers declare their cap in their own file and KinBot picks it up
+ * automatically.
  */
 function getMaxToolsForProvider(providerType: string | null): number {
-  switch (providerType) {
-    case 'openai':
-    case 'openai-codex':
-      return 128
-    case 'anthropic':
-    case 'anthropic-oauth':
-      return 512
-    default:
-      return DEFAULT_MAX_LLM_TOOLS
-  }
+  if (!providerType) return DEFAULT_MAX_LLM_TOOLS
+  const provider = getLLMProvider(providerType)
+  return provider?.defaultMaxTools ?? DEFAULT_MAX_LLM_TOOLS
 }
 
 /**

@@ -326,7 +326,7 @@ function embeddingModelFrom(m: ReplicateCollectionModel): EmbeddingModel {
 // ─── Shared config schema ───────────────────────────────────────────────────
 //
 // All three native providers (LLM / Image / Embedding) of this plugin
-// share `type: 'replicate'`, so the AddProviderDialog only renders one
+// share `type: 'replicate'`, so the ProviderFormDialog only renders one
 // configSchema (the first one registered — LLM by alphabetical-ish
 // registration order). To make every field actually appear in the form,
 // we use the same schema across all three. Each provider's runtime code

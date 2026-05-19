@@ -408,6 +408,9 @@ export const openaiKeyProvider: LLMProvider = {
   type: 'openai',
   displayName: 'OpenAI',
   configSchema: CONFIG_SCHEMA,
+  // OpenAI's documented per-request tool cap.
+  defaultMaxTools: 128,
+  billing: 'per-token',
 
   async authenticate(config: ProviderConfig): Promise<AuthResult> {
     try {

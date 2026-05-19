@@ -447,6 +447,11 @@ export const openaiCodexProvider: LLMProvider = {
   type: 'openai-codex',
   displayName: 'OpenAI (Codex CLI)',
   configSchema: CONFIG_SCHEMA,
+  // Same upstream as openaiKeyProvider — OpenAI's 128-tool cap applies.
+  defaultMaxTools: 128,
+  // ChatGPT Plus / Codex CLI is a subscription — auto-resolution
+  // prefers it over a metered openai-key when both serve the same model.
+  billing: 'subscription',
 
   async authenticate(config: ProviderConfig): Promise<AuthResult> {
     try {

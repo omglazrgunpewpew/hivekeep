@@ -31,9 +31,6 @@ interface KinDetail extends KinSummary {
   isProcessing: boolean
 }
 
-/** @deprecated Use ProviderModel from useModels instead */
-type Model = ProviderModel
-
 export interface GeneratedKinConfig {
   name: string
   role: string

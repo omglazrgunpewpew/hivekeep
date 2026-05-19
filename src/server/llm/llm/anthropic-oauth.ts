@@ -240,6 +240,11 @@ export const anthropicOAuthProvider: LLMProvider = {
   type: 'anthropic-oauth',
   displayName: 'Anthropic (Claude Max)',
   configSchema: CONFIG_SCHEMA,
+  // Same upstream as anthropicKeyProvider.
+  defaultMaxTools: 512,
+  // Claude Max is a subscription — auto-resolution prefers it over a
+  // metered anthropic-key when both serve the same model.
+  billing: 'subscription',
 
   async authenticate(config: ProviderConfig): Promise<AuthResult> {
     try {

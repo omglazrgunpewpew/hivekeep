@@ -263,14 +263,19 @@ export async function consolidateMemories(kinId: string): Promise<number> {
 
   log.info({ kinId, rawClusters: rawClusters.length, clusters: clusters.length, pairs: pairs.length }, 'Found memory clusters')
 
-  // Phase 2: Merge each cluster via LLM
-  const { resolveLLM } = await import('@/server/llm/core/resolve')
+  // Phase 2: Merge each cluster via LLM. Resolution preference:
+  // 1. explicit memory-consolidation settings
+  // 2. shared compacting model settings (same task class — both summarise)
+  // 3. any available LLM model (pickAnyLLMModel)
+  // Never hardcode a specific provider's model id in core.
+  const { resolveLLM, pickAnyLLMModel } = await import('@/server/llm/core/resolve')
   let resolved: Awaited<ReturnType<typeof resolveLLM>> | null = null
+  const desiredModelId = config.memory.consolidationModel ?? config.compacting.model
+  const desiredProviderId = config.memory.consolidationProviderId ?? config.compacting.providerId
   try {
-    resolved = await resolveLLM({
-      modelId: config.memory.consolidationModel ?? config.compacting.model ?? 'gpt-4.1-nano',
-      providerId: config.memory.consolidationProviderId ?? config.compacting.providerId ?? null,
-    })
+    resolved = desiredModelId
+      ? await resolveLLM({ modelId: desiredModelId, providerId: desiredProviderId ?? null })
+      : await pickAnyLLMModel()
   } catch {
     // Provider/model unavailable — every mergeCluster() call will short-circuit.
   }

@@ -84,6 +84,9 @@ export const anthropicKeyProvider: LLMProvider = {
   type: 'anthropic',
   displayName: 'Anthropic',
   configSchema: CONFIG_SCHEMA,
+  // Anthropic doesn't document a hard tool cap — generous soft limit.
+  defaultMaxTools: 512,
+  billing: 'per-token',
 
   async authenticate(config: ProviderConfig): Promise<AuthResult> {
     try {

@@ -499,6 +499,3 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
     </Dialog>
   )
 }
-
-/** @deprecated Use ProviderFormDialog instead */
-export const AddProviderDialog = ProviderFormDialog

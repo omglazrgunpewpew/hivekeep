@@ -530,9 +530,9 @@ export class UnsupportedCapabilityError extends KinbotProviderError {
 
 // ─── UI metadata (optional hints for the "add provider" picker) ─────────────
 
-/** Optional UI hints shared by every native provider interface. Mostly used
- *  by the AddProviderDialog to render the right copy and link the user to
- *  the right places. */
+/** Optional UI hints shared by every native provider interface. Mostly
+ *  used by the ProviderFormDialog to render the right copy and link the
+ *  user to the right places. */
 export interface ProviderUIHints {
   /** True when no API key is required (local model, auto-detected creds). */
   readonly noApiKey?: boolean
@@ -689,6 +689,36 @@ export interface LLMProvider extends ProviderUIHints {
   readonly displayName: string
   /** Declarative schema for the configuration form. */
   readonly configSchema: ProviderConfigSchema
+  /**
+   * Hard cap on the number of tools KinBot may send in a single chat
+   * request to this provider. The engine's tool-truncation pass reads
+   * this value before each call — exceeding it gets rejected upstream.
+   *
+   * Typical values:
+   * - OpenAI: 128 (documented hard limit)
+   * - Anthropic: 512 (no documented limit, generous soft cap)
+   * - Replicate: undefined (no tool-calling — provider ignores it)
+   *
+   * Undefined = no known limit. Engine falls back to a conservative
+   * default (currently 128) so plugin authors can omit it without
+   * accidentally allowing thousands of tools.
+   */
+  readonly defaultMaxTools?: number
+
+  /**
+   * Billing model of the upstream API. Used by KinBot's auto-resolution
+   * to break ties when the same model id is served by several configured
+   * providers — fixed-cost (subscription) wins over pay-per-token so the
+   * user's flat-rate plan is used before their metered key.
+   *
+   * - `subscription` — flat-rate plan (Claude Max, ChatGPT Plus via
+   *                    Codex CLI, …). Auto-resolution prefers this.
+   * - `per-token`   — metered API key (default for most providers).
+   * - `local`       — local model, no upstream cost (Ollama-style).
+   *
+   * Undefined defaults to `per-token` — the conservative assumption.
+   */
+  readonly billing?: 'subscription' | 'per-token' | 'local'
 
   /** Verify the credentials work. Called by the UI before saving. */
   authenticate(config: ProviderConfig): Promise<AuthResult>

@@ -321,18 +321,27 @@ export const reviewMemoriesTool: ToolRegistration = {
           `- Be conservative: when in doubt, don't flag it.\n\n` +
           `## Memories to review (${memoriesToReview.length} total)\n\n${memoriesList}`
 
-        // Resolve provider+model (prefer extraction model, fall back to Kin's model)
-        const { resolveLLM } = await import('@/server/llm/core/resolve')
+        // Resolve provider+model. Preference chain: app-settings
+        // extraction model, then env-configured extraction model, then
+        // pickAnyLLMModel as last resort. Never hardcode a specific
+        // provider's model id in core — the previous fallback
+        // ('gpt-4.1-mini') made KinBot OpenAI-dependent for memory review.
+        const { resolveLLM, pickAnyLLMModel } = await import('@/server/llm/core/resolve')
         const { runOneShot } = await import('@/server/llm/core/run-oneshot')
         const settingsExtractionModel = await getExtractionModel()
         const effectiveModel = settingsExtractionModel ?? config.memory.extractionModel
         const settingsProviderId = await getExtractionProviderId()
         let resolved
         try {
-          resolved = await resolveLLM({
-            modelId: effectiveModel ?? 'gpt-4.1-mini',
-            providerId: settingsProviderId ?? config.memory.extractionProviderId ?? null,
-          })
+          resolved = effectiveModel
+            ? await resolveLLM({
+                modelId: effectiveModel,
+                providerId: settingsProviderId ?? config.memory.extractionProviderId ?? null,
+              })
+            : await pickAnyLLMModel()
+          if (!resolved) {
+            return { issues: [], summary: 'No LLM model available for review.' }
+          }
         } catch {
           return { issues: [], summary: 'No LLM model available for review.' }
         }

@@ -15,13 +15,21 @@ const BATCH_SIZE = 20
  * Returns the number of memories updated.
  */
 export async function backfillImportance(kinId?: string): Promise<{ updated: number; skipped: number }> {
-  const { resolveLLM } = await import('@/server/llm/core/resolve')
+  // Same resolution chain as consolidation: explicit consolidation
+  // model, then shared compacting model, then any available LLM.
+  // Never hardcode a specific provider's model id in core.
+  const { resolveLLM, pickAnyLLMModel } = await import('@/server/llm/core/resolve')
+  const desiredModelId = config.memory.consolidationModel ?? config.compacting.model
+  const desiredProviderId = config.memory.consolidationProviderId ?? config.compacting.providerId
   let resolved
   try {
-    resolved = await resolveLLM({
-      modelId: config.memory.consolidationModel ?? config.compacting.model ?? 'gpt-4.1-nano',
-      providerId: config.memory.consolidationProviderId ?? config.compacting.providerId ?? null,
-    })
+    resolved = desiredModelId
+      ? await resolveLLM({ modelId: desiredModelId, providerId: desiredProviderId ?? null })
+      : await pickAnyLLMModel()
+    if (!resolved) {
+      log.warn('No LLM model available for importance backfill')
+      return { updated: 0, skipped: 0 }
+    }
   } catch (err) {
     log.warn({ err }, 'No LLM model available for importance backfill')
     return { updated: 0, skipped: 0 }
