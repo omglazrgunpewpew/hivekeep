@@ -81,7 +81,7 @@ AES-256-GCM vault · Auth with roles · Invitation system · 100% self-hosted ·
 
 #### Extensibility
 - **MCP servers** — connect any Model Context Protocol server to extend Kins with external tools; Kins can manage their own MCP connections
-- **Plugin system** — extend KinBot with community or custom plugins; plugins can register tools, hooks, AI providers, and channels; install from Git repos or npm packages; hot reload during development; community registry with a built-in marketplace UI for discovering and installing plugins; managed via the UI with per-plugin configuration, encrypted secret storage, and enable/disable toggles; health monitoring with circuit breaker auto-disable; dependency management between plugins; version compatibility checking
+- **Plugin system** — extend KinBot with third-party plugins; plugins can register tools, hooks, AI providers, and channels; discover and install from npm via the built-in marketplace (any package tagged with the `kinbot-plugin` keyword); install from a Git URL for unpublished or private plugins; hot reload during development; managed via the UI with per-plugin configuration, encrypted secret storage, and enable/disable toggles; health monitoring with circuit breaker auto-disable; dependency management between plugins; version compatibility checking
 - **Custom tools** — Kins can create, register, and run their own scripts from their workspace
 - **Mini Apps** — Kins can build and deploy interactive web apps (HTML/CSS/JS) that live in the sidebar; auto-injected design system + JavaScript SDK with theme sync, toasts, inter-app navigation (`openApp`), dialogs (`confirm`/`prompt`), window title & badge control, persistent key-value storage (`get`/`set`/`delete`/`list`/`clear`), starter templates, parent-child event communication, and an App Gallery to browse and clone community apps
 - **Contacts** — manage contacts that Kins can reference and interact with
@@ -116,8 +116,6 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 **Mini Apps** — create, update, delete, read/write files, snapshots, rollback, persistent key-value storage, browse & clone from the App Gallery, templates, docs, icon generation
 
 **Channels** — `list_channels`, `list_channel_conversations`, `send_channel_message`
-
-**Plugins** — `list_installed_plugins`, `browse_plugin_store`, `install_plugin`, `uninstall_plugin`, `enable_plugin`, `disable_plugin`, `configure_plugin`, `get_plugin_details`, `check_plugin_updates`, `update_plugin`
 
 **Custom Tools** — `register_tool`, `run_custom_tool`, `list_custom_tools` (Kins write and run their own scripts)
 
@@ -249,7 +247,7 @@ NODE_ENV=production bun run start
    Mistral · DeepSeek · Groq            Webhooks
    Ollama · OpenRouter · xAI            Custom tools
    Cohere · Together · Fireworks        Web browsing
-   + embedding, image, search           Plugins (community)
+   + embedding, image, search           Plugins (npm)
 ```
 
 **Key design principles:**
@@ -340,7 +338,7 @@ src/
     types.ts
     constants.ts
 data/               # Created at runtime — SQLite DB, uploads, workspaces
-plugins/            # Community & custom plugins (each with manifest.json + main entry)
+plugins/            # Installed third-party plugins (each with plugin.json + main entry)
 docker/             # Dockerfile + docker-compose.yml
 site/               # GitHub Pages landing site
 ```

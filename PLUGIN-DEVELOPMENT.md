@@ -367,70 +367,64 @@ Drop your plugin folder into `plugins/`:
 cp -r my-plugin /path/to/kinbot/plugins/
 ```
 
-### Git
+### npm (preferred)
 
-Install from a Git repository:
-
-```bash
-# Via the KinBot UI: Settings → Plugins → Install → Git URL
-# Or via API:
-curl -X POST http://localhost:3000/api/plugins/install \
-  -H 'Content-Type: application/json' \
-  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-xxx.git"}'
-```
-
-### npm
-
-Install from npm:
+Published plugins are discovered and installed via the npm registry — any package tagged with the `kinbot-plugin` keyword shows up in **Settings → Plugins → Browse**.
 
 ```bash
-# Via the KinBot UI: Settings → Plugins → Install → npm
+# Via the UI: Settings → Plugins → Browse → search → Install
 # Or via API:
 curl -X POST http://localhost:3000/api/plugins/install \
   -H 'Content-Type: application/json' \
   -d '{"source": "npm", "package": "kinbot-plugin-xxx"}'
 ```
 
-## Publishing to the Registry
+### Git URL (for unpublished or private plugins)
 
-1. **Create your plugin** following this guide
-2. **Host on GitHub** (public repository)
-3. **Add a README.md** with documentation
-4. **Submit to the registry**:
-   - Fork [MarlBurroW/kinbot-plugins](https://github.com/MarlBurroW/kinbot-plugins)
-   - Add your entry to `registry.json`:
-     ```json
-     {
-       "name": "my-plugin",
-       "description": "What it does",
-       "author": "Your Name",
-       "version": "1.0.0",
-       "repo": "https://github.com/user/kinbot-plugin-my-plugin",
-       "tags": ["tools"],
-       "downloads": 0,
-       "rating": 0,
-       "compatible_versions": ">=0.10.0",
-       "license": "MIT"
-     }
-     ```
-   - Open a Pull Request
+Useful while developing or to install a plugin that isn't on npm yet:
 
-### PR Template for Registry Submissions
-
-```markdown
-## New Plugin Submission
-
-**Plugin name:** my-plugin
-**Repository:** https://github.com/user/kinbot-plugin-my-plugin
-**Description:** Brief description
-
-### Checklist
-- [ ] Plugin has a valid `plugin.json` manifest
-- [ ] Repository is publicly accessible
-- [ ] README.md with usage instructions
-- [ ] Tested with KinBot version specified in `compatible_versions`
-- [ ] No duplicate plugin name in registry
+```bash
+# Via the UI: Settings → Plugins → Install from URL
+# Or via API:
+curl -X POST http://localhost:3000/api/plugins/install \
+  -H 'Content-Type: application/json' \
+  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-xxx.git"}'
 ```
+
+## Publishing to npm
+
+KinBot's marketplace queries the public npm registry for packages with `keywords: ["kinbot-plugin"]`. Publishing your plugin makes it discoverable to every KinBot instance.
+
+1. **Create your plugin** following this guide (or scaffold with `bun create kinbot-plugin <name>`)
+2. **Host on GitHub** (public repository — the marketplace links to it for trust/inspection)
+3. **`package.json` essentials**:
+   ```json
+   {
+     "name": "kinbot-plugin-xxx",
+     "version": "0.1.0",
+     "description": "What it does",
+     "author": "Your Name",
+     "license": "MIT",
+     "repository": { "type": "git", "url": "git+https://github.com/user/kinbot-plugin-xxx.git" },
+     "homepage": "https://github.com/user/kinbot-plugin-xxx#readme",
+     "bugs": { "url": "https://github.com/user/kinbot-plugin-xxx/issues" },
+     "main": "index.ts",
+     "files": ["index.ts", "plugin.json", "README.md"],
+     "keywords": ["kinbot-plugin", "kinbot"],
+     "peerDependencies": { "@kinbot-developer/sdk": "^0.2.0" }
+   }
+   ```
+   The `kinbot-plugin` keyword is **required** for marketplace discovery. `peerDependencies` (not `dependencies`) ensures the SDK module identity matches the host's, so `instanceof` checks and shared types work.
+4. **Sanity check the tarball** before publishing:
+   ```bash
+   npm publish --dry-run
+   ```
+   Verify it only contains `index.ts`, `plugin.json`, `README.md`, and `package.json` — no `node_modules`, no test files.
+5. **Publish**:
+   ```bash
+   npm publish --access public
+   ```
+   Indexing on `registry.npmjs.org/-/v1/search` takes ~5–15 minutes; after that the package is searchable in the marketplace.
 
 ## Tips
 

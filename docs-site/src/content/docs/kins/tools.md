@@ -217,23 +217,6 @@ Task mode parameters:
 Kin management tools are **opt-in** (disabled by default). Enable them via `enabledOptInTools` in the tool config.
 :::
 
-### Plugin Management
-
-| Tool | Description |
-|---|---|
-| `list_installed_plugins` | List installed plugins |
-| `browse_plugin_store` | Browse the plugin store |
-| `install_plugin` | Install a plugin |
-| `uninstall_plugin` | Remove a plugin |
-| `enable_plugin` | Enable a disabled plugin |
-| `disable_plugin` | Disable a plugin |
-| `configure_plugin` | Set plugin configuration |
-| `get_plugin_details` | View plugin details and config schema |
-
-:::note
-Plugin management tools are **opt-in** (disabled by default). Enable them via `enabledOptInTools` in the tool config.
-:::
-
 ### User Management
 
 | Tool | Description |

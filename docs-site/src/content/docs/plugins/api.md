@@ -188,21 +188,11 @@ Plugin management is also available via the REST API:
 | `POST` | `/api/plugins/:name/update` | Update a plugin to latest version |
 | `POST` | `/api/plugins/:name/health/reset` | Reset plugin health stats |
 
-**Built-in store:**
+**Discovery (npm marketplace):**
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/plugins/store` | List available store plugins |
-| `GET` | `/api/plugins/store/:name` | Get store plugin details + README |
-| `POST` | `/api/plugins/store/:name/install` | Install a store plugin |
-
-**Community registry:**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/plugins/registry` | Browse the community registry (add `?refresh=true` to force) |
-| `GET` | `/api/plugins/registry/search` | Search registry (`?q=...&tag=...`) |
-| `GET` | `/api/plugins/registry/readme` | Fetch a plugin's README (`?repo=<github-url>`) |
+| `GET` | `/api/plugins/registry/npm-search` | Search the public npm registry for packages tagged with the `kinbot-plugin` keyword (`?q=<query>`). Results are tagged with `installed: boolean`. Server-side cache: 5 min per query. |
 | `GET` | `/api/plugins/version` | Get KinBot version for compatibility checks |
 
 ## Plugin Health Monitoring
@@ -230,14 +220,6 @@ interface PluginHealthStats {
 curl -X POST http://localhost:3000/api/plugins/my-plugin/health/reset
 ```
 
-### Install from Git
-
-```bash
-curl -X POST http://localhost:3000/api/plugins/install \
-  -H 'Content-Type: application/json' \
-  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-weather"}'
-```
-
 ### Install from npm
 
 ```bash
@@ -246,8 +228,10 @@ curl -X POST http://localhost:3000/api/plugins/install \
   -d '{"source": "npm", "package": "kinbot-plugin-weather"}'
 ```
 
-### Install from Store
+### Install from Git URL (unpublished / private plugins)
 
 ```bash
-curl -X POST http://localhost:3000/api/plugins/store/weather/install
+curl -X POST http://localhost:3000/api/plugins/install \
+  -H 'Content-Type: application/json' \
+  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-weather"}'
 ```

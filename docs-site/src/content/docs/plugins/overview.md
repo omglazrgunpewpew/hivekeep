@@ -26,26 +26,9 @@ A single plugin can contribute one or more of these:
 
 ## Managing Plugins
 
-### Via the UI
+Plugins are admin-only and managed exclusively from the UI: **Settings → Plugins** lets an admin browse the npm marketplace, install, enable/disable, configure, and uninstall plugins. The UI auto-generates settings forms from the plugin's `configSchema`.
 
-Navigate to **Settings → Plugins** to browse, install, enable/disable, and configure plugins. The UI auto-generates settings forms from the plugin's config schema.
-
-### Via Kin Tools
-
-Kins can manage plugins autonomously using built-in tools (opt-in, disabled by default):
-
-| Tool | Description |
-|------|-------------|
-| `list_installed_plugins` | List all installed plugins with status |
-| `browse_plugin_store` | Search the community plugin registry |
-| `install_plugin` | Install from store, git URL, or npm |
-| `uninstall_plugin` | Remove an installed plugin |
-| `enable_plugin` | Activate a disabled plugin |
-| `disable_plugin` | Deactivate without uninstalling |
-| `configure_plugin` | Update plugin settings |
-| `get_plugin_details` | Get detailed info, config schema, registered tools |
-
-To enable these tools for a Kin, go to the Kin's tool settings and enable the plugin management tools.
+Kins cannot install or manage plugins themselves — that capability was intentionally removed to keep the attack surface admin-gated.
 
 ## Plugin Lifecycle
 
@@ -75,10 +58,9 @@ Plugins have two levels of enablement:
 
 | Method | How | Use Case |
 |--------|-----|----------|
-| **Manual** | Copy folder to `plugins/` | Development, local plugins |
-| **Git** | Install via UI or API from a Git URL | Shared plugins |
-| **npm** | Install via UI or API from npm | Published packages |
-| **UI upload** | Upload ZIP via Plugin Manager | Non-technical users (future) |
+| **npm marketplace** | Settings → Plugins → Browse → search → Install | Published plugins (any package tagged with the `kinbot-plugin` keyword) |
+| **Git URL** | Settings → Plugins → Install from URL | Unpublished, private, or in-development plugins |
+| **Manual** | Drop a folder into `plugins/` | Local development; managed entirely by hand |
 
 See [Developing Plugins](/kinbot/docs/plugins/developing/) for the full development guide.
 
@@ -86,4 +68,3 @@ See [Developing Plugins](/kinbot/docs/plugins/developing/) for the full developm
 
 - [Developing Plugins](/kinbot/docs/plugins/developing/) — Build your first plugin
 - [Plugin API](/kinbot/docs/plugins/api/) — Full API reference
-- [Plugin Store](/kinbot/docs/plugins/store/) — Browse community plugins
