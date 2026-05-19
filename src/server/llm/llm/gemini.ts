@@ -59,6 +59,31 @@ const CONFIG_SCHEMA: readonly ConfigField[] = [
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
+/**
+ * Names that match this pattern are filtered out of the LLM listing
+ * even when they advertise `generateContent`. They're real Gemini
+ * models, just not text-chat ones — Google reuses the `generateContent`
+ * RPC for non-text modalities and the API doesn't tag the output
+ * modality in the model record.
+ *
+ * - `image`  — image-generation models (Nano Banana family, native
+ *              `*-image-preview`, `*-image-edit`, future
+ *              `*-image-*` variants)
+ * - `tts`    — text-to-speech preview models
+ * - `aqa`    — Attributed Question Answering (grounded specialty)
+ *
+ * Embedding models (`text-embedding-*`, `embedding-001`,
+ * `gemini-embedding-001`) are NOT in this pattern because they
+ * already get filtered upstream — their `supportedGenerationMethods`
+ * exposes only `embedContent`, never `generateContent`.
+ *
+ * Pattern, not allowlist: structural — when Google ships a future
+ * model whose name contains one of these markers, it's automatically
+ * filtered, no code change. A future `gemini-4-flash` chat model
+ * passes through.
+ */
+const NON_LLM_MODALITY_PATTERN = /(^|[-_/])(image|tts|aqa)([-_]|$)/i
+
 // ─── Wire types ──────────────────────────────────────────────────────────────
 
 interface GeminiTextPart {
@@ -451,6 +476,16 @@ async function listGeminiModels(apiKey: string): Promise<LLMModel[]> {
       const methods = m.supportedGenerationMethods ?? []
       if (!methods.includes('streamGenerateContent') && !methods.includes('generateContent')) continue
       const id = m.name.replace(/^models\//, '')
+      // Google's /v1beta/models listing doesn't expose the model's
+      // OUTPUT modality — every model that accepts `generateContent`
+      // appears uniformly, including non-text ones (Nano Banana for
+      // image gen, *-tts-* for text-to-speech, AQA grounded-QA, …).
+      // Their naming convention is the only public discriminator, so
+      // we filter by structural pattern in the model id — not by a
+      // specific-model-id allowlist. A new chat model like
+      // `gemini-3-flash` passes; a new image variant like
+      // `gemini-3-flash-image-edit` is automatically dropped.
+      if (NON_LLM_MODALITY_PATTERN.test(id)) continue
       // Multimodal models surface their capability via inputTokenLimit
       // alone — the official API doesn't expose an image-input flag.
       // Use a name heuristic: every 2.x+ Gemini accepts images.

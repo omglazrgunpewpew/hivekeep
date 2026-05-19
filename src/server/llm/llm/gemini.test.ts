@@ -31,6 +31,133 @@ describe('geminiProvider — metadata', () => {
   })
 })
 
+// ─── listModels: non-LLM modality filter ────────────────────────────────────
+
+async function stubListModelsResponse(payload: unknown): Promise<unknown[]> {
+  const original = globalThis.fetch
+  ;(globalThis as any).fetch = async () =>
+    new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  try {
+    return await geminiProvider.listModels({ apiKey: 'AIza-test' })
+  } finally {
+    ;(globalThis as any).fetch = original
+  }
+}
+
+describe('geminiProvider.listModels — modality filter', () => {
+  it('keeps text-chat models', async () => {
+    const models = await stubListModelsResponse({
+      models: [
+        {
+          name: 'models/gemini-2.5-pro',
+          displayName: 'Gemini 2.5 Pro',
+          inputTokenLimit: 1048576,
+          outputTokenLimit: 65536,
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent', 'countTokens'],
+        },
+        {
+          name: 'models/gemini-2.5-flash',
+          displayName: 'Gemini 2.5 Flash',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+      ],
+    })
+    expect(models.map((m) => m.id)).toEqual(['gemini-2.5-pro', 'gemini-2.5-flash'])
+  })
+
+  it('filters out image-generation models even when they expose generateContent', async () => {
+    // Nano Banana is technically a generateContent model — it returns
+    // images via inlineData parts in the response — so the upstream
+    // method-based filter doesn't catch it. Name-based modality
+    // filter does.
+    const models = await stubListModelsResponse({
+      models: [
+        {
+          name: 'models/gemini-2.5-flash',
+          displayName: 'Flash',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+        {
+          name: 'models/gemini-2.5-flash-image-preview',
+          displayName: 'Nano Banana',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+        {
+          name: 'models/gemini-3-flash-image-edit',  // future-hypothetical
+          displayName: 'Hypothetical image edit',
+          supportedGenerationMethods: ['generateContent'],
+        },
+      ],
+    })
+    expect(models.map((m) => m.id)).toEqual(['gemini-2.5-flash'])
+  })
+
+  it('filters out TTS preview models', async () => {
+    const models = await stubListModelsResponse({
+      models: [
+        {
+          name: 'models/gemini-2.5-pro',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+        {
+          name: 'models/gemini-2.5-flash-preview-tts',
+          supportedGenerationMethods: ['generateContent'],
+        },
+        {
+          name: 'models/gemini-2.5-pro-preview-tts',
+          supportedGenerationMethods: ['generateContent'],
+        },
+      ],
+    })
+    expect(models.map((m) => m.id)).toEqual(['gemini-2.5-pro'])
+  })
+
+  it('filters out AQA (grounded QA specialty)', async () => {
+    const models = await stubListModelsResponse({
+      models: [
+        {
+          name: 'models/aqa',
+          displayName: 'AQA',
+          supportedGenerationMethods: ['generateContent'],
+        },
+        {
+          name: 'models/gemini-2.5-flash',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+      ],
+    })
+    expect(models.map((m) => m.id)).toEqual(['gemini-2.5-flash'])
+  })
+
+  it('filters embedding models via the upstream method check (no generateContent)', async () => {
+    // Embedding models advertise only `embedContent`, so the
+    // method-based filter (which runs before the name pattern)
+    // drops them. Verified explicitly so a future regression that
+    // adds generateContent to embedding listings would still get
+    // caught — modality pattern matches "embedding" too.
+    const models = await stubListModelsResponse({
+      models: [
+        {
+          name: 'models/text-embedding-004',
+          supportedGenerationMethods: ['embedContent'],
+        },
+        {
+          name: 'models/gemini-embedding-001',
+          supportedGenerationMethods: ['embedContent'],
+        },
+        {
+          name: 'models/gemini-2.5-flash',
+          supportedGenerationMethods: ['generateContent', 'streamGenerateContent'],
+        },
+      ],
+    })
+    expect(models.map((m) => m.id)).toEqual(['gemini-2.5-flash'])
+  })
+})
+
 // ─── End-to-end shape: request body sent to streamGenerateContent ──────────
 
 /**
