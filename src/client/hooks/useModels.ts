@@ -15,6 +15,10 @@ export interface ProviderModel {
   /** Image-family only — how many source images the model accepts
    *  (0 = text-to-image, 1 = single-image edit, N>1 = multi-reference). */
   maxImageInputs?: number
+  /** Maximum input/context tokens. Populated when the provider's API exposes it. */
+  contextWindow?: number
+  /** Maximum output tokens. Populated when the provider's API exposes it. */
+  maxOutput?: number
 }
 
 /**

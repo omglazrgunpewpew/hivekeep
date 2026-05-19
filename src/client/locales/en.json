@@ -1800,7 +1800,11 @@
     "search": "Search models...",
     "noResults": "No models found",
     "all": "All",
-    "clear": "No model — use default"
+    "clear": "No model — use default",
+    "loading": "Loading models…",
+    "vision": "vision",
+    "img2img": "img2img",
+    "multiImage": "multi-ref ({{count}})"
   },
   "account": {
     "title": "My account",

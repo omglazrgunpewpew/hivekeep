@@ -1800,7 +1800,11 @@
     "search": "Rechercher un modèle...",
     "noResults": "Aucun modèle trouvé",
     "all": "Tous",
-    "clear": "Aucun modèle — utiliser le défaut"
+    "clear": "Aucun modèle — utiliser le défaut",
+    "loading": "Chargement des modèles…",
+    "vision": "vision",
+    "img2img": "img2img",
+    "multiImage": "multi-réf ({{count}})"
   },
   "account": {
     "title": "Mon compte",

@@ -26,7 +26,7 @@ interface DefaultModelsData {
 
 export function ModelsSettings() {
   const { t } = useTranslation()
-  const { models: allModels } = useModels()
+  const { models: allModels, isLoading: modelsLoading } = useModels()
 
   const llmModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'llm'), [allModels])
   const imageModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'image'), [allModels])
@@ -202,6 +202,7 @@ export function ModelsSettings() {
           onValueChange={(modelId, pid) => { setLlmModel(modelId); setLlmProviderId(pid) }}
           placeholder={t('settings.models.defaultLlmPlaceholder')}
           allowClear
+          isLoading={modelsLoading}
         />
         <p className="text-xs text-muted-foreground">{t('settings.models.defaultLlmHint')}</p>
         <Button size="sm" onClick={handleSaveLlm} disabled={!hasLlmChanges || savingField === 'llm'}>
@@ -221,6 +222,7 @@ export function ModelsSettings() {
           onValueChange={(modelId, pid) => { setCompactingModel(modelId); setCompactingProviderId(pid) }}
           placeholder={t('settings.models.defaultCompactingPlaceholder')}
           allowClear
+          isLoading={modelsLoading}
         />
         <p className="text-xs text-muted-foreground">{t('settings.models.defaultCompactingHint')}</p>
         <Button size="sm" onClick={handleSaveCompacting} disabled={!hasCompactingChanges || savingField === 'compacting'}>
@@ -261,6 +263,7 @@ export function ModelsSettings() {
           onValueChange={(modelId, pid) => { setExtractionModel(modelId); setExtractionProviderId(pid) }}
           placeholder={t('settings.models.extractionModelPlaceholder')}
           allowClear
+          isLoading={modelsLoading}
         />
         <p className="text-xs text-muted-foreground">{t('settings.models.extractionModelHint')}</p>
         <Button size="sm" onClick={handleSaveExtraction} disabled={!hasExtractionChanges || savingField === 'extraction'}>
@@ -279,6 +282,7 @@ export function ModelsSettings() {
           value={modelPickerValue(embeddingModel, embeddingProviderId)}
           onValueChange={(modelId, pid) => { setEmbeddingModel(modelId); setEmbeddingProviderId(pid) }}
           placeholder={t('settings.models.embeddingModelPlaceholder')}
+          isLoading={modelsLoading}
         />
         <p className="text-xs text-muted-foreground">{t('settings.models.embeddingModelHint')}</p>
 

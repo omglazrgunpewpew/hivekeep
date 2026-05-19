@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronsUpDown, Ban } from 'lucide-react'
+import { Check, ChevronsUpDown, Ban, Loader2, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { Button } from '@/client/components/ui/button'
+import { Badge } from '@/client/components/ui/badge'
 import {
   Popover,
   PopoverContent,
@@ -25,6 +26,21 @@ interface ModelPickerModel {
   providerName: string
   providerType: string
   capability: string
+  /** Maximum input/context tokens. Rendered as a `{n}k ctx` badge. */
+  contextWindow?: number
+  /** Maximum output tokens. Rendered as a `{n}k out` badge. */
+  maxOutput?: number
+  /** LLM-family only — chat accepts image attachments (vision-capable). */
+  supportsImageInput?: boolean
+  /** Image-family only — how many source images this model accepts. */
+  maxImageInputs?: number
+}
+
+/** Compact tokens display: 1_500_000 -> "1.5M", 128_000 -> "128k". */
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`
+  return String(n)
 }
 
 interface ModelPickerProps {
@@ -39,6 +55,10 @@ interface ModelPickerProps {
   /** Label for the clear option. Defaults to `placeholder` if provided,
    *  else to a generic translated fallback. */
   clearLabel?: string
+  /** When true, replace the placeholder with a "loading…" indicator so the
+   *  user knows the model catalogue is still being fetched (the global
+   *  `/providers/models` call can take a few seconds on first mount). */
+  isLoading?: boolean
 }
 
 /** Build the composite value used for matching: `providerId:modelId` */
@@ -56,6 +76,7 @@ export function ModelPicker({
   className,
   allowClear = false,
   clearLabel,
+  isLoading = false,
 }: ModelPickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -121,6 +142,11 @@ export function ModelPicker({
                 className="size-4 shrink-0"
               />
               <span className="truncate">{selectedModel.name}</span>
+            </span>
+          ) : isLoading && models.length === 0 ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="size-4 shrink-0 animate-spin opacity-60" />
+              <span>{t('modelPicker.loading')}</span>
             </span>
           ) : (
             <span>{placeholder ?? t('modelPicker.placeholder')}</span>
@@ -209,22 +235,63 @@ export function ModelPicker({
                 >
                   {providerModels.map((m) => {
                     const itemValue = getItemValue(m)
+                    const hasMeta =
+                      m.contextWindow != null ||
+                      m.maxOutput != null ||
+                      m.supportsImageInput ||
+                      (m.maxImageInputs != null && m.maxImageInputs > 0)
                     return (
                       <CommandItem
                         key={itemValue}
-                        value={`${m.name} ${m.providerName}`}
+                        value={`${m.name} ${m.id} ${m.providerName}`}
                         onSelect={() => {
                           onValueChange(m.id, m.providerId)
                           setOpen(false)
                         }}
+                        className="items-start py-2"
                       >
                         <Check
                           className={cn(
-                            'size-4 shrink-0',
+                            'mt-0.5 size-4 shrink-0',
                             value === itemValue ? 'opacity-100' : 'opacity-0',
                           )}
                         />
-                        {m.name}
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="truncate text-sm">{m.name}</span>
+                          {m.name !== m.id && (
+                            <span className="truncate font-mono text-[10px] text-muted-foreground">
+                              {m.id}
+                            </span>
+                          )}
+                          {hasMeta && (
+                            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                              {m.contextWindow != null && (
+                                <Badge variant="outline" size="xs">
+                                  {formatTokens(m.contextWindow)} ctx
+                                </Badge>
+                              )}
+                              {m.maxOutput != null && (
+                                <Badge variant="outline" size="xs">
+                                  {formatTokens(m.maxOutput)} out
+                                </Badge>
+                              )}
+                              {m.supportsImageInput && (
+                                <Badge variant="outline" size="xs">
+                                  <ImageIcon className="mr-0.5 size-3" />
+                                  {t('modelPicker.vision')}
+                                </Badge>
+                              )}
+                              {m.maxImageInputs != null && m.maxImageInputs > 0 && (
+                                <Badge variant="outline" size="xs">
+                                  <ImageIcon className="mr-0.5 size-3" />
+                                  {m.maxImageInputs === 1
+                                    ? t('modelPicker.img2img')
+                                    : t('modelPicker.multiImage', { count: m.maxImageInputs })}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </CommandItem>
                     )
                   })}

@@ -20,7 +20,7 @@ interface StepDefaultModelsProps {
 export const StepDefaultModels = forwardRef<StepDefaultModelsRef, StepDefaultModelsProps>(
   function StepDefaultModels({ onComplete, onBack }, ref) {
     const { t } = useTranslation()
-    const { models: allModels } = useModels()
+    const { models: allModels, isLoading: modelsLoading } = useModels()
     const [saving, setSaving] = useState(false)
 
     const llmModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'llm'), [allModels])
@@ -119,6 +119,7 @@ export const StepDefaultModels = forwardRef<StepDefaultModelsRef, StepDefaultMod
             value={modelPickerValue(llmModel, llmProviderId)}
             onValueChange={(modelId, pid) => { setLlmModel(modelId); setLlmProviderId(pid) }}
             placeholder={t('onboarding.models.defaultLlmPlaceholder')}
+            isLoading={modelsLoading}
           />
           <p className="text-xs text-muted-foreground">{t('onboarding.models.defaultLlmHint')}</p>
         </div>
@@ -135,6 +136,7 @@ export const StepDefaultModels = forwardRef<StepDefaultModelsRef, StepDefaultMod
             value={modelPickerValue(embeddingModel, embeddingProviderId)}
             onValueChange={(modelId, pid) => { setEmbeddingModel(modelId); setEmbeddingProviderId(pid) }}
             placeholder={t('onboarding.models.embeddingModelPlaceholder')}
+            isLoading={modelsLoading}
           />
           <p className="text-xs text-muted-foreground">{t('onboarding.models.embeddingModelHint')}</p>
         </div>
@@ -152,6 +154,7 @@ export const StepDefaultModels = forwardRef<StepDefaultModelsRef, StepDefaultMod
             onValueChange={(modelId, pid) => { setExtractionModel(modelId); setExtractionProviderId(pid) }}
             placeholder={t('onboarding.models.extractionModelPlaceholder')}
             allowClear
+            isLoading={modelsLoading}
           />
           <p className="text-xs text-muted-foreground">{t('onboarding.models.extractionModelHint')}</p>
         </div>
@@ -188,6 +191,7 @@ export const StepDefaultModels = forwardRef<StepDefaultModelsRef, StepDefaultMod
             onValueChange={(modelId, pid) => { setCompactingModel(modelId); setCompactingProviderId(pid) }}
             placeholder={t('onboarding.models.compactingModelPlaceholder')}
             allowClear
+            isLoading={modelsLoading}
           />
           <p className="text-xs text-muted-foreground">{t('onboarding.models.compactingModelHint')}</p>
         </div>

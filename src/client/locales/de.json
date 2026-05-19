@@ -1586,7 +1586,11 @@
     "placeholder": "Wähle ein Modell aus",
     "search": "Modelle suchen...",
     "noResults": "Keine Modelle gefunden",
-    "all": "Alle"
+    "all": "Alle",
+    "loading": "Modelle werden geladen…",
+    "vision": "Vision",
+    "img2img": "img2img",
+    "multiImage": "multi-Ref ({{count}})"
   },
   "account": {
     "title": "Mein Konto",

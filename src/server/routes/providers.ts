@@ -384,9 +384,12 @@ providerRoutes.post('/:id/test', async (c) => {
 })
 
 // GET /api/providers/models — list all available models
+//
+// Parallelised across providers (and their capability families) so that a
+// page-mount fetch latency is bounded by the slowest provider, not the
+// sum of all of them. Was ~5–10s sequential with 6 providers × N families.
 providerRoutes.get('/models', async (c) => {
-  const allProviders = await db.select().from(providers).all()
-  const models: Array<{
+  type ModelEntry = {
     id: string
     name: string
     providerId: string
@@ -397,37 +400,55 @@ providerRoutes.get('/models', async (c) => {
     supportsImageInput?: boolean
     /** Image-family only — how many source images the model accepts. */
     maxImageInputs?: number
-  }> = []
-
-  for (const p of allProviders) {
-    if (!p.isValid) continue
-
-    try {
-      const providerConfig = JSON.parse(await decrypt(p.configEncrypted))
-      const rowCaps = JSON.parse(p.capabilities) as string[]
-      // One row can serve multiple families now (e.g. OpenAI = llm +
-      // embedding + image). Dispatch listModels once per family the row
-      // declared, then concatenate.
-      for (const family of rowCaps) {
-        if (family !== 'llm' && family !== 'embedding' && family !== 'image') continue
-        const providerModels = await listModelsForProvider(p.type, providerConfig, family)
-        for (const model of providerModels) {
-          models.push({
-            id: model.id,
-            name: model.name,
-            providerId: p.id,
-            providerName: p.name,
-            providerType: p.type,
-            capability: model.capability,
-            ...(model.capability === 'llm' && model.supportsImageInput ? { supportsImageInput: true } : {}),
-            ...(model.capability === 'image' ? { maxImageInputs: model.maxImageInputs ?? 0 } : {}),
-          })
-        }
-      }
-    } catch (err) {
-      log.error({ providerId: p.id, name: p.name, type: p.type, err }, 'Failed to list models for provider')
-    }
+    /** Maximum input/context tokens. Populated when the provider's API exposes it. */
+    contextWindow?: number
+    /** Maximum output tokens. Populated when the provider's API exposes it. */
+    maxOutput?: number
   }
+
+  const allProviders = await db.select().from(providers).all()
+
+  const providerTasks = allProviders
+    .filter((p) => p.isValid)
+    .map(async (p): Promise<ModelEntry[]> => {
+      try {
+        const providerConfig = JSON.parse(await decrypt(p.configEncrypted))
+        const rowCaps = JSON.parse(p.capabilities) as string[]
+        const families = rowCaps.filter(
+          (f): f is 'llm' | 'embedding' | 'image' =>
+            f === 'llm' || f === 'embedding' || f === 'image',
+        )
+        // Parallelise per-family too — a provider that exposes llm +
+        // embedding + image hits 3 different upstream catalogues.
+        const familyResults = await Promise.all(
+          families.map((family) => listModelsForProvider(p.type, providerConfig, family)),
+        )
+        const entries: ModelEntry[] = []
+        for (const providerModels of familyResults) {
+          for (const model of providerModels) {
+            entries.push({
+              id: model.id,
+              name: model.name,
+              providerId: p.id,
+              providerName: p.name,
+              providerType: p.type,
+              capability: model.capability,
+              ...(model.capability === 'llm' && model.supportsImageInput ? { supportsImageInput: true } : {}),
+              ...(model.capability === 'image' ? { maxImageInputs: model.maxImageInputs ?? 0 } : {}),
+              ...(model.contextWindow ? { contextWindow: model.contextWindow } : {}),
+              ...(model.maxOutput != null ? { maxOutput: model.maxOutput } : {}),
+            })
+          }
+        }
+        return entries
+      } catch (err) {
+        log.error({ providerId: p.id, name: p.name, type: p.type, err }, 'Failed to list models for provider')
+        return []
+      }
+    })
+
+  const results = await Promise.all(providerTasks)
+  const models = results.flat()
 
   return c.json({ models })
 })
