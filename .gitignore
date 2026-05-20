@@ -61,3 +61,11 @@ kin-context-journal.md
 # Internal strategy docs
 branding/
 promo/
+
+# Runtime plugin installs — every plugin now ships independently via
+# npm (see PLUGIN-DEVELOPMENT.md). The plugins/ folder is created and
+# managed by the install handler at runtime; nothing inside belongs in
+# git. The .gitkeep keeps the empty folder tracked so a fresh clone
+# has somewhere for the install workflow to write to.
+plugins/*
+!plugins/.gitkeep
