@@ -271,6 +271,18 @@ export function PluginsSettings() {
               className="rounded-lg border p-4 surface-card"
             >
               <div className="flex items-start justify-between gap-4">
+                {plugin.logoUrl ? (
+                  <img
+                    src={plugin.logoUrl}
+                    alt=""
+                    className="size-10 shrink-0 rounded-md object-contain bg-muted/40 p-1"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : plugin.icon ? (
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted/40 text-2xl">
+                    {plugin.icon}
+                  </span>
+                ) : null}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium">{plugin.name}</h4>

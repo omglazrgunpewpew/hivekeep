@@ -629,6 +629,18 @@ export interface ProviderUIHints {
   readonly optionalApiKey?: boolean
   /** URL where users can obtain / manage their API key. */
   readonly apiKeyUrl?: string
+  /**
+   * Name of the icon to use from `@lobehub/icons` (e.g. `"Mistral"`,
+   * `"DeepSeek"`, `"Cohere"`). KinBot's frontend ships a whitelist of
+   * supported names — anything outside the whitelist falls back to a
+   * generic chip icon. See the developer guide for the full list, or
+   * pick from https://icons.lobehub.com/.
+   *
+   * Plugin providers that want their brand to render alongside built-ins
+   * (Anthropic, OpenAI, Gemini) should set this. Built-ins set it in
+   * their core metadata.
+   */
+  readonly lobehubIcon?: string
 }
 
 // ─── LLM ────────────────────────────────────────────────────────────────────

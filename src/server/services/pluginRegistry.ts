@@ -79,7 +79,7 @@ export class PluginRegistryService {
         return []
       }
       const raw = (await res.json()) as NpmSearchResponse
-      const data: NpmPlugin[] = (raw.objects ?? [])
+      const baseData: NpmPlugin[] = (raw.objects ?? [])
         .map((o) => {
           const p = o.package
           if (!p?.name || !p.version) return null
@@ -97,11 +97,44 @@ export class PluginRegistryService {
         })
         .filter((x): x is NpmPlugin => x !== null)
 
+      // Enrich each result with its logoUrl (best-effort, parallel,
+      // timeouts). Fetches plugin.json from unpkg and points logoUrl at
+      // the absolute file path in the tarball. Failures are silent —
+      // the card simply doesn't show a logo.
+      const data = await Promise.all(baseData.map((p) => this.enrichWithLogo(p)))
+
       this.npmSearchCache.set(cacheKey, { data, fetchedAt: Date.now() })
       return data
     } catch (err) {
       log.warn({ err, query }, 'npm search threw')
       return []
+    }
+  }
+
+  /**
+   * Best-effort logo discovery for an npm search result. Fetches the
+   * plugin's `plugin.json` from unpkg, reads `iconUrl`, and resolves it
+   * to an absolute unpkg URL.
+   *
+   * Returns the input plugin unchanged on any failure (timeout, 404,
+   * malformed manifest, missing iconUrl). 3s timeout — search latency
+   * matters more than 100% logo coverage on first paint.
+   */
+  private async enrichWithLogo(plugin: NpmPlugin): Promise<NpmPlugin> {
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 3000)
+      const manifestUrl = `https://unpkg.com/${plugin.name}@${plugin.version}/plugin.json`
+      const res = await fetch(manifestUrl, { signal: controller.signal })
+      clearTimeout(timer)
+      if (!res.ok) return plugin
+      const manifest = (await res.json()) as { iconUrl?: string }
+      if (!manifest.iconUrl || typeof manifest.iconUrl !== 'string') return plugin
+      if (manifest.iconUrl.includes('..')) return plugin // refuse path traversal
+      const normalized = manifest.iconUrl.replace(/^\/+/, '')
+      return { ...plugin, logoUrl: `https://unpkg.com/${plugin.name}@${plugin.version}/${normalized}` }
+    } catch {
+      return plugin
     }
   }
 

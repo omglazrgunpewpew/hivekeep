@@ -124,6 +124,49 @@ pluginRoutes.get('/:name/readme', async (c) => {
   }
 })
 
+// GET /api/plugins/:name/logo — serve the plugin's logo file declared in
+// `manifest.iconUrl`. Path is constrained to the plugin's directory so a
+// crafted manifest can't escape via `../`.
+pluginRoutes.get('/:name/logo', async (c) => {
+  const { name } = c.req.param()
+  if (name.includes('..') || name.includes('/') || name.includes('\\')) {
+    return c.json({ error: { code: 'INVALID_NAME', message: 'Invalid plugin name' } }, 400)
+  }
+  try {
+    const plugin = pluginManager.getPlugin(name)
+    if (!plugin) return c.json({ error: { code: 'PLUGIN_NOT_FOUND', message: 'Plugin not found' } }, 404)
+    const iconRel = plugin.manifest.iconUrl
+    if (!iconRel) return c.json({ error: { code: 'NO_LOGO', message: 'Plugin has no logo' } }, 404)
+
+    const pluginDir = resolve(process.cwd(), 'plugins', name)
+    const logoPath = resolve(pluginDir, iconRel)
+    // Containment check — abort if iconUrl escapes the plugin directory.
+    if (!logoPath.startsWith(pluginDir + '/') && logoPath !== pluginDir) {
+      return c.json({ error: { code: 'INVALID_LOGO_PATH', message: 'Logo path escapes plugin directory' } }, 400)
+    }
+
+    const buf = await readFile(logoPath)
+    const ext = logoPath.slice(logoPath.lastIndexOf('.') + 1).toLowerCase()
+    const mime =
+      ext === 'svg' ? 'image/svg+xml' :
+      ext === 'png' ? 'image/png' :
+      ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' :
+      ext === 'webp' ? 'image/webp' :
+      'application/octet-stream'
+    return new Response(buf, {
+      headers: {
+        'Content-Type': mime,
+        // Cache aggressively — logo content is tied to plugin version,
+        // a re-install replaces the file on disk and bumps the URL via
+        // `/:name/logo` (no version query needed for the local case).
+        'Cache-Control': 'public, max-age=3600',
+      },
+    })
+  } catch {
+    return c.json({ error: { code: 'LOGO_NOT_FOUND', message: 'Logo file not found' } }, 404)
+  }
+})
+
 // POST /api/plugins/:name/enable
 pluginRoutes.post('/:name/enable', requireAdmin, async (c) => {
   const { name } = c.req.param()

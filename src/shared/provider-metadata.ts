@@ -16,14 +16,20 @@ export interface ProviderMeta {
   readonly optionalApiKey?: boolean
   /** URL where users can obtain or manage their API key */
   readonly apiKeyUrl?: string
+  /**
+   * Name of the icon to use from `@lobehub/icons` (e.g. `"Claude"`, `"OpenAI"`).
+   * Must match the whitelist in the frontend's ProviderIcon component.
+   * Falls back to a generic chip icon when missing or unsupported.
+   */
+  readonly lobehubIcon?: string
 }
 
 export const PROVIDER_META = {
-  anthropic:          { capabilities: ['llm'],                       displayName: 'Anthropic',              apiKeyUrl: 'https://console.anthropic.com/settings/keys' },
-  'anthropic-oauth':  { capabilities: ['llm'],                       displayName: 'Anthropic (Claude Max)', noApiKey: true },
-  openai:             { capabilities: ['llm', 'embedding', 'image'], displayName: 'OpenAI',                 apiKeyUrl: 'https://platform.openai.com/api-keys' },
-  'openai-codex':     { capabilities: ['llm'],                       displayName: 'OpenAI (Codex CLI)',     noApiKey: true },
-  gemini:             { capabilities: ['llm', 'image'],              displayName: 'Google Gemini',          apiKeyUrl: 'https://aistudio.google.com/apikey' },
+  anthropic:          { capabilities: ['llm'],                       displayName: 'Anthropic',              lobehubIcon: 'Claude',  apiKeyUrl: 'https://console.anthropic.com/settings/keys' },
+  'anthropic-oauth':  { capabilities: ['llm'],                       displayName: 'Anthropic (Claude Max)', lobehubIcon: 'Claude',  noApiKey: true },
+  openai:             { capabilities: ['llm', 'embedding', 'image'], displayName: 'OpenAI',                 lobehubIcon: 'OpenAI',  apiKeyUrl: 'https://platform.openai.com/api-keys' },
+  'openai-codex':     { capabilities: ['llm'],                       displayName: 'OpenAI (Codex CLI)',     lobehubIcon: 'OpenAI',  noApiKey: true },
+  gemini:             { capabilities: ['llm', 'image'],              displayName: 'Google Gemini',          lobehubIcon: 'Gemini',  apiKeyUrl: 'https://aistudio.google.com/apikey' },
 } as const satisfies Record<string, ProviderMeta>
 
 export type ProviderType = keyof typeof PROVIDER_META

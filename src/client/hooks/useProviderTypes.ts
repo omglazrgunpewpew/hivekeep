@@ -10,6 +10,7 @@ import {
   PROVIDERS_WITH_OPTIONAL_API_KEY,
 } from '@/shared/constants'
 import type { ConfigField } from '@kinbot-developer/sdk'
+import { registerProviderLobehubIcon } from '@/client/components/common/ProviderIcon'
 
 /** One entry returned by `GET /api/providers/types`. */
 export interface ProviderTypeInfo {
@@ -19,6 +20,8 @@ export interface ProviderTypeInfo {
   noApiKey: boolean
   optionalApiKey: boolean
   apiKeyUrl?: string
+  /** Name of the icon to use from `@lobehub/icons` (e.g. "Mistral", "Claude"). */
+  lobehubIcon?: string
   source: 'builtin' | 'plugin'
   configSchema?: ConfigField[]
 }
@@ -80,6 +83,12 @@ export function useProviderTypes(): ProviderTypesView {
       const data = await api.get<{ types: ProviderTypeInfo[] }>('/providers/types')
       setEntries(data.types)
       setLoaded(true)
+      // Side-effect: register Lobehub icon names so <ProviderIcon> can
+      // resolve plugin-contributed provider types without each caller
+      // having to thread the meta through props.
+      for (const t of data.types) {
+        if (t.lobehubIcon) registerProviderLobehubIcon(t.type, t.lobehubIcon)
+      }
     } catch {
       // keep fallback
     }

@@ -1420,6 +1420,7 @@ class PluginManager {
       homepage: p.manifest.homepage,
       license: p.manifest.license,
       icon: p.manifest.icon,
+      logoUrl: p.manifest.iconUrl ? `/api/plugins/${encodeURIComponent(p.manifest.name)}/logo` : undefined,
       permissions: p.manifest.permissions ?? [],
       enabled: p.enabled,
       error: p.error,

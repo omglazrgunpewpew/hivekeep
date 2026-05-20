@@ -238,17 +238,27 @@ function NpmPluginCard({
         </Badge>
       </div>
 
-      <div className="min-w-0">
-        <h4 className="font-medium truncate">{plugin.name}</h4>
-        {plugin.author && (
-          <p className="text-xs text-muted-foreground">
-            <User className="size-3 inline mr-1" />
-            {plugin.author}
-            {plugin.publisherUsername && plugin.publisherUsername !== plugin.author && (
-              <span className="opacity-60"> (@{plugin.publisherUsername})</span>
-            )}
-          </p>
-        )}
+      <div className="flex items-start gap-3 min-w-0">
+        {plugin.logoUrl ? (
+          <img
+            src={plugin.logoUrl}
+            alt=""
+            className="size-10 shrink-0 rounded-md object-contain bg-muted/40 p-1"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h4 className="font-medium truncate">{plugin.name}</h4>
+          {plugin.author && (
+            <p className="text-xs text-muted-foreground">
+              <User className="size-3 inline mr-1" />
+              {plugin.author}
+              {plugin.publisherUsername && plugin.publisherUsername !== plugin.author && (
+                <span className="opacity-60"> (@{plugin.publisherUsername})</span>
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mt-2 line-clamp-3">

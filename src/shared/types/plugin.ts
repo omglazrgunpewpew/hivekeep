@@ -58,7 +58,19 @@ export interface PluginManifest {
   license?: string
   kinbot?: string
   main: string
+  /** Emoji shown when the plugin has no real logo (back-compat). */
   icon?: string
+  /**
+   * Path (relative to the plugin's root) to a logo file shipped inside
+   * the package. Must be a `.png`, `.jpg`, `.svg`, or `.webp` declared
+   * in the package.json `files` array so it ends up in the tarball.
+   * Example: `"logo.svg"` or `"assets/logo.png"`.
+   *
+   * When set:
+   * - Installed plugins serve it at `GET /api/plugins/:name/logo`
+   * - npm marketplace surfaces it via `https://unpkg.com/<pkg>/<iconUrl>`
+   */
+  iconUrl?: string
   permissions?: string[]
   dependencies?: Record<string, string>  // plugin-name → semver range (e.g. ">=1.0.0")
   config?: Record<string, PluginConfigField>
@@ -122,6 +134,12 @@ export interface NpmPlugin {
     repository?: string
     bugs?: string
   }
+  /**
+   * Absolute URL to the plugin's logo, served by unpkg.com from the
+   * tarball. Set when the plugin's `plugin.json` declares `iconUrl` and
+   * the file is shipped in the published package.
+   */
+  logoUrl?: string
 }
 
 export interface PluginHealthStats {
@@ -141,6 +159,9 @@ export interface PluginSummary {
   homepage?: string
   license?: string
   icon?: string
+  /** Set when the plugin ships a logo file (manifest.iconUrl); resolved
+   *  to `/api/plugins/<name>/logo` so the UI can `<img src="…">` directly. */
+  logoUrl?: string
   permissions: string[]
   enabled: boolean
   error?: string

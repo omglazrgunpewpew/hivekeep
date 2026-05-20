@@ -92,6 +92,7 @@ providerRoutes.get('/types', async (c) => {
     noApiKey: (meta as any).noApiKey ?? false,
     optionalApiKey: (meta as any).optionalApiKey ?? false,
     apiKeyUrl: (meta as any).apiKeyUrl,
+    lobehubIcon: (meta as any).lobehubIcon,
     source: 'builtin' as const,
     configSchema: readConfigSchema(type),
   }))
@@ -104,6 +105,7 @@ providerRoutes.get('/types', async (c) => {
     noApiKey: meta.noApiKey ?? false,
     optionalApiKey: meta.optionalApiKey ?? false,
     apiKeyUrl: meta.apiKeyUrl,
+    lobehubIcon: meta.lobehubIcon,
     source: 'plugin' as const,
     configSchema: readConfigSchema(type),
   }))
