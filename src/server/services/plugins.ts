@@ -1726,6 +1726,24 @@ class PluginManager {
       const manifest = data as PluginManifest
       log.info({ plugin: manifest.name, version: manifest.version }, 'npm install: manifest validated')
 
+      // Sanity check: package.json.version is the version the npm registry
+      // resolves; plugin.json.version is what KinBot displays. If the
+      // plugin author forgot to bump plugin.json alongside package.json,
+      // checkUpdates() will keep offering an "update" that doesn't change
+      // anything visible. Surface a clear log so the author can fix it.
+      try {
+        const pkgRaw = await readFile(join(nodeModulesDir, 'package.json'), 'utf-8')
+        const pkgVersion = (JSON.parse(pkgRaw) as { version?: string }).version
+        if (pkgVersion && pkgVersion !== manifest.version) {
+          log.warn(
+            { plugin: manifest.name, packageJsonVersion: pkgVersion, pluginJsonVersion: manifest.version },
+            'Plugin package.json and plugin.json have mismatched versions — bump both together to keep update detection accurate',
+          )
+        }
+      } catch {
+        // package.json missing or malformed — not fatal for KinBot
+      }
+
       // Check version compatibility
       const compat = await this.checkCompatibility(manifest)
       if (!compat.compatible) {
@@ -1895,21 +1913,32 @@ class PluginManager {
       const packageName = plugin.installMeta?.package
       if (!packageName) throw new Error('No package name stored for npm plugin')
 
+      log.info({ plugin: name, package: packageName }, 'npm update: start')
+
       // Re-install from npm (overwrite) — workspace outside plugins/
       await mkdir(this.installWorkspace, { recursive: true })
       const tempDir = join(this.installWorkspace, `_update_${Date.now()}`)
       await mkdir(tempDir, { recursive: true })
       await Bun.write(join(tempDir, 'package.json'), JSON.stringify({ name: 'kinbot-plugin-update', private: true }))
 
-      const { exitCode, stderr } = await this.runSpawn(['bun', 'add', packageName], { cwd: tempDir })
+      const isolatedCache = join(this.installWorkspace, 'bun-cache')
+      const { exitCode, stderr, stdout } = await this.runSpawn(
+        ['bun', 'add', `${packageName}@latest`],
+        {
+          cwd: tempDir,
+          env: { BUN_INSTALL_CACHE_DIR: isolatedCache },
+          timeoutMs: 60_000,
+        },
+      )
       if (exitCode !== 0) {
         await rm(tempDir, { recursive: true, force: true }).catch(() => {})
-        throw new Error(`npm update failed: ${stderr.trim()}`)
+        throw new Error(`npm update failed (exit ${exitCode}): ${stderr.trim() || stdout.trim() || '(no output)'}`)
       }
+      log.info({ plugin: name }, 'npm update: bun add done')
 
       // Replace plugin dir
       await rm(pluginDir, { recursive: true, force: true })
-      await this.runSpawn(['mv', join(tempDir, 'node_modules', packageName), pluginDir])
+      await this.runSpawn(['mv', join(tempDir, 'node_modules', packageName), pluginDir], { timeoutMs: 10_000 })
       await rm(tempDir, { recursive: true, force: true }).catch(() => {})
     } else {
       throw new Error('Cannot update a local plugin')
@@ -1924,6 +1953,22 @@ class PluginManager {
     }
 
     const manifest = data as PluginManifest
+
+    // Same version-mismatch check as installFromNpm — if the author bumped
+    // package.json but forgot plugin.json, the UI keeps offering an update
+    // that doesn't change anything visible.
+    try {
+      const pkgRaw = await readFile(join(pluginDir, 'package.json'), 'utf-8')
+      const pkgVersion = (JSON.parse(pkgRaw) as { version?: string }).version
+      if (pkgVersion && pkgVersion !== manifest.version) {
+        log.warn(
+          { plugin: name, packageJsonVersion: pkgVersion, pluginJsonVersion: manifest.version },
+          'Plugin package.json and plugin.json have mismatched versions — bump both together to keep update detection accurate',
+        )
+      }
+    } catch {
+      // package.json missing or malformed
+    }
 
     // Deactivate and re-activate
     const wasEnabled = plugin.enabled
