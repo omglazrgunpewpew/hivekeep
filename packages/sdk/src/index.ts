@@ -332,6 +332,38 @@ export interface OutboundMessageResult {
  *
  * Adapters from plugins must consume *only* `@kinbot-developer/sdk`.
  */
+/**
+ * A discoverable destination within a channel connection — a Discord
+ * guild channel, a TeamSpeak room, a Telegram group, a Matrix room, a
+ * DM thread, etc. Returned by `ChannelAdapter.listEndpoints` so a Kin
+ * can post somewhere it hasn't received a message from first.
+ *
+ * The `id` is the opaque value the Kin later passes back as `chat_id`
+ * to `sendMessage` — same format the platform's inbound events use.
+ */
+export interface ChannelEndpoint {
+  /** Opaque destination id — same format used as `chat_id` in
+   *  `sendMessage` / `OutboundMessageParams.chatId`. */
+  id: string
+  /** Display name (e.g. `"#general"`, `"Alice"`, `"Lobby"`). Short. */
+  displayName: string
+  /**
+   * Type hint for the UI and the Kin's reasoning:
+   *   - `channel`  : multi-user space the bot is a member of (Discord
+   *                  guild channel, Slack public/private channel)
+   *   - `group`    : multi-user space typically smaller (Telegram
+   *                  group, WhatsApp group, Matrix space)
+   *   - `room`     : voice/text room (TeamSpeak, Mumble, etc.)
+   *   - `dm`       : direct conversation with one specific user
+   *   - `user`     : same as dm, when the adapter exposes users as
+   *                  endpoints even without an open thread
+   */
+  type: 'channel' | 'group' | 'room' | 'dm' | 'user'
+  /** Adapter-specific extras (member count, topic, last activity, …).
+   *  KinBot won't interpret these but may surface them in the UI. */
+  metadata?: Record<string, unknown>
+}
+
 export interface ChannelAdapter {
   /** Stable platform id ('telegram', 'discord', 'mattermost', …). Used
    *  as the foreign key in the `channels` table. Plugins must prefix
@@ -366,6 +398,24 @@ export interface ChannelAdapter {
     config: Record<string, unknown>,
     params: OutboundMessageParams,
   ): Promise<OutboundMessageResult>
+
+  /**
+   * Discover the destinations a Kin can post to within this channel
+   * connection — Discord guild channels + DM threads, TeamSpeak rooms,
+   * Matrix rooms, Telegram groups/DMs known to the bot, Slack channels,
+   * etc. Optional: adapters where the destination is always a single
+   * contact (Twilio SMS, Signal) don't implement this — the host tool
+   * falls back to telling the Kin to use `send_to_contact` instead.
+   *
+   * The `id` is the same opaque string the Kin passes back as
+   * `chat_id` to `send_channel_message` / `sendMessage`. Adapters
+   * should NOT include endpoints the bot has no permission to write
+   * to (e.g. read-only Slack channels) — KinBot trusts the list.
+   */
+  listEndpoints?(
+    channelId: string,
+    config: Record<string, unknown>,
+  ): Promise<ChannelEndpoint[]>
 
   /** Turn the inbound `metadata` blob into a short, already-localized line
    *  of context for the conversation UI (e.g. "Sent by Alice from #Gaming

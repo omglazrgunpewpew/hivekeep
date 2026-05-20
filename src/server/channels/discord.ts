@@ -1,4 +1,4 @@
-import type { ChannelAdapter, ChannelConfigSchema, IncomingAttachment, IncomingMessageHandler, OutboundMessageParams } from '@/server/channels/adapter'
+import type { ChannelAdapter, ChannelConfigSchema, ChannelEndpoint, IncomingAttachment, IncomingMessageHandler, OutboundMessageParams } from '@/server/channels/adapter'
 import { readAttachmentBlob, attachmentFileName } from '@/server/channels/adapter'
 import type { ChannelAdapterMeta } from '@/server/channels/adapter'
 import { getSecretValue } from '@/server/services/vault'
@@ -480,6 +480,66 @@ export class DiscordAdapter implements ChannelAdapter {
     } catch (err) {
       return { valid: false, error: err instanceof Error ? err.message : 'Invalid bot token' }
     }
+  }
+
+  async listEndpoints(_channelId: string, cfg: Record<string, unknown>): Promise<ChannelEndpoint[]> {
+    const token = await resolveToken(cfg)
+    const endpoints: ChannelEndpoint[] = []
+
+    // Guild text channels — one REST round-trip per guild the bot is in.
+    // Text channels are type 0; announcement channels are type 5
+    // (still writable as plain text). All other types (voice=2,
+    // category=4, stage=13, forum=15) are skipped because the bot
+    // can't post a regular message into them.
+    const guilds = await discordApi(token, 'GET', '/users/@me/guilds') as Array<{ id: string; name: string }>
+    for (const guild of guilds) {
+      try {
+        const channels = await discordApi(token, 'GET', `/guilds/${guild.id}/channels`) as Array<{
+          id: string
+          name: string
+          type: number
+          parent_id?: string | null
+        }>
+        for (const ch of channels) {
+          if (ch.type !== 0 && ch.type !== 5) continue
+          endpoints.push({
+            id: ch.id,
+            displayName: `#${ch.name}`,
+            type: 'channel',
+            metadata: { guildId: guild.id, guildName: guild.name, parentId: ch.parent_id ?? null },
+          })
+        }
+      } catch {
+        // Skip guilds we can't enumerate — likely a missing intent
+        // or revoked bot permission. Don't fail the whole list.
+      }
+    }
+
+    // Open DM channels — /users/@me/channels lists the DM channels
+    // the bot has actually opened (typically the ones it has been
+    // messaged from). Bots can't list every user globally, so this
+    // is the practical proxy.
+    try {
+      const dms = await discordApi(token, 'GET', '/users/@me/channels') as Array<{
+        id: string
+        type: number
+        recipients?: Array<{ id: string; username: string; global_name?: string }>
+      }>
+      for (const dm of dms) {
+        if (dm.type !== 1) continue // type 1 = DM
+        const recipient = dm.recipients?.[0]
+        endpoints.push({
+          id: dm.id,
+          displayName: recipient ? (recipient.global_name ?? recipient.username) : 'DM',
+          type: 'dm',
+          metadata: recipient ? { recipientId: recipient.id, recipientUsername: recipient.username } : {},
+        })
+      }
+    } catch {
+      // No DMs to surface — ignore.
+    }
+
+    return endpoints
   }
 
   async getBotInfo(cfg: Record<string, unknown>): Promise<{ name: string; username?: string } | null> {

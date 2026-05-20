@@ -156,6 +156,7 @@ import {
 import {
   listChannelsTool,
   listChannelConversationsTool,
+  listEndpointsTool,
   sendChannelMessageTool,
   sendToContactTool,
   createChannelTool,
@@ -408,6 +409,7 @@ export function registerAllTools(): void {
   // Channel tools (main only, send_channel_message/create/update/delete are opt-in)
   toolRegistry.register('list_channels', listChannelsTool, 'channels')
   toolRegistry.register('list_channel_conversations', listChannelConversationsTool, 'channels')
+  toolRegistry.register('list_endpoints', listEndpointsTool, 'channels')
   toolRegistry.register('send_channel_message', sendChannelMessageTool, 'channels')
   toolRegistry.register('send_to_contact', sendToContactTool, 'channels')
   toolRegistry.register('create_channel', createChannelTool, 'channels')

@@ -17,6 +17,7 @@ export type {
   ChannelAdapterMeta,
   ChannelConfigField,
   ChannelConfigSchema,
+  ChannelEndpoint,
   IncomingAttachment,
   IncomingMessage,
   IncomingMessageHandler,

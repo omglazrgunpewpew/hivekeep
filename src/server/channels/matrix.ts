@@ -1,4 +1,4 @@
-import type { ChannelAdapter, ChannelConfigSchema, IncomingAttachment, IncomingMessageHandler, OutboundMessageParams } from '@/server/channels/adapter'
+import type { ChannelAdapter, ChannelConfigSchema, ChannelEndpoint, IncomingAttachment, IncomingMessageHandler, OutboundMessageParams } from '@/server/channels/adapter'
 import { readAttachmentBlob, attachmentFileName, isImageAttachment } from '@/server/channels/adapter'
 import type { ChannelAdapterMeta } from '@/server/channels/adapter'
 import { getSecretValue } from '@/server/services/vault'
@@ -263,6 +263,37 @@ export class MatrixAdapter implements ChannelAdapter {
     } catch (err) {
       return { valid: false, error: err instanceof Error ? err.message : 'Invalid Matrix config' }
     }
+  }
+
+  async listEndpoints(_channelId: string, cfg: Record<string, unknown>): Promise<ChannelEndpoint[]> {
+    const homeserver = getHomeserverUrl(cfg)
+    const token = await resolveToken(cfg)
+
+    // Matrix joined_rooms returns just the room ids — we resolve the
+    // human-readable name + room type via /state/m.room.name and
+    // /state/m.room.canonical_alias. We fan those out in parallel and
+    // skip rooms whose name lookup fails (they still appear as the
+    // raw id so the Kin can still target them).
+    const { joined_rooms } = await matrixApi(homeserver, token, 'GET', '/joined_rooms') as { joined_rooms: string[] }
+
+    const endpoints = await Promise.all(joined_rooms.map(async (roomId): Promise<ChannelEndpoint> => {
+      const encoded = encodeURIComponent(roomId)
+      let displayName = roomId
+      // Direct rooms (DMs) typically have 2 members and no canonical
+      // alias — heuristic, good enough for the type hint.
+      let type: ChannelEndpoint['type'] = 'room'
+      try {
+        const name = await matrixApi(homeserver, token, 'GET', `/rooms/${encoded}/state/m.room.name`) as { name?: string }
+        if (name.name) displayName = name.name
+      } catch { /* room has no explicit name */ }
+      try {
+        const members = await matrixApi(homeserver, token, 'GET', `/rooms/${encoded}/joined_members`) as { joined: Record<string, unknown> }
+        if (Object.keys(members.joined).length <= 2) type = 'dm'
+      } catch { /* membership lookup failed — leave as room */ }
+      return { id: roomId, displayName, type, metadata: { roomId } }
+    }))
+
+    return endpoints
   }
 
   async getBotInfo(cfg: Record<string, unknown>): Promise<{ name: string; username?: string } | null> {

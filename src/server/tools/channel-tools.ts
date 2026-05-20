@@ -138,6 +138,69 @@ export const sendChannelMessageTool: ToolRegistration = {
 }
 
 /**
+ * list_endpoints — surface the destinations a Kin can post to within a
+ * connected channel. Examples: Discord guild channels + DM threads,
+ * TeamSpeak rooms, Matrix joined rooms, Telegram groups.
+ *
+ * Cached per channel for 60s — most adapters round-trip the platform
+ * API to enumerate, and the list rarely changes between back-to-back
+ * Kin turns. Cache is in-memory; restart clears it.
+ *
+ * Adapters where every destination is implicitly tied to a contact
+ * (Twilio SMS, Signal) don't implement `listEndpoints` — the tool
+ * returns a clear error pointing the Kin at `send_to_contact`.
+ */
+export const listEndpointsTool: ToolRegistration = {
+  availability: ['main'],
+  readOnly: true,
+  concurrencySafe: true,
+  create: (ctx) =>
+    tool({
+      description:
+        'List the destinations (channels, rooms, groups, DMs) reachable inside a connected channel. Use the returned `id` as the `chat_id` argument to send_channel_message.',
+      inputSchema: z.object({
+        channel_id: z.string(),
+      }),
+      execute: async ({ channel_id }) => {
+        const channel = await getChannel(channel_id)
+        if (!channel || channel.kinId !== ctx.kinId) {
+          return { error: 'Channel not found' }
+        }
+
+        const adapter = channelAdapters.get(channel.platform)
+        if (!adapter) {
+          return { error: `No adapter for platform ${channel.platform}` }
+        }
+        if (!adapter.listEndpoints) {
+          return {
+            error: `Platform "${channel.platform}" doesn't expose endpoint discovery. Each destination on this platform is tied to a contact — use send_to_contact instead.`,
+          }
+        }
+
+        const cacheKey = `${channel_id}`
+        const cached = endpointsCache.get(cacheKey)
+        if (cached && Date.now() - cached.fetchedAt < ENDPOINTS_CACHE_TTL_MS) {
+          return { endpoints: cached.data, cached: true }
+        }
+
+        try {
+          const cfg = JSON.parse(channel.platformConfig) as Record<string, unknown>
+          const endpoints = await adapter.listEndpoints(channel_id, cfg)
+          endpointsCache.set(cacheKey, { data: endpoints, fetchedAt: Date.now() })
+          return { endpoints }
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : 'Unknown error' }
+        }
+      },
+    }),
+}
+
+/** Per-channel cache for listEndpoints — most platforms cost a REST
+ *  round-trip to enumerate; the list rarely changes between Kin turns. */
+const ENDPOINTS_CACHE_TTL_MS = 60_000
+const endpointsCache = new Map<string, { data: unknown; fetchedAt: number }>()
+
+/**
  * send_to_contact — proactively message a contact on a specific platform.
  *
  * Higher-level wrapper around `send_channel_message`. Resolves the
