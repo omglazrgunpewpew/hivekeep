@@ -86,6 +86,7 @@ function metaForType(type: string): ProviderMeta | undefined {
     ...(first?.optionalApiKey ? { optionalApiKey: true } : {}),
     ...(first?.apiKeyUrl ? { apiKeyUrl: first.apiKeyUrl } : {}),
     ...(first?.lobehubIcon ? { lobehubIcon: first.lobehubIcon } : {}),
+    ...(first?.reactIcon ? { reactIcon: first.reactIcon } : {}),
   }
 }
 

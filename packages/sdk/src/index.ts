@@ -708,6 +708,19 @@ export interface ProviderUIHints {
    * their core metadata.
    */
   readonly lobehubIcon?: string
+  /**
+   * Optional react-icons identifier as a secondary fallback when the
+   * brand isn't in the Lobehub whitelist. Format: `"<collection>/<ComponentName>"`
+   * (e.g. `"si/SiBrave"`, `"si/SiKagi"`). The supported collections are
+   * the same as the plugin card system's `PluginIcon` resolver (`si`,
+   * `fa`, `bs`, `tb`, …). Each collection is dynamically imported on
+   * first use to keep the initial bundle small.
+   *
+   * Resolution order: `lobehubIcon` (when in whitelist) → `reactIcon` →
+   * generic chip icon. Setting both is fine; the Lobehub variant wins
+   * because it ships a `.Color` variant for several brands.
+   */
+  readonly reactIcon?: string
 }
 
 // ─── LLM ────────────────────────────────────────────────────────────────────

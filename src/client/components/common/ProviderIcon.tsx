@@ -5,6 +5,10 @@ type SvgIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string 
 type IconModule = { default: SvgIcon & { Color?: SvgIcon } }
 type IconLoader = () => Promise<IconModule>
 
+/** A react-icons component (different prop signature from Lobehub icons). */
+type ReactIcon = ComponentType<{ size?: number | string; color?: string; className?: string }>
+type ReactIconCollection = Record<string, ReactIcon>
+
 /**
  * Whitelist of `@lobehub/icons` names KinBot's frontend ships. Providers
  * (built-in or plugin-contributed) declare `lobehubIcon` in their metadata
@@ -63,6 +67,53 @@ export function registerProviderLobehubIcon(providerType: string, lobehubName: s
   ICON_LOADERS.set(providerType, { loader, lobehubName })
 }
 
+// ─── React-icons fallback (used when no Lobehub icon is available) ──────────
+
+/**
+ * Dynamic-import switch for react-icons collections. The set mirrors
+ * the `PluginIcon` resolver in chat/plugin-card so plugin authors and
+ * built-in providers pick from the same catalogue. Vite needs a static
+ * import path per case to pre-bundle the chunks correctly.
+ */
+function loadReactCollection(collection: string): Promise<ReactIconCollection> | null {
+  let raw: Promise<unknown> | null = null
+  switch (collection) {
+    case 'ai':   raw = import('react-icons/ai'); break
+    case 'bi':   raw = import('react-icons/bi'); break
+    case 'bs':   raw = import('react-icons/bs'); break
+    case 'fa':   raw = import('react-icons/fa'); break
+    case 'fa6':  raw = import('react-icons/fa6'); break
+    case 'fi':   raw = import('react-icons/fi'); break
+    case 'hi':   raw = import('react-icons/hi'); break
+    case 'hi2':  raw = import('react-icons/hi2'); break
+    case 'io5':  raw = import('react-icons/io5'); break
+    case 'lu':   raw = import('react-icons/lu'); break
+    case 'md':   raw = import('react-icons/md'); break
+    case 'pi':   raw = import('react-icons/pi'); break
+    case 'ri':   raw = import('react-icons/ri'); break
+    case 'si':   raw = import('react-icons/si'); break
+    case 'tb':   raw = import('react-icons/tb'); break
+    default:     return null
+  }
+  return raw as Promise<ReactIconCollection>
+}
+
+const REACT_ICON_LOADERS = new Map<string, { collection: string; componentName: string }>()
+const reactCollectionCache = new Map<string, Promise<ReactIconCollection>>()
+const reactComponentCache = new Map<string, ReactIcon>()
+
+/**
+ * Register a provider type's react-icons identifier (`"collection/Name"`).
+ * Called from useProviderTypes for every entry that declares `reactIcon`.
+ * Idempotent; silently ignores malformed ids and unknown collections.
+ */
+export function registerProviderReactIcon(providerType: string, identifier: string): void {
+  const [collection, componentName] = identifier.split('/')
+  if (!collection || !componentName) return
+  if (!loadReactCollection(collection)) return  // unknown collection
+  REACT_ICON_LOADERS.set(providerType, { collection, componentName })
+}
+
 /** Cache resolved icon modules so re-renders don't re-import. */
 const iconCache = new Map<string, SvgIcon & { Color?: SvgIcon }>()
 
@@ -75,14 +126,22 @@ interface ProviderIconProps {
 
 export const ProviderIcon = memo(function ProviderIcon({ providerType, className, variant = 'mono' }: ProviderIconProps) {
   const entry = ICON_LOADERS.get(providerType)
-  if (!entry) return <Cpu className={className} />
-
-  const cached = iconCache.get(providerType)
-  if (cached) {
-    return <ResolvedIcon icon={cached} lobehubName={entry.lobehubName} variant={variant} className={className} />
+  if (entry) {
+    const cached = iconCache.get(providerType)
+    if (cached) {
+      return <ResolvedIcon icon={cached} lobehubName={entry.lobehubName} variant={variant} className={className} />
+    }
+    return <LazyIcon providerType={providerType} loader={entry.loader} lobehubName={entry.lobehubName} variant={variant} className={className} />
   }
 
-  return <LazyIcon providerType={providerType} loader={entry.loader} lobehubName={entry.lobehubName} variant={variant} className={className} />
+  // Secondary fallback: react-icons. Used for brands not in the Lobehub
+  // whitelist (Brave, Kagi, niche search/embedding providers, …).
+  const reactEntry = REACT_ICON_LOADERS.get(providerType)
+  if (reactEntry) {
+    return <LazyReactIcon providerType={providerType} collection={reactEntry.collection} componentName={reactEntry.componentName} className={className} />
+  }
+
+  return <Cpu className={className} />
 })
 
 /** Renders an already-resolved icon */
@@ -125,4 +184,52 @@ function LazyIcon({ providerType, loader, lobehubName, variant, className }: {
   }
 
   return <ResolvedIcon icon={icon} lobehubName={lobehubName} variant={variant} className={className} />
+}
+
+/** Lazy-loads a react-icons collection (cached per collection), then
+ *  pulls the requested component out of it. Renders a same-size
+ *  placeholder while the import resolves to avoid layout shift. */
+function LazyReactIcon({ providerType, collection, componentName, className }: {
+  providerType: string
+  collection: string
+  componentName: string
+  className?: string
+}) {
+  const cacheKey = `${collection}/${componentName}`
+  const [icon, setIcon] = useState<ReactIcon | null>(() => reactComponentCache.get(cacheKey) ?? null)
+
+  useEffect(() => {
+    if (icon) return
+    let cancelled = false
+    let promise = reactCollectionCache.get(collection)
+    if (!promise) {
+      const next = loadReactCollection(collection)
+      if (!next) return
+      promise = next
+      reactCollectionCache.set(collection, promise)
+    }
+    promise
+      .then((mod) => {
+        if (cancelled) return
+        const Comp = mod[componentName]
+        if (!Comp) return
+        reactComponentCache.set(cacheKey, Comp)
+        setIcon(() => Comp)
+      })
+      .catch(() => {
+        // Swallow — provider icon failure is purely cosmetic
+      })
+    return () => { cancelled = true }
+  }, [collection, componentName, cacheKey, icon])
+
+  if (!icon) {
+    return <Cpu className={className} style={{ opacity: 0.3 }} />
+  }
+
+  const Icon = icon
+  // react-icons SVGs take size via prop, but for parity with Lobehub
+  // icons we let the className drive sizing (the existing Cpu fallback
+  // already does this). Don't pass size — let CSS handle it.
+  void providerType
+  return <Icon className={className} />
 }

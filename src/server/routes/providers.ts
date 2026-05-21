@@ -13,6 +13,7 @@ import {
 import { getLLMProvider } from '@/server/llm/llm/registry'
 import { getEmbeddingProvider } from '@/server/llm/embedding/registry'
 import { getImageProvider } from '@/server/llm/image/registry'
+import { getSearchProvider } from '@/server/llm/search/registry'
 import { PROVIDER_META } from '@/shared/provider-metadata'
 import type { ConfigField } from '@kinbot-developer/sdk'
 import { createLogger } from '@/server/logger'
@@ -78,7 +79,8 @@ function readConfigSchema(type: string): ConfigField[] | undefined {
   const provider =
     getLLMProvider(type) ??
     getEmbeddingProvider(type) ??
-    getImageProvider(type)
+    getImageProvider(type) ??
+    getSearchProvider(type)
   if (!provider) return undefined
   return [...provider.configSchema]
 }
@@ -93,6 +95,7 @@ providerRoutes.get('/types', async (c) => {
     optionalApiKey: (meta as any).optionalApiKey ?? false,
     apiKeyUrl: (meta as any).apiKeyUrl,
     lobehubIcon: (meta as any).lobehubIcon,
+    reactIcon: (meta as any).reactIcon,
     source: 'builtin' as const,
     configSchema: readConfigSchema(type),
   }))
@@ -106,6 +109,7 @@ providerRoutes.get('/types', async (c) => {
     optionalApiKey: meta.optionalApiKey ?? false,
     apiKeyUrl: meta.apiKeyUrl,
     lobehubIcon: meta.lobehubIcon,
+    reactIcon: meta.reactIcon,
     source: 'plugin' as const,
     configSchema: readConfigSchema(type),
   }))
