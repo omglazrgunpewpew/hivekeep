@@ -8,6 +8,7 @@ import {
   getCapabilitiesForType,
   testProviderConnection,
   listModelsForProvider,
+  listVoicesForProvider,
   getPluginProviderMeta,
 } from '@/server/providers/index'
 import { getLLMProvider } from '@/server/llm/llm/registry'
@@ -508,8 +509,12 @@ providerRoutes.get('/:id/models', async (c) => {
     return c.json({ error: { code: 'PROVIDER_NOT_FOUND', message: 'Provider not found' } }, 404)
   }
 
+  // Families that expose a model catalogue. TTS is excluded — its
+  // user-facing unit is a Voice (served by the sibling /voices route).
+  // Search is excluded — one provider == one endpoint, no models.
   const rowCaps = (JSON.parse(existing.capabilities) as string[]).filter(
-    (c): c is 'llm' | 'embedding' | 'image' => c === 'llm' || c === 'embedding' || c === 'image',
+    (c): c is 'llm' | 'embedding' | 'image' | 'stt' =>
+      c === 'llm' || c === 'embedding' || c === 'image' || c === 'stt',
   )
 
   if (!existing.isValid) {
@@ -562,6 +567,61 @@ providerRoutes.get('/:id/models', async (c) => {
     models,
     errors,
   })
+})
+
+// GET /api/providers/:id/voices — list every voice the given provider
+// exposes (TTS only). Sibling of /:id/models; lives on its own path
+// because the user-facing unit for TTS is a Voice (with optional model
+// binding) rather than a model. Returns an empty list with an
+// explanatory error when the provider doesn't have the TTS capability,
+// rather than 404-ing, so the browse modal can show a clean message.
+providerRoutes.get('/:id/voices', async (c) => {
+  const id = c.req.param('id')
+  const existing = await db.select().from(providers).where(eq(providers.id, id)).get()
+  if (!existing) {
+    return c.json({ error: { code: 'PROVIDER_NOT_FOUND', message: 'Provider not found' } }, 404)
+  }
+
+  const rowCaps = JSON.parse(existing.capabilities) as string[]
+  const provider = { id: existing.id, name: existing.name, type: existing.type, slug: existing.slug }
+
+  if (!rowCaps.includes('tts')) {
+    return c.json({ provider, voices: [], errors: [] })
+  }
+
+  if (!existing.isValid) {
+    return c.json({
+      provider,
+      voices: [],
+      errors: [{ capability: 'tts', message: existing.lastError ?? 'Provider is marked invalid — re-test before browsing voices.' }],
+    })
+  }
+
+  const providerConfig = JSON.parse(await decrypt(existing.configEncrypted))
+  try {
+    const voices = await listVoicesForProvider(existing.type, providerConfig)
+    return c.json({
+      provider,
+      voices: voices.map((v) => ({
+        id: v.id,
+        name: v.name,
+        ...(v.language ? { language: v.language } : {}),
+        ...(v.gender ? { gender: v.gender } : {}),
+        ...(v.description ? { description: v.description } : {}),
+        ...(v.model ? { model: v.model } : {}),
+        ...(v.previewUrl ? { previewUrl: v.previewUrl } : {}),
+      })),
+      errors: [],
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    log.warn({ providerId: id, err: message }, 'listVoices failed while building provider voice browser')
+    return c.json({
+      provider,
+      voices: [],
+      errors: [{ capability: 'tts', message }],
+    })
+  }
 })
 
 // GET /api/providers/:id — fetch a single provider, including its

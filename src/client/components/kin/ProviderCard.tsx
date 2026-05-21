@@ -150,6 +150,7 @@ export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: 
         onOpenChange={setModelsOpen}
         providerId={provider.id}
         providerName={provider.name}
+        capabilities={provider.capabilities}
       />
     </Card>
   )
