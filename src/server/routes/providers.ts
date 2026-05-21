@@ -211,6 +211,23 @@ providerRoutes.patch('/:id', async (c) => {
   const updates: Record<string, unknown> = { updatedAt: new Date() }
   if (body.name !== undefined) updates.name = body.name
 
+  // Families update — independent of config changes. The user can
+  // tick/untick capabilities on an existing row (e.g. enable TTS / STT
+  // on an OpenAI row created before those capabilities existed).
+  // Intersect with what the type still supports so a stale UI can't
+  // grant unsupported families.
+  if (Array.isArray(body.families)) {
+    const allCaps = getCapabilitiesForType(existing.type) as readonly string[]
+    const requested = (body.families as string[]).filter((f) => allCaps.includes(f))
+    if (requested.length === 0) {
+      return c.json(
+        { error: { code: 'NO_FAMILIES', message: 'No valid families to enable — at least one of the requested families must be supported by the provider type.' } },
+        400,
+      )
+    }
+    updates.capabilities = JSON.stringify(requested)
+  }
+
   if (body.config) {
     const existingConfig = JSON.parse(await decrypt(existing.configEncrypted))
     const mergedConfig = { ...existingConfig, ...body.config }
@@ -225,9 +242,11 @@ providerRoutes.patch('/:id', async (c) => {
       : await testProviderConnection(existing.type, mergedConfig)
     updates.isValid = testResult.valid
     updates.lastError = testResult.valid ? null : (testResult.error ?? null)
-    if (testResult.valid) {
-      updates.capabilities = JSON.stringify(getCapabilitiesForType(existing.type))
-    }
+    // When the user didn't explicitly send `families`, preserve whatever
+    // was stored before. The previous behavior auto-reset to "all caps
+    // the type supports", which silently undid any opt-out the user had
+    // made (e.g. an OpenAI row with image disabled would suddenly
+    // re-enable image after a key rotation).
   }
 
   await db.update(providers).set(updates).where(eq(providers.id, id))

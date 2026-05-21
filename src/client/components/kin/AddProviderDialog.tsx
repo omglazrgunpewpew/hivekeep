@@ -38,6 +38,11 @@ interface EditProvider {
   id: string
   name: string
   type: string
+  /** Capabilities currently persisted on the row. Used in edit mode to
+   *  pre-tick the family picker so the user sees the actual state and
+   *  can add/remove families (e.g. enable TTS/STT on an existing
+   *  OpenAI row that was created before those capabilities existed). */
+  capabilities?: string[]
 }
 
 interface ProviderFormDialogProps {
@@ -199,12 +204,23 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
   const supportedFamilies = FAMILY_ORDER.filter((f) =>
     getCapabilitiesForType(providerType).includes(f),
   )
-  // Initialise selected families when the type changes (or first selected).
+  // Initialise selected families. In edit mode we seed from the row's
+  // currently-persisted capabilities (intersected with what the type
+  // still supports — handles the edge case where a plugin drops a
+  // capability between versions). In create mode every supported
+  // family is ticked by default so users opt out rather than in.
   useEffect(() => {
-    setSelectedFamilies(supportedFamilies)
+    if (isEditing && provider?.capabilities) {
+      const persisted = supportedFamilies.filter((f) =>
+        (provider.capabilities ?? []).includes(f),
+      )
+      setSelectedFamilies(persisted.length > 0 ? persisted : supportedFamilies)
+    } else {
+      setSelectedFamilies(supportedFamilies)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [providerType])
-  const showsFamilyPicker = !isEditing && supportedFamilies.length > 1
+  }, [providerType, isEditing, provider?.id])
+  const showsFamilyPicker = supportedFamilies.length > 1
   const toggleFamily = (family: string) => {
     setSelectedFamilies((prev) =>
       prev.includes(family) ? prev.filter((f) => f !== family) : [...prev, family],
@@ -270,7 +286,21 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
         // tested then saved we can skip the server-side re-test. It
         // resets to false on any field edit (see resetTest hooks).
         if (testPassed && Object.keys(config).length > 0) body.skipTest = true
-        if (providerName !== provider!.name || Object.keys(config).length > 0) {
+        // Send families when the picker was visible — the user may
+        // have ticked/unticked boxes to add or drop capabilities on
+        // the row. The PATCH route intersects with what the type
+        // supports server-side, so a stale UI can't grant unsupported
+        // families.
+        const familiesChanged =
+          showsFamilyPicker &&
+          (selectedFamilies.length !== (provider!.capabilities?.length ?? 0) ||
+            selectedFamilies.some((f) => !(provider!.capabilities ?? []).includes(f)))
+        if (familiesChanged) body.families = selectedFamilies
+        if (
+          providerName !== provider!.name ||
+          Object.keys(config).length > 0 ||
+          familiesChanged
+        ) {
           await api.patch(`/providers/${provider!.id}`, body)
         }
       } else {
