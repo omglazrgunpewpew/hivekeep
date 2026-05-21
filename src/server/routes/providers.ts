@@ -128,17 +128,25 @@ providerRoutes.get('/types', async (c) => {
 // intersection of "what the type supports" and "what the user enabled".
 providerRoutes.post('/', async (c) => {
   const body = await c.req.json()
-  const { name, type, config: providerConfig, families: requestedFamilies } = body as {
+  const { name, type, config: providerConfig, families: requestedFamilies, skipTest } = body as {
     name: string
     type: string
     config: { apiKey: string; baseUrl?: string }
     /** Subset of the type's supported families to enable on this row.
      *  When omitted or empty, every family the type advertises is enabled. */
     families?: string[]
+    /** Set by the UI when the user already ran POST /providers/test with
+     *  the same credentials and got valid back. Skips the redundant
+     *  server-side re-test that otherwise burns a second auth call —
+     *  the difference between "tested + save" and "two auth hits" for
+     *  rate-limited providers like Brave Search (1 req/sec free tier). */
+    skipTest?: boolean
   }
 
-  // Test connection
-  const testResult = await testProviderConnection(type, providerConfig)
+  // Test connection — unless the client already validated with the same creds.
+  const testResult = skipTest
+    ? { valid: true as const }
+    : await testProviderConnection(type, providerConfig)
 
   const allCaps = getCapabilitiesForType(type)
   const FAMILY_ORDER = ['llm', 'embedding', 'image', 'search'] as const
@@ -204,11 +212,13 @@ providerRoutes.patch('/:id', async (c) => {
     const mergedConfig = { ...existingConfig, ...body.config }
     updates.configEncrypted = await encrypt(JSON.stringify(mergedConfig))
 
-    // Re-test connection. Authenticate is family-invariant (same creds
-    // regardless of which family is queried) so we omit the family hint
-    // here — the dispatcher's legacy fallback returns whichever family
-    // the type is registered in.
-    const testResult = await testProviderConnection(existing.type, mergedConfig)
+    // Re-test connection — unless the client already validated. Authenticate
+    // is family-invariant (same creds regardless of which family is queried)
+    // so we omit the family hint here; the dispatcher's legacy fallback
+    // returns whichever family the type is registered in.
+    const testResult = body.skipTest
+      ? { valid: true as const }
+      : await testProviderConnection(existing.type, mergedConfig)
     updates.isValid = testResult.valid
     updates.lastError = testResult.valid ? null : (testResult.error ?? null)
     if (testResult.valid) {

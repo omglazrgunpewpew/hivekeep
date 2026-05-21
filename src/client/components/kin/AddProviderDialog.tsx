@@ -262,6 +262,10 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
         if (providerName !== provider!.name) body.name = providerName || provider!.type
         const config = buildConfig()
         if (Object.keys(config).length > 0) body.config = config
+        // testPassed sticks across the save click, so when the user
+        // tested then saved we can skip the server-side re-test. It
+        // resets to false on any field edit (see resetTest hooks).
+        if (testPassed && Object.keys(config).length > 0) body.skipTest = true
         if (providerName !== provider!.name || Object.keys(config).length > 0) {
           await api.patch(`/providers/${provider!.id}`, body)
         }
@@ -274,6 +278,10 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
           // the backend defaults to "every family the type supports", which is
           // exactly what we want for single-family providers.
           ...(showsFamilyPicker ? { families: selectedFamilies } : {}),
+          // Avoid a second auth hit in the create path when the user
+          // just tested. Matters for rate-limited providers (Brave free
+          // tier = 1 req/sec → 429 on the back-to-back call).
+          ...(testPassed ? { skipTest: true } : {}),
         })
       }
 
