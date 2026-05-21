@@ -496,17 +496,17 @@ export interface ChannelAdapter {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-//  Providers (native LLM / embedding / image)
+//  Providers (native LLM / embedding / image / search)
 // ════════════════════════════════════════════════════════════════════════════
 //
-// Plugins extend KinBot with new model providers by implementing one of the
-// three native interfaces (`LLMProvider`, `EmbeddingProvider`,
-// `ImageProvider`). KinBot's built-in providers (Anthropic, OpenAI, …) use
-// the same interfaces — there is no separate "plugin shape" anymore.
+// Plugins extend KinBot with new providers by implementing one of the four
+// native interfaces (`LLMProvider`, `EmbeddingProvider`, `ImageProvider`,
+// `SearchProvider`). KinBot's built-in providers (Anthropic, OpenAI, …)
+// use the same interfaces — there is no separate "plugin shape" anymore.
 
 /** Capability flags a provider declares. Implemented as the union of the
- *  three native interfaces below. */
-export type ProviderCapability = 'llm' | 'embedding' | 'image' | 'rerank'
+ *  four native interfaces below. */
+export type ProviderCapability = 'llm' | 'embedding' | 'image' | 'search' | 'rerank'
 
 // ─── Config schema (provider-declared, UI-rendered) ─────────────────────────
 
@@ -1147,8 +1147,137 @@ export interface ImageProvider extends ProviderUIHints {
   ): Promise<ImageResult>
 }
 
+// ─── Search ─────────────────────────────────────────────────────────────────
+
+/**
+ * Static capability declaration a search provider exposes so the host
+ * (and the Kin, via `list_search_providers`) knows what it can ask for.
+ *
+ * All flags are optional and default to `false` — a provider that
+ * declares no capabilities only supports the bare minimum: a plain
+ * query, no filters, no synthesized answer.
+ *
+ * Capabilities are *static* (set on the provider object, not derived
+ * from config) because they describe the upstream API surface, not the
+ * specific credentials in use.
+ */
+export interface SearchCapabilities {
+  /** True when the provider returns a synthesized answer with citations
+   *  in addition to (or instead of) a raw SERP. Perplexity Sonar, Tavily,
+   *  and similar LLM-grounded providers set this. */
+  readonly supportsAnswer?: boolean
+  /** True when the provider can restrict results by recency
+   *  (`freshness: 'day' | 'week' | 'month' | 'year'`). */
+  readonly supportsFreshness?: boolean
+  /** True when the provider can include or exclude specific domains. */
+  readonly supportsDomainFilter?: boolean
+  /** True when the provider honors a language hint (ISO 639-1 code). */
+  readonly supportsLanguage?: boolean
+  /** True when the provider honors a location hint (ISO country code or
+   *  a free-form region string — depends on the provider). */
+  readonly supportsLocation?: boolean
+}
+
+/**
+ * Payload passed to `SearchProvider.search()`. The host normalizes the
+ * tool's input against this shape; providers receive a stable, typed
+ * request regardless of how the LLM phrased it.
+ *
+ * Standard fields cover the lowest common denominator. The `extra`
+ * passthrough lets the LLM tune provider-specific quirks (Perplexity's
+ * `search_recency_filter`, Tavily's `include_raw_content`, …) without
+ * the host needing to know about each one. Providers ignore unknown
+ * keys in `extra` rather than erroring.
+ */
+export interface SearchRequest {
+  query: string
+  /** Maximum number of results to return. Provider may cap further. */
+  count?: number
+  freshness?: 'day' | 'week' | 'month' | 'year' | 'all'
+  /** Domain filter (include and/or exclude). Providers that only
+   *  support one direction honor what they can and ignore the other. */
+  domains?: { include?: string[]; exclude?: string[] }
+  /** ISO 639-1 language hint (`'en'`, `'fr'`, …). */
+  lang?: string
+  /** Region hint — provider-dependent. Often an ISO country code
+   *  (`'US'`, `'FR'`) but some providers accept city / region strings. */
+  location?: string
+  /** Request a synthesized answer with citations. Honored only when
+   *  the provider declares `supportsAnswer: true`. Otherwise the
+   *  provider returns results-only and adds a warning. */
+  answer?: boolean
+  /** Provider-specific options the host doesn't model. Pass-through
+   *  to the upstream API. Providers MUST tolerate unknown keys
+   *  (ignore rather than reject) so that adding a new key to one
+   *  provider doesn't break calls routed to another. */
+  extra?: Record<string, unknown>
+  signal?: AbortSignal
+}
+
+/** A single result returned by a search provider. Fields are kept
+ *  minimal so the LLM gets a compact list; full-content fetch is a
+ *  separate step via `web_fetch`. */
+export interface SearchResultEntry {
+  title: string
+  url: string
+  /** Short excerpt from the page (provider-extracted). Optional — some
+   *  providers return URL-only results. */
+  snippet?: string
+  /** Publication date when known (Unix ms). Populated by news/articles
+   *  verticals; typically absent for generic web results. */
+  publishedAt?: number
+  /** Domain portion of `url`, pre-extracted for convenience. */
+  domain?: string
+}
+
+/** Synthesized answer block returned when the provider supports it and
+ *  the caller requested `answer: true`. */
+export interface SearchAnswer {
+  text: string
+  citations?: Array<{ url: string; title?: string }>
+}
+
+/**
+ * What `SearchProvider.search()` returns. `results` is always present
+ * (possibly empty). `answer` is set only when synthesis was requested
+ * AND the provider supports it. `warnings` carries soft notices the LLM
+ * should be aware of (capability not supported, partial result, …) —
+ * they do NOT indicate an error.
+ */
+export interface SearchResult {
+  results: SearchResultEntry[]
+  answer?: SearchAnswer
+  warnings?: string[]
+}
+
+/**
+ * Native search provider interface — plugins implement this directly,
+ * built-in providers (Brave, SerpAPI, Tavily, Perplexity Sonar) use
+ * the same shape.
+ *
+ * Search providers have no `listModels()` (one provider == one search
+ * endpoint, no model selection) — the LLM picks a provider, not a
+ * model within a provider. The dispatcher returns an empty model list
+ * if anything ever queries it.
+ */
+export interface SearchProvider extends ProviderUIHints {
+  readonly type: string
+  readonly displayName: string
+  readonly configSchema: ProviderConfigSchema
+  /** Static capabilities — drives `list_search_providers` and the
+   *  capability-aware fallback behavior in `web_search`. */
+  readonly capabilities: SearchCapabilities
+
+  authenticate(config: ProviderConfig): Promise<AuthResult>
+
+  search(
+    request: SearchRequest,
+    config: ProviderConfig,
+  ): Promise<SearchResult>
+}
+
 /** Discriminated union of every native provider shape a plugin can declare. */
-export type PluginProvider = LLMProvider | EmbeddingProvider | ImageProvider
+export type PluginProvider = LLMProvider | EmbeddingProvider | ImageProvider | SearchProvider
 
 // ════════════════════════════════════════════════════════════════════════════
 //  Hooks
@@ -1543,14 +1672,16 @@ export interface PluginExports {
   tools?: Record<string, ToolRegistration>
   /**
    * Native AI providers contributed by the plugin. KinBot's plugin loader
-   * inspects each provider's shape (the `chat` / `embed` / `generate`
-   * method) and registers it into the matching native registry. The same
-   * `LLMProvider` / `EmbeddingProvider` / `ImageProvider` interfaces back
-   * the built-in providers — there is no second shape for plugins.
+   * inspects each provider's shape (the `chat` / `embed` / `generate` /
+   * `search` method) and registers it into the matching native registry.
+   * The same `LLMProvider` / `EmbeddingProvider` / `ImageProvider` /
+   * `SearchProvider` interfaces back the built-in providers — there is
+   * no second shape for plugins.
    *
    *   providers: [
    *     new MyMistralProvider(),    // LLMProvider
    *     new MyVoyageEmbedder(),     // EmbeddingProvider
+   *     new MyKagiSearchProvider(), // SearchProvider
    *   ]
    */
   providers?: PluginProvider[]

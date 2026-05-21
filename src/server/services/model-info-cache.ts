@@ -118,7 +118,8 @@ export async function refreshAllProviderModels(): Promise<void> {
           const cfg = JSON.parse(await decrypt(p.configEncrypted))
           const caps = JSON.parse(p.capabilities) as string[]
           // Hit listModels once per family the row serves so the cache
-          // is populated for every model surface (not just LLM).
+          // is populated for every model surface (not just LLM). Search
+          // is excluded — search providers have no model selection.
           for (const family of caps) {
             if (family !== 'llm' && family !== 'embedding' && family !== 'image') continue
             await listModelsForProvider(p.type, cfg, family)

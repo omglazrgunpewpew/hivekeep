@@ -23,8 +23,9 @@ import { satisfiesSemver, isVersionNewer } from '@/shared/semver'
 import { registerLLMProvider, unregisterLLMProvider } from '@/server/llm/llm/registry'
 import { registerEmbeddingProvider, unregisterEmbeddingProvider } from '@/server/llm/embedding/registry'
 import { registerImageProvider, unregisterImageProvider } from '@/server/llm/image/registry'
+import { registerSearchProvider, unregisterSearchProvider } from '@/server/llm/search/registry'
 import { channelAdapters } from '@/server/channels/index'
-import type { LLMProvider, EmbeddingProvider, ImageProvider, PluginProvider, ProviderCapability } from '@kinbot-developer/sdk'
+import type { LLMProvider, EmbeddingProvider, ImageProvider, SearchProvider, PluginProvider, ProviderCapability } from '@kinbot-developer/sdk'
 import { emitPluginCard, updatePluginCard } from '@/server/services/plugin-cards'
 import type {
   PluginContext,
@@ -96,15 +97,16 @@ export class PluginPermissionError extends Error {
 
 /**
  * Detect which native provider family a plugin-exported provider implements,
- * based on the chat/embed/generate method it carries. Returns null when the
- * shape doesn't match any of the three native interfaces.
+ * based on the chat/embed/generate/search method it carries. Returns null
+ * when the shape doesn't match any of the four native interfaces.
  */
 function detectProviderFamily(
   p: PluginProvider,
-): 'llm' | 'embedding' | 'image' | null {
+): 'llm' | 'embedding' | 'image' | 'search' | null {
   if (typeof (p as { chat?: unknown }).chat === 'function') return 'llm'
   if (typeof (p as { embed?: unknown }).embed === 'function') return 'embedding'
   if (typeof (p as { generate?: unknown }).generate === 'function') return 'image'
+  if (typeof (p as { search?: unknown }).search === 'function') return 'search'
   return null
 }
 
@@ -540,12 +542,13 @@ export function validatePluginExports(
   }
 
   // Validate providers — must be an array of native LLMProvider /
-  // EmbeddingProvider / ImageProvider instances. The plugin loader
-  // detects each provider's family at registration time by inspecting
-  // which method it carries (chat / embed / generate).
+  // EmbeddingProvider / ImageProvider / SearchProvider instances. The
+  // plugin loader detects each provider's family at registration time
+  // by inspecting which method it carries (chat / embed / generate /
+  // search).
   if (ex.providers !== undefined) {
     if (!Array.isArray(ex.providers)) {
-      errors.push('"providers" must be an array of LLMProvider | EmbeddingProvider | ImageProvider')
+      errors.push('"providers" must be an array of LLMProvider | EmbeddingProvider | ImageProvider | SearchProvider')
     } else {
       ex.providers.forEach((p, i) => {
         if (!p || typeof p !== 'object') {
@@ -562,15 +565,23 @@ export function validatePluginExports(
         if (typeof prov.authenticate !== 'function') {
           warnings.push(`providers[${i}] (${String(prov.type)}): missing authenticate() method`)
         }
-        if (typeof prov.listModels !== 'function') {
-          warnings.push(`providers[${i}] (${String(prov.type)}): missing listModels() method`)
-        }
         const hasChat = typeof prov.chat === 'function'
         const hasEmbed = typeof prov.embed === 'function'
         const hasGenerate = typeof prov.generate === 'function'
-        if (!hasChat && !hasEmbed && !hasGenerate) {
+        const hasSearch = typeof prov.search === 'function'
+        // listModels is required for the model-bearing families but not
+        // for search providers (one provider == one endpoint, no models).
+        if (!hasSearch && typeof prov.listModels !== 'function') {
+          warnings.push(`providers[${i}] (${String(prov.type)}): missing listModels() method`)
+        }
+        if (!hasChat && !hasEmbed && !hasGenerate && !hasSearch) {
           warnings.push(
-            `providers[${i}] (${String(prov.type)}): must implement one of chat() (LLM), embed() (Embedding), or generate() (Image)`,
+            `providers[${i}] (${String(prov.type)}): must implement one of chat() (LLM), embed() (Embedding), generate() (Image), or search() (Search)`,
+          )
+        }
+        if (hasSearch && (!prov.capabilities || typeof prov.capabilities !== 'object')) {
+          warnings.push(
+            `providers[${i}] (${String(prov.type)}): SearchProvider must declare a "capabilities" object (use {} for none)`,
           )
         }
       })
@@ -974,6 +985,7 @@ class PluginManager {
             if (family === 'llm') registerLLMProvider(wrapped as LLMProvider)
             else if (family === 'embedding') registerEmbeddingProvider(wrapped as EmbeddingProvider)
             else if (family === 'image') registerImageProvider(wrapped as ImageProvider)
+            else if (family === 'search') registerSearchProvider(wrapped as SearchProvider)
             plugin.registeredProviders.push({
               type: prefixedType,
               displayName: rawProvider.displayName,
@@ -1114,6 +1126,7 @@ class PluginManager {
       if (family === 'llm') unregisterLLMProvider(prov.type)
       else if (family === 'embedding') unregisterEmbeddingProvider(prov.type)
       else if (family === 'image') unregisterImageProvider(prov.type)
+      else if (family === 'search') unregisterSearchProvider(prov.type)
     }
     plugin.registeredProviders = []
 

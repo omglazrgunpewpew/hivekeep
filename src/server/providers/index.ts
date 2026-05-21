@@ -1,13 +1,19 @@
 /**
- * Provider dispatcher — single front-door over the three native registries
- * (`llm`, `embedding`, `image`). Built-in providers (Anthropic, OpenAI, …)
- * and plugin-contributed providers register identically into these three
- * registries; nothing here knows or cares about the difference.
+ * Provider dispatcher — single front-door over the four native registries
+ * (`llm`, `embedding`, `image`, `search`). Built-in providers (Anthropic,
+ * OpenAI, …) and plugin-contributed providers register identically into
+ * these four registries; nothing here knows or cares about the difference.
  *
  * Callers (routes/providers, tools/provider-tools, image-tools,
  * model-info-cache, image-generation, routes/kins, llm/core/resolve) get a
  * uniform `ProviderModel` shape regardless of which family answers, which
  * keeps the per-model UI generic.
+ *
+ * Note: `listModelsForProvider` is a no-op for the `search` family —
+ * search providers have no concept of model selection (one provider ==
+ * one search endpoint). The dispatcher returns an empty list rather
+ * than failing so the model-info-cache refresh loop can ignore search
+ * rows without special-casing.
  */
 
 import type { ProviderConfig as KinbotProviderConfig } from '@/server/llm/core/types'
@@ -17,6 +23,7 @@ import { createLogger } from '@/server/logger'
 import { getLLMProvider, listLLMProviders } from '@/server/llm/llm/registry'
 import { getEmbeddingProvider, listEmbeddingProviders } from '@/server/llm/embedding/registry'
 import { getImageProvider, listImageProviders } from '@/server/llm/image/registry'
+import { getSearchProvider, listSearchProviders } from '@/server/llm/search/registry'
 
 const log = createLogger('providers')
 
@@ -66,10 +73,12 @@ function metaForType(type: string): ProviderMeta | undefined {
   if (emb) capabilities.push('embedding')
   const img = getImageProvider(type)
   if (img) capabilities.push('image')
+  const search = getSearchProvider(type)
+  if (search) capabilities.push('search')
 
   if (capabilities.length === 0) return undefined
 
-  const first = llm ?? emb ?? img
+  const first = llm ?? emb ?? img ?? search
   return {
     capabilities,
     displayName: first?.displayName ?? type,
@@ -88,7 +97,7 @@ function metaForType(type: string): ProviderMeta | undefined {
  */
 export function getPluginProviderMeta(): Record<string, ProviderMeta> {
   const out: Record<string, ProviderMeta> = {}
-  for (const p of [...listLLMProviders(), ...listEmbeddingProviders(), ...listImageProviders()]) {
+  for (const p of [...listLLMProviders(), ...listEmbeddingProviders(), ...listImageProviders(), ...listSearchProviders()]) {
     if (!p.type.startsWith('plugin:')) continue
     if (out[p.type]) {
       // Same type registered in multiple families (e.g. a single plugin
@@ -115,22 +124,23 @@ export function getCapabilitiesForType(type: string): ProviderCapability[] {
 /** Provider family hint passed to the dispatcher to route the call to a
  *  specific native registry. Each `providers.capabilities[]` entry
  *  matches one of these values. */
-export type ProviderFamily = 'llm' | 'embedding' | 'image'
+export type ProviderFamily = 'llm' | 'embedding' | 'image' | 'search'
 
 /**
- * Look up a provider across the three native registries and run `fn`
+ * Look up a provider across the four native registries and run `fn`
  * against the matching one. Returns null when the type isn't registered
  * in the requested family (or in any family when `family` is omitted).
  *
  * The `family` hint is required for any call that dispatches a
- * family-specific operation (listModels, image generate, embed). It
- * routes to the right registry when a single provider type registers
+ * family-specific operation (listModels, image generate, embed, search).
+ * It routes to the right registry when a single provider type registers
  * in multiple registries (OpenAI llm+embedding+image, Replicate, …).
  *
  * `family` is omitted only by `testProviderConnection` — `authenticate`
  * is family-invariant (same credentials across families), so we don't
  * care which family's registry answers as long as one of them does.
- * The "try LLM → embedding → image" fallback below handles that case.
+ * The "try LLM → embedding → image → search" fallback below handles
+ * that case.
  */
 async function tryDispatch<T>(
   type: string,
@@ -139,6 +149,7 @@ async function tryDispatch<T>(
     llm: (p: NonNullable<ReturnType<typeof getLLMProvider>>) => Promise<T>
     embedding: (p: NonNullable<ReturnType<typeof getEmbeddingProvider>>) => Promise<T>
     image: (p: NonNullable<ReturnType<typeof getImageProvider>>) => Promise<T>
+    search: (p: NonNullable<ReturnType<typeof getSearchProvider>>) => Promise<T>
   },
   family?: ProviderFamily,
 ): Promise<T | null> {
@@ -154,6 +165,10 @@ async function tryDispatch<T>(
     const img = getImageProvider(type)
     return img ? fn.image(img) : null
   }
+  if (family === 'search') {
+    const search = getSearchProvider(type)
+    return search ? fn.search(search) : null
+  }
   // No family hint — try in order.
   const llm = getLLMProvider(type)
   if (llm) return fn.llm(llm)
@@ -161,6 +176,8 @@ async function tryDispatch<T>(
   if (emb) return fn.embedding(emb)
   const img = getImageProvider(type)
   if (img) return fn.image(img)
+  const search = getSearchProvider(type)
+  if (search) return fn.search(search)
   return null
 }
 
@@ -185,6 +202,7 @@ export async function testProviderConnection(
       llm: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
       embedding: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
       image: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
+      search: (p) => p.authenticate(config).then((r) => ({ valid: r.valid, error: r.error })),
     },
     family,
   )
@@ -252,6 +270,10 @@ export async function listModelsForProvider(
           ...(m.maxImageInputs != null ? { maxImageInputs: m.maxImageInputs } : {}),
         }))
       },
+      // Search providers have no model selection — one provider == one
+      // search endpoint. Return an empty list so the model-info cache
+      // refresh loop ignores them without special-casing.
+      search: async () => [],
     },
     family,
   )
@@ -295,5 +317,6 @@ export function getRegistryStats() {
     llm: listLLMProviders().map((p) => p.type),
     embedding: listEmbeddingProviders().map((p) => p.type),
     image: listImageProviders().map((p) => p.type),
+    search: listSearchProviders().map((p) => p.type),
   }
 }
