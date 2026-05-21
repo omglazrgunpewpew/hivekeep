@@ -4,12 +4,14 @@ import { toast } from 'sonner'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Button } from '@/client/components/ui/button'
 import { Label } from '@/client/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { InfoTip } from '@/client/components/common/InfoTip'
 import { Skeleton } from '@/client/components/ui/skeleton'
 import { HelpPanel } from '@/client/components/common/HelpPanel'
 import { api, toastError } from '@/client/lib/api'
 import { useModels, type ProviderModel } from '@/client/hooks/useModels'
+import { useProviders } from '@/client/hooks/useProviders'
 
 interface DefaultModelsData {
   defaultLlmModel: string | null
@@ -22,15 +24,21 @@ interface DefaultModelsData {
   extractionProviderId: string | null
   embeddingModel: string | null
   embeddingProviderId: string | null
+  defaultSearchProviderId: string | null
 }
 
 export function ModelsSettings() {
   const { t } = useTranslation()
   const { models: allModels, isLoading: modelsLoading } = useModels()
+  const { providers: allProviders } = useProviders()
 
   const llmModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'llm'), [allModels])
   const imageModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'image'), [allModels])
   const embeddingModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'embedding'), [allModels])
+  const searchProviders = useMemo(
+    () => allProviders.filter((p) => p.isValid && p.capabilities.includes('search')),
+    [allProviders],
+  )
 
   // State for all fields
   const [isLoading, setIsLoading] = useState(true)
@@ -59,6 +67,9 @@ export function ModelsSettings() {
   const [embeddingProviderId, setEmbeddingProviderId] = useState('')
   const [initEmbeddingModel, setInitEmbeddingModel] = useState('')
   const [initEmbeddingProviderId, setInitEmbeddingProviderId] = useState('')
+
+  const [searchProviderId, setSearchProviderId] = useState('')
+  const [initSearchProviderId, setInitSearchProviderId] = useState('')
 
   const [reembedding, setReembedding] = useState(false)
 
@@ -92,6 +103,9 @@ export function ModelsSettings() {
         setEmbeddingProviderId(data.embeddingProviderId ?? '')
         setInitEmbeddingModel(data.embeddingModel ?? '')
         setInitEmbeddingProviderId(data.embeddingProviderId ?? '')
+
+        setSearchProviderId(data.defaultSearchProviderId ?? '')
+        setInitSearchProviderId(data.defaultSearchProviderId ?? '')
       })
       .catch(() => {})
       .finally(() => setIsLoading(false))
@@ -103,6 +117,7 @@ export function ModelsSettings() {
   const hasImageChanges = imageModel !== initImageModel || imageProviderId !== initImageProviderId
   const hasExtractionChanges = extractionModel !== initExtractionModel || extractionProviderId !== initExtractionProviderId
   const hasEmbeddingChanges = embeddingModel !== initEmbeddingModel || embeddingProviderId !== initEmbeddingProviderId
+  const hasSearchChanges = searchProviderId !== initSearchProviderId
 
   // Save handlers
   const saveField = async (
@@ -151,6 +166,11 @@ export function ModelsSettings() {
     saveField('embedding', '/settings/embedding-model', { model: embeddingModel, providerId: embeddingProviderId || null }, () => {
       setInitEmbeddingModel(embeddingModel)
       setInitEmbeddingProviderId(embeddingProviderId)
+    })
+
+  const handleSaveSearch = () =>
+    saveField('search', '/settings/default-search', { providerId: searchProviderId || null }, () => {
+      setInitSearchProviderId(searchProviderId)
     })
 
   const handleReembed = async () => {
@@ -247,6 +267,37 @@ export function ModelsSettings() {
           <p className="text-xs text-muted-foreground">{t('settings.models.defaultImageHint')}</p>
           <Button size="sm" onClick={handleSaveImage} disabled={!hasImageChanges || savingField === 'image'}>
             {savingField === 'image' ? t('common.loading') : t('common.save')}
+          </Button>
+        </div>
+      )}
+
+      {/* Default Search Provider */}
+      {searchProviders.length > 0 && (
+        <div className="space-y-2">
+          <Label className="inline-flex items-center gap-1.5">
+            {t('settings.models.defaultSearch')}
+            <InfoTip content={t('settings.models.defaultSearchTip')} />
+          </Label>
+          <Select
+            value={searchProviderId || '__none__'}
+            onValueChange={(v) => setSearchProviderId(v === '__none__' ? '' : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('settings.models.defaultSearchPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">{t('settings.models.defaultSearchPlaceholder')}</SelectItem>
+              {searchProviders.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}{' '}
+                  <span className="text-muted-foreground text-xs">({p.slug})</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('settings.models.defaultSearchHint')}</p>
+          <Button size="sm" onClick={handleSaveSearch} disabled={!hasSearchChanges || savingField === 'search'}>
+            {savingField === 'search' ? t('common.loading') : t('common.save')}
           </Button>
         </div>
       )}

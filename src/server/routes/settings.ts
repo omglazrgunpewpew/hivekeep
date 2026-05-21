@@ -28,6 +28,8 @@ import {
   setDefaultCompactingModel,
   getDefaultCompactingProviderId,
   setDefaultCompactingProviderId,
+  getDefaultSearchProviderId,
+  setDefaultSearchProviderId,
 } from '@/server/services/app-settings'
 import { sseManager } from '@/server/sse/index'
 import type { AppVariables } from '@/server/app'
@@ -110,12 +112,14 @@ settingsRoutes.get('/default-models', async (c) => {
     defaultCompactingModel, defaultCompactingProviderId,
     extractionModel, extractionProviderId,
     embeddingModel, embeddingProviderId,
+    defaultSearchProviderId,
   ] = await Promise.all([
     getDefaultLlmModel(), getDefaultLlmProviderId(),
     getDefaultImageModel(), getDefaultImageProviderId(),
     getDefaultCompactingModel(), getDefaultCompactingProviderId(),
     getExtractionModel(), getExtractionProviderId(),
     getEmbeddingModel(), getEmbeddingProviderId(),
+    getDefaultSearchProviderId(),
   ])
   return c.json({
     defaultLlmModel, defaultLlmProviderId,
@@ -123,6 +127,7 @@ settingsRoutes.get('/default-models', async (c) => {
     defaultCompactingModel, defaultCompactingProviderId,
     extractionModel, extractionProviderId,
     embeddingModel, embeddingProviderId,
+    defaultSearchProviderId,
   })
 })
 
@@ -199,6 +204,31 @@ settingsRoutes.put('/default-compacting', async (c) => {
   await setDefaultCompactingProviderId(providerId ?? null)
   log.info({ model: model.trim(), providerId }, 'Default compacting model updated')
   return c.json({ defaultCompactingModel: model.trim(), defaultCompactingProviderId: providerId ?? null })
+})
+
+// PUT /api/settings/default-search
+//
+// Search providers have no "model" — the body is provider-only.
+settingsRoutes.put('/default-search', async (c) => {
+  const body = await c.req.json()
+  const { providerId } = body as { providerId: string | null }
+
+  if (providerId !== null && typeof providerId !== 'string') {
+    return c.json(
+      { error: { code: 'INVALID_BODY', message: 'providerId must be a string or null' } },
+      400,
+    )
+  }
+
+  if (!providerId || providerId.trim() === '') {
+    await setDefaultSearchProviderId(null)
+    log.info('Default search provider cleared')
+    return c.json({ defaultSearchProviderId: null })
+  }
+
+  await setDefaultSearchProviderId(providerId.trim())
+  log.info({ providerId: providerId.trim() }, 'Default search provider updated')
+  return c.json({ defaultSearchProviderId: providerId.trim() })
 })
 
 // PUT /api/settings/extraction-model

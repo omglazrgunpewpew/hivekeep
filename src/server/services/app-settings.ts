@@ -138,6 +138,27 @@ export async function setDefaultImageProviderId(providerId: string | null): Prom
   return setSetting('default_image_provider_id', providerId)
 }
 
+// ─── Default Search Provider ─────────────────────────────────────────────────
+
+/**
+ * Default search provider used by `web_search` when the LLM doesn't
+ * pass an explicit `providerSlug`. Stored as the provider's UUID (same
+ * convention as default_llm_provider_id). The `web_search` tool resolves
+ * the row at call time and exposes it to the LLM as a slug for
+ * human-readable tool input.
+ *
+ * No `default_search_model` companion: search providers have no model
+ * selection (one provider == one search endpoint).
+ */
+export async function getDefaultSearchProviderId(): Promise<string | null> {
+  return getSetting('default_search_provider_id')
+}
+
+export async function setDefaultSearchProviderId(providerId: string | null): Promise<void> {
+  if (providerId === null) return deleteSetting('default_search_provider_id')
+  return setSetting('default_search_provider_id', providerId)
+}
+
 // ─── Default Compacting Model ────────────────────────────────────────────────
 
 export async function getDefaultCompactingModel(): Promise<string | null> {
