@@ -1,5 +1,8 @@
 import { registerSearchProvider } from '@/server/llm/search/registry'
 import { braveSearchProvider } from '@/server/llm/search/brave'
+import { serpapiSearchProvider } from '@/server/llm/search/serpapi'
+import { tavilySearchProvider } from '@/server/llm/search/tavily'
+import { perplexitySearchProvider } from '@/server/llm/search/perplexity'
 
 /**
  * Register every built-in search provider in the registry. Called once at
@@ -10,4 +13,7 @@ import { braveSearchProvider } from '@/server/llm/search/brave'
  */
 export function registerBuiltinSearchProviders(): void {
   registerSearchProvider(braveSearchProvider)
+  registerSearchProvider(serpapiSearchProvider)
+  registerSearchProvider(tavilySearchProvider)
+  registerSearchProvider(perplexitySearchProvider)
 }
