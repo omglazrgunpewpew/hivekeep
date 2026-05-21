@@ -1,5 +1,6 @@
 import { registerSTTProvider } from '@/server/llm/stt/registry'
 import { openaiSTTProvider } from '@/server/llm/stt/openai'
+import { elevenlabsSTTProvider } from '@/server/llm/stt/elevenlabs'
 
 /**
  * Register every built-in STT provider in the registry. Called once at
@@ -11,4 +12,5 @@ import { openaiSTTProvider } from '@/server/llm/stt/openai'
  */
 export function registerBuiltinSTTProviders(): void {
   registerSTTProvider(openaiSTTProvider)
+  registerSTTProvider(elevenlabsSTTProvider)
 }
