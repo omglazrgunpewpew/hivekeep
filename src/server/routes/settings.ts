@@ -30,6 +30,10 @@ import {
   setDefaultCompactingProviderId,
   getDefaultSearchProviderId,
   setDefaultSearchProviderId,
+  getDefaultTtsProviderId,
+  setDefaultTtsProviderId,
+  getDefaultSttProviderId,
+  setDefaultSttProviderId,
 } from '@/server/services/app-settings'
 import { sseManager } from '@/server/sse/index'
 import type { AppVariables } from '@/server/app'
@@ -113,6 +117,8 @@ settingsRoutes.get('/default-models', async (c) => {
     extractionModel, extractionProviderId,
     embeddingModel, embeddingProviderId,
     defaultSearchProviderId,
+    defaultTtsProviderId,
+    defaultSttProviderId,
   ] = await Promise.all([
     getDefaultLlmModel(), getDefaultLlmProviderId(),
     getDefaultImageModel(), getDefaultImageProviderId(),
@@ -120,6 +126,8 @@ settingsRoutes.get('/default-models', async (c) => {
     getExtractionModel(), getExtractionProviderId(),
     getEmbeddingModel(), getEmbeddingProviderId(),
     getDefaultSearchProviderId(),
+    getDefaultTtsProviderId(),
+    getDefaultSttProviderId(),
   ])
   return c.json({
     defaultLlmModel, defaultLlmProviderId,
@@ -128,6 +136,8 @@ settingsRoutes.get('/default-models', async (c) => {
     extractionModel, extractionProviderId,
     embeddingModel, embeddingProviderId,
     defaultSearchProviderId,
+    defaultTtsProviderId,
+    defaultSttProviderId,
   })
 })
 
@@ -229,6 +239,58 @@ settingsRoutes.put('/default-search', async (c) => {
   await setDefaultSearchProviderId(providerId.trim())
   log.info({ providerId: providerId.trim() }, 'Default search provider updated')
   return c.json({ defaultSearchProviderId: providerId.trim() })
+})
+
+// PUT /api/settings/default-tts
+//
+// TTS defaults to a provider — voice is per-call (or per channel later),
+// never a global default.
+settingsRoutes.put('/default-tts', async (c) => {
+  const body = await c.req.json()
+  const { providerId } = body as { providerId: string | null }
+
+  if (providerId !== null && typeof providerId !== 'string') {
+    return c.json(
+      { error: { code: 'INVALID_BODY', message: 'providerId must be a string or null' } },
+      400,
+    )
+  }
+
+  if (!providerId || providerId.trim() === '') {
+    await setDefaultTtsProviderId(null)
+    log.info('Default TTS provider cleared')
+    return c.json({ defaultTtsProviderId: null })
+  }
+
+  await setDefaultTtsProviderId(providerId.trim())
+  log.info({ providerId: providerId.trim() }, 'Default TTS provider updated')
+  return c.json({ defaultTtsProviderId: providerId.trim() })
+})
+
+// PUT /api/settings/default-stt
+//
+// STT defaults to a provider — the transcription model is picked at
+// call time (provider default unless the tool overrides via model_id).
+settingsRoutes.put('/default-stt', async (c) => {
+  const body = await c.req.json()
+  const { providerId } = body as { providerId: string | null }
+
+  if (providerId !== null && typeof providerId !== 'string') {
+    return c.json(
+      { error: { code: 'INVALID_BODY', message: 'providerId must be a string or null' } },
+      400,
+    )
+  }
+
+  if (!providerId || providerId.trim() === '') {
+    await setDefaultSttProviderId(null)
+    log.info('Default STT provider cleared')
+    return c.json({ defaultSttProviderId: null })
+  }
+
+  await setDefaultSttProviderId(providerId.trim())
+  log.info({ providerId: providerId.trim() }, 'Default STT provider updated')
+  return c.json({ defaultSttProviderId: providerId.trim() })
 })
 
 // PUT /api/settings/extraction-model

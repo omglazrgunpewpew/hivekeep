@@ -17,12 +17,11 @@ export function ProvidersSettings() {
   // filter for the saved providers list and as the picker entries.
   const catalogue = useProviderTypes()
   // Every provider family the host knows about. The Providers page is
-  // capability-agnostic: LLM, embedding, image, search — same UX, same
-  // table, same lifecycle. The old filter was a hangover from when only
-  // the three AI families existed and excluded search rows from the list.
+  // capability-agnostic: LLM, embedding, image, search, TTS, STT —
+  // same UX, same table, same lifecycle.
   const providerTypes = catalogue.entries.length > 0
     ? catalogue.entries
-        .filter((e) => e.capabilities.some((c) => c === 'llm' || c === 'embedding' || c === 'image' || c === 'search'))
+        .filter((e) => e.capabilities.some((c) => c === 'llm' || c === 'embedding' || c === 'image' || c === 'search' || c === 'tts' || c === 'stt'))
         .map((e) => e.type)
     : catalogue.types
   const { providers, isLoading, refetch: fetchProviders } = useProviders({ filterTypes: providerTypes })

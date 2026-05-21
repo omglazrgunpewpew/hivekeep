@@ -159,6 +159,42 @@ export async function setDefaultSearchProviderId(providerId: string | null): Pro
   return setSetting('default_search_provider_id', providerId)
 }
 
+// ─── Default TTS Provider ────────────────────────────────────────────────────
+
+/**
+ * Default TTS provider used by `text_to_speech` when the LLM doesn't
+ * pass an explicit provider slug. Voice selection is independent — the
+ * tool always takes an explicit `voice_id` (and `provider_slug` when
+ * cross-provider).
+ *
+ * No `default_tts_voice` companion: voices are per-tool-call (or per
+ * channel config later), not per global default.
+ */
+export async function getDefaultTtsProviderId(): Promise<string | null> {
+  return getSetting('default_tts_provider_id')
+}
+
+export async function setDefaultTtsProviderId(providerId: string | null): Promise<void> {
+  if (providerId === null) return deleteSetting('default_tts_provider_id')
+  return setSetting('default_tts_provider_id', providerId)
+}
+
+// ─── Default STT Provider ────────────────────────────────────────────────────
+
+/**
+ * Default STT provider used by `transcribe_audio` when the LLM doesn't
+ * pass an explicit provider slug. The transcription model is picked at
+ * call time (provider default unless the LLM overrides via model_id).
+ */
+export async function getDefaultSttProviderId(): Promise<string | null> {
+  return getSetting('default_stt_provider_id')
+}
+
+export async function setDefaultSttProviderId(providerId: string | null): Promise<void> {
+  if (providerId === null) return deleteSetting('default_stt_provider_id')
+  return setSetting('default_stt_provider_id', providerId)
+}
+
 // ─── Default Compacting Model ────────────────────────────────────────────────
 
 export async function getDefaultCompactingModel(): Promise<string | null> {

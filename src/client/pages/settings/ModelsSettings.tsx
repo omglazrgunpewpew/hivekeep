@@ -25,6 +25,8 @@ interface DefaultModelsData {
   embeddingModel: string | null
   embeddingProviderId: string | null
   defaultSearchProviderId: string | null
+  defaultTtsProviderId: string | null
+  defaultSttProviderId: string | null
 }
 
 export function ModelsSettings() {
@@ -37,6 +39,14 @@ export function ModelsSettings() {
   const embeddingModels = useMemo(() => allModels.filter((m: ProviderModel) => m.capability === 'embedding'), [allModels])
   const searchProviders = useMemo(
     () => allProviders.filter((p) => p.isValid && p.capabilities.includes('search')),
+    [allProviders],
+  )
+  const ttsProviders = useMemo(
+    () => allProviders.filter((p) => p.isValid && p.capabilities.includes('tts')),
+    [allProviders],
+  )
+  const sttProviders = useMemo(
+    () => allProviders.filter((p) => p.isValid && p.capabilities.includes('stt')),
     [allProviders],
   )
 
@@ -70,6 +80,12 @@ export function ModelsSettings() {
 
   const [searchProviderId, setSearchProviderId] = useState('')
   const [initSearchProviderId, setInitSearchProviderId] = useState('')
+
+  const [ttsProviderId, setTtsProviderId] = useState('')
+  const [initTtsProviderId, setInitTtsProviderId] = useState('')
+
+  const [sttProviderId, setSttProviderId] = useState('')
+  const [initSttProviderId, setInitSttProviderId] = useState('')
 
   const [reembedding, setReembedding] = useState(false)
 
@@ -106,6 +122,12 @@ export function ModelsSettings() {
 
         setSearchProviderId(data.defaultSearchProviderId ?? '')
         setInitSearchProviderId(data.defaultSearchProviderId ?? '')
+
+        setTtsProviderId(data.defaultTtsProviderId ?? '')
+        setInitTtsProviderId(data.defaultTtsProviderId ?? '')
+
+        setSttProviderId(data.defaultSttProviderId ?? '')
+        setInitSttProviderId(data.defaultSttProviderId ?? '')
       })
       .catch(() => {})
       .finally(() => setIsLoading(false))
@@ -118,6 +140,8 @@ export function ModelsSettings() {
   const hasExtractionChanges = extractionModel !== initExtractionModel || extractionProviderId !== initExtractionProviderId
   const hasEmbeddingChanges = embeddingModel !== initEmbeddingModel || embeddingProviderId !== initEmbeddingProviderId
   const hasSearchChanges = searchProviderId !== initSearchProviderId
+  const hasTtsChanges = ttsProviderId !== initTtsProviderId
+  const hasSttChanges = sttProviderId !== initSttProviderId
 
   // Save handlers
   const saveField = async (
@@ -171,6 +195,16 @@ export function ModelsSettings() {
   const handleSaveSearch = () =>
     saveField('search', '/settings/default-search', { providerId: searchProviderId || null }, () => {
       setInitSearchProviderId(searchProviderId)
+    })
+
+  const handleSaveTts = () =>
+    saveField('tts', '/settings/default-tts', { providerId: ttsProviderId || null }, () => {
+      setInitTtsProviderId(ttsProviderId)
+    })
+
+  const handleSaveStt = () =>
+    saveField('stt', '/settings/default-stt', { providerId: sttProviderId || null }, () => {
+      setInitSttProviderId(sttProviderId)
     })
 
   const handleReembed = async () => {
@@ -298,6 +332,68 @@ export function ModelsSettings() {
           <p className="text-xs text-muted-foreground">{t('settings.models.defaultSearchHint')}</p>
           <Button size="sm" onClick={handleSaveSearch} disabled={!hasSearchChanges || savingField === 'search'}>
             {savingField === 'search' ? t('common.loading') : t('common.save')}
+          </Button>
+        </div>
+      )}
+
+      {/* Default TTS Provider */}
+      {ttsProviders.length > 0 && (
+        <div className="space-y-2">
+          <Label className="inline-flex items-center gap-1.5">
+            {t('settings.models.defaultTts')}
+            <InfoTip content={t('settings.models.defaultTtsTip')} />
+          </Label>
+          <Select
+            value={ttsProviderId || '__none__'}
+            onValueChange={(v) => setTtsProviderId(v === '__none__' ? '' : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('settings.models.defaultTtsPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">{t('settings.models.defaultTtsPlaceholder')}</SelectItem>
+              {ttsProviders.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}{' '}
+                  <span className="text-muted-foreground text-xs">({p.slug})</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('settings.models.defaultTtsHint')}</p>
+          <Button size="sm" onClick={handleSaveTts} disabled={!hasTtsChanges || savingField === 'tts'}>
+            {savingField === 'tts' ? t('common.loading') : t('common.save')}
+          </Button>
+        </div>
+      )}
+
+      {/* Default STT Provider */}
+      {sttProviders.length > 0 && (
+        <div className="space-y-2">
+          <Label className="inline-flex items-center gap-1.5">
+            {t('settings.models.defaultStt')}
+            <InfoTip content={t('settings.models.defaultSttTip')} />
+          </Label>
+          <Select
+            value={sttProviderId || '__none__'}
+            onValueChange={(v) => setSttProviderId(v === '__none__' ? '' : v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('settings.models.defaultSttPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">{t('settings.models.defaultSttPlaceholder')}</SelectItem>
+              {sttProviders.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}{' '}
+                  <span className="text-muted-foreground text-xs">({p.slug})</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('settings.models.defaultSttHint')}</p>
+          <Button size="sm" onClick={handleSaveStt} disabled={!hasSttChanges || savingField === 'stt'}>
+            {savingField === 'stt' ? t('common.loading') : t('common.save')}
           </Button>
         </div>
       )}
