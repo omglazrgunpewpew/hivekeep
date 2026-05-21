@@ -123,7 +123,7 @@ Upload multipart/form-data.
     id: string
     name: string
     type: 'anthropic' | 'openai' | 'gemini' | 'voyage_ai'
-    capabilities: ('llm' | 'embedding' | 'image')[]
+    capabilities: ('llm' | 'embedding' | 'image' | 'search')[]
     isValid: boolean
     createdAt: number
   }>
@@ -187,7 +187,7 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
     name: string            // ex: 'Claude Sonnet 4'
     providerId: string
     providerType: string
-    capability: 'llm' | 'embedding'
+    capability: 'llm' | 'embedding' | 'image' | 'search'
   }>
 }
 ```
@@ -1053,7 +1053,7 @@ Retourne tous les modèles/services par défaut en un seul payload.
   extractionProviderId: string | null
   embeddingModel: string | null
   embeddingProviderId: string | null
-  searchProviderId: string | null
+  defaultSearchProviderId: string | null
 }
 ```
 
@@ -1107,22 +1107,19 @@ Retourne tous les modèles/services par défaut en un seul payload.
 { embeddingModel: string, embeddingProviderId: string | null }
 ```
 
-### `GET /api/settings/search-provider`
+### `PUT /api/settings/default-search`
 
-```typescript
-// Response 200
-{ searchProviderId: string | null }
-```
-
-### `PUT /api/settings/search-provider`
+Search providers have no companion "model" — body is provider-only.
 
 ```typescript
 // Request
-{ searchProviderId: string | null }
+{ providerId: string | null }
 
 // Response 200
-{ searchProviderId: string | null }
+{ defaultSearchProviderId: string | null }
 ```
+
+The current default is read from `GET /api/settings/default-models` (see `defaultSearchProviderId` in that payload).
 
 ### `GET /api/settings/hub`
 

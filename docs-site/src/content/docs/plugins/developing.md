@@ -238,9 +238,9 @@ Webhook-driven adapters implement `handleInboundWebhook`. KinBot routes `POST /a
 
 Identity-switch behaviour (when a channel is transferred to a different Kin) is controlled by `identitySwitchMode`: `'native'` (adapter implements `onIdentityChange`), `'prefix'` (default — KinBot prefixes outbound messages with the new Kin's name), or `'none'`.
 
-## Providers (LLM, Embedding, Image)
+## Providers (LLM, Embedding, Image, Search)
 
-Plugin providers implement the **same** native interfaces as KinBot's built-in Anthropic / OpenAI providers. Streaming, prompt caching, thinking effort, tool calls — all of it. There is no second, simplified shape for plugins.
+Plugin providers implement the **same** native interfaces as KinBot's built-in Anthropic / OpenAI / Brave / Tavily providers. Streaming, prompt caching, thinking effort, tool calls — all of it. There is no second, simplified shape for plugins.
 
 ```ts
 import type {
@@ -281,7 +281,67 @@ export default function (ctx: PluginContext) {
 
 Embedding and image providers follow the same pattern with their own interface (`EmbeddingProvider.embed`, `ImageProvider.generate`).
 
-The plugin loader detects the family by inspecting which method the provider exposes (`chat` → LLM, `embed` → embedding, `generate` → image). The provider's `type` field is prefixed internally to `plugin:<your-plugin-name>:<type>` so it can't collide with built-ins.
+The plugin loader detects the family by inspecting which method the provider exposes (`chat` → LLM, `embed` → embedding, `generate` → image, `search` → search). The provider's `type` field is prefixed internally to `plugin:<your-plugin-name>:<type>` so it can't collide with built-ins.
+
+### Search providers
+
+Search providers have a thinner shape than the model-bearing families — no `listModels()` (one provider == one search endpoint), no streaming. They MUST declare a static `capabilities` object so the host's `web_search` tool can warn the LLM when a request asks for something the provider doesn't expose.
+
+```ts
+import type {
+  SearchProvider,
+  SearchRequest,
+  SearchResult,
+  PluginContext,
+} from '@kinbot-developer/sdk'
+
+class KagiSearchProvider implements SearchProvider {
+  readonly type = 'kagi-search'
+  readonly displayName = 'Kagi'
+  readonly apiKeyUrl = 'https://kagi.com/settings?p=api'
+  readonly configSchema = [
+    { key: 'apiKey', type: 'secret', label: 'API Token', required: true },
+  ] as const
+
+  // Static — describes the API surface, not the credentials in use.
+  readonly capabilities = {
+    supportsAnswer: false,
+    supportsFreshness: false,
+    supportsDomainFilter: false,
+    supportsLanguage: false,
+    supportsLocation: false,
+  }
+
+  async authenticate(config) {
+    // Hit a cheap endpoint to validate. Don't burn a real search credit
+    // when an auth-only check is available (e.g. SerpAPI's /account).
+    return { valid: true }
+  }
+
+  async search(request: SearchRequest, config): Promise<SearchResult> {
+    // Call upstream, normalize to { results, answer?, warnings? }.
+    return { results: [] }
+  }
+}
+
+export default function (ctx: PluginContext) {
+  return { providers: [new KagiSearchProvider()] }
+}
+```
+
+The `SearchRequest` shape covers the lowest common denominator (`query`, `count`, `freshness`, `domains`, `lang`, `location`, `answer`). For provider-specific knobs the standard schema doesn't model, use the `extra` passthrough:
+
+```ts
+// Provider-side: read whatever your upstream API understands.
+async search(request) {
+  const myCustomKnob = (request.extra?.myCustomKnob as string) ?? 'default'
+  // ...
+}
+```
+
+The LLM can pass through `extra` keys via the `web_search` tool's own `extra` parameter (when surfaced) or via host configuration. Providers MUST tolerate unknown keys (silently ignore rather than reject) so a key meant for one provider doesn't break calls routed to another.
+
+For the `answer` capability: when the LLM requests `answer: true` and the provider declares `supportsAnswer: false`, the host adds a warning to the response but still calls `search()` with the original request. Your `search()` implementation should either ignore the `answer` flag or populate `SearchResult.answer` when honored. Don't throw on unsupported requests — let the warning system signal degradation.
 
 ## Hooks
 

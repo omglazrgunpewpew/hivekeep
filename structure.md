@@ -73,8 +73,10 @@ kinbot/
 │   │   │   │   └── _shared / _auth helpers
 │   │   │   ├── embedding/             # Providers embeddings
 │   │   │   │   └── openai.ts + registry/register
-│   │   │   └── image/                 # Providers image generation
-│   │   │       └── openai.ts + registry/register
+│   │   │   ├── image/                 # Providers image generation
+│   │   │   │   └── openai.ts + registry/register
+│   │   │   └── search/                # Providers web search
+│   │   │       └── brave.ts, serpapi.ts, tavily.ts, perplexity.ts + registry/register
 │   │   │
 │   │   ├── providers/                 # Dispatcher provider-agnostic
 │   │   │   ├── index.ts               # listModelsForProvider, lookupImageModel,

@@ -19,7 +19,7 @@ Read these files **before starting any phase**. They are the source of truth.
 
 ## Tech stack
 
-**Backend**: Bun + Hono + SQLite (bun:sqlite) + Drizzle ORM + Better Auth + croner. LLM/Embedding/Image providers are native primitives in `src/server/llm/{llm,embedding,image}/`; plugins consume `@kinbot-developer/sdk`. (Vercel AI SDK was removed pre-2.0.)
+**Backend**: Bun + Hono + SQLite (bun:sqlite) + Drizzle ORM + Better Auth + croner. LLM/Embedding/Image/Search providers are native primitives in `src/server/llm/{llm,embedding,image,search}/`; plugins consume `@kinbot-developer/sdk`. (Vercel AI SDK was removed pre-2.0.)
 **Frontend**: React + Vite + Tailwind CSS + shadcn/ui + i18next
 **Single process, single DB file, single Docker container. Zero external infrastructure.**
 
@@ -103,7 +103,8 @@ All API routes return JSON. Errors follow this format:
 - **Inter-Kin communication**: `request`/`reply` pattern with correlation IDs. Replies are always `inform` (no ping-pong). Rate-limited.
 - **Crons**: in-process scheduler (croner). Spawn sub-Kins on schedule. Results are informational (no LLM turn on parent). Kin-created crons require user approval.
 - **Event bus + hooks**: foundation for observability and future plugin system.
-- **Providers are pluggable**: one config per provider, multiple capabilities auto-detected (`llm`, `embedding`, `image`).
+- **Providers are pluggable**: one config per provider, multiple capabilities auto-detected (`llm`, `embedding`, `image`, `search`).
+- **Search**: `web_search` action tool + `list_search_providers` discovery tool. Provider resolved via `resolveSearchProvider(slug?)` (explicit slug → global default in `app_settings.default_search_provider_id` → first valid). Built-ins: Brave, SerpAPI, Tavily, Perplexity Sonar. `SearchProvider.capabilities` (static) drives capability-mismatch warnings emitted by the host before calling the upstream API. `SearchRequest.extra` is a free-form passthrough for provider-specific quirks. Follow-up reads go through the existing `browse_url` tool (no separate `web_fetch`).
 - **Tool concurrency**: within a single LLM step, tool calls are partitioned into batches by `tool-executor.ts`. Consecutive tools flagged `concurrencySafe: true` on their `ToolRegistration` fuse into one parallel batch (bounded by `KINBOT_MAX_TOOL_USE_CONCURRENCY`, default 10); every other tool runs alone in its own serial batch. Three optional flags: `readOnly`, `concurrencySafe`, `destructive`. Default is `false` everywhere (conservative: assume write, assume not safe to parallelize). When adding a native tool, only set these flags when the answer is unambiguous — anything stateful, side-effecting, or with ordering dependencies should stay at the default.
 
 ## Git conventions
