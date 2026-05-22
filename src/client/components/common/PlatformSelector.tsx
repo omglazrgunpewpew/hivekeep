@@ -47,7 +47,12 @@ export function PlatformSelector({
       <SelectTrigger className={cn(isSmall ? 'h-7 text-xs px-2' : 'w-full', className)}>
         <SelectValue>
           <span className={cn('flex items-center gap-2', isSmall && 'gap-1.5')}>
-            <PlatformIcon platform={value} variant="color" className={isSmall ? 'size-3' : 'size-4'} />
+            <PlatformIcon
+              platform={value}
+              variant="color"
+              className={isSmall ? 'size-3' : 'size-4'}
+              iconUrl={current?.iconUrl}
+            />
             {current?.displayName ?? value}
           </span>
         </SelectValue>
@@ -56,7 +61,12 @@ export function PlatformSelector({
         {allPlatforms.map((p) => (
           <SelectItem key={p.platform} value={p.platform}>
             <span className={cn('flex items-center gap-2', isSmall && 'gap-1.5')}>
-              <PlatformIcon platform={p.platform} variant="color" className={isSmall ? 'size-3' : 'size-4'} />
+              <PlatformIcon
+                platform={p.platform}
+                variant="color"
+                className={isSmall ? 'size-3' : 'size-4'}
+                iconUrl={p.iconUrl}
+              />
               {p.displayName}
             </span>
           </SelectItem>

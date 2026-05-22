@@ -1,4 +1,5 @@
 import { Radio } from 'lucide-react'
+import { usePlatforms } from '@/client/hooks/usePlatforms'
 
 /** Brand colors per platform */
 const PLATFORM_COLORS: Record<string, string> = {
@@ -72,9 +73,41 @@ interface PlatformIconProps {
   className?: string
   /** 'mono' uses currentColor (default), 'color' uses brand colors */
   variant?: 'mono' | 'color'
+  /** Optional logo URL. Used when the platform is a plugin-contributed
+   *  adapter (the manifest's `iconUrl`, served via `/api/plugins/<name>
+   *  /logo`). Falls through to the hardcoded SVG map / Radio fallback
+   *  when omitted. */
+  iconUrl?: string
 }
 
-export function PlatformIcon({ platform, className, variant = 'mono' }: PlatformIconProps) {
+export function PlatformIcon({ platform, className, variant = 'mono', iconUrl }: PlatformIconProps) {
+  // When the caller didn't thread an iconUrl, look it up from the
+  // platforms catalogue automatically. Keeps every call site
+  // (ChannelCard, ContactPlatformIds, NotificationChannelCard, …) on
+  // a `<PlatformIcon platform={…} />` one-liner while still showing
+  // plugin-contributed branding. The hook is cheap (module-level
+  // cache shared with the picker) and re-renders on plugin lifecycle
+  // SSE events so newly-enabled plugins surface without a refresh.
+  const { platforms } = usePlatforms()
+  const resolvedIconUrl = iconUrl ?? platforms.find((p) => p.platform === platform)?.iconUrl
+
+  if (resolvedIconUrl) {
+    return (
+      <img
+        src={resolvedIconUrl}
+        alt={platform}
+        className={className}
+        style={{ objectFit: 'contain' }}
+        onError={(e) => {
+          // Hide on 404 so the layout doesn't show a broken-image icon —
+          // the SVG / Radio fallback isn't easy to swap in mid-render
+          // without re-mounting, so silent degrade is the lesser evil.
+          ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+        }}
+      />
+    )
+  }
+
   const Icon = PLATFORM_ICONS[platform]
   if (!Icon) return <Radio className={className} />
 
