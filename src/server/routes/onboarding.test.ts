@@ -191,7 +191,12 @@ describe('onboarding routes', () => {
       })
     })
 
-    it('returns hasAdmin=true when admin exists but no providers', async () => {
+    it('returns completed=true when admin exists, regardless of providers', async () => {
+      // Phase 1 of the onboarding redesign decoupled `completed` from
+      // provider configuration — `completed` now mirrors `hasAdmin`.
+      // Provider state stays in the response for informational use
+      // (the dashboard checklist + Settings can surface it) but no
+      // longer gates entry to the app.
       let call = 0
       mockDbSelect = mock(() => {
         call++
@@ -205,7 +210,7 @@ describe('onboarding routes', () => {
       expect(body.hasAdmin).toBe(true)
       expect(body.hasLlm).toBe(false)
       expect(body.hasEmbedding).toBe(false)
-      expect(body.completed).toBe(false)
+      expect(body.completed).toBe(true)
     })
 
     it('returns completed=true when admin + llm + embedding providers exist', async () => {

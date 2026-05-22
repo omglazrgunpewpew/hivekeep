@@ -3,19 +3,32 @@ import { useTranslation } from 'react-i18next'
 import { Progress } from '@/client/components/ui/progress'
 import { StepIdentity } from '@/client/pages/onboarding/StepIdentity'
 import { StepPreferences } from '@/client/pages/onboarding/StepPreferences'
-import { StepProviders } from '@/client/pages/onboarding/StepProviders'
-import { StepDefaultModels } from '@/client/pages/onboarding/StepDefaultModels'
 
-const TOTAL_STEPS = 4
+/**
+ * First-run onboarding — minimal by design.
+ *
+ * The flow used to be 4 steps (Identity → Preferences → Providers →
+ * Default Models). Providers + default models were moved to the
+ * in-app setup checklist on the dashboard (Phase 1 of the onboarding
+ * redesign) so users land on a working app immediately. What stays
+ * here is the bare minimum that has to happen before there's even an
+ * authenticated session:
+ *   1. Identity   — creates the user profile (admin role for the
+ *                   first user) so subsequent API calls have a
+ *                   profile row to attach to.
+ *   2. Preferences — language + theme + palette. Lightweight; takes
+ *                    ~5 seconds. Sets the cosmetic frame before the
+ *                    user sees the dashboard.
+ */
+const TOTAL_STEPS = 2
 
 interface OnboardingPageProps {
   onComplete: () => void
-  initialStep?: number
 }
 
-export function OnboardingPage({ onComplete, initialStep = 1 }: OnboardingPageProps) {
+export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const { t } = useTranslation()
-  const [currentStep, setCurrentStep] = useState(initialStep)
+  const [currentStep, setCurrentStep] = useState(1)
 
   const progressValue = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100
 
@@ -52,17 +65,7 @@ export function OnboardingPage({ onComplete, initialStep = 1 }: OnboardingPagePr
             <StepIdentity onComplete={() => setCurrentStep(2)} />
           )}
           {currentStep === 2 && (
-            <StepPreferences onComplete={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} />
-          )}
-          {currentStep === 3 && (
-            <StepProviders
-              onComplete={() => setCurrentStep(4)}
-              onBack={() => setCurrentStep(2)}
-              onQuickFinish={onComplete}
-            />
-          )}
-          {currentStep === 4 && (
-            <StepDefaultModels onComplete={onComplete} onBack={() => setCurrentStep(3)} />
+            <StepPreferences onComplete={onComplete} onBack={() => setCurrentStep(1)} />
           )}
         </div>
       </div>

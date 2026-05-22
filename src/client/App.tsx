@@ -105,27 +105,14 @@ function AppRoot() {
     )
   }
 
-  // Fresh install — no admin exists, start onboarding from step 1
+  // Fresh install — no admin exists yet, run the (now-minimal) onboarding.
+  // The provider/default-model questionnaire that used to live here moved
+  // to the dashboard's setup checklist; first-time users land on a usable
+  // app immediately and configure capabilities at their own pace.
   if (onboardingStatus && !onboardingStatus.hasAdmin) {
     return (
       <Suspense fallback={<PageFallback />}>
         <OnboardingPage
-          onComplete={async () => {
-            await refetch()
-            await checkOnboarding()
-          }}
-        />
-      </Suspense>
-    )
-  }
-
-  // Admin exists but onboarding incomplete (providers missing)
-  // If authenticated, resume onboarding at step 3 (providers)
-  if (onboardingStatus && !onboardingStatus.completed && isAuthenticated) {
-    return (
-      <Suspense fallback={<PageFallback />}>
-        <OnboardingPage
-          initialStep={3}
           onComplete={async () => {
             await refetch()
             await checkOnboarding()

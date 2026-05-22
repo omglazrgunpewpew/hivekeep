@@ -12,8 +12,18 @@ const log = createLogger('routes:onboarding')
 const onboardingRoutes = new Hono()
 
 // GET /api/onboarding/status — check if onboarding is complete
+//
+// "Complete" now means "the admin user exists". Everything else
+// (providers, default models, channels) is handled by the in-app
+// setup checklist on the dashboard — users land on a functional app
+// immediately and configure capabilities at their own pace. The old
+// gate refused entry until LLM + embedding providers were set, which
+// turned the first-run experience into a long-form questionnaire.
+//
+// `hasLlm` / `hasEmbedding` stay in the response for any client that
+// wants to surface a finer-grained progress signal, but they no longer
+// influence `completed`.
 onboardingRoutes.get('/status', async (c) => {
-  // Check if an admin user exists
   const admin = await db
     .select()
     .from(userProfiles)
@@ -22,7 +32,6 @@ onboardingRoutes.get('/status', async (c) => {
 
   const hasAdmin = !!admin
 
-  // Check provider capabilities
   const allProviders = await db.select().from(providers).all()
 
   let hasLlm = false
@@ -38,9 +47,7 @@ onboardingRoutes.get('/status', async (c) => {
     }
   }
 
-  const completed = hasAdmin && hasLlm && hasEmbedding
-
-  return c.json({ completed, hasAdmin, hasLlm, hasEmbedding })
+  return c.json({ completed: hasAdmin, hasAdmin, hasLlm, hasEmbedding })
 })
 
 // POST /api/onboarding/profile — create user profile during onboarding
