@@ -2236,7 +2236,12 @@
       "sqlNoRows": "No rows returned",
       "sqlChanges": "{{count}} row affected",
       "sqlChanges_plural": "{{count}} rows affected",
-      "sqlLastInsert": "Last inserted row id: {{id}}"
+      "sqlLastInsert": "Last inserted row id: {{id}}",
+      "searchResults": "{{count}} result",
+      "searchResults_plural": "{{count}} results",
+      "searchAnswer": "Answer",
+      "searchNoResults": "No results found",
+      "searchUntitled": "Untitled result"
     }
   },
   "invite": {

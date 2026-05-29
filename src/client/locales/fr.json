@@ -2236,7 +2236,12 @@
       "sqlNoRows": "Aucune ligne retournée",
       "sqlChanges": "{{count}} ligne affectée",
       "sqlChanges_plural": "{{count}} lignes affectées",
-      "sqlLastInsert": "Dernier id inséré : {{id}}"
+      "sqlLastInsert": "Dernier id inséré : {{id}}",
+      "searchResults": "{{count}} résultat",
+      "searchResults_plural": "{{count}} résultats",
+      "searchAnswer": "Réponse",
+      "searchNoResults": "Aucun résultat trouvé",
+      "searchUntitled": "Résultat sans titre"
     }
   },
   "invite": {
