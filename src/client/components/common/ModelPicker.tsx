@@ -50,6 +50,10 @@ interface ModelPickerProps {
   placeholder?: string
   disabled?: boolean
   className?: string
+  /** Trigger button variant. Defaults to 'outline' (bordered). Pass 'ghost'
+   *  for a borderless inline trigger that blends into its surroundings
+   *  (e.g. the composer toolbar). */
+  variant?: 'outline' | 'ghost'
   /** Show a "None" option at the top to clear the selection */
   allowClear?: boolean
   /** Label for the clear option. Defaults to `placeholder` if provided,
@@ -74,6 +78,7 @@ export function ModelPicker({
   placeholder,
   disabled = false,
   className,
+  variant = 'outline',
   allowClear = false,
   clearLabel,
   isLoading = false,
@@ -125,7 +130,7 @@ export function ModelPicker({
     >
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant={variant}
           role="combobox"
           aria-expanded={open}
           disabled={disabled}

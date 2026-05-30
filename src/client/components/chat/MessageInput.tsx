@@ -768,14 +768,15 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
         {/* Composer toolbar: generation controls (model + effort) on the left,
             character count on the right. Model/effort were relocated here from
             the conversation header so they sit where you compose. */}
-        <div className="mt-1 flex items-center justify-between gap-2 px-1">
-          <div className="flex min-w-0 items-center gap-1.5">
+        <div className="mt-1.5 flex items-center justify-between gap-2 px-1">
+          <div className="flex min-w-0 items-center gap-0.5">
             {llmModels && model && onModelChange && (
               <ModelPicker
                 models={llmModels}
                 value={modelPickerValue(model, providerId ?? '')}
                 onValueChange={onModelChange}
-                className="h-7 w-auto min-w-0 max-w-[220px] shrink text-xs"
+                variant="ghost"
+                className="h-7 w-auto min-w-0 max-w-[200px] shrink gap-1.5 rounded-full px-2.5 text-xs font-normal text-muted-foreground hover:text-foreground"
               />
             )}
             {onChangeThinking && (
