@@ -76,6 +76,8 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'get_project_knowledge',
       'update_project_knowledge',
       'pin_project_knowledge',
+      // Delegation — offload heavy read-only exploration to a cheap scout model.
+      'scout',
     ],
   },
   {
@@ -96,6 +98,8 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'forget',
       'list_memories',
       'review_memories',
+      // Delegation — offload heavy read-only exploration to a cheap scout model.
+      'scout',
     ],
   },
   {
@@ -110,6 +114,8 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'redact_message',
       'http_request',
       'get_system_info',
+      // Delegation — offload heavy read-only exploration to a cheap scout model.
+      'scout',
     ],
   },
   {
