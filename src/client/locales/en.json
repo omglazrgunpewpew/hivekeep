@@ -1022,7 +1022,6 @@
     "viewPromptTooltip": "View full task prompt",
     "runPrompt": "Run instructions",
     "runPromptTooltip": "Run-specific instructions passed at spawn time",
-    "toolCalls": "Tool calls",
     "prompt": "Task prompt",
     "promptDescription": "Full task prompt content",
     "forceStart": "Force start",

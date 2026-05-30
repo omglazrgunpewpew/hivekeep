@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avat
 import { Popover, PopoverTrigger, PopoverContent } from '@/client/components/ui/popover'
 import { MessageBubble } from '@/client/components/chat/MessageBubble'
 import { TokenUsageIndicator } from '@/client/components/chat/TokenUsageIndicator'
-import { ToolCallsViewer } from '@/client/components/chat/ToolCallsViewer'
 import { TypingIndicator } from '@/client/components/chat/TypingIndicator'
 import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
 import { HumanPromptCard } from '@/client/components/chat/HumanPromptCard'
@@ -40,7 +39,6 @@ import {
   MessageSquare,
   GitBranch,
   Layers,
-  Wrench,
   Cpu,
   Sparkles,
   FileText,
@@ -121,8 +119,6 @@ export function TaskPanelContent({
     pauseTask,
     resumeTask,
     injectIntoTask,
-    allToolCalls,
-    toolCallCount,
     toolCallsByMessage,
     learningsSaved,
     todos,
@@ -131,7 +127,6 @@ export function TaskPanelContent({
     task ? task.parentKinId : null,
     taskId,
   )
-  const [isToolCallsOpen, setIsToolCallsOpen] = useState(false)
 
   // Fetch context-preview for the task
   const [contextData, setContextData] = useState<{
@@ -156,7 +151,6 @@ export function TaskPanelContent({
   }, [task?.parentKinId, task?.id])
   const [isPromptOpen, setIsPromptOpen] = useState(false)
   const [isRunPromptOpen, setIsRunPromptOpen] = useState(false)
-  const toggleToolCalls = useCallback(() => setIsToolCallsOpen((prev) => !prev), [])
 
   // Sibling runs of the same cron — for the run selector
   const { openTask } = useSidePanel()
@@ -529,24 +523,8 @@ export function TaskPanelContent({
         )}
 
         {/* Row 3: action chips — only rendered when at least one is visible */}
-        {task && (toolCallCount > 0 || task.description || contextData) && (
+        {task && (task.description || contextData) && (
           <div className="flex items-center gap-1.5 flex-wrap pl-9">
-            {toolCallCount > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={isToolCallsOpen ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="h-5 gap-1 px-1.5 text-[10px]"
-                    onClick={toggleToolCalls}
-                  >
-                    <Wrench className="size-2.5" />
-                    {toolCallCount}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('taskDetail.toolCalls', { defaultValue: 'Tool calls' })}</TooltipContent>
-              </Tooltip>
-            )}
             {task.description && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -601,7 +579,7 @@ export function TaskPanelContent({
         <TaskTodoList todos={todos} />
       )}
 
-      {/* Middle: messages + optional tool calls panel */}
+      {/* Middle: messages */}
       <div className="flex min-h-0 flex-1">
         {/* Conversation */}
         <div className="relative flex-1 min-h-0 overflow-y-auto py-3" ref={scrollContainerRef}>
@@ -798,20 +776,6 @@ export function TaskPanelContent({
           >
             {autoScroll ? <Pin className="size-2.5" /> : <PinOff className="size-2.5" />}
           </button>
-        </div>
-
-        {/* Tool calls side panel — animated width */}
-        <div
-          className={cn(
-            'shrink-0 overflow-hidden transition-[width] duration-300 ease-out',
-            isToolCallsOpen ? 'w-56 lg:w-64' : 'w-0',
-          )}
-        >
-          <ToolCallsViewer
-            toolCalls={allToolCalls}
-            toolCallCount={toolCallCount}
-            onClose={toggleToolCalls}
-          />
         </div>
       </div>
 

@@ -1022,7 +1022,6 @@
     "viewPromptTooltip": "Voir le prompt complet de la tâche",
     "runPrompt": "Instructions de run",
     "runPromptTooltip": "Instructions spécifiques fournies au lancement de la tâche",
-    "toolCalls": "Appels d'outils",
     "prompt": "Prompt de la tâche",
     "promptDescription": "Contenu complet du prompt de la tâche",
     "forceStart": "Démarrer immédiatement",
