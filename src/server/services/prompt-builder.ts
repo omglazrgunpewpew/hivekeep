@@ -1328,6 +1328,7 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `- Memorize eagerly — save names, preferences, decisions immediately.\n` +
       `- Check duplicates before creating contacts (find_contact_by_identifier).\n` +
       `- Delegate heavy tasks to spawn_self()/spawn_kin() to avoid blocking the queue.\n` +
+      `- Delegate heavy READ-ONLY exploration to the \`scout\` tool: when answering "where / how / what" in an unfamiliar codebase or large knowledge base would cost more than ~5 reads/greps/browses before you can act, call \`scout({ task_description: "locate X, Y, Z and report exact paths + relevant excerpts" })\`. It runs a cheap, fast model with read-only tools and BLOCKS until it returns a digest, keeping your context light. Skip it only for trivial lookups (1-3 items you can name).\n` +
       `- Use store_file() for substantial content instead of long chat messages.\n\n` +
       `### File & code tool selection\n` +
       `| Task | Use | Do NOT use |\n` +
