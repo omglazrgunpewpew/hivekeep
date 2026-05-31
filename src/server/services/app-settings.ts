@@ -9,6 +9,50 @@ const log = createLogger('app-settings')
 // In-memory cache (single-process, invalidated on write)
 const cache = new Map<string, string>()
 
+// ─── OAuth app credentials (operator-level, keyed by provider type) ──────────
+// The client id is non-secret (app_settings); the client secret is sensitive
+// and goes to the vault. Used by the generic OAuth2 flow for email providers.
+
+export interface OAuthClient {
+  clientId: string
+  clientSecret: string
+}
+
+export async function getOAuthClient(providerType: string): Promise<OAuthClient | null> {
+  const clientId = await getSetting(`oauth_client:${providerType}:client_id`)
+  if (!clientId) return null
+  const { getSecretValue } = await import('@/server/services/vault')
+  const clientSecret = await getSecretValue(`oauth_client:${providerType}:secret`)
+  if (!clientSecret) return null
+  return { clientId, clientSecret }
+}
+
+export async function setOAuthClient(providerType: string, client: OAuthClient): Promise<void> {
+  await setSetting(`oauth_client:${providerType}:client_id`, client.clientId)
+  const vault = await import('@/server/services/vault')
+  const key = `oauth_client:${providerType}:secret`
+  const updated = await vault.updateSecretValueByKey(key, client.clientSecret)
+  if (!updated) {
+    await vault.createSecret(key, client.clientSecret, undefined, `OAuth client secret for ${providerType}`)
+  }
+}
+
+export async function clearOAuthClient(providerType: string): Promise<void> {
+  await deleteSetting(`oauth_client:${providerType}:client_id`)
+  const vault = await import('@/server/services/vault')
+  const existing = await vault.getSecretByKey(`oauth_client:${providerType}:secret`)
+  if (existing) await vault.deleteSecret(existing.id)
+}
+
+export async function getDefaultEmailProviderId(): Promise<string | null> {
+  return getSetting('default_email_provider_id')
+}
+
+export async function setDefaultEmailProviderId(id: string | null): Promise<void> {
+  if (id == null) return deleteSetting('default_email_provider_id')
+  return setSetting('default_email_provider_id', id)
+}
+
 export async function getSetting(key: string): Promise<string | null> {
   const cached = cache.get(key)
   if (cached !== undefined) return cached
