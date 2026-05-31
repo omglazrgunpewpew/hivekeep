@@ -19,9 +19,46 @@ import type { KinCompactingConfig, MemoryCategory } from '@/shared/types'
 
 const log = createLogger('compacting')
 
-// Rough token estimation: ~4 characters per token
+// Rough token estimation: ~4 characters per token.
+// Kept for summary metadata (`tokenEstimate`) so stored values stay stable.
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4)
+}
+
+// chars/4 under-counts real BPE tokens on JSON/tool-heavy content by ~30-60%.
+// The keep-window and trigger budgets are expressed in REAL tokens (the context
+// window comes from the provider's `max_input_tokens`), so per-message sizes used
+// in budget math must be scaled into the same unit — otherwise the keep-window
+// fills a real-token budget with under-counted estimates and silently keeps ~40%
+// more than configured. See compacting.md "Token calibration".
+function estimateContextTokens(text: string): number {
+  // Defensive `?? 1.4`: cross-file `mock.module('@/server/config')` in the test
+  // suite can leave `config.compacting` undefined; never let calibration be NaN.
+  const calibration = config.compacting?.tokenCalibration ?? 1.4
+  return Math.ceil((text.length / 4) * calibration)
+}
+
+// ─── Budget resolution (pure, exported for tests) ─────────────────────────────
+//
+// Each percentage knob scales with the context window, so on a 1M-token model a
+// "small" 25% keep-window is 250k tokens. An absolute ceiling bounds the real
+// footprint regardless of window size: `effective = min(percent × window, cap)`.
+// On a 200k model the percent still dominates, so the caps only engage on
+// large-window models.
+
+/** Raw-message keep-window budget (real tokens). */
+export function resolveKeepBudget(keepPercent: number, contextWindow: number, keepMaxTokens: number): number {
+  return Math.min(Math.floor((keepPercent / 100) * contextWindow), keepMaxTokens)
+}
+
+/** Context size that triggers compaction (real tokens). */
+export function resolveTriggerTokens(thresholdPercent: number, contextWindow: number, triggerMaxTokens: number): number {
+  return Math.min(Math.floor((thresholdPercent / 100) * contextWindow), triggerMaxTokens)
+}
+
+/** Total active-summary budget before telescopic merge (real tokens). */
+export function resolveSummaryBudget(summaryBudgetPercent: number, contextWindow: number, summaryMaxTokens: number): number {
+  return Math.min(Math.floor((summaryBudgetPercent / 100) * contextWindow), summaryMaxTokens)
 }
 
 // ─── Per-Kin Effective Config ─────────────────────────────────────────────────
@@ -31,6 +68,9 @@ interface EffectiveCompactingConfig {
   keepPercent: number
   summaryBudgetPercent: number
   maxSummaries: number
+  keepMaxTokens: number
+  triggerMaxTokens: number
+  summaryMaxTokens: number
   model: string
   providerId: string | null
 }
@@ -52,6 +92,9 @@ async function getEffectiveCompactingConfig(kinId: string): Promise<EffectiveCom
   const keepPercent = perKin?.keepPercent ?? config.compacting.keepPercent
   const summaryBudgetPercent = perKin?.summaryBudgetPercent ?? config.compacting.summaryBudgetPercent
   const maxSummaries = perKin?.maxSummaries ?? config.compacting.maxSummaries
+  const keepMaxTokens = perKin?.keepMaxTokens ?? config.compacting.keepMaxTokens
+  const triggerMaxTokens = perKin?.triggerMaxTokens ?? config.compacting.triggerMaxTokens
+  const summaryMaxTokens = perKin?.summaryMaxTokens ?? config.compacting.summaryMaxTokens
 
   // Model: per-Kin override > app_setting default > env COMPACTING_MODEL > Kin's own model
   // Sentinel '__kin_own__' means "use this kin's own model" (skips defaults)
@@ -78,7 +121,7 @@ async function getEffectiveCompactingConfig(kinId: string): Promise<EffectiveCom
     providerId = kin.providerId
   }
 
-  return { thresholdPercent, keepPercent, summaryBudgetPercent, maxSummaries, model, providerId }
+  return { thresholdPercent, keepPercent, summaryBudgetPercent, maxSummaries, keepMaxTokens, triggerMaxTokens, summaryMaxTokens, model, providerId }
 }
 
 // ─── Threshold Evaluation ────────────────────────────────────────────────────
@@ -104,8 +147,12 @@ export async function shouldCompact(kinId: string, contextTokens?: number, conte
     const effectiveTokens = cached?.apiContextTokens != null && cached.apiContextTokens > contextTokens
       ? cached.apiContextTokens
       : contextTokens
-    const usagePercent = (effectiveTokens / contextWindow) * 100
-    return usagePercent > effectiveConfig.thresholdPercent
+    const triggerAt = resolveTriggerTokens(
+      effectiveConfig.thresholdPercent,
+      contextWindow,
+      effectiveConfig.triggerMaxTokens,
+    )
+    return effectiveTokens > triggerAt
   }
 
   // Fallback: estimate from DB
@@ -125,15 +172,19 @@ export async function shouldCompact(kinId: string, contextTokens?: number, conte
   // tool-heavy Kins by 10-100× and lets shouldCompact silently miss its
   // threshold when there's no fresh apiContextTokens in the cache yet.
   const messageTokens = nonCompactedMessages.reduce(
-    (sum, m) => sum + estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? ''),
+    (sum, m) => sum + estimateContextTokens(m.content ?? '') + estimateContextTokens((m.toolCalls as string | null) ?? ''),
     0,
   )
-  const summaryTokens = activeSummaries.reduce((sum, s) => sum + estimateTokens(s.summary), 0)
+  const summaryTokens = activeSummaries.reduce((sum, s) => sum + estimateContextTokens(s.summary), 0)
 
   // Rough estimate: messages + summaries + ~2000 for system prompt + ~1000 for tools
   const estimatedTotal = messageTokens + summaryTokens + 3000
-  const usagePercent = (estimatedTotal / ctxWindow) * 100
-  return usagePercent > effectiveConfig.thresholdPercent
+  const triggerAt = resolveTriggerTokens(
+    effectiveConfig.thresholdPercent,
+    ctxWindow,
+    effectiveConfig.triggerMaxTokens,
+  )
+  return estimatedTotal > triggerAt
 }
 
 // ─── Public: compacting proximity for UI ─────────────────────────────────────
@@ -169,13 +220,22 @@ export async function getCompactingProximity(kinId: string): Promise<CompactingP
 
   const activeSummaries = await getActiveSummaries(kinId)
   const summaryTokens = activeSummaries.reduce((sum, s) => sum + (s.tokenEstimate ?? estimateTokens(s.summary)), 0)
+  // Report the EFFECTIVE budgets (after the absolute caps), not the raw
+  // percentages — otherwise on a 1M-window model the bar would claim
+  // "triggers at 75%" while compaction actually fires at 300k (≈30%).
   const summaryBudgetTokens = contextWindow > 0
-    ? Math.floor((effectiveConfig.summaryBudgetPercent / 100) * contextWindow)
+    ? resolveSummaryBudget(effectiveConfig.summaryBudgetPercent, contextWindow, effectiveConfig.summaryMaxTokens)
     : 0
+  const effectiveThresholdPercent = contextWindow > 0
+    ? Math.round(
+        (resolveTriggerTokens(effectiveConfig.thresholdPercent, contextWindow, effectiveConfig.triggerMaxTokens) /
+          contextWindow) * 100,
+      )
+    : effectiveConfig.thresholdPercent
 
   return {
     currentPercent,
-    thresholdPercent: effectiveConfig.thresholdPercent,
+    thresholdPercent: effectiveThresholdPercent,
     summaryCount: activeSummaries.length,
     maxSummaries: effectiveConfig.maxSummaries,
     summaryTokens,
@@ -269,10 +329,13 @@ export async function runCompacting(
   //    cap, a Kin sitting at 90k of messages with 250k budget got "nothing to
   //    compact" forever despite the user wanting more relief.
   const totalNonCompactedTokens = nonCompacted.reduce(
-    (sum, m) => sum + estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? ''),
+    (sum, m) => sum + estimateContextTokens(m.content ?? '') + estimateContextTokens((m.toolCalls as string | null) ?? ''),
     0,
   )
-  const regularBudget = Math.floor((keepPercent / 100) * ctxWindow)
+  // min(keepPercent% of window, keepMaxTokens) — the absolute cap keeps the
+  // post-compaction footprint bounded on large-window models (e.g. 1M), where
+  // 25% would otherwise be 250k tokens of raw messages.
+  const regularBudget = resolveKeepBudget(keepPercent, ctxWindow, effectiveConfig.keepMaxTokens)
   const keepBudget = options?.aggressive
     ? Math.min(regularBudget, Math.floor(totalNonCompactedTokens / 2))
     : regularBudget
@@ -280,7 +343,7 @@ export async function runCompacting(
   let keepStartIndex = nonCompacted.length
   for (let i = nonCompacted.length - 1; i >= 0; i--) {
     const m = nonCompacted[i]!
-    const msgTokens = estimateTokens(m.content ?? '') + estimateTokens((m.toolCalls as string | null) ?? '')
+    const msgTokens = estimateContextTokens(m.content ?? '') + estimateContextTokens((m.toolCalls as string | null) ?? '')
     if (keepTokens + msgTokens > keepBudget) break
     keepTokens += msgTokens
     keepStartIndex = i
@@ -613,8 +676,14 @@ async function maybeMergeSummaries(kinId: string, contextWindow: number): Promis
 
   if (activeSummaries.length <= 2) return // nothing to merge
 
-  const totalSummaryTokens = activeSummaries.reduce((sum, s) => sum + (s.tokenEstimate ?? estimateTokens(s.summary)), 0)
-  const summaryBudget = Math.floor((effectiveConfig.summaryBudgetPercent / 100) * contextWindow)
+  const totalSummaryTokens = activeSummaries.reduce((sum, s) => sum + estimateContextTokens(s.summary), 0)
+  // min(summaryBudgetPercent% of window, summaryMaxTokens) — the absolute cap
+  // keeps the summary block from ballooning to 20% of a 1M window (200k).
+  const summaryBudget = resolveSummaryBudget(
+    effectiveConfig.summaryBudgetPercent,
+    contextWindow,
+    effectiveConfig.summaryMaxTokens,
+  )
 
   const needsMerge = activeSummaries.length > effectiveConfig.maxSummaries || totalSummaryTokens > summaryBudget
   if (!needsMerge) return
@@ -682,7 +751,7 @@ async function maybeMergeSummaries(kinId: string, contextWindow: number): Promis
   // sources, not less.
   const perSummaryBudget = Math.max(
     1500,
-    Math.floor((effectiveConfig.summaryBudgetPercent / 100) * contextWindow / Math.max(1, effectiveConfig.maxSummaries)),
+    Math.floor(summaryBudget / Math.max(1, effectiveConfig.maxSummaries)),
   )
   const mergeMaxTokens = Math.floor(perSummaryBudget * 1.5)
 

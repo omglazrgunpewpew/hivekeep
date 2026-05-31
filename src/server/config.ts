@@ -200,6 +200,21 @@ export const config = {
     maxSummaries: Number(process.env.COMPACTING_MAX_SUMMARIES ?? 10),
     /** Max summaries to retain in DB (old archived summaries beyond this are deleted). */
     maxSummariesPerKin: Number(process.env.COMPACTING_MAX_SUMMARIES_PER_KIN ?? 50),
+    // ── Absolute token ceilings (model-agnostic) ──────────────────────────────
+    // The percentage knobs above scale with the context window, so on a 1M-token
+    // model even a "small" 25% keep-window is 250k tokens. These absolute caps
+    // bound the real footprint regardless of window size — `effective = min(%×window, cap)`.
+    // On a 200k model the % still dominates (50k < 100k), so they only bite on
+    // large-window models. See compacting.md for the resulting envelope.
+    /** Hard ceiling on the raw-message keep-window (real tokens). Caps `keepPercent`. */
+    keepMaxTokens: Number(process.env.COMPACTING_KEEP_MAX_TOKENS ?? 100_000),
+    /** Hard ceiling on context size before compaction triggers (real tokens). Caps `thresholdPercent`. */
+    triggerMaxTokens: Number(process.env.COMPACTING_TRIGGER_MAX_TOKENS ?? 300_000),
+    /** Hard ceiling on total active-summary tokens before telescopic merge (real tokens). Caps `summaryBudgetPercent`. */
+    summaryMaxTokens: Number(process.env.COMPACTING_SUMMARY_MAX_TOKENS ?? 48_000),
+    /** Multiplier correcting the chars/4 estimate up to real BPE tokens (JSON/tool-heavy
+     *  content under-counts by ~30-60%). Keeps the keep-window budget honest. */
+    tokenCalibration: Number(process.env.COMPACTING_TOKEN_CALIBRATION ?? 1.4),
   },
 
   /** Max estimated tokens for conversation history injected into the LLM context.

@@ -215,6 +215,12 @@ export interface KinCompactingConfig {
   summaryBudgetPercent?: number | null
   /** Max active summaries in context before forcing merge (null = use global default) */
   maxSummaries?: number | null
+  /** Absolute ceiling (real tokens) on the raw-message keep-window — caps keepPercent (null = use global default) */
+  keepMaxTokens?: number | null
+  /** Absolute ceiling (real tokens) on context size before compaction triggers — caps thresholdPercent (null = use global default) */
+  triggerMaxTokens?: number | null
+  /** Absolute ceiling (real tokens) on total summary tokens before telescopic merge — caps summaryBudgetPercent (null = use global default) */
+  summaryMaxTokens?: number | null
 }
 
 /** Effort level for thinking/reasoning — maps to provider-specific budgets/flags. */

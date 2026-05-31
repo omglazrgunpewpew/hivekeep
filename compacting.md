@@ -36,9 +36,11 @@ Compacting is evaluated **after each LLM turn** (after the Kin has responded). I
 
 | Condition | Threshold (configurable) |
 |---|---|
-| Estimated context tokens | > `thresholdPercent`% of the model's context window (default: **75%**) |
+| Estimated context tokens | > `min(thresholdPercent`% of the model's context window, `triggerMaxTokens)` (defaults: **75%** / **300k tokens**) |
 
-The context token count comes from the actual Vercel AI SDK usage data when available (post-turn), or is estimated from the database as a fallback.
+The trigger is the **smaller** of a percentage of the window and an absolute token ceiling. On a 200k model the percentage dominates (75% = 150k < 300k cap); on a 1M model the absolute cap bites (75% = 750k → capped to 300k), so a huge window doesn't let context balloon before compaction fires. See **Absolute token ceilings** below.
+
+The context token count comes from the actual provider-reported usage data when available (post-turn), or is estimated from the database as a fallback.
 
 > **Important**: messages with `redact_pending = 1` are **excluded** from compacting. Compacting waits until redaction is effective before including them.
 
@@ -49,9 +51,12 @@ Each Kin can override the global compacting settings via its `compactingConfig` 
 | Field | Type | Description |
 |---|---|---|
 | `thresholdPercent` | number | Context usage % before compaction triggers (default: 75) |
-| `keepPercent` | number | % of context window preserved as raw messages (default: 40) |
+| `keepPercent` | number | % of context window preserved as raw messages (default: 25) |
 | `summaryBudgetPercent` | number | Max % of context window for summary tokens before merge (default: 20) |
 | `maxSummaries` | number | Max active summaries before telescopic merge (default: 10) |
+| `keepMaxTokens` | number | **Absolute** ceiling (real tokens) on the keep-window — caps `keepPercent` (default: 100000) |
+| `triggerMaxTokens` | number | **Absolute** ceiling (real tokens) on context size before compaction triggers — caps `thresholdPercent` (default: 300000) |
+| `summaryMaxTokens` | number | **Absolute** ceiling (real tokens) on total summary tokens before merge — caps `summaryBudgetPercent` (default: 48000) |
 | `compactingModel` | string | Model for compaction LLM calls. Special value `__kin_own__` uses the Kin's own model |
 | `compactingProviderId` | string | Provider ID for the compacting model |
 
@@ -69,7 +74,7 @@ Instead of compacting by turn count, KinBot uses a **token-aware keep-window** a
 
 ```
 contextWindow = model's max context tokens
-keepBudget = keepPercent% of contextWindow (default: 40%)
+keepBudget = min(keepPercent% of contextWindow,  keepMaxTokens)   // defaults: 25%, 100k
 
 // Walk backward from newest message, accumulating tokens
 for (i = newest → oldest):
@@ -80,6 +85,12 @@ for (i = newest → oldest):
 // Messages before keepStartIndex → to summarize
 // Messages from keepStartIndex onward → kept as raw context
 ```
+
+`keepBudget` is the **smaller** of `keepPercent`% of the window and the absolute
+`keepMaxTokens` ceiling. The cap is what keeps the post-compaction footprint
+bounded on large-window models: 25% of a 1M window would be 250k tokens of raw
+messages, but `keepMaxTokens` (100k) holds it to ~100k. Per-message sizes in the
+walk are **calibrated** (see below) so the budget is measured in real tokens.
 
 #### Step 2 — Build the compacting prompt
 
@@ -186,7 +197,7 @@ When summaries accumulate beyond the budget, the oldest ones are **merged telesc
 
 Merge runs when **either** condition is met:
 - Active summary count > `maxSummaries` (default: 10)
-- Total summary tokens > `summaryBudgetPercent`% of context window (default: 20%)
+- Total summary tokens > `min(summaryBudgetPercent`% of context window, `summaryMaxTokens)` (defaults: 20% / 48k tokens)
 
 ### Merge process
 
@@ -258,11 +269,50 @@ After extraction, three additional processes run:
 | Variable | Default | Description |
 |---|---|---|
 | `COMPACTING_THRESHOLD_PERCENT` | `75` | Context usage % before compaction triggers |
-| `COMPACTING_KEEP_PERCENT` | `40` | % of context window preserved as raw messages |
+| `COMPACTING_KEEP_PERCENT` | `25` | % of context window preserved as raw messages |
 | `COMPACTING_SUMMARY_BUDGET_PERCENT` | `20` | Max % of context window for summary tokens before telescopic merge |
 | `COMPACTING_MAX_SUMMARIES` | `10` | Max active summaries before telescopic merge |
 | `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Total summary retention per Kin (active + archived) |
+| `COMPACTING_KEEP_MAX_TOKENS` | `100000` | **Absolute** ceiling (real tokens) on the keep-window — caps `keepPercent` |
+| `COMPACTING_TRIGGER_MAX_TOKENS` | `300000` | **Absolute** ceiling (real tokens) before compaction triggers — caps `thresholdPercent` |
+| `COMPACTING_SUMMARY_MAX_TOKENS` | `48000` | **Absolute** ceiling (real tokens) on summaries before merge — caps `summaryBudgetPercent` |
+| `COMPACTING_TOKEN_CALIBRATION` | `1.4` | Multiplier correcting the `chars/4` estimate up to real BPE tokens |
 | `COMPACTING_MODEL` | Provider default | Model used for compaction summarization |
+
+---
+
+## Absolute token ceilings
+
+Every percentage knob above scales with the model's context window. That is fine
+at 200k, but on a **1M-token** model even a "small" 25% keep-window is 250k tokens
+— and because the per-message estimate under-counts (see Token calibration), the
+real footprint was larger still. A Kin could sit at **400k+ tokens of raw kept
+messages** right after compaction.
+
+Three absolute ceilings bound the real footprint regardless of window size. Each
+effective budget is `min(percentage × window, cap)`:
+
+| Budget | Percentage knob | Absolute cap | 200k model | 1M model |
+|---|---|---|---|---|
+| Keep-window | `keepPercent` (25%) | `keepMaxTokens` (100k) | 50k (% wins) | **100k** (cap wins) |
+| Trigger | `thresholdPercent` (75%) | `triggerMaxTokens` (300k) | 150k (% wins) | **300k** (cap wins) |
+| Summaries | `summaryBudgetPercent` (20%) | `summaryMaxTokens` (48k) | 40k (% wins) | **48k** (cap wins) |
+
+On small-window models the percentage still dominates, so behaviour there is
+unchanged — the caps only engage on large-window models. Resulting envelope on a
+1M model: post-compaction floor ≈ 100k (keep) + ≤48k (summaries) + ~20k (system
+prompt + tools) ≈ **~170k**, growing to 300k before the next compaction.
+
+## Token calibration
+
+The keep-window walk and the trigger/summary budgets are measured in **real**
+tokens (the context window is the provider's `max_input_tokens`). The cheap
+`chars/4` estimate under-counts real BPE tokens on JSON/tool-heavy content by
+~30-60%, so per-message sizes used in budget math are scaled by
+`COMPACTING_TOKEN_CALIBRATION` (default 1.4) to bring them into the same unit.
+Without this, the keep-window silently kept ~40% more real tokens than the
+configured budget implied. The provider-reported `apiContextTokens` (ground truth
+from the last turn) is still preferred for the trigger when available.
 
 ---
 

@@ -32,12 +32,18 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 |---|---|---|---|
 | `compacting.model` | `COMPACTING_MODEL` | — | Modèle utilisé pour le compacting (format `providerId:modelId` supporté). Si non défini, utilise le modèle du Kin |
 | `compacting.thresholdPercent` | `COMPACTING_THRESHOLD_PERCENT` | `75` | % d'utilisation du contexte avant déclenchement de la compaction |
-| `compacting.keepPercent` | `COMPACTING_KEEP_PERCENT` | `40` | % de la fenêtre de contexte préservé en messages bruts (keep-window) |
+| `compacting.keepPercent` | `COMPACTING_KEEP_PERCENT` | `25` | % de la fenêtre de contexte préservé en messages bruts (keep-window) |
 | `compacting.summaryBudgetPercent` | `COMPACTING_SUMMARY_BUDGET_PERCENT` | `20` | % max de la fenêtre de contexte pour les résumés avant fusion télescopique |
 | `compacting.maxSummaries` | `COMPACTING_MAX_SUMMARIES` | `10` | Nombre max de résumés actifs avant fusion télescopique |
 | `compacting.maxSummariesPerKin` | `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Rétention totale de résumés par Kin (actifs + archivés) |
+| `compacting.keepMaxTokens` | `COMPACTING_KEEP_MAX_TOKENS` | `100000` | Plafond **absolu** (tokens réels) de la keep-window — borne `keepPercent`. N'agit que sur les grandes fenêtres (1M) |
+| `compacting.triggerMaxTokens` | `COMPACTING_TRIGGER_MAX_TOKENS` | `300000` | Plafond **absolu** (tokens réels) avant déclenchement — borne `thresholdPercent` |
+| `compacting.summaryMaxTokens` | `COMPACTING_SUMMARY_MAX_TOKENS` | `48000` | Plafond **absolu** (tokens réels) des résumés avant fusion — borne `summaryBudgetPercent` |
+| `compacting.tokenCalibration` | `COMPACTING_TOKEN_CALIBRATION` | `1.4` | Multiplicateur corrigeant l'estimation `chars/4` vers les vrais tokens BPE (le JSON/outils sous-compte de ~30-60 %) |
 
-> **Per-Kin override** : chaque Kin peut surcharger les paramètres de compacting via son `compactingConfig` (stocké en JSON dans `kins.compacting_config`). L'interface de configuration se trouve dans l'onglet Compaction des paramètres du Kin. Les champs disponibles sont : `thresholdPercent`, `keepPercent`, `summaryBudgetPercent`, `maxSummaries`, `compactingModel`, et `compactingProviderId`.
+> **Budgets effectifs** : chaque budget est `min(pourcentage × fenêtre, plafond absolu)`. Sur un modèle 200k le pourcentage domine (comportement inchangé) ; sur 1M le plafond absolu borne l'empreinte. Voir `compacting.md` → « Absolute token ceilings ».
+
+> **Per-Kin override** : chaque Kin peut surcharger les paramètres de compacting via son `compactingConfig` (stocké en JSON dans `kins.compacting_config`). L'interface de configuration se trouve dans l'onglet Compaction des paramètres du Kin. Les champs disponibles sont : `thresholdPercent`, `keepPercent`, `summaryBudgetPercent`, `maxSummaries`, `keepMaxTokens`, `triggerMaxTokens`, `summaryMaxTokens`, `compactingModel`, et `compactingProviderId`.
 
 ---
 

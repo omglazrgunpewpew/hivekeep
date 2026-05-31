@@ -416,7 +416,10 @@ export function KinFormModal({
           compactingConfig?.thresholdPercent != null ||
           compactingConfig?.keepPercent != null ||
           compactingConfig?.summaryBudgetPercent != null ||
-          compactingConfig?.maxSummaries != null
+          compactingConfig?.maxSummaries != null ||
+          compactingConfig?.keepMaxTokens != null ||
+          compactingConfig?.triggerMaxTokens != null ||
+          compactingConfig?.summaryMaxTokens != null
         ) ? compactingConfig : null
         await onUpdateKin(kin.id, { name, slug, role, character, expertise, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, toolboxIds, compactingConfig: effectiveCompactingConfig, thinkingConfig })
         if (avatarFile) await onUploadAvatar(kin.id, avatarFile)
@@ -982,6 +985,70 @@ export function KinFormModal({
                               }}
                             />
                             <p className="text-[10px] text-muted-foreground">{t('kin.compacting.maxSummariesHint')}</p>
+                          </div>
+
+                          {/* Absolute token ceilings — bound the real footprint on large-window
+                              models (e.g. 1M), where the percentages above would otherwise be huge. */}
+                          <div className="pt-1">
+                            <p className="text-xs font-medium">{t('kin.compacting.absoluteCapsTitle')}</p>
+                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.absoluteCapsHint')}</p>
+                          </div>
+
+                          {/* Keep max tokens */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">{t('kin.compacting.keepMaxTokensLabel')}</Label>
+                            <Input
+                              type="number"
+                              min={20000}
+                              max={500000}
+                              step={10000}
+                              placeholder={t('kin.compacting.keepMaxTokensPlaceholder', { default: 100000 })}
+                              value={compactingConfig?.keepMaxTokens ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : null
+                                setCompactingConfig({ ...compactingConfig, keepMaxTokens: val })
+                                markDirty()
+                              }}
+                            />
+                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.keepMaxTokensHint')}</p>
+                          </div>
+
+                          {/* Trigger max tokens */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">{t('kin.compacting.triggerMaxTokensLabel')}</Label>
+                            <Input
+                              type="number"
+                              min={50000}
+                              max={1000000}
+                              step={25000}
+                              placeholder={t('kin.compacting.triggerMaxTokensPlaceholder', { default: 300000 })}
+                              value={compactingConfig?.triggerMaxTokens ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : null
+                                setCompactingConfig({ ...compactingConfig, triggerMaxTokens: val })
+                                markDirty()
+                              }}
+                            />
+                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.triggerMaxTokensHint')}</p>
+                          </div>
+
+                          {/* Summary max tokens */}
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">{t('kin.compacting.summaryMaxTokensLabel')}</Label>
+                            <Input
+                              type="number"
+                              min={8000}
+                              max={200000}
+                              step={8000}
+                              placeholder={t('kin.compacting.summaryMaxTokensPlaceholder', { default: 48000 })}
+                              value={compactingConfig?.summaryMaxTokens ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : null
+                                setCompactingConfig({ ...compactingConfig, summaryMaxTokens: val })
+                                markDirty()
+                              }}
+                            />
+                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.summaryMaxTokensHint')}</p>
                           </div>
                         </div>
                       )}

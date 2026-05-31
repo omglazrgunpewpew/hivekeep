@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import { resolveKeepBudget, resolveTriggerTokens, resolveSummaryBudget } from '@/server/services/compacting'
 
 // ─── estimateTokens (pure function, re-implemented to test the contract) ─────
 
@@ -38,56 +39,70 @@ describe('estimateTokens', () => {
   })
 })
 
-// ─── Compacting logic: keep-count calculation ────────────────────────────────
+// ─── Absolute-cap budget resolution ──────────────────────────────────────────
+//
+// The keep/trigger/summary budgets are `min(percent × window, absoluteCap)`.
+// The cap only bites on large-window models — on a 200k model the percent still
+// dominates, so behaviour there is unchanged.
 
-// The module keeps 30% of messages as raw context:
-//   keepCount = Math.max(1, Math.ceil(nonCompacted.length * 0.3))
-//   messagesToSummarize = nonCompacted.slice(0, -keepCount)
-
-function computeKeepCount(total: number): number {
-  return Math.max(1, Math.ceil(total * 0.3))
-}
-
-function computeMessagesToSummarize(total: number): number {
-  const keep = computeKeepCount(total)
-  return Math.max(0, total - keep)
-}
-
-describe('compacting keep/summarize split', () => {
-  it('keeps at least 1 message', () => {
-    expect(computeKeepCount(1)).toBe(1)
-    expect(computeKeepCount(2)).toBe(1)
-    expect(computeKeepCount(3)).toBe(1)
+describe('resolveKeepBudget', () => {
+  it('percent dominates on a 200k window (cap does not bite)', () => {
+    // 25% of 200k = 50k < 100k cap
+    expect(resolveKeepBudget(25, 200_000, 100_000)).toBe(50_000)
   })
 
-  it('keeps 30% rounded up for larger sets', () => {
-    expect(computeKeepCount(10)).toBe(3) // ceil(3.0) = 3
-    expect(computeKeepCount(11)).toBe(4) // ceil(3.3) = 4
-    expect(computeKeepCount(20)).toBe(6) // ceil(6.0) = 6
-    expect(computeKeepCount(100)).toBe(30)
+  it('absolute cap bounds a 1M window', () => {
+    // 25% of 1M = 250k, capped to 100k
+    expect(resolveKeepBudget(25, 1_000_000, 100_000)).toBe(100_000)
   })
 
-  it('summarizes 0 when only 1 message', () => {
-    // 1 message, keep 1 → summarize 0
-    expect(computeMessagesToSummarize(1)).toBe(0)
+  it('always returns the smaller of the two', () => {
+    expect(resolveKeepBudget(5, 1_000_000, 100_000)).toBe(50_000) // 5% of 1M = 50k < cap
+    expect(resolveKeepBudget(50, 1_000_000, 100_000)).toBe(100_000) // 50% of 1M = 500k → cap
+  })
+})
+
+describe('resolveTriggerTokens', () => {
+  it('percent dominates on 200k (75% = 150k < 300k cap)', () => {
+    expect(resolveTriggerTokens(75, 200_000, 300_000)).toBe(150_000)
   })
 
-  it('summarizes 0 when 2 messages (keep >= 1)', () => {
-    // 2 messages, keep 1 → summarize 1
-    expect(computeMessagesToSummarize(2)).toBe(1)
+  it('absolute cap bounds the 1M window (75% = 750k → 300k)', () => {
+    expect(resolveTriggerTokens(75, 1_000_000, 300_000)).toBe(300_000)
+  })
+})
+
+describe('resolveSummaryBudget', () => {
+  it('percent dominates on 200k (20% = 40k < 48k cap)', () => {
+    expect(resolveSummaryBudget(20, 200_000, 48_000)).toBe(40_000)
   })
 
-  it('summarizes the majority for larger sets', () => {
-    expect(computeMessagesToSummarize(10)).toBe(7)
-    expect(computeMessagesToSummarize(100)).toBe(70)
+  it('absolute cap bounds the 1M window (20% = 200k → 48k)', () => {
+    expect(resolveSummaryBudget(20, 1_000_000, 48_000)).toBe(48_000)
   })
+})
 
-  it('summarize + keep always equals total', () => {
-    for (const n of [1, 2, 3, 5, 10, 15, 33, 50, 100, 999]) {
-      const keep = computeKeepCount(n)
-      const summarize = computeMessagesToSummarize(n)
-      expect(summarize + keep).toBe(n)
+describe('keep-window walk under the absolute cap', () => {
+  // Mirror the runCompacting walk: accumulate per-message tokens newest→oldest
+  // until the budget is exceeded; everything before keepStartIndex is summarized.
+  function keptCount(msgTokens: number[], budget: number): number {
+    let keep = 0
+    let keepStartIndex = msgTokens.length
+    for (let i = msgTokens.length - 1; i >= 0; i--) {
+      if (keep + msgTokens[i]! > budget) break
+      keep += msgTokens[i]!
+      keepStartIndex = i
     }
+    return msgTokens.length - keepStartIndex
+  }
+
+  it('keeps far fewer messages under the 100k cap than under the old 250k %-budget', () => {
+    const msgs = Array(300).fill(2_000) // 300 messages × 2k tokens
+    const capped = keptCount(msgs, resolveKeepBudget(25, 1_000_000, 100_000)) // 100k
+    const oldBehaviour = keptCount(msgs, Math.floor(0.25 * 1_000_000)) // 250k
+    expect(capped).toBe(50) // 100k / 2k
+    expect(oldBehaviour).toBe(125) // 250k / 2k
+    expect(capped).toBeLessThan(oldBehaviour)
   })
 })
 
