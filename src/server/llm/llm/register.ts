@@ -5,6 +5,7 @@ import { openaiKeyProvider } from '@/server/llm/llm/openai-key'
 import { openaiCodexProvider } from '@/server/llm/llm/openai-codex'
 import { geminiProvider } from '@/server/llm/llm/gemini'
 import { openrouterProvider } from '@/server/llm/llm/openrouter'
+import { xaiProvider } from '@/server/llm/llm/xai'
 
 /**
  * Register every built-in LLM provider in the registry. Called once at
@@ -17,4 +18,5 @@ export function registerBuiltinLLMProviders(): void {
   registerLLMProvider(openaiCodexProvider)
   registerLLMProvider(geminiProvider)
   registerLLMProvider(openrouterProvider)
+  registerLLMProvider(xaiProvider)
 }
