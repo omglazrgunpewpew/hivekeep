@@ -202,6 +202,12 @@ taskRoutes.get('/:id', async (c) => {
       }
     }),
     streamingMessageId: snapshot?.messageId ?? null,
+    // Live thinking-bubble fields for a client mounting mid-stream: the real
+    // turn start (so the chrono resumes instead of restarting) and the running
+    // output-token total. Null when no stream is in-flight. Mirrors the main
+    // thread's streamingMessage.{startedAt,outputTokens} (see routes/messages.ts).
+    streamingStartedAt: snapshot?.startedAt ?? null,
+    streamingOutputTokens: snapshot?.outputTokens ?? null,
     learningsSaved,
     todos: getTodosForTask(taskId),
   })

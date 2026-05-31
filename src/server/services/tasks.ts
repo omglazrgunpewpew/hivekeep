@@ -167,6 +167,14 @@ export interface ActiveTaskStreamSnapshot {
   content: string
   toolCalls: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }>
   reasoning: Array<{ offset: number; text: string }>
+  /** Running sum of output tokens reported so far this turn (one increment per
+   *  completed step). Drives the live token counter in the thinking bubble,
+   *  mirroring ActiveKinStreamSnapshot.outputTokens on the main thread. */
+  outputTokens: number
+  /** Epoch (ms) when this streaming turn started. Lets a client mounting
+   *  mid-stream resume the thinking-bubble chrono from the real start instead
+   *  of restarting it at mount time. */
+  startedAt: number
 }
 
 const activeTaskStreams = new Map<string, ActiveTaskStreamSnapshot>()
@@ -1445,6 +1453,8 @@ async function executeSubKin(taskId: string, isNudge = false) {
       content: '',
       toolCalls: toolCallsLog,
       reasoning: reasoningSegments,
+      outputTokens: 0,
+      startedAt: Date.now(),
     }
     activeTaskStreams.set(taskId, streamSnapshot)
 
@@ -1548,7 +1558,21 @@ async function executeSubKin(taskId: string, isNudge = false) {
           },
         },
       }, step)
-      if (outcome.usage) stepUsages.push(outcome.usage)
+      if (outcome.usage) {
+        stepUsages.push(outcome.usage)
+        // Push the running output-token total over SSE so the task panel's
+        // thinking bubble shows real tokens accumulating across steps, exactly
+        // like the main thread (see kin-engine.ts). Usage is only known at each
+        // step's `finish` chunk, so this increments per step (not per token).
+        if (outcome.usage.outputTokens) {
+          streamSnapshot.outputTokens += outcome.usage.outputTokens
+          sseManager.sendToKin(task.parentKinId, {
+            type: 'chat:token-usage',
+            kinId: task.parentKinId,
+            data: { taskId, messageId: assistantMessageId, outputTokens: streamSnapshot.outputTokens },
+          })
+        }
+      }
 
       if (outcome.error) {
         streamError = outcome.error

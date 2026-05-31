@@ -71,6 +71,13 @@ interface TaskDetailResponse {
   task: TaskDetail
   messages: TaskMessage[]
   streamingMessageId: string | null
+  /** Epoch (ms) the in-flight streaming turn started — null when no stream is
+   *  active. Seeds the thinking-bubble chrono so it resumes from the real start
+   *  after a panel close/reopen instead of restarting at mount. */
+  streamingStartedAt: number | null
+  /** Running output-token total for the in-flight turn — null when idle. Seeds
+   *  the thinking-bubble token counter on mid-stream mount. */
+  streamingOutputTokens: number | null
   learningsSaved: LearningEntry[]
   todos: TaskTodo[]
 }
@@ -114,6 +121,12 @@ export function useTaskDetail(taskId: string | null) {
   const [streamingToolCalls, setStreamingToolCalls] = useState<ToolCallViewItem[]>([])
   const streamingToolCallsRef = useRef<ToolCallViewItem[]>([])
 
+  // Live thinking-bubble fields (parity with the main conversation): the real
+  // turn start (chrono resumes across panel close/reopen) and the running
+  // output-token estimate streamed via chat:token-usage.
+  const [streamingStartedAt, setStreamingStartedAt] = useState<number | null>(null)
+  const [streamingOutputTokens, setStreamingOutputTokens] = useState(0)
+
   // Gate: SSE streaming events are buffered until the first fetchDetail()
   // resolves. Without this, events arriving before fetchDetail seed from an
   // empty messagesRef, causing a text gap. Buffered events are replayed once
@@ -144,6 +157,8 @@ export function useTaskDetail(taskId: string | null) {
     streamingReasoningRef.current = ''
     streamingToolCallsRef.current = []
     setStreamingToolCalls([])
+    setStreamingStartedAt(null)
+    setStreamingOutputTokens(0)
     if (batchTimerRef.current) {
       clearTimeout(batchTimerRef.current)
       batchTimerRef.current = null
@@ -194,7 +209,16 @@ export function useTaskDetail(taskId: string | null) {
         streamingReasoningRef.current = ''
         streamingToolCallsRef.current = []
         setStreamingToolCalls([])
+        setStreamingStartedAt(null)
+        setStreamingOutputTokens(0)
       } else if (data.streamingMessageId) {
+        // Seed the live thinking-bubble fields from the snapshot so the chrono
+        // resumes from the real turn start and the token counter doesn't reset
+        // to zero when the panel is closed and reopened mid-stream.
+        if (typeof data.streamingStartedAt === 'number') setStreamingStartedAt(data.streamingStartedAt)
+        if (typeof data.streamingOutputTokens === 'number') {
+          setStreamingOutputTokens((prev) => (data.streamingOutputTokens! > prev ? data.streamingOutputTokens! : prev))
+        }
         // The server reports an in-flight assistant message and has overlaid
         // its live in-memory content into the messages list. Pre-seed the
         // streaming state from it so buffered chat:token events whose
@@ -228,6 +252,10 @@ export function useTaskDetail(taskId: string | null) {
     streamingMessageIdRef.current = messageId
     streamingContentRef.current = baseContent
     setIsStreaming(true)
+    // Anchor the thinking-bubble chrono to the moment the live stream began.
+    // Only set it once per turn — a mid-stream mount already seeded the real
+    // server start via fetchDetail, which must not be clobbered here.
+    setStreamingStartedAt((prev) => prev ?? Date.now())
     setStreamingMessage({
       id: messageId,
       role: 'assistant',
@@ -417,6 +445,8 @@ export function useTaskDetail(taskId: string | null) {
       streamingReasoningRef.current = ''
       streamingToolCallsRef.current = []
       setStreamingToolCalls([])
+      setStreamingStartedAt(null)
+      setStreamingOutputTokens(0)
     },
     'task:status': (data) => {
       if (data.taskId !== taskId) return
@@ -451,6 +481,8 @@ export function useTaskDetail(taskId: string | null) {
         streamingReasoningRef.current = ''
         streamingToolCallsRef.current = []
         setStreamingToolCalls([])
+        setStreamingStartedAt(null)
+        setStreamingOutputTokens(0)
         fetchDetail()
       }
     },
@@ -459,6 +491,16 @@ export function useTaskDetail(taskId: string | null) {
       const next = data.tokenUsage as TaskTokenUsage | null | undefined
       if (!next) return
       setTask((prev) => (prev ? { ...prev, tokenUsage: next } : prev))
+    },
+    // Live per-turn output-token estimate for the thinking bubble (parity with
+    // the main conversation's useChat handler). Keep the running max so the
+    // slight under-estimate from the 200ms server extrapolation self-corrects
+    // upward without the counter ticking back.
+    'chat:token-usage': (data) => {
+      if (data.taskId !== taskId) return
+      const out = data.outputTokens as number | undefined
+      if (typeof out !== 'number') return
+      setStreamingOutputTokens((prev) => (out > prev ? out : prev))
     },
     'task:done': (data) => {
       if (data.taskId !== taskId) return
@@ -479,6 +521,8 @@ export function useTaskDetail(taskId: string | null) {
       streamingReasoningRef.current = ''
       streamingToolCallsRef.current = []
       setStreamingToolCalls([])
+      setStreamingStartedAt(null)
+      setStreamingOutputTokens(0)
       fetchDetail()
     },
 
@@ -674,7 +718,14 @@ export function useTaskDetail(taskId: string | null) {
     refetch: fetchDetail,
     allToolCalls,
     toolCallCount: allToolCalls.length,
+    // Current-turn tool-call count for the thinking bubble (parity with the
+    // main conversation's streamingToolCallCount). Distinct from toolCallCount,
+    // which sums historical + streaming.
+    streamingToolCallCount: streamingToolCalls.length,
     toolCallsByMessage,
+    // Live thinking-bubble inputs — null/0 when no stream is active.
+    streamingStartedAt,
+    streamingOutputTokens,
     learningsSaved,
     todos,
   }

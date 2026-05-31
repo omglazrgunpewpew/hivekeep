@@ -100,6 +100,9 @@ export function TaskPanelContent({
     resumeTask,
     injectIntoTask,
     toolCallsByMessage,
+    streamingToolCallCount,
+    streamingStartedAt,
+    streamingOutputTokens,
     learningsSaved,
     todos,
   } = useTaskDetail(taskId)
@@ -605,7 +608,13 @@ export function TaskPanelContent({
           ) : visibleMessages.length === 0 && !streamingMessage && !isStreaming ? (
             isActive ? (
               <div className="py-4">
-                <TypingIndicator kinName={kinName} kinAvatarUrl={kinAvatarUrl} />
+                <TypingIndicator
+                  kinName={kinName}
+                  kinAvatarUrl={kinAvatarUrl}
+                  startedAt={streamingStartedAt ?? (startedMs ?? undefined)}
+                  tokenCount={streamingOutputTokens}
+                  toolCallCount={streamingToolCallCount}
+                />
               </div>
             ) : (
               <p className="text-center text-xs text-muted-foreground py-8">
@@ -651,7 +660,13 @@ export function TaskPanelContent({
                 </div>
               ))}
               {(isStreaming || (isActive && !streamingMessage && pendingPrompts.length === 0)) && (
-                <TypingIndicator kinName={kinName} kinAvatarUrl={kinAvatarUrl} />
+                <TypingIndicator
+                  kinName={kinName}
+                  kinAvatarUrl={kinAvatarUrl}
+                  startedAt={streamingStartedAt ?? (startedMs ?? undefined)}
+                  tokenCount={streamingOutputTokens}
+                  toolCallCount={streamingToolCallCount}
+                />
               )}
             </div>
           )}
