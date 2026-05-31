@@ -14,6 +14,8 @@ KinBot ships with built-in providers across four families: language models (LLM)
 | [OpenAI](https://platform.openai.com/api-keys) | ✅ | ✅ | ✅ | | ✅ |
 | [OpenAI (Codex CLI)](https://openai.com/index/introducing-codex/) | ✅ | | | | ❌ (OAuth) |
 | [Gemini](https://aistudio.google.com/apikey) | ✅ | | ✅ | | ✅ |
+| [OpenRouter](https://openrouter.ai/keys) | ✅ | | | | ✅ |
+| [xAI (Grok)](https://console.x.ai) | ✅ | | | | ✅ |
 | [Brave Search](https://brave.com/search/api/) | | | | ✅ | ✅ |
 | [SerpAPI](https://serpapi.com/manage-api-key) | | | | ✅ | ✅ |
 | [Tavily](https://app.tavily.com/home) | | | | ✅ | ✅ |
