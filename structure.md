@@ -78,6 +78,10 @@ kinbot/
 │   │   │   └── search/                # Providers web search
 │   │   │       └── brave.ts, serpapi.ts, tavily.ts, perplexity.ts + registry/register
 │   │   │
+│   │   ├── email/                     # Famille de providers email (compte = ligne providers)
+│   │   │   ├── providers/gmail.ts     # Provider Gmail natif (REST + MIME)
+│   │   │   └── registry.ts, register.ts, types.ts
+│   │   │
 │   │   ├── providers/                 # Dispatcher provider-agnostic
 │   │   │   ├── index.ts               # listModelsForProvider, lookupImageModel,
 │   │   │   │                          #  describeImageModel, testProviderConnection
