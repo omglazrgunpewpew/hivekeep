@@ -78,41 +78,72 @@ function encodeHeaderWord(value: string): string {
 }
 
 /** Build an RFC 822 message ready to be base64url-encoded for the Gmail send
- *  endpoint. Plain-text by default; multipart/alternative when `bodyHtml` is set. */
+ *  endpoint. Plain-text by default; multipart/alternative when `bodyHtml` is
+ *  set; multipart/mixed wrapping the body + each attachment when present. */
 export function buildMimeMessage(params: SendEmailParams, from: string): string {
-  const headers: string[] = []
-  headers.push(`From: ${from}`)
-  headers.push(`To: ${params.to.map(formatAddress).join(', ')}`)
-  if (params.cc?.length) headers.push(`Cc: ${params.cc.map(formatAddress).join(', ')}`)
-  if (params.bcc?.length) headers.push(`Bcc: ${params.bcc.map(formatAddress).join(', ')}`)
-  headers.push(`Subject: ${encodeHeaderWord(params.subject)}`)
-  headers.push('MIME-Version: 1.0')
-
   const b64 = (s: string) => Buffer.from(s, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n')
+  const wrap76 = (s: string) => s.replace(/(.{76})/g, '$1\r\n')
 
-  if (params.bodyHtml) {
-    const boundary = `kb_${Math.abs(hashString(params.subject + params.body)).toString(36)}`
-    headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`)
-    const body = [
-      `--${boundary}`,
-      'Content-Type: text/plain; charset="UTF-8"',
-      'Content-Transfer-Encoding: base64',
-      '',
-      b64(params.body),
-      `--${boundary}`,
-      'Content-Type: text/html; charset="UTF-8"',
-      'Content-Transfer-Encoding: base64',
-      '',
-      b64(params.bodyHtml),
-      `--${boundary}--`,
-      '',
-    ].join('\r\n')
-    return `${headers.join('\r\n')}\r\n\r\n${body}`
+  const topHeaders: string[] = []
+  topHeaders.push(`From: ${from}`)
+  topHeaders.push(`To: ${params.to.map(formatAddress).join(', ')}`)
+  if (params.cc?.length) topHeaders.push(`Cc: ${params.cc.map(formatAddress).join(', ')}`)
+  if (params.bcc?.length) topHeaders.push(`Bcc: ${params.bcc.map(formatAddress).join(', ')}`)
+  topHeaders.push(`Subject: ${encodeHeaderWord(params.subject)}`)
+  topHeaders.push('MIME-Version: 1.0')
+
+  // The body section: a text/plain part, or a multipart/alternative when HTML
+  // is present. Returned as headers + body so it can be the whole message body
+  // or a part inside multipart/mixed.
+  const bodySection = (): { headers: string[]; body: string } => {
+    if (params.bodyHtml) {
+      const alt = `alt_${Math.abs(hashString(params.body + params.bodyHtml)).toString(36)}`
+      return {
+        headers: [`Content-Type: multipart/alternative; boundary="${alt}"`],
+        body: [
+          `--${alt}`,
+          'Content-Type: text/plain; charset="UTF-8"',
+          'Content-Transfer-Encoding: base64',
+          '',
+          b64(params.body),
+          `--${alt}`,
+          'Content-Type: text/html; charset="UTF-8"',
+          'Content-Transfer-Encoding: base64',
+          '',
+          b64(params.bodyHtml),
+          `--${alt}--`,
+        ].join('\r\n'),
+      }
+    }
+    return {
+      headers: ['Content-Type: text/plain; charset="UTF-8"', 'Content-Transfer-Encoding: base64'],
+      body: b64(params.body),
+    }
   }
 
-  headers.push('Content-Type: text/plain; charset="UTF-8"')
-  headers.push('Content-Transfer-Encoding: base64')
-  return `${headers.join('\r\n')}\r\n\r\n${b64(params.body)}`
+  const attachments = params.attachments ?? []
+  const section = bodySection()
+
+  if (attachments.length === 0) {
+    return `${[...topHeaders, ...section.headers].join('\r\n')}\r\n\r\n${section.body}`
+  }
+
+  const mixed = `mix_${Math.abs(hashString(params.subject + attachments.map((a) => a.filename).join())).toString(36)}`
+  topHeaders.push(`Content-Type: multipart/mixed; boundary="${mixed}"`)
+  const parts: string[] = []
+  parts.push(`--${mixed}`, ...section.headers, '', section.body)
+  for (const att of attachments) {
+    parts.push(
+      `--${mixed}`,
+      `Content-Type: ${att.mimeType}; name="${att.filename}"`,
+      'Content-Transfer-Encoding: base64',
+      `Content-Disposition: attachment; filename="${att.filename}"`,
+      '',
+      wrap76(att.contentBase64),
+    )
+  }
+  parts.push(`--${mixed}--`, '')
+  return `${topHeaders.join('\r\n')}\r\n\r\n${parts.join('\r\n')}`
 }
 
 // Deterministic, no Math.random — keeps a stable boundary per message content.
@@ -319,5 +350,14 @@ export const gmailProvider: EmailProvider = {
       body: JSON.stringify(threadId ? { raw, threadId } : { raw }),
     })) as { id: string; threadId?: string }
     return { id: sent.id, threadId: sent.threadId }
+  },
+
+  async getAttachment(messageId: string, attachmentId: string, config: ProviderConfig) {
+    const att = (await gmailFetch(config, `/messages/${messageId}/attachments/${attachmentId}`)) as {
+      data?: string
+    }
+    if (!att.data) throw new Error('Gmail: attachment has no data')
+    // Gmail returns base64url; normalize to standard base64.
+    return { contentBase64: Buffer.from(att.data, 'base64url').toString('base64') }
   },
 }

@@ -74,6 +74,22 @@ describe('buildMimeMessage', () => {
     expect(mime).toContain('multipart/alternative')
     expect(mime).toContain('text/html')
   })
+
+  it('wraps body + attachments in multipart/mixed', () => {
+    const mime = buildMimeMessage(
+      {
+        to: [{ email: 'a@x' }],
+        subject: 'With file',
+        body: 'see attached',
+        attachments: [{ filename: 'report.pdf', mimeType: 'application/pdf', contentBase64: 'AAAA' }],
+      },
+      'me@x',
+    )
+    expect(mime).toContain('multipart/mixed')
+    expect(mime).toContain('Content-Disposition: attachment; filename="report.pdf"')
+    expect(mime).toContain('Content-Type: application/pdf; name="report.pdf"')
+    expect(mime).toContain('AAAA')
+  })
 })
 
 describe('extractBodyAndAttachments', () => {

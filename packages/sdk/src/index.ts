@@ -1675,6 +1675,14 @@ export interface EmailListResult {
   nextPageToken?: string
 }
 
+/** A file to attach to an outgoing message. `contentBase64` is the raw bytes
+ *  in standard base64 — the provider wraps it in a MIME part. */
+export interface OutgoingAttachment {
+  filename: string
+  mimeType: string
+  contentBase64: string
+}
+
 /** Parameters for `sendMessage`. */
 export interface SendEmailParams {
   to: EmailAddress[]
@@ -1685,6 +1693,8 @@ export interface SendEmailParams {
   body: string
   /** Optional HTML body, sent as an alternative part. */
   bodyHtml?: string
+  /** Files to attach. The host enforces the provider's `maxAttachmentMb`. */
+  attachments?: OutgoingAttachment[]
   /** When replying, the message id to thread under (sets In-Reply-To /
    *  References, or reuses the Gmail threadId). */
   replyToMessageId?: string
@@ -1747,6 +1757,13 @@ export interface EmailProvider extends ProviderUIHints {
   getMessage(id: string, config: ProviderConfig): Promise<EmailFull>
   searchMessages?(query: EmailSearchQuery, config: ProviderConfig): Promise<EmailSummary[]>
   sendMessage(params: SendEmailParams, config: ProviderConfig): Promise<SendEmailResult>
+  /** Fetch an attachment's raw bytes (standard base64). Optional — providers
+   *  that can't download attachments omit it. */
+  getAttachment?(
+    messageId: string,
+    attachmentId: string,
+    config: ProviderConfig,
+  ): Promise<{ contentBase64: string }>
 }
 
 /** Discriminated union of every native provider shape a plugin can declare. */
