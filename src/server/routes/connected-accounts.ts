@@ -4,6 +4,7 @@ import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { getEmailProvider } from '@/server/email/registry'
 import { getContactsProvider } from '@/server/contacts/registry'
+import { getCalendarProvider } from '@/server/calendar/registry'
 import {
   listConnectedAccounts,
   listConnectedProviders,
@@ -25,7 +26,14 @@ interface ConfigProviderLike {
 
 /** Resolve the config (non-OAuth) provider that serves a capability for a type. */
 function configProviderFor(type: string, capability: string): ConfigProviderLike | null {
-  const p = capability === 'email' ? getEmailProvider(type) : capability === 'contacts' ? getContactsProvider(type) : undefined
+  const p =
+    capability === 'email'
+      ? getEmailProvider(type)
+      : capability === 'contacts'
+        ? getContactsProvider(type)
+        : capability === 'calendar'
+          ? getCalendarProvider(type)
+          : undefined
   if (!p || p.oauth) return null
   return p as ConfigProviderLike
 }

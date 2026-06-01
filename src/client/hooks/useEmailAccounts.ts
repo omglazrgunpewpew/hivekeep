@@ -31,10 +31,12 @@ export interface EmailProviderInfo {
   brandColor: string | null
   /** Where the operator sets up the OAuth app (Google Cloud / Azure portal). */
   consoleUrl: string | null
-  /** Capabilities this provider can serve (email and/or contacts). */
+  /** Capabilities this provider can serve (email / contacts / calendar). */
   capabilities: string[]
   /** Convenience: capabilities includes 'contacts'. */
   supportsContacts: boolean
+  /** Convenience: capabilities includes 'calendar'. */
+  supportsCalendar: boolean
   /** For non-OAuth providers (IMAP / CardDAV): the fields to render in the Add
    *  dialog. Empty for OAuth providers. */
   configSchema: ConfigField[]
@@ -69,7 +71,13 @@ export function useEmailAccounts() {
         if (prov.reactIcon) registerProviderReactIcon(prov.type, prov.reactIcon, prov.brandColor ?? undefined)
       }
       setAccounts(a.accounts)
-      setProviders(p.providers.map((prov) => ({ ...prov, supportsContacts: prov.capabilities.includes('contacts') })))
+      setProviders(
+        p.providers.map((prov) => ({
+          ...prov,
+          supportsContacts: prov.capabilities.includes('contacts'),
+          supportsCalendar: prov.capabilities.includes('calendar'),
+        })),
+      )
     } catch {
       // Surfaced by callers via individual actions; list just stays empty.
     } finally {

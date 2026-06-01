@@ -19,6 +19,7 @@ import { invalidateAccessToken } from '@/server/services/email-token-manager'
 import { generateProviderSlug } from '@/server/services/provider-slug'
 import { listEmailProviders } from '@/server/email/registry'
 import { listContactsProviders } from '@/server/contacts/registry'
+import { listCalendarProviders } from '@/server/calendar/registry'
 import { createLogger } from '@/server/logger'
 import type { ConfigField } from '@kinbot-developer/sdk'
 
@@ -136,6 +137,9 @@ export async function listConnectedProviders(): Promise<ConnectedProviderInfo[]>
   }
   for (const p of listContactsProviders()) {
     add(p.type, { displayName: p.displayName, oauth: !!p.oauth, reactIcon: p.reactIcon, brandColor: p.brandColor, apiKeyUrl: p.apiKeyUrl, configSchema: [...p.configSchema] }, 'contacts')
+  }
+  for (const p of listCalendarProviders()) {
+    add(p.type, { displayName: p.displayName, oauth: !!p.oauth, reactIcon: p.reactIcon, brandColor: p.brandColor, apiKeyUrl: p.apiKeyUrl, configSchema: [...p.configSchema] }, 'calendar')
   }
 
   const list = [...byType.values()]

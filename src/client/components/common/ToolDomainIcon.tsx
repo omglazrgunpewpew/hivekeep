@@ -23,6 +23,7 @@ import {
   FileCode,
   Kanban,
   Mail,
+  Calendar,
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import type { ToolDomain } from '@/shared/types'
@@ -33,6 +34,7 @@ const DOMAIN_ICONS: Record<ToolDomain, React.FC<LucideProps>> = {
   browse: Globe,
   voice: Mic,
   contacts: Users,
+  calendar: Calendar,
   email: Mail,
   memory: Brain,
   vault: ShieldCheck,

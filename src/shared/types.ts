@@ -598,6 +598,7 @@ export type ToolDomain =
   | 'browse'
   | 'voice'
   | 'contacts'
+  | 'calendar'
   | 'memory'
   | 'vault'
   | 'tasks'

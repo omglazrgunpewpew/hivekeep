@@ -336,12 +336,14 @@ function ConnectStep({
   const [connecting, setConnecting] = useState(false)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [withContacts, setWithContacts] = useState(true)
+  const [withCalendar, setWithCalendar] = useState(true)
   const [configCaps, setConfigCaps] = useState<string[]>(provider.capabilities)
 
   // Reset the form when switching providers.
   useEffect(() => {
     setFields({})
     setWithContacts(true)
+    setWithCalendar(true)
     setConfigCaps(provider.capabilities)
   }, [provider.type, provider.capabilities])
 
@@ -357,7 +359,11 @@ function ConnectStep({
   const connectOAuth = async () => {
     setConnecting(true)
     try {
-      const capabilities = ['email', ...(provider.supportsContacts && withContacts ? ['contacts'] : [])]
+      const capabilities = [
+        'email',
+        ...(provider.supportsContacts && withContacts ? ['contacts'] : []),
+        ...(provider.supportsCalendar && withCalendar ? ['calendar'] : []),
+      ]
       const { authUrl } = await api.post<{ authUrl: string }>(`/email-accounts/connect/${provider.type}`, {
         capabilities,
       })
@@ -407,6 +413,17 @@ function ConnectStep({
             <Switch id="with-contacts" checked={withContacts} onCheckedChange={setWithContacts} />
           </div>
         )}
+        {provider.supportsCalendar && (
+          <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
+            <div className="space-y-0.5">
+              <Label htmlFor="with-calendar" className="text-sm font-normal">
+                {t('settings.emailAccounts.alsoCalendar')}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoCalendarHint')}</p>
+            </div>
+            <Switch id="with-calendar" checked={withCalendar} onCheckedChange={setWithCalendar} />
+          </div>
+        )}
         <Button className="w-full" onClick={connectOAuth} disabled={connecting}>
           <Plus className="size-4" />
           {t('settings.emailAccounts.connect', { provider: provider.displayName })}
@@ -427,7 +444,11 @@ function ConnectStep({
             {provider.capabilities.map((cap) => (
               <label key={cap} className="flex items-center gap-1.5 text-sm">
                 <Switch checked={configCaps.includes(cap)} onCheckedChange={(on) => toggleCap(cap, on)} />
-                {cap === 'email' ? t('settings.emailAccounts.capEmail') : t('settings.emailAccounts.capContacts')}
+                {cap === 'email'
+                  ? t('settings.emailAccounts.capEmail')
+                  : cap === 'contacts'
+                    ? t('settings.emailAccounts.capContacts')
+                    : t('settings.emailAccounts.capCalendar')}
               </label>
             ))}
           </div>
@@ -508,6 +529,9 @@ function EmailAccountCard({ account, onChange }: { account: EmailAccount; onChan
               )}
               {account.capabilities.includes('contacts') && (
                 <Badge variant="secondary" className="text-[10px]">{t('settings.emailAccounts.capContacts')}</Badge>
+              )}
+              {account.capabilities.includes('calendar') && (
+                <Badge variant="secondary" className="text-[10px]">{t('settings.emailAccounts.capCalendar')}</Badge>
               )}
             </div>
             <p className="truncate text-xs text-muted-foreground">{account.name}</p>

@@ -158,6 +158,19 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'search_address_book',
     ],
   },
+  {
+    name: 'calendar',
+    description: 'Calendar access (Google, Outlook, CalDAV): list and search events, create, update and delete events.',
+    toolNames: [
+      'list_calendar_accounts',
+      'list_calendars',
+      'list_events',
+      'get_event',
+      'create_event',
+      'update_event',
+      'delete_event',
+    ],
+  },
 ]
 
 const BUILTIN_NAMES = new Set<string>(BUILTIN_TOOLBOXES.map((b) => b.name))

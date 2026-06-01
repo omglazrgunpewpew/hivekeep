@@ -24,6 +24,15 @@ import {
   searchAddressBookTool,
 } from '@/server/tools/address-book-tools'
 import {
+  listCalendarAccountsTool,
+  listCalendarsTool,
+  listEventsTool,
+  getEventTool,
+  createEventTool,
+  updateEventTool,
+  deleteEventTool,
+} from '@/server/tools/calendar-tools'
+import {
   listTtsProvidersTool,
   listVoicesTool,
   textToSpeechTool,
@@ -296,6 +305,15 @@ export function registerAllTools(): void {
   toolRegistry.register('list_address_book_contacts', listAddressBookContactsTool, 'contacts')
   toolRegistry.register('get_address_book_contact', getAddressBookContactTool, 'contacts')
   toolRegistry.register('search_address_book', searchAddressBookTool, 'contacts')
+
+  // Calendar tools — read + write events on a slug-resolved calendar account.
+  toolRegistry.register('list_calendar_accounts', listCalendarAccountsTool, 'calendar')
+  toolRegistry.register('list_calendars', listCalendarsTool, 'calendar')
+  toolRegistry.register('list_events', listEventsTool, 'calendar')
+  toolRegistry.register('get_event', getEventTool, 'calendar')
+  toolRegistry.register('create_event', createEventTool, 'calendar')
+  toolRegistry.register('update_event', updateEventTool, 'calendar')
+  toolRegistry.register('delete_event', deleteEventTool, 'calendar')
 
   // Voice tools — TTS + STT discovery and actions. Audio bytes flow
   // through the messages-attachment files table (same path as

@@ -4,6 +4,7 @@ import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { getEmailProvider, listEmailProviders } from '@/server/email/registry'
 import { getContactsProvider } from '@/server/contacts/registry'
+import { getCalendarProvider } from '@/server/calendar/registry'
 import type { OAuthProfile } from '@kinbot-developer/sdk'
 import {
   getOAuthClient,
@@ -47,6 +48,13 @@ function collectOAuth(type: string, capabilities: string[]): { profile: OAuthPro
   }
   if (capabilities.includes('contacts')) {
     const p = getContactsProvider(type)
+    if (p?.oauth) {
+      profile = profile ?? p.oauth
+      for (const s of p.oauth.scopes) scopes.add(s)
+    }
+  }
+  if (capabilities.includes('calendar')) {
+    const p = getCalendarProvider(type)
     if (p?.oauth) {
       profile = profile ?? p.oauth
       for (const s of p.oauth.scopes) scopes.add(s)
