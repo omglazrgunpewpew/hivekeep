@@ -88,12 +88,34 @@ distinct toolbox and distinct tool names.
 No sync, no copy into KinBot's contacts — the address book is just a lookup
 source feeding `chat_id`.
 
+## Unified accounts (one connection, several capabilities)
+
+A connected identity (Google, Microsoft, iCloud) is **one** `providers` row whose
+`capabilities` column lists what it serves (`['email','contacts']`). Built-in
+contacts providers keyed by the same `type` as the email provider:
+
+| type | email | contacts |
+|---|---|---|
+| `gmail` | Gmail API | **Google People API** (`contacts.readonly`) |
+| `microsoft` | Graph `/messages` | **Graph `/me/contacts`** (`Contacts.Read`) |
+| `icloud` | (IMAP — fast-follow) | **CardDAV** (app password) |
+| `imap` | IMAP/SMTP | — |
+
+**Capability-aware OAuth connect**: `POST /api/email-accounts/connect/:type` takes
+`{ capabilities }` and requests the **union** of the email + contacts scopes in a
+single consent; the callback writes one row with both capabilities. Token refresh
+doesn't narrow scopes, so the same access token serves both families.
+`resolveContactsProvider` reuses the account's refresh token via the email token
+manager. The read model (`connected-accounts.ts`) merges providers by type and
+lists each account once with its capability set.
+
 ## UI
 
-Settings → **Connections → Address Books** (its own section, distinct from
-Contacts). Provider select (with logos) + a credentials form built from the
-provider's `configSchema` → Connect; a card per connected account (label, status,
-disconnect).
+Settings → **Connections → Connected Accounts** (one section). Provider select
+(with logos) → for OAuth providers an **"Also read contacts"** toggle; for config
+providers (IMAP / iCloud) a credentials form from `configSchema`. Each account
+card shows **Mail / Contacts** capability badges; send-mode appears only for email
+accounts. Config connect routes to the owning family (IMAP→email, CardDAV→contacts).
 
 ## Adding a provider later
 
