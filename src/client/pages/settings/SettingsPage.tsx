@@ -31,7 +31,6 @@ import { MemoriesSettings } from '@/client/pages/settings/MemoriesSettings'
 import { WebhooksSettings } from '@/client/pages/settings/WebhooksSettings'
 import { ChannelsSettings } from '@/client/pages/settings/ChannelsSettings'
 import { EmailAccountsSettings } from '@/client/pages/settings/EmailAccountsSettings'
-import { AddressBookSettings } from '@/client/pages/settings/AddressBookSettings'
 import { UsersSettings } from '@/client/pages/settings/UsersSettings'
 import { NotificationPreferences } from '@/client/components/notifications/NotificationPreferences'
 import { PluginsSettings } from '@/client/pages/settings/PluginsSettings'
@@ -62,7 +61,6 @@ import {
   Coins,
   Wrench,
   Mail,
-  BookUser,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { api } from '@/client/lib/api'
@@ -106,7 +104,6 @@ const sectionGroups: SectionGroup[] = [
       { id: 'emailAccounts', icon: Mail, labelKey: 'settings.emailAccounts.title' },
       { id: 'webhooks', icon: Webhook, labelKey: 'settings.webhooks.title' },
       { id: 'contacts', icon: Users, labelKey: 'settings.contacts.title' },
-      { id: 'addressBook', icon: BookUser, labelKey: 'settings.addressBook.title' },
     ],
   },
   {
@@ -151,7 +148,6 @@ const sectionComponents: Record<string, React.FC> = {
   webhooks: WebhooksSettings,
   channels: ChannelsSettings,
   emailAccounts: EmailAccountsSettings,
-  addressBook: AddressBookSettings,
   plugins: PluginsSettings,
   marketplace: PluginMarketplace,
   toolboxes: ToolboxesSettings,

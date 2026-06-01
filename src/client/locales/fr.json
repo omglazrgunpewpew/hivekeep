@@ -1728,8 +1728,8 @@
       }
     },
     "emailAccounts": {
-      "title": "Comptes email",
-      "description": "Connectez des comptes email pour que vos Kins puissent lire et envoyer des mails. Stockés comme comptes provider chiffrés.",
+      "title": "Comptes connectés",
+      "description": "Connectez des comptes Google, Microsoft, iCloud ou IMAP pour que vos Kins puissent lire/envoyer des mails et consulter les contacts. Une connexion peut servir plusieurs capacités.",
       "add": "Ajouter un compte",
       "addTitle": "Ajouter un compte email",
       "addDescription": "Choisis un fournisseur et connecte une boîte mail.",
@@ -1749,6 +1749,8 @@
       "connected": "Compte {{provider}} connecté",
       "alsoContacts": "Lire aussi les contacts",
       "alsoContactsHint": "Permet aux Kins de consulter le carnet d'adresses de ce compte (lecture seule). Demandé dans le même consentement.",
+      "capEmail": "Mail",
+      "capContacts": "Contacts",
       "connectedToast": "{{email}} connecté",
       "editCreds": "Modifier les identifiants de l'app",
       "credsSaved": "Identifiants de l'app enregistrés",

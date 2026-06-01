@@ -12,6 +12,7 @@ import { onboardingRoutes } from '@/server/routes/onboarding'
 import { providerRoutes } from '@/server/routes/providers'
 import { emailAccountRoutes } from '@/server/routes/email-accounts'
 import { contactsAccountRoutes } from '@/server/routes/contacts-accounts'
+import { connectedAccountRoutes } from '@/server/routes/connected-accounts'
 import { pendingEmailSendRoutes } from '@/server/routes/pending-email-sends'
 import { sseRoutes } from '@/server/routes/sse'
 import { kinRoutes } from '@/server/routes/kins'
@@ -163,6 +164,7 @@ app.route('/api/onboarding', onboardingRoutes)
 app.route('/api/providers', providerRoutes)
 app.route('/api/email-accounts', emailAccountRoutes)
 app.route('/api/contacts-accounts', contactsAccountRoutes)
+app.route('/api/connected-accounts', connectedAccountRoutes)
 app.route('/api/pending-email-sends', pendingEmailSendRoutes)
 app.route('/api/sse', sseRoutes)
 app.route('/api/kins', kinRoutes)

@@ -1728,8 +1728,8 @@
       }
     },
     "emailAccounts": {
-      "title": "Email Accounts",
-      "description": "Connect email accounts so your Kins can read and send email. Stored as encrypted provider accounts.",
+      "title": "Connected Accounts",
+      "description": "Connect Google, Microsoft, iCloud or IMAP accounts so your Kins can read/send email and look up contacts. One connection can serve several capabilities.",
       "add": "Add account",
       "addTitle": "Add an email account",
       "addDescription": "Choose a provider and connect a mailbox.",
@@ -1749,6 +1749,8 @@
       "connected": "{{provider}} account connected",
       "alsoContacts": "Also read contacts",
       "alsoContactsHint": "Lets Kins look up this account's address book (read-only). Requested in the same consent.",
+      "capEmail": "Mail",
+      "capContacts": "Contacts",
       "connectedToast": "{{email}} connected",
       "editCreds": "Edit app credentials",
       "credsSaved": "App credentials saved",

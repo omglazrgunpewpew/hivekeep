@@ -369,7 +369,10 @@ function ConnectStep({
   const connectConfig = async () => {
     setConnecting(true)
     try {
-      await api.post(`/email-accounts/connect-config/${provider.type}`, { fields })
+      // Route to the family that owns this config provider: IMAP → email,
+      // CardDAV (iCloud) → contacts.
+      const base = provider.capabilities.includes('email') ? 'email-accounts' : 'contacts-accounts'
+      await api.post(`/${base}/connect-config/${provider.type}`, { fields })
       toast.success(t('settings.emailAccounts.connected', { provider: provider.displayName }))
       onChange()
       onClose()
@@ -443,10 +446,11 @@ function ConnectStep({
 
 function EmailAccountCard({ account, onChange }: { account: EmailAccount; onChange: () => void }) {
   const { t } = useTranslation()
+  const servesEmail = account.capabilities.includes('email')
 
   const setMode = async (mode: string) => {
     try {
-      await api.patch(`/email-accounts/${account.id}`, { sendMode: mode })
+      await api.patch(`/connected-accounts/${account.id}`, { sendMode: mode })
       onChange()
     } catch (err) {
       toast.error(getErrorMessage(err))
@@ -455,7 +459,7 @@ function EmailAccountCard({ account, onChange }: { account: EmailAccount; onChan
 
   const disconnect = async () => {
     try {
-      await api.delete(`/email-accounts/${account.id}`)
+      await api.delete(`/connected-accounts/${account.id}`)
       toast.success(t('settings.emailAccounts.deleted'))
       onChange()
     } catch (err) {
@@ -477,21 +481,31 @@ function EmailAccountCard({ account, onChange }: { account: EmailAccount; onChan
             />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{account.emailAddress}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="truncate text-sm font-medium">{account.label}</p>
+              {account.capabilities.includes('email') && (
+                <Badge variant="secondary" className="text-[10px]">{t('settings.emailAccounts.capEmail')}</Badge>
+              )}
+              {account.capabilities.includes('contacts') && (
+                <Badge variant="secondary" className="text-[10px]">{t('settings.emailAccounts.capContacts')}</Badge>
+              )}
+            </div>
             <p className="truncate text-xs text-muted-foreground">{account.name}</p>
             {account.lastError && <p className="truncate text-xs text-destructive">{account.lastError}</p>}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Select value={account.sendMode} onValueChange={(v) => void setMode(v)}>
-            <SelectTrigger className="h-8 w-36 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="direct">{t('settings.emailAccounts.sendModeDirect')}</SelectItem>
-              <SelectItem value="approval">{t('settings.emailAccounts.sendModeApproval')}</SelectItem>
-            </SelectContent>
-          </Select>
+          {servesEmail && account.sendMode && (
+            <Select value={account.sendMode} onValueChange={(v) => void setMode(v)}>
+              <SelectTrigger className="h-8 w-36 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="direct">{t('settings.emailAccounts.sendModeDirect')}</SelectItem>
+                <SelectItem value="approval">{t('settings.emailAccounts.sendModeApproval')}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <ConfirmDeleteButton
             onConfirm={() => void disconnect()}
             title={t('settings.emailAccounts.delete')}
