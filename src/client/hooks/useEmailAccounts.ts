@@ -26,6 +26,9 @@ export interface EmailProviderInfo {
   brandColor: string | null
   /** Where the operator sets up the OAuth app (Google Cloud / Azure portal). */
   consoleUrl: string | null
+  /** A contacts provider is registered under the same type — the account can
+   *  also serve the address book (offered as an optional capability). */
+  supportsContacts: boolean
   /** For non-OAuth providers (IMAP/SMTP): the fields to render in the Add
    *  dialog. Empty for OAuth providers. */
   configSchema: ConfigField[]

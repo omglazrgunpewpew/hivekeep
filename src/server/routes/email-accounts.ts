@@ -3,6 +3,8 @@ import type { Context } from 'hono'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { getEmailProvider, listEmailProviders } from '@/server/email/registry'
+import { getContactsProvider } from '@/server/contacts/registry'
+import type { OAuthProfile } from '@kinbot-developer/sdk'
 import {
   getOAuthClient,
   setOAuthClient,
@@ -24,8 +26,34 @@ const log = createLogger('routes:email-accounts')
 const emailAccountRoutes = new Hono()
 
 // Short-lived CSRF/state store for in-flight OAuth connects (in-memory).
-const pendingStates = new Map<string, { type: string; createdAt: number }>()
+const pendingStates = new Map<string, { type: string; capabilities: string[]; createdAt: number }>()
 const STATE_TTL_MS = 10 * 60 * 1000
+
+/**
+ * Collect the OAuth profile + the union of scopes for the requested capabilities.
+ * A single identity (e.g. Microsoft) exposes both an EmailProvider and a
+ * ContactsProvider under the same `type`; connecting with both capabilities
+ * requests Mail + Contacts scopes at once so one account serves both.
+ */
+function collectOAuth(type: string, capabilities: string[]): { profile: OAuthProfile; scopes: string[] } | null {
+  const scopes = new Set<string>()
+  let profile: OAuthProfile | undefined
+  if (capabilities.includes('email')) {
+    const p = getEmailProvider(type)
+    if (p?.oauth) {
+      profile = p.oauth
+      for (const s of p.oauth.scopes) scopes.add(s)
+    }
+  }
+  if (capabilities.includes('contacts')) {
+    const p = getContactsProvider(type)
+    if (p?.oauth) {
+      profile = profile ?? p.oauth
+      for (const s of p.oauth.scopes) scopes.add(s)
+    }
+  }
+  return profile ? { profile, scopes: [...scopes] } : null
+}
 
 function sweepStates() {
   const cutoff = Date.now() - STATE_TTL_MS
@@ -70,6 +98,9 @@ emailAccountRoutes.get('/providers', async (c) => {
       reactIcon: p.reactIcon ?? null,
       brandColor: p.brandColor ?? null,
       consoleUrl: p.apiKeyUrl ?? null,
+      // A ContactsProvider registered under the same type means this account can
+      // also serve the address book — the UI offers a "Contacts" capability.
+      supportsContacts: !!getContactsProvider(p.type),
       // Non-OAuth providers (IMAP/SMTP) render this form in the Add dialog.
       configSchema: p.oauth ? [] : p.configSchema,
     })
@@ -113,14 +144,20 @@ emailAccountRoutes.delete('/oauth-config/:type', async (c) => {
 })
 
 // POST /api/email-accounts/connect/:type — begin the OAuth connect flow.
+// Body: { capabilities?: ['email','contacts'] } — the union of scopes for the
+// selected capabilities is requested so one account can serve both.
 emailAccountRoutes.post('/connect/:type', async (c) => {
   const type = c.req.param('type')
-  const provider = getEmailProvider(type)
-  if (!provider) {
-    return c.json({ error: { code: 'UNKNOWN_PROVIDER', message: `Unknown email provider: ${type}` } }, 404)
-  }
-  if (!provider.oauth) {
-    return c.json({ error: { code: 'NOT_OAUTH', message: `${type} does not use OAuth` } }, 400)
+  const body = await c.req.json<{ capabilities?: string[] }>().catch(() => ({ capabilities: undefined }))
+  const capabilities =
+    body.capabilities && body.capabilities.length > 0 ? body.capabilities : ['email']
+
+  const oauth = collectOAuth(type, capabilities)
+  if (!oauth) {
+    return c.json(
+      { error: { code: 'NOT_OAUTH', message: `${type} has no OAuth provider for: ${capabilities.join(', ')}` } },
+      400,
+    )
   }
   const client = await getOAuthClient(type)
   if (!client) {
@@ -131,9 +168,9 @@ emailAccountRoutes.post('/connect/:type', async (c) => {
   }
   sweepStates()
   const state = crypto.randomUUID()
-  pendingStates.set(state, { type, createdAt: Date.now() })
+  pendingStates.set(state, { type, capabilities, createdAt: Date.now() })
   const authUrl = buildAuthorizeUrl({
-    profile: provider.oauth,
+    profile: { ...oauth.profile, scopes: oauth.scopes },
     clientId: client.clientId,
     redirectUri: callbackUri(c),
     state,
@@ -205,14 +242,14 @@ emailAccountRoutes.get('/oauth/callback', async (c) => {
   if (!pending) return c.redirect('/?email_error=invalid_state')
   pendingStates.delete(state)
 
-  const provider = getEmailProvider(pending.type)
-  if (!provider?.oauth) return c.redirect('/?email_error=unknown_provider')
+  const oauth = collectOAuth(pending.type, pending.capabilities)
+  if (!oauth) return c.redirect('/?email_error=unknown_provider')
   const client = await getOAuthClient(pending.type)
   if (!client) return c.redirect('/?email_error=oauth_not_configured')
 
   try {
     const tokens = await exchangeCode({
-      profile: provider.oauth,
+      profile: oauth.profile,
       clientId: client.clientId,
       clientSecret: client.clientSecret,
       code,
@@ -224,13 +261,14 @@ emailAccountRoutes.get('/oauth/callback', async (c) => {
       // a fresh refresh token, so this should be rare.
       return c.redirect('/?email_error=no_refresh_token')
     }
-    const email = await fetchAccountEmail(provider.oauth, tokens.accessToken)
+    const email = await fetchAccountEmail(oauth.profile, tokens.accessToken)
     if (!email) return c.redirect('/?email_error=no_email')
     await createOAuthEmailAccount({
       type: pending.type,
       emailAddress: email,
       refreshToken: tokens.refreshToken,
-      scopes: tokens.scope ? tokens.scope.split(' ') : [...provider.oauth.scopes],
+      scopes: tokens.scope ? tokens.scope.split(' ') : oauth.scopes,
+      capabilities: pending.capabilities,
     })
     return c.redirect(`/?email_connected=${encodeURIComponent(email)}`)
   } catch (err) {

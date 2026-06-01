@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/client/components/ui/card'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Label } from '@/client/components/ui/label'
+import { Switch } from '@/client/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -334,10 +335,12 @@ function ConnectStep({
   const { t } = useTranslation()
   const [connecting, setConnecting] = useState(false)
   const [fields, setFields] = useState<Record<string, string>>({})
+  const [withContacts, setWithContacts] = useState(true)
 
   // Reset the form when switching providers.
   useEffect(() => {
     setFields({})
+    setWithContacts(true)
   }, [provider.type])
 
   // The OAuth connect navigates away via window.location; if the user comes
@@ -352,7 +355,10 @@ function ConnectStep({
   const connectOAuth = async () => {
     setConnecting(true)
     try {
-      const { authUrl } = await api.post<{ authUrl: string }>(`/email-accounts/connect/${provider.type}`)
+      const capabilities = ['email', ...(provider.supportsContacts && withContacts ? ['contacts'] : [])]
+      const { authUrl } = await api.post<{ authUrl: string }>(`/email-accounts/connect/${provider.type}`, {
+        capabilities,
+      })
       window.location.href = authUrl
     } catch (err) {
       toast.error(getErrorMessage(err))
@@ -383,10 +389,23 @@ function ConnectStep({
       )
     }
     return (
-      <Button className="w-full" onClick={connectOAuth} disabled={connecting}>
-        <Plus className="size-4" />
-        {t('settings.emailAccounts.connect', { provider: provider.displayName })}
-      </Button>
+      <div className="space-y-3">
+        {provider.supportsContacts && (
+          <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
+            <div className="space-y-0.5">
+              <Label htmlFor="with-contacts" className="text-sm font-normal">
+                {t('settings.emailAccounts.alsoContacts')}
+              </Label>
+              <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoContactsHint')}</p>
+            </div>
+            <Switch id="with-contacts" checked={withContacts} onCheckedChange={setWithContacts} />
+          </div>
+        )}
+        <Button className="w-full" onClick={connectOAuth} disabled={connecting}>
+          <Plus className="size-4" />
+          {t('settings.emailAccounts.connect', { provider: provider.displayName })}
+        </Button>
+      </div>
     )
   }
 

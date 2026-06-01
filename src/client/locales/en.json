@@ -1747,6 +1747,8 @@
       "emptyDescription": "Configure a provider above and connect a mailbox to get started.",
       "connect": "Connect {{provider}}",
       "connected": "{{provider}} account connected",
+      "alsoContacts": "Also read contacts",
+      "alsoContactsHint": "Lets Kins look up this account's address book (read-only). Requested in the same consent.",
       "connectedToast": "{{email}} connected",
       "editCreds": "Edit app credentials",
       "credsSaved": "App credentials saved",
