@@ -1751,6 +1751,7 @@
       "alsoContactsHint": "Permet aux Kins de consulter le carnet d'adresses de ce compte (lecture seule). Demandé dans le même consentement.",
       "capEmail": "Mail",
       "capContacts": "Contacts",
+      "capabilitiesHint": "Ce que ce compte doit servir :",
       "connectedToast": "{{email}} connecté",
       "editCreds": "Modifier les identifiants de l'app",
       "credsSaved": "Identifiants de l'app enregistrés",

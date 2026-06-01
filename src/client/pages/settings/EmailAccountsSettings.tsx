@@ -336,12 +336,14 @@ function ConnectStep({
   const [connecting, setConnecting] = useState(false)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [withContacts, setWithContacts] = useState(true)
+  const [configCaps, setConfigCaps] = useState<string[]>(provider.capabilities)
 
   // Reset the form when switching providers.
   useEffect(() => {
     setFields({})
     setWithContacts(true)
-  }, [provider.type])
+    setConfigCaps(provider.capabilities)
+  }, [provider.type, provider.capabilities])
 
   // The OAuth connect navigates away via window.location; if the user comes
   // back (browser Back / bfcache restore), the frozen `connecting=true` would
@@ -369,10 +371,8 @@ function ConnectStep({
   const connectConfig = async () => {
     setConnecting(true)
     try {
-      // Route to the family that owns this config provider: IMAP → email,
-      // CardDAV (iCloud) → contacts.
-      const base = provider.capabilities.includes('email') ? 'email-accounts' : 'contacts-accounts'
-      await api.post(`/${base}/connect-config/${provider.type}`, { fields })
+      const capabilities = configCaps.length > 0 ? configCaps : provider.capabilities
+      await api.post(`/connected-accounts/connect-config/${provider.type}`, { capabilities, fields })
       toast.success(t('settings.emailAccounts.connected', { provider: provider.displayName }))
       onChange()
       onClose()
@@ -382,6 +382,9 @@ function ConnectStep({
       setConnecting(false)
     }
   }
+
+  const toggleCap = (cap: string, on: boolean) =>
+    setConfigCaps((caps) => (on ? [...new Set([...caps, cap])] : caps.filter((c) => c !== cap)))
 
   if (provider.usesOAuth) {
     if (!provider.oauthConfigured) {
@@ -417,6 +420,19 @@ function ConnectStep({
 
   return (
     <div className="space-y-3">
+      {provider.capabilities.length > 1 && (
+        <div className="space-y-1.5 rounded-md border border-border/60 p-2.5">
+          <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.capabilitiesHint')}</p>
+          <div className="flex flex-wrap gap-3">
+            {provider.capabilities.map((cap) => (
+              <label key={cap} className="flex items-center gap-1.5 text-sm">
+                <Switch checked={configCaps.includes(cap)} onCheckedChange={(on) => toggleCap(cap, on)} />
+                {cap === 'email' ? t('settings.emailAccounts.capEmail') : t('settings.emailAccounts.capContacts')}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       {provider.configSchema.map((field) => {
         const isSecret = field.type === 'secret'
         const Tag = isSecret ? PasswordInput : Input
@@ -436,7 +452,11 @@ function ConnectStep({
           </div>
         )
       })}
-      <Button className="w-full" onClick={connectConfig} disabled={connecting || missingRequired}>
+      <Button
+        className="w-full"
+        onClick={connectConfig}
+        disabled={connecting || missingRequired || configCaps.length === 0}
+      >
         <Plus className="size-4" />
         {t('settings.emailAccounts.connect', { provider: provider.displayName })}
       </Button>

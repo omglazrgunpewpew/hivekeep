@@ -9,15 +9,20 @@
  * per-family services / routes; this module is the read model that powers the
  * single "Connected accounts" settings section.
  */
+import { v4 as uuid } from 'uuid'
 import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { providers } from '@/server/db/schema'
 import { decrypt, encrypt } from '@/server/services/encryption'
 import { getOAuthClient } from '@/server/services/app-settings'
 import { invalidateAccessToken } from '@/server/services/email-token-manager'
+import { generateProviderSlug } from '@/server/services/provider-slug'
 import { listEmailProviders } from '@/server/email/registry'
 import { listContactsProviders } from '@/server/contacts/registry'
+import { createLogger } from '@/server/logger'
 import type { ConfigField } from '@kinbot-developer/sdk'
+
+const log = createLogger('connected-accounts')
 
 const ACCOUNT_CAPABILITIES = ['email', 'contacts', 'calendar']
 
@@ -168,4 +173,81 @@ export function setAccountAllowList(id: string, kinIds: string[] | null): Promis
   return mutateRowConfig(id, (cfg) => {
     cfg.allowed_kin_ids = kinIds && kinIds.length > 0 ? kinIds : null
   })
+}
+
+function mergeCapabilities(existing: string[], add: string[]): string[] {
+  const out = [...existing]
+  for (const c of add) if (!out.includes(c)) out.push(c)
+  return out
+}
+
+/**
+ * Create (or augment) a non-OAuth account from validated config credentials,
+ * setting ALL requested capabilities on ONE row. Used by the unified config
+ * connect (e.g. iCloud = email + contacts with the same app password).
+ */
+export async function createConfigAccount(opts: {
+  type: string
+  label: string
+  credentials: Record<string, string>
+  capabilities: string[]
+  name?: string
+}): Promise<{ id: string }> {
+  const servesEmail = opts.capabilities.includes('email')
+  let matched: ProviderRow | undefined
+  for (const row of db.select().from(providers).all()) {
+    if (row.type !== opts.type) continue
+    try {
+      const cfg = JSON.parse(await decrypt(row.configEncrypted)) as StoredConfig
+      if ((cfg.email_address || cfg.account_label) === opts.label) {
+        matched = row
+        break
+      }
+    } catch {
+      /* skip unreadable */
+    }
+  }
+
+  const now = new Date()
+  if (matched) {
+    const cfg = JSON.parse(await decrypt(matched.configEncrypted)) as Record<string, unknown>
+    cfg.credentials = opts.credentials
+    if (servesEmail && !cfg.send_mode) cfg.send_mode = 'direct'
+    const caps = mergeCapabilities(rowCapabilities(matched), opts.capabilities)
+    await db
+      .update(providers)
+      .set({
+        configEncrypted: await encrypt(JSON.stringify(cfg)),
+        capabilities: JSON.stringify(caps),
+        isValid: true,
+        lastError: null,
+        updatedAt: now,
+      })
+      .where(eq(providers.id, matched.id))
+    log.info({ id: matched.id, type: opts.type, label: opts.label, capabilities: caps }, 'Config account updated')
+    return { id: matched.id }
+  }
+
+  const id = uuid()
+  const cfg: StoredConfig & { credentials: Record<string, string> } = {
+    email_address: servesEmail ? opts.label : undefined,
+    account_label: opts.label,
+    credentials: opts.credentials,
+    send_mode: servesEmail ? 'direct' : undefined,
+    allowed_kin_ids: null,
+  }
+  await db.insert(providers).values({
+    id,
+    slug: generateProviderSlug(opts.name ?? opts.label),
+    name: opts.name ?? opts.label,
+    type: opts.type,
+    configEncrypted: await encrypt(JSON.stringify(cfg)),
+    capabilities: JSON.stringify(opts.capabilities),
+    isValid: true,
+    lastError: null,
+    createdAt: now,
+    updatedAt: now,
+  })
+  log.info({ id, type: opts.type, label: opts.label, capabilities: opts.capabilities }, 'Config account connected')
+  return { id }
 }

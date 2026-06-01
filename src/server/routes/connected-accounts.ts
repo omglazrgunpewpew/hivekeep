@@ -1,15 +1,34 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { config } from '@/server/config'
+import { createLogger } from '@/server/logger'
+import { getEmailProvider } from '@/server/email/registry'
+import { getContactsProvider } from '@/server/contacts/registry'
 import {
   listConnectedAccounts,
   listConnectedProviders,
+  createConfigAccount,
   deleteConnectedAccount,
   setAccountSendMode,
   setAccountAllowList,
 } from '@/server/services/connected-accounts'
+import type { ConfigField, ProviderConfig } from '@kinbot-developer/sdk'
 
+const log = createLogger('routes:connected-accounts')
 const connectedAccountRoutes = new Hono()
+
+interface ConfigProviderLike {
+  configSchema: readonly ConfigField[]
+  oauth?: unknown
+  authenticate(config: ProviderConfig): Promise<{ valid: boolean; error?: string; accountLabel?: string }>
+}
+
+/** Resolve the config (non-OAuth) provider that serves a capability for a type. */
+function configProviderFor(type: string, capability: string): ConfigProviderLike | null {
+  const p = capability === 'email' ? getEmailProvider(type) : capability === 'contacts' ? getContactsProvider(type) : undefined
+  if (!p || p.oauth) return null
+  return p as ConfigProviderLike
+}
 
 /** Public origin for OAuth redirect URIs (PUBLIC_URL → X-Forwarded → req).
  *  Mirrors the email-accounts route — the OAuth connect/callback live there. */
@@ -33,6 +52,60 @@ connectedAccountRoutes.get('/providers', async (c) => {
     providers: await listConnectedProviders(),
     redirectUri: `${publicOrigin(c)}/api/email-accounts/oauth/callback`,
   })
+})
+
+// POST /api/connected-accounts/connect-config/:type — connect a non-OAuth
+// account for one or more capabilities (e.g. iCloud = email + contacts with the
+// same app password). Validates EVERY requested capability before storing.
+connectedAccountRoutes.post('/connect-config/:type', async (c) => {
+  const type = c.req.param('type')
+  const body = await c.req.json<{ capabilities?: string[]; fields?: Record<string, string>; name?: string }>()
+  const capabilities = body.capabilities?.length ? body.capabilities : ['email']
+  const fields = body.fields ?? {}
+
+  // Resolve a config provider per requested capability.
+  const selected: { capability: string; provider: ConfigProviderLike }[] = []
+  for (const cap of capabilities) {
+    const provider = configProviderFor(type, cap)
+    if (!provider) {
+      return c.json({ error: { code: 'UNSUPPORTED', message: `${type} has no config provider for ${cap}` } }, 400)
+    }
+    selected.push({ capability: cap, provider })
+  }
+
+  // Union the config schemas (providers of the same identity share fields).
+  const schemaByKey = new Map<string, ConfigField>()
+  for (const { provider } of selected) for (const f of provider.configSchema) if (!schemaByKey.has(f.key)) schemaByKey.set(f.key, f)
+  const schema = [...schemaByKey.values()]
+
+  const missing = schema.filter((f) => f.required && !fields[f.key]?.trim()).map((f) => f.label)
+  if (missing.length > 0) {
+    return c.json({ error: { code: 'INVALID_INPUT', message: `Missing required field(s): ${missing.join(', ')}` } }, 400)
+  }
+
+  const providerConfig: Record<string, string> = {}
+  for (const f of schema) {
+    const v = fields[f.key]?.trim()
+    if (v) providerConfig[f.key] = v
+    else if ('default' in f && f.default) providerConfig[f.key] = f.default
+  }
+
+  try {
+    let label: string | undefined
+    for (const { capability, provider } of selected) {
+      const auth = await provider.authenticate(providerConfig)
+      if (!auth.valid) {
+        return c.json({ error: { code: 'AUTH_FAILED', message: `${capability}: ${auth.error ?? 'authentication failed'}` } }, 400)
+      }
+      label = label ?? auth.accountLabel
+    }
+    label = label || providerConfig.email || providerConfig.apple_id || providerConfig.username || providerConfig.email_address || type
+    const account = await createConfigAccount({ type, label, credentials: providerConfig, capabilities, name: body.name })
+    return c.json({ account })
+  } catch (err) {
+    log.error({ err, type, capabilities }, 'Config connect failed')
+    return c.json({ error: { code: 'CONNECT_FAILED', message: err instanceof Error ? err.message : 'Failed' } }, 400)
+  }
 })
 
 // PATCH /api/connected-accounts/:id — send mode (email) / allow-list.

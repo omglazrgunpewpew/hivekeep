@@ -1751,6 +1751,7 @@
       "alsoContactsHint": "Lets Kins look up this account's address book (read-only). Requested in the same consent.",
       "capEmail": "Mail",
       "capContacts": "Contacts",
+      "capabilitiesHint": "What this account should serve:",
       "connectedToast": "{{email}} connected",
       "editCreds": "Edit app credentials",
       "credsSaved": "App credentials saved",
