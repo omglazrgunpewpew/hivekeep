@@ -1820,6 +1820,11 @@
       "messagesSent": "sent",
       "manageUsers": "Users",
       "pendingUsers": "pending",
+      "webhook": {
+        "label": "Inbound webhook URL",
+        "hint": "Paste this URL into your provider's console to receive inbound messages. For Twilio: Phone Numbers → your number → Messaging → \"A message comes in\" → HTTP POST.",
+        "localhostWarning": "This points at localhost — external providers can't reach it. Set the PUBLIC_URL env var to your public HTTPS URL so signatures validate and webhooks arrive."
+      },
       "noUsers": "No pending users",
       "newUserPending": "New user {{name}} awaiting approval",
       "userApproved": "User approved",

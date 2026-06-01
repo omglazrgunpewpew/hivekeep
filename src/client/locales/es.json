@@ -1353,6 +1353,11 @@
       "messagesSent": "enviados",
       "manageUsers": "Usuarios",
       "pendingUsers": "pendientes",
+      "webhook": {
+        "label": "URL del webhook entrante",
+        "hint": "Pega esta URL en la consola de tu proveedor para recibir mensajes entrantes. Para Twilio: Números de teléfono → tu número → Messaging → «A message comes in» → HTTP POST.",
+        "localhostWarning": "Esta URL apunta a localhost — los proveedores externos no pueden acceder a ella. Define la variable de entorno PUBLIC_URL con tu URL HTTPS pública para que las firmas sean válidas y los webhooks lleguen."
+      },
       "noUsers": "No hay usuarios pendientes",
       "newUserPending": "Nuevo usuario {{name}} esperando aprobación",
       "userApproved": "Usuario aprobado",

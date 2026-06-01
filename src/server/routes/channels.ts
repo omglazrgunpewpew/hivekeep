@@ -25,7 +25,9 @@ import {
   buildZodSchemaFromConfigSchema,
   formatZodIssues,
 } from '@/server/channels/configSchemaValidator'
+import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
+import type { ChannelSummary } from '@/shared/types'
 
 const log = createLogger('routes:channels')
 
@@ -39,7 +41,22 @@ function kinAvatarUrl(kinId: string, avatarPath: string | null): string | null {
 
 interface KinInfo { name: string; avatarPath: string | null }
 
-function serializeChannel(channel: any, kinInfo?: KinInfo, pendingApprovalCount = 0) {
+/**
+ * The public URL Twilio (or any webhook-driven plugin platform) must call to
+ * deliver inbound messages. Only meaningful for plugin adapters that actually
+ * implement `handleInboundWebhook` — the exact condition the dispatcher route
+ * `POST /plugin/:platform/webhook/:channelId` requires. Returns null for
+ * built-in channels (Telegram, Slack, …) which manage their own webhook wiring.
+ */
+function channelWebhookUrl(platform: string, channelId: string): string | null {
+  if (!channelAdapters.isPluginAdapter(platform)) return null
+  const adapter = channelAdapters.get(platform)
+  if (!adapter || typeof adapter.handleInboundWebhook !== 'function') return null
+  const base = config.publicUrl.replace(/\/$/, '')
+  return `${base}/api/channels/plugin/${platform}/webhook/${channelId}`
+}
+
+function serializeChannel(channel: any, kinInfo?: KinInfo, pendingApprovalCount = 0): ChannelSummary {
   return {
     id: channel.id,
     kinId: channel.kinId,
@@ -56,6 +73,7 @@ function serializeChannel(channel: any, kinInfo?: KinInfo, pendingApprovalCount 
     createdBy: channel.createdBy,
     createdAt: new Date(channel.createdAt).getTime(),
     pendingApprovalCount,
+    webhookUrl: channelWebhookUrl(channel.platform, channel.id),
   }
 }
 

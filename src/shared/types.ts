@@ -455,6 +455,12 @@ export interface ChannelSummary {
   createdBy: 'user' | 'kin'
   createdAt: number
   pendingApprovalCount: number
+  /**
+   * Public inbound-webhook URL to paste into the external platform's console
+   * (e.g. Twilio). Set only for plugin channels whose adapter handles inbound
+   * webhooks; `null` for built-in or non-webhook channels.
+   */
+  webhookUrl: string | null
 }
 
 /** Pending channel user awaiting approval */
