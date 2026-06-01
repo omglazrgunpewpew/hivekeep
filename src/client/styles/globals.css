@@ -2609,3 +2609,16 @@ body {
   }
 }
 
+/* ─── RADIX SCROLLAREA HORIZONTAL OVERFLOW FIX ─────────── */
+
+/* Radix injects an inner wrapper (display:table; min-width:100%) inside the
+   ScrollArea viewport. Because display:table is shrink-to-fit, it sizes to the
+   content's max-content width — on narrow (mobile) viewports this lays the
+   entire content out wider than the viewport and clips the right side instead
+   of letting text wrap. Forcing the wrapper to block makes it respect the
+   viewport width; genuinely-wide children (code blocks, tables) still scroll
+   horizontally via the viewport's own overflow. */
+[data-slot="scroll-area-viewport"] > div {
+  display: block !important;
+}
+
