@@ -60,7 +60,7 @@ export function WebSearchRenderer({ args, result, status }: ToolResultRendererPr
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
           <Search className="size-3 text-muted-foreground shrink-0" />
-          {query && <span className="text-foreground truncate font-medium">{query}</span>}
+          {query && <span className="min-w-0 text-foreground truncate font-medium">{query}</span>}
           <span className="ml-auto flex items-center gap-2 shrink-0">
             {provider && <span className="text-[10px] text-muted-foreground">{provider}</span>}
             {results && (
@@ -86,7 +86,7 @@ export function WebSearchRenderer({ args, result, status }: ToolResultRendererPr
               <Sparkles className="size-3" />
               {t('tools.renderers.searchAnswer')}
             </div>
-            <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{answer.text}</p>
+            <p className="text-foreground/90 whitespace-pre-wrap break-words leading-relaxed">{answer.text}</p>
             {!!answer.citations?.length && (
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {answer.citations.map((c, i) => (
@@ -95,7 +95,7 @@ export function WebSearchRenderer({ args, result, status }: ToolResultRendererPr
                     href={c.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    className="inline-block max-w-full truncate rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {i + 1}. {hostOf(c.url, undefined) ?? c.title ?? c.url}
                   </a>
@@ -120,10 +120,10 @@ export function WebSearchRenderer({ args, result, status }: ToolResultRendererPr
                   >
                     <span className="flex-1 min-w-0">
                       <span className="flex items-center gap-1 text-foreground font-medium group-hover:text-primary transition-colors">
-                        <span className="truncate">{r.title || r.url || t('tools.renderers.searchUntitled')}</span>
+                        <span className="min-w-0 truncate">{r.title || r.url || t('tools.renderers.searchUntitled')}</span>
                         <ExternalLink className="size-2.5 shrink-0 opacity-0 group-hover:opacity-60" />
                       </span>
-                      {host && <span className="text-[10px] text-muted-foreground/70">{host}</span>}
+                      {host && <span className="block truncate text-[10px] text-muted-foreground/70">{host}</span>}
                       {r.snippet && (
                         <span className="mt-0.5 block text-[11px] text-muted-foreground line-clamp-2">{r.snippet}</span>
                       )}

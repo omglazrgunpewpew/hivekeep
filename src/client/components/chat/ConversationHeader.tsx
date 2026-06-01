@@ -1,5 +1,6 @@
 import { useState, useMemo, memo, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '@/client/hooks/use-mobile'
 import { ChatAvatar } from '@/client/components/chat/ChatAvatar'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
@@ -216,11 +217,17 @@ export const ConversationHeader = memo(function ConversationHeader({
   const cacheMultipliers = getCacheMultipliers(currentProviderType)
 
   // Responsive action bar — see useElementWidth above.
+  const isMobile = useIsMobile()
   const [headerRef, headerWidth] = useElementWidth<HTMLDivElement>()
-  const showDateNav = headerWidth >= HIDE_DATE_NAV_BELOW
-  const showStats = headerWidth >= HIDE_STATS_BELOW
-  const showUsageIcon = headerWidth >= FOLD_USAGE_BELOW
-  const showQuickIcon = headerWidth >= FOLD_QUICK_BELOW
+  // On mobile the foldable / passive actions always collapse, regardless of the
+  // measured width. This also avoids a first-paint overflow flash before the
+  // ResizeObserver reports a width (initial width is +Infinity). At >=768px the
+  // hook returns false, so desktop behaviour stays driven purely by the
+  // width thresholds — byte-identical to before.
+  const showDateNav = !isMobile && headerWidth >= HIDE_DATE_NAV_BELOW
+  const showStats = !isMobile && headerWidth >= HIDE_STATS_BELOW
+  const showUsageIcon = !isMobile && headerWidth >= FOLD_USAGE_BELOW
+  const showQuickIcon = !isMobile && headerWidth >= FOLD_QUICK_BELOW
   // The "⋯" overflow only appears when at least one *foldable* action (a simple
   // onClick — quick session, usage) couldn't fit. Stats/date-nav don't fold.
   const hasOverflow = Boolean((onQuickSession && !showQuickIcon) || (onViewUsage && !showUsageIcon))

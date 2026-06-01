@@ -2,6 +2,7 @@ import { forwardRef, useState, type HTMLAttributes } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/client/components/ui/badge'
 import { cn } from '@/client/lib/utils'
+import { useIsMobile } from '@/client/hooks/use-mobile'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/client/components/ui/tooltip'
 import { PlatformIcon } from '@/client/components/common/PlatformIcon'
 import type { KinChannelBadge } from '@/client/hooks/useKinChannels'
@@ -55,6 +56,8 @@ export interface KinCardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const MAX_VISIBLE_BADGES = 5
+/** Tighter cap inside the ~288px mobile drawer so cards stay compact. */
+const MAX_VISIBLE_BADGES_MOBILE = 3
 
 export const KinCard = forwardRef<HTMLDivElement, KinCardProps>(function KinCard({
   name,
@@ -82,6 +85,10 @@ export const KinCard = forwardRef<HTMLDivElement, KinCardProps>(function KinCard
 }, ref) {
   const { t } = useTranslation()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const isMobile = useIsMobile()
+  // Inside the narrow mobile drawer, show fewer icons and collapse the rest
+  // into the existing "+N" affordance. Desktop keeps the full count.
+  const maxVisibleBadges = isMobile ? MAX_VISIBLE_BADGES_MOBILE : MAX_VISIBLE_BADGES
 
   const cardContent = (
     <div
@@ -173,8 +180,8 @@ export const KinCard = forwardRef<HTMLDivElement, KinCardProps>(function KinCard
           <p className="truncate text-[10px] text-muted-foreground/50 mt-0.5">{modelDisplayName}</p>
         )}
         {channels && channels.length > 0 && (
-          <div className="flex items-center gap-1 mt-1" aria-label={t('sidebar.kins.boundChannelsLabel', 'Bound channels')}>
-            {channels.slice(0, MAX_VISIBLE_BADGES).map((ch) => (
+          <div className="flex flex-wrap items-center gap-1 mt-1" aria-label={t('sidebar.kins.boundChannelsLabel', 'Bound channels')}>
+            {channels.slice(0, maxVisibleBadges).map((ch) => (
               <Tooltip key={ch.id}>
                 <TooltipTrigger asChild>
                   <button
@@ -191,15 +198,15 @@ export const KinCard = forwardRef<HTMLDivElement, KinCardProps>(function KinCard
                 </TooltipContent>
               </Tooltip>
             ))}
-            {channels.length > MAX_VISIBLE_BADGES && (
+            {channels.length > maxVisibleBadges && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="rounded px-1 py-0.5 text-[10px] font-medium text-muted-foreground/70">
-                    +{channels.length - MAX_VISIBLE_BADGES}
+                    +{channels.length - maxVisibleBadges}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
-                  {channels.slice(MAX_VISIBLE_BADGES).map((c) => c.name).join(', ')}
+                  {channels.slice(maxVisibleBadges).map((c) => c.name).join(', ')}
                 </TooltipContent>
               </Tooltip>
             )}

@@ -61,7 +61,7 @@ export function KnowledgeResultRenderer({ args, result, status }: ToolResultRend
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
           <BrainCircuit className="size-3 text-muted-foreground shrink-0" />
-          {query && <span className="text-foreground truncate font-medium">{query}</span>}
+          {query && <span className="min-w-0 text-foreground truncate font-medium">{query}</span>}
           {items && (
             <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground shrink-0">
               {t('tools.renderers.knowledgeResults', { count: items.length })}

@@ -34,15 +34,17 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
     <header className="surface-header sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b px-4">
       <button
         type="button"
-        className="flex items-center gap-2.5"
+        className="flex shrink-0 items-center gap-2.5"
         onClick={() => navigate('/')}
       >
         <img src="/kinbot.svg" alt="" width={28} height={28} className="rounded-lg" />
-        <span className="gradient-primary-text text-xl font-bold tracking-tight">
+        {/* Logo wordmark collides with the right cluster at very narrow widths
+            (<=375px). Hide the text on mobile; the icon alone keeps the brand. */}
+        <span className="hidden sm:inline gradient-primary-text text-xl font-bold tracking-tight">
           KinBot
         </span>
       </button>
-      <div className="flex flex-1 items-center justify-end gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
         {user && <QueueIndicator />}
         <SSEStatusIndicator />
         {user && <SetupChecklistButton onOpenSettings={onOpenSettings} />}

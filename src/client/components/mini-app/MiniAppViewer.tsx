@@ -13,6 +13,9 @@ import {
   AlertDialogAction,
 } from '@/client/components/ui/alert-dialog'
 import { Input } from '@/client/components/ui/input'
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/client/components/ui/sheet'
+import { VisuallyHidden } from 'radix-ui'
+import { useIsMobile } from '@/client/hooks/use-mobile'
 import { X, RotateCw, Maximize2, Minimize2, Sparkles, Loader2, AlertTriangle, ClipboardList } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
@@ -48,6 +51,7 @@ export function MiniAppViewer() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const isMobile = useIsMobile()
   const { panelOpen, activeAppId, activeAppVersion, activeAppReloadSignal, isFullPage, customTitle, openApp, closePanel, toggleFullPage, setFullPage, setCustomTitle, setBadge } = useSidePanel()
   const [app, setApp] = useState<MiniAppSummary | null>(null)
   const [iframeKey, setIframeKey] = useState(0)
@@ -641,14 +645,12 @@ export function MiniAppViewer() {
   const showTask = activeTab === 'task'
   const showTicket = activeTab === 'ticket'
 
-  // Side panel mode (default)
-  return (
-    <div
-      className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${
-        panelOpen ? 'w-[480px] lg:w-[600px]' : 'w-0'
-      }`}
-    >
-      <div className="flex h-full w-[480px] lg:w-[600px] flex-col border-l border-border">
+  // Side panel mode (default). The inner content is identical between desktop
+  // (inline fixed-width column) and mobile (fullscreen Sheet overlay). On
+  // mobile the inline column would force page-wide horizontal scroll and leave
+  // no room for the conversation, so we render it inside a Sheet instead.
+  const panelInner = (
+      <div className={`flex h-full flex-col ${isMobile ? 'w-full' : 'w-[480px] lg:w-[600px] border-l border-border'}`}>
         {dialogElement}
 
         {/* Tab bar — only shown when both a mini-app and task are loaded */}
@@ -827,6 +829,41 @@ export function MiniAppViewer() {
           </Suspense>
         )}
       </div>
+  )
+
+  // Mobile: render the panel as a fullscreen Sheet overlay instead of an inline
+  // column. This frees the whole width for the conversation and hosts mini-apps,
+  // task detail and ticket detail without forcing page-wide horizontal scroll.
+  // Closing the Sheet routes through closePanel() so the underlying tab/app
+  // state is reset consistently with the desktop close controls.
+  if (isMobile) {
+    return (
+      <Sheet open={panelOpen} onOpenChange={(open) => { if (!open) closePanel() }}>
+        <SheetContent
+          side="right"
+          showCloseButton={false}
+          className="w-screen max-w-none h-full gap-0 p-0 sm:max-w-none"
+        >
+          {/* Radix Dialog requires an accessible title/description. The panel
+              renders its own visible headers, so keep these screen-reader only. */}
+          <VisuallyHidden.Root>
+            <SheetTitle>{customTitle || (app?.name ?? t('rightPanel.title', { defaultValue: 'Panel' }))}</SheetTitle>
+            <SheetDescription>{t('rightPanel.description', { defaultValue: 'Detail panel' })}</SheetDescription>
+          </VisuallyHidden.Root>
+          {panelInner}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // Desktop (>= 768px): inline fixed-width side column — unchanged behavior.
+  return (
+    <div
+      className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${
+        panelOpen ? 'w-[480px] lg:w-[600px]' : 'w-0'
+      }`}
+    >
+      {panelInner}
     </div>
   )
 }

@@ -73,7 +73,7 @@ export function TaskSpawnRenderer({ args, result, status }: ToolResultRendererPr
         <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
           <div className="flex items-center gap-2">
             <ListTodo className="size-3 text-muted-foreground shrink-0" />
-            <span className="flex-1 truncate font-medium text-foreground">{title ?? t('tools.renderers.taskSpawned')}</span>
+            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{title ?? t('tools.renderers.taskSpawned')}</span>
             <StatusBadge s={spawnStatus ?? undefined} />
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground/70">
@@ -101,7 +101,7 @@ export function TaskSpawnRenderer({ args, result, status }: ToolResultRendererPr
           {/* Header */}
           <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
             <ListTodo className="size-3 text-muted-foreground shrink-0" />
-            <span className="flex-1 truncate font-medium text-foreground">{detail.title ?? t('tools.renderers.taskSpawned')}</span>
+            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{detail.title ?? t('tools.renderers.taskSpawned')}</span>
             <StatusBadge s={detail.status} />
           </div>
 
@@ -130,7 +130,7 @@ export function TaskSpawnRenderer({ args, result, status }: ToolResultRendererPr
 
           {/* Inline task error (failed task with an error payload) */}
           {detail.error && (
-            <div className="px-3 py-1.5 text-[11px] text-destructive border-t border-border/40">{detail.error}</div>
+            <div className="px-3 py-1.5 text-[11px] text-destructive border-t border-border/40 break-words">{detail.error}</div>
           )}
 
           {/* Messages count */}

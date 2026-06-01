@@ -888,7 +888,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         <ScrollArea className="min-h-0 flex-1">
           <SearchHighlightProvider value={searchQuery}>
           <MentionLookupProvider users={mentionableUsers} kins={mentionableKins}>
-          <div className="mx-auto max-w-3xl py-4">
+          <div className="mx-auto min-w-0 max-w-3xl py-4 px-2 md:px-0">
             {/* Sentinel for infinite scroll — triggers loading older messages */}
             {hasMore && <div ref={topSentinelRef} className="h-px" />}
             {isLoadingMore && (

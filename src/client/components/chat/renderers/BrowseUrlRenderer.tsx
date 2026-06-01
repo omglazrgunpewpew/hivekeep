@@ -57,7 +57,7 @@ export function BrowseUrlRenderer({ args, result, status }: ToolResultRendererPr
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-1 text-[10px] text-muted-foreground/70 hover:text-primary transition-colors max-w-full"
               >
-                <span className="truncate font-mono">{url}</span>
+                <span className="min-w-0 truncate font-mono">{url}</span>
                 <ExternalLink className="size-2.5 shrink-0 opacity-0 group-hover:opacity-60" />
               </a>
             )}

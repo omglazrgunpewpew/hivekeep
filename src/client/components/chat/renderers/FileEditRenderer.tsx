@@ -24,11 +24,11 @@ export function FileEditRenderer({ args, result, status }: ToolResultRendererPro
       <div className="space-y-2">
         <div className="rounded-md bg-zinc-950 text-zinc-100 text-xs font-mono overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-            <FileWarning className="size-3 text-red-400" />
-            <span className="text-zinc-400 text-[10px]">{filePath ?? t('tools.renderers.file')}</span>
-            <span className="ml-auto text-[10px] text-red-400">{t('tools.renderers.failed')}</span>
+            <FileWarning className="size-3 text-red-400 shrink-0" />
+            <span className="min-w-0 truncate text-zinc-400 text-[10px]">{filePath ?? t('tools.renderers.file')}</span>
+            <span className="ml-auto shrink-0 text-[10px] text-red-400">{t('tools.renderers.failed')}</span>
           </div>
-          <div className="px-3 py-2 text-red-300">{error ?? t('tools.renderers.editFailed')}</div>
+          <div className="px-3 py-2 text-red-300 break-words">{error ?? t('tools.renderers.editFailed')}</div>
         </div>
       </div>
     )
@@ -42,10 +42,10 @@ export function FileEditRenderer({ args, result, status }: ToolResultRendererPro
       <div className="rounded-md bg-zinc-950 text-zinc-100 text-xs font-mono overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-          <FilePen className="size-3 text-zinc-500" />
-          <span className="text-zinc-300 text-[10px] font-medium">{filePath}</span>
-          {language && <span className="text-[10px] text-zinc-500">{language}</span>}
-          <div className="ml-auto flex items-center gap-2">
+          <FilePen className="size-3 text-zinc-500 shrink-0" />
+          <span className="min-w-0 truncate text-zinc-300 text-[10px] font-medium">{filePath}</span>
+          {language && <span className="shrink-0 text-[10px] text-zinc-500">{language}</span>}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded text-blue-400 bg-blue-500/20">
               {t('tools.renderers.edited')}
             </span>

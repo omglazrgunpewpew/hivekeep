@@ -56,8 +56,8 @@ function ContactCard({ c }: { c: Contact }) {
               {c.identifiers.map((id, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[11px]">
                   <AtSign className="size-2.5 shrink-0 text-muted-foreground/60" />
-                  {id.label && <span className="text-muted-foreground/70">{id.label}:</span>}
-                  <span className="text-foreground/90 break-all font-mono">{id.value}</span>
+                  {id.label && <span className="shrink-0 text-muted-foreground/70">{id.label}:</span>}
+                  <span className="min-w-0 text-foreground/90 break-all font-mono">{id.value}</span>
                 </div>
               ))}
             </div>
@@ -69,7 +69,7 @@ function ContactCard({ c }: { c: Contact }) {
               {c.notes.map((note, i) => (
                 <div key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
                   <StickyNote className="size-2.5 mt-0.5 shrink-0 text-muted-foreground/60" />
-                  <span className="break-words">{note.content}</span>
+                  <span className="min-w-0 break-words">{note.content}</span>
                   {note.source && (
                     <span className="ml-auto shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground/60">
                       {note.source}

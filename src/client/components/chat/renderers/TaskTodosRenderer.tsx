@@ -89,7 +89,7 @@ export function TaskTodosRenderer({ args, result }: ToolResultRendererProps) {
                   <Icon className={cn('size-3.5 mt-0.5 shrink-0', iconClass)} />
                   <span
                     className={cn(
-                      'text-zinc-300',
+                      'min-w-0 break-words text-zinc-300',
                       struck && 'line-through text-zinc-600',
                       todo.status === 'in_progress' && 'text-zinc-100 font-medium',
                     )}

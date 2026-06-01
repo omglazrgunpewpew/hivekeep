@@ -64,6 +64,7 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { api } from '@/client/lib/api'
+import { useIsMobile } from '@/client/hooks/use-mobile'
 
 interface SectionItem {
   id: string
@@ -247,6 +248,7 @@ function SettingsFooter() {
 
 export function SettingsModal({ open, onOpenChange, initialSection, initialFilters }: SettingsModalProps) {
   const { t } = useTranslation()
+  const isMobile = useIsMobile()
   const [activeSection, setActiveSection] = useState<SectionId>('general')
 
   // Navigate to requested section when modal opens
@@ -257,6 +259,32 @@ export function SettingsModal({ open, onOpenChange, initialSection, initialFilte
   }, [open, initialSection])
 
   const ActiveComponent = sectionComponents[activeSection]
+
+  // Settings are explicitly out of scope for mobile (dense, desktop-oriented
+  // surfaces). On phones, render a simple centered gate instead of the full UI.
+  // Desktop (>=768px) is untouched.
+  if (isMobile) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] gap-0 p-0">
+          <DialogHeader className="border-b px-5 py-4">
+            <DialogTitle>{t('settings.title')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('settings.title')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <Settings2 className="size-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t('settings.mobileGate', {
+                defaultValue: 'Settings are optimized for desktop — open KinBot on a larger screen.',
+              })}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -12,15 +12,32 @@ interface ProjectsSidebarProps {
   onSelect: (projectId: string) => void
   onCreate: () => void
   onEdit: (projectId: string) => void
+  /**
+   * `sidebar` (default): the fixed-width column shown on desktop (>= 768px).
+   * Hidden on mobile via `hidden md:flex` — mobile reaches the list through a
+   * Sheet drawer that renders this component with `variant="drawer"`.
+   * `drawer`: borderless, full-width fill of its parent Sheet panel.
+   */
+  variant?: 'sidebar' | 'drawer'
 }
 
-export function ProjectsSidebar({ projects, selectedId, onSelect, onCreate, onEdit }: ProjectsSidebarProps) {
+export function ProjectsSidebar({ projects, selectedId, onSelect, onCreate, onEdit, variant = 'sidebar' }: ProjectsSidebarProps) {
   const { t } = useTranslation()
 
   const sorted = [...projects].sort((a, b) => b.updatedAt - a.updatedAt)
 
   return (
-    <aside className="surface-sidebar flex h-full w-64 shrink-0 flex-col border-r border-sidebar-border text-sidebar-foreground">
+    <aside
+      className={cn(
+        'surface-sidebar flex h-full flex-col text-sidebar-foreground',
+        variant === 'sidebar'
+          // Desktop column: fixed width + right border. Hidden on mobile — the
+          // Sheet drawer (variant="drawer") takes over below 768px.
+          ? 'hidden w-64 shrink-0 border-r border-sidebar-border md:flex'
+          // Drawer: fill the Sheet panel, no chrome of its own.
+          : 'w-full',
+      )}
+    >
       <header className="flex items-center justify-between px-3 py-3">
         <h2 className="text-sm font-semibold">{t('projects.sidebar.title')}</h2>
         <Button size="icon" variant="ghost" onClick={onCreate} title={t('projects.sidebar.create')}>

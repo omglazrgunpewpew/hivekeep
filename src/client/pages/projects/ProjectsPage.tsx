@@ -2,7 +2,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
-import { Kanban, BookOpen } from 'lucide-react'
+import { Kanban, BookOpen, PanelLeft } from 'lucide-react'
 import { useProjects, useProject } from '@/client/hooks/useProjects'
 import { useTickets } from '@/client/hooks/useTickets'
 import { ProjectsSidebar } from '@/client/components/project/ProjectsSidebar'
@@ -16,6 +16,13 @@ import { ActiveKinsIndicator } from '@/client/components/project/ActiveKinsIndic
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { Button } from '@/client/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/client/components/ui/tabs'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/client/components/ui/sheet'
 import { cn } from '@/client/lib/utils'
 import { stripMarkdown } from '@/client/lib/strip-markdown'
 import { getErrorMessage } from '@/client/lib/api'
@@ -40,6 +47,8 @@ export function ProjectsPage() {
   const [createTicketOpen, setCreateTicketOpen] = useState(false)
   const [editProjectOpen, setEditProjectOpen] = useState(false)
   const [view, setView] = useState<ProjectView>('kanban')
+  // Mobile-only project picker (the desktop sidebar is hidden below 768px).
+  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false)
 
   // Auto-select the first project if none is selected and projects are available
   useEffect(() => {
@@ -118,6 +127,45 @@ export function ProjectsPage() {
           return (
           <div className="flex h-full flex-col">
             <header className="flex items-start gap-3 border-b border-border px-4 py-3">
+              {/* Mobile project picker — the desktop sidebar is hidden below
+                  768px, so this Sheet drawer is how the user switches projects.
+                  Mirrors the Settings md:hidden mobile pattern. */}
+              <Sheet open={projectDrawerOpen} onOpenChange={setProjectDrawerOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="mt-0.5 shrink-0 md:hidden"
+                    aria-label={t('projects.sidebar.openDrawer', { defaultValue: 'Open projects' })}
+                    title={t('projects.sidebar.openDrawer', { defaultValue: 'Open projects' })}
+                  >
+                    <PanelLeft className="size-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>{t('projects.sidebar.title')}</SheetTitle>
+                  </SheetHeader>
+                  <ProjectsSidebar
+                    variant="drawer"
+                    projects={projects}
+                    selectedId={routeProjectId ?? null}
+                    onSelect={(id) => {
+                      navigate(`/projects/${id}`)
+                      setProjectDrawerOpen(false)
+                    }}
+                    onCreate={() => {
+                      setProjectDrawerOpen(false)
+                      setCreateOpen(true)
+                    }}
+                    onEdit={(id) => {
+                      if (id !== routeProjectId) navigate(`/projects/${id}`)
+                      setProjectDrawerOpen(false)
+                      setEditProjectOpen(true)
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <h1 className="truncate text-base font-semibold">{project.title}</h1>

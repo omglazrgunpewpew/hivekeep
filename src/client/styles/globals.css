@@ -443,6 +443,9 @@ body {
   padding: 0.15em 0.35em;
   font-size: 0.88em;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  /* Long URLs / identifiers must break instead of forcing horizontal scroll. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Code blocks */
@@ -551,9 +554,13 @@ body {
 .markdown-content--user .hljs-meta,
 .markdown-content--user .hljs-quote { color: inherit; opacity: 0.6; }
 
-/* Tables (GFM) */
+/* Tables (GFM) — wrapped in a .overflow-x-auto container (see MarkdownTable).
+   `min-width: 100%` keeps narrow tables full-bleed; `width: max-content` lets
+   wide tables exceed the bubble and scroll within the wrapper instead of
+   blowing out the page on mobile. */
 .markdown-content table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   margin: 0.5em 0;
   font-size: 0.9em;

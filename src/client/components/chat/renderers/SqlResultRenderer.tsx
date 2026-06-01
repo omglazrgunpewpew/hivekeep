@@ -38,7 +38,7 @@ export function SqlResultRenderer({ args, result, status }: ToolResultRendererPr
   const header = (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
       <Database className="size-3 text-zinc-500 shrink-0" />
-      {sql && <code className="text-[10px] text-zinc-300 truncate font-mono">{sql}</code>}
+      {sql && <code className="min-w-0 text-[10px] text-zinc-300 truncate font-mono">{sql}</code>}
     </div>
   )
 
@@ -55,6 +55,8 @@ export function SqlResultRenderer({ args, result, status }: ToolResultRendererPr
     body = rows.length === 0 ? (
       <div className="px-3 py-2 text-[11px] text-zinc-500">{t('tools.renderers.sqlNoRows')}</div>
     ) : (
+      // Both axes scroll inside the card so a wide table never forces page-wide
+      // horizontal scroll on mobile.
       <div className="max-h-80 overflow-auto scrollbar-thin">
         <table className="w-full text-[11px] font-mono">
           <thead className="sticky top-0 bg-zinc-900">
@@ -70,7 +72,7 @@ export function SqlResultRenderer({ args, result, status }: ToolResultRendererPr
             {rows.map((row, i) => (
               <tr key={i} className="border-b border-zinc-800/40 hover:bg-zinc-800/30">
                 {columns.map(col => (
-                  <td key={col} className="px-2 py-1 text-zinc-300 align-top max-w-[24rem] truncate" title={formatCell(row[col])}>
+                  <td key={col} className="px-2 py-1 text-zinc-300 align-top max-w-[10rem] md:max-w-[24rem] truncate" title={formatCell(row[col])}>
                     {formatCell(row[col])}
                   </td>
                 ))}

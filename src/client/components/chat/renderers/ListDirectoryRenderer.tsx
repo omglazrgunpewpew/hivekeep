@@ -53,12 +53,12 @@ function TreeEntry({ entry, depth }: { entry: DirEntry; depth: number }) {
           <FileText className="size-3.5 text-zinc-500 flex-shrink-0" />
         )}
 
-        <span className={cn('text-xs', isDir ? 'text-zinc-200 font-medium' : 'text-zinc-400')}>
+        <span className={cn('min-w-0 truncate text-xs', isDir ? 'text-zinc-200 font-medium' : 'text-zinc-400')}>
           {entry.name}
         </span>
 
         {entry.size !== undefined && (
-          <span className="ml-auto text-[10px] text-zinc-600 tabular-nums">{formatSize(entry.size)}</span>
+          <span className="ml-auto shrink-0 text-[10px] text-zinc-600 tabular-nums">{formatSize(entry.size)}</span>
         )}
       </div>
 
@@ -84,11 +84,11 @@ export function ListDirectoryRenderer({ args, result, status }: ToolResultRender
       <div className="space-y-2">
         <div className="rounded-md bg-zinc-950 text-zinc-100 text-xs font-mono overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-            <FolderSearch className="size-3 text-red-400" />
-            <span className="text-zinc-400 text-[10px]">{dirPath}</span>
-            <span className="ml-auto text-[10px] text-red-400">{t('tools.renderers.error')}</span>
+            <FolderSearch className="size-3 text-red-400 shrink-0" />
+            <span className="min-w-0 truncate text-zinc-400 text-[10px]">{dirPath}</span>
+            <span className="ml-auto shrink-0 text-[10px] text-red-400">{t('tools.renderers.error')}</span>
           </div>
-          <div className="px-3 py-2 text-red-300">{error ?? t('tools.renderers.failedToListDirectory')}</div>
+          <div className="px-3 py-2 text-red-300 break-words">{error ?? t('tools.renderers.failedToListDirectory')}</div>
         </div>
       </div>
     )
@@ -111,9 +111,9 @@ export function ListDirectoryRenderer({ args, result, status }: ToolResultRender
       <div className="rounded-md bg-zinc-950 text-zinc-100 text-xs font-mono overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-          <Folder className="size-3 text-amber-400" />
-          <span className="text-zinc-300 text-[10px] font-medium">{dirPath}</span>
-          <span className="ml-auto text-[10px] text-zinc-500">
+          <Folder className="size-3 text-amber-400 shrink-0" />
+          <span className="min-w-0 truncate text-zinc-300 text-[10px] font-medium">{dirPath}</span>
+          <span className="ml-auto shrink-0 text-[10px] text-zinc-500 whitespace-nowrap">
             {dirCount > 0 && t('tools.renderers.dirCount', { count: dirCount })}
             {dirCount > 0 && fileCount > 0 && ' · '}
             {fileCount > 0 && t('tools.renderers.fileCount', { count: fileCount })}

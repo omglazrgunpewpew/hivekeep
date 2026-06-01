@@ -174,9 +174,13 @@ export function AppSidebar({
         <SidebarGroup className="flex-1 flex flex-col min-h-0">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
             <TabsList className="w-full shrink-0 mx-1 h-8">
-              <TabsTrigger value="tasks" className="gap-1.5 text-xs">
-                <ListTodo className="size-3.5" />
-                {t('sidebar.tabs.tasks')}
+              {/*
+                On the narrow mobile drawer (<=~288px) the text labels can clip,
+                so we hide them and keep icon + count. Desktop (md+) is unchanged.
+              */}
+              <TabsTrigger value="tasks" aria-label={t('sidebar.tabs.tasks')} className="gap-1.5 text-xs max-md:px-1.5">
+                <ListTodo className="size-3.5 shrink-0" />
+                <span className="max-md:hidden">{t('sidebar.tabs.tasks')}</span>
                 {activeCount > 0 && (
                   <span className={cn(
                     'ml-0.5 inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary px-1 text-[9px] font-semibold text-primary-foreground leading-none',
@@ -186,16 +190,16 @@ export function AppSidebar({
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="jobs" className="gap-1.5 text-xs">
-                <CalendarClock className="size-3.5" />
-                {t('sidebar.tabs.jobs')}
+              <TabsTrigger value="jobs" aria-label={t('sidebar.tabs.jobs')} className="gap-1.5 text-xs max-md:px-1.5">
+                <CalendarClock className="size-3.5 shrink-0" />
+                <span className="max-md:hidden">{t('sidebar.tabs.jobs')}</span>
                 {taskData.activeCronIds.size > 0 && (
                   <span className="ml-0.5 inline-block size-2 rounded-full bg-primary animate-pulse" />
                 )}
               </TabsTrigger>
-              <TabsTrigger value="apps" className="gap-1.5 text-xs">
-                <Blocks className="size-3.5" />
-                {t('sidebar.tabs.apps')}
+              <TabsTrigger value="apps" aria-label={t('sidebar.tabs.apps')} className="gap-1.5 text-xs max-md:px-1.5">
+                <Blocks className="size-3.5 shrink-0" />
+                <span className="max-md:hidden">{t('sidebar.tabs.apps')}</span>
               </TabsTrigger>
             </TabsList>
 

@@ -234,7 +234,12 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
       />
 
       <SidebarInset className="min-h-0">
-        <div className="flex h-full min-h-0">
+        {/* `overflow-x-hidden` keeps the row from ever forcing page-wide
+            horizontal scroll on narrow viewports. On mobile the detail panel
+            (MiniAppViewer) renders as a fullscreen Sheet overlay instead of an
+            inline column, so the conversation below gets the full width; the
+            inline fixed-width column only participates at >= 768px. */}
+        <div className="flex h-full min-h-0 overflow-x-hidden">
         <div className="flex h-full min-w-0 min-h-0 flex-1 flex-col">
           {/* Thin local bar — only hosts the SidebarTrigger which depends on
               SidebarProvider context (scoped to this page). Global actions

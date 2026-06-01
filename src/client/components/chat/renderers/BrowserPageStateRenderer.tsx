@@ -88,7 +88,7 @@ export function BrowserPageStateRenderer({ toolName, args, result, status }: Too
         <div className="rounded-md border border-border overflow-hidden text-xs">
           <div className="flex items-center gap-2 px-3 py-2 bg-muted/50">
             <Icon className="size-3 text-muted-foreground shrink-0" />
-            <span className="text-foreground font-mono truncate">{label}</span>
+            <span className="min-w-0 text-foreground font-mono truncate">{label}</span>
             {status === 'success' && (
               <span className="ml-auto rounded bg-success/15 px-1.5 py-0.5 text-[10px] font-medium text-success shrink-0">ok</span>
             )}
@@ -125,13 +125,13 @@ export function BrowserPageStateRenderer({ toolName, args, result, status }: Too
         {/* Action line */}
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
           <Icon className="size-3 text-muted-foreground shrink-0" />
-          <span className="text-foreground font-mono truncate">{label}</span>
+          <span className="min-w-0 text-foreground font-mono truncate">{label}</span>
         </div>
 
         {/* Resulting page line */}
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50">
           <Globe className="size-3 text-muted-foreground shrink-0" />
-          <span className="text-foreground truncate font-mono">{pageState.url ?? sessionUrl ?? ''}</span>
+          <span className="min-w-0 text-foreground truncate font-mono">{pageState.url ?? sessionUrl ?? ''}</span>
           {elementsCount > 0 && (
             <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary shrink-0">
               {elementsCount} {t('tools.renderers.refs', 'refs')}
@@ -143,7 +143,7 @@ export function BrowserPageStateRenderer({ toolName, args, result, status }: Too
         {pageState.title && (
           <div className="px-3 py-1.5 border-b border-border/50 text-foreground/80">
             <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mr-2">title</span>
-            <span className="truncate">{pageState.title}</span>
+            <span className="break-words">{pageState.title}</span>
           </div>
         )}
 

@@ -118,7 +118,7 @@ export const SystemHealthBar = memo(function SystemHealthBar({ onOpenSettings }:
 
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-3 px-4 py-1.5">
+      <div className="flex items-center gap-3 px-4 py-1.5 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1 max-md:px-3">
         {/* Overall status dot */}
         <div className="flex items-center gap-1.5">
           <span

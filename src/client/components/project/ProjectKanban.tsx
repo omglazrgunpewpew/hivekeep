@@ -15,12 +15,14 @@ import {
 } from '@dnd-kit/core'
 import { TicketColumn } from './TicketColumn'
 import { TicketCard } from './TicketCard'
+import { KanbanMobileBoard } from './KanbanMobileBoard'
 import { useTickets } from '@/client/hooks/useTickets'
 import { TICKET_STATUSES } from '@/shared/constants'
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Plus, Search, X } from 'lucide-react'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
+import { useIsMobile } from '@/client/hooks/use-mobile'
 import type { TicketStatus, TicketSummary } from '@/shared/types'
 
 interface ProjectKanbanProps {
@@ -47,6 +49,9 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
   const { t } = useTranslation()
   const { tickets, updateTicket, createTicket } = useTickets(projectId)
   const { openTicket } = useSidePanel()
+  const isMobile = useIsMobile()
+  // Mobile single-column view: which status column is currently shown.
+  const [activeStatus, setActiveStatus] = useState<TicketStatus>('todo')
 
   /**
    * Quick inline create from a kanban column. Pre-binds the status so the new
@@ -237,6 +242,27 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
     openTicket({ ticketId: ticket.id })
   }
 
+  /**
+   * Mobile "move to status" — the touch replacement for drag-and-drop. Reuses
+   * the SAME `updateTicket` mutation the desktop `onDragEnd` calls, dropping the
+   * ticket at the end of the target column (position after the current last one).
+   */
+  function handleMove(ticketId: string, targetStatus: TicketStatus) {
+    const ticket = displayTickets.find((t) => t.id === ticketId)
+    if (!ticket || ticket.status === targetStatus) return
+    const targetTickets = displayTickets.filter((t) => t.status === targetStatus)
+    const maxPosition = targetTickets.reduce((max, t) => Math.max(max, t.position), 0)
+    const nextPosition = maxPosition + 1024
+    // Optimistic local update so the card disappears from the current column
+    // immediately; SSE reconciles displayTickets afterwards.
+    setDisplayTickets((prev) =>
+      prev.map((t) => (t.id === ticketId ? { ...t, status: targetStatus, position: nextPosition } : t)),
+    )
+    updateTicket(ticketId, { status: targetStatus, position: nextPosition }).catch(() => {
+      setDisplayTickets(tickets)
+    })
+  }
+
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-2 border-b border-border px-4 py-2">
@@ -284,33 +310,51 @@ export function ProjectKanban({ projectId, onNewTicket }: ProjectKanbanProps) {
           {t('projects.kanban.newTicket')}
         </Button>
       </header>
-      <div className="flex-1 overflow-x-auto p-4">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={collisionDetectionStrategy}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex h-full gap-3">
-            {TICKET_STATUSES.map((status) => (
-              <TicketColumn
-                key={status}
-                status={status}
-                label={t(`projects.status.${status}`)}
-                tickets={byStatus[status]}
-                onTicketClick={handleTicketClick}
-                highlightQuery={normalizedQuery}
-                onTagClick={(label) => setSearchQuery(label)}
-                onQuickCreate={handleQuickCreate}
-              />
-            ))}
-          </div>
-          <DragOverlay>
-            {activeTicket ? <TicketCard ticket={activeTicket} isOverlay /> : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+      {isMobile ? (
+        // Mobile (< 768px): single-column view with a status switcher + a
+        // "move to status" action per card. No horizontal scroll, no touch dnd.
+        <div className="flex-1 overflow-hidden">
+          <KanbanMobileBoard
+            byStatus={byStatus}
+            activeStatus={activeStatus}
+            onActiveStatusChange={setActiveStatus}
+            onTicketClick={handleTicketClick}
+            highlightQuery={normalizedQuery}
+            onTagClick={(label) => setSearchQuery(label)}
+            onQuickCreate={handleQuickCreate}
+            onMove={handleMove}
+          />
+        </div>
+      ) : (
+        // Desktop (>= 768px): unchanged 5-column drag-and-drop board.
+        <div className="flex-1 overflow-x-auto p-4">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={collisionDetectionStrategy}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex h-full gap-3">
+              {TICKET_STATUSES.map((status) => (
+                <TicketColumn
+                  key={status}
+                  status={status}
+                  label={t(`projects.status.${status}`)}
+                  tickets={byStatus[status]}
+                  onTicketClick={handleTicketClick}
+                  highlightQuery={normalizedQuery}
+                  onTagClick={(label) => setSearchQuery(label)}
+                  onQuickCreate={handleQuickCreate}
+                />
+              ))}
+            </div>
+            <DragOverlay>
+              {activeTicket ? <TicketCard ticket={activeTicket} isOverlay /> : null}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      )}
     </div>
   )
 }

@@ -69,7 +69,7 @@ export function HttpRequestRenderer({ args, result, status }: ToolResultRenderer
           <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', METHOD_COLORS[method] ?? 'bg-gray-500/20 text-gray-400')}>
             {method}
           </span>
-          <span className="text-foreground truncate font-mono">{url}</span>
+          <span className="min-w-0 text-foreground truncate font-mono">{url}</span>
           {statusCode !== null && (
             <span className={cn('ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold shrink-0', statusColor(statusCode))}>
               {statusCode}

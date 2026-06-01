@@ -454,9 +454,23 @@ function MentionElement(props: HTMLAttributes<HTMLElement> & { 'data-raw'?: stri
   return <TicketMention raw={raw} />
 }
 
+/**
+ * Wraps GFM tables in a horizontally-scrollable container so wide tables scroll
+ * WITHIN the message bubble instead of forcing the whole page to overflow on
+ * narrow viewports. `max-w-full` keeps the wrapper inside the bubble's bounds.
+ */
+function MarkdownTable({ children, ...props }: HTMLAttributes<HTMLTableElement> & { children?: React.ReactNode }) {
+  return (
+    <div className="max-w-full overflow-x-auto">
+      <table {...props}>{children}</table>
+    </div>
+  )
+}
+
 // biome-ignore lint/suspicious/noExplicitAny: registering a custom tag name in the components map
 const markdownComponents: any = {
   pre: PreBlock,
+  table: MarkdownTable,
   p: withHighlight('p'),
   li: withHighlight('li'),
   td: withHighlight('td'),

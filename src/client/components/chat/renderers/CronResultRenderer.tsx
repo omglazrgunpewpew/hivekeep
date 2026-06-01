@@ -42,7 +42,7 @@ function CronCard({ c }: { c: Cron }) {
     <div className="px-3 py-2 space-y-1">
       <div className="flex items-center gap-2">
         <CalendarClock className="size-3 shrink-0 text-muted-foreground" />
-        <span className="flex-1 truncate font-medium text-foreground">{c.name ?? t('tools.renderers.cronUnnamed')}</span>
+        <span className="min-w-0 flex-1 truncate font-medium text-foreground">{c.name ?? t('tools.renderers.cronUnnamed')}</span>
         {c.isActive === false ? (
           <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground shrink-0">{t('tools.renderers.cronInactive')}</span>
         ) : c.isActive === true ? (

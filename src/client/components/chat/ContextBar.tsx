@@ -137,7 +137,15 @@ export function ContextBar({
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`flex cursor-pointer flex-col gap-1 rounded-md px-1 transition-colors hover:bg-muted/50 min-w-0 ${compact ? 'w-44' : 'w-56'}`}
+            className={cn(
+              'flex cursor-pointer flex-col gap-1 rounded-md px-1 transition-colors hover:bg-muted/50 min-w-0',
+              // Compact (mobile popover) keeps its fixed comfortable width.
+              // Inline (desktop header) bar is byte-identical at >=md (the
+              // desktop breakpoint, w-56) but shrinks gracefully on narrower
+              // viewports (the 640-767px band where it's still rendered)
+              // instead of forcing horizontal page scroll.
+              compact ? 'w-44' : 'w-full max-w-56 md:w-56',
+            )}
             onClick={() => setContextViewerOpen(true)}
           >
             <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">

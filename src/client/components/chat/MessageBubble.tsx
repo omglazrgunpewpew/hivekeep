@@ -1026,7 +1026,7 @@ export const MessageBubble = memo(function MessageBubble({
           <ChatAvatar avatarUrl={avatarUrl} name={senderName} />
         )}
 
-        <div className="group/msg relative max-w-[80%] space-y-1.5">
+        <div className="group/msg relative min-w-0 max-w-[94%] sm:max-w-[88%] md:max-w-[80%] space-y-1.5">
           {!isGrouped && senderName && (
             <p className="text-xs font-medium text-muted-foreground">{senderName}</p>
           )}
@@ -1115,7 +1115,7 @@ export const MessageBubble = memo(function MessageBubble({
 
       <div
         className={cn(
-          'group/msg relative max-w-[80%] rounded-2xl px-4 py-2.5',
+          'group/msg relative min-w-0 max-w-[94%] sm:max-w-[88%] md:max-w-[80%] rounded-2xl px-4 py-2.5',
           isUser
             ? cn('bg-primary text-primary-foreground', !isGrouped && 'rounded-tr-md')
             : isFromOtherKin

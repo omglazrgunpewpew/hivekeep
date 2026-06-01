@@ -57,7 +57,7 @@ export function BrowserScreenshotRenderer({ args, result, status }: ToolResultRe
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
           <Camera className="size-3 text-muted-foreground shrink-0" />
-          {pageUrl && <span className="text-foreground truncate font-mono">{pageUrl}</span>}
+          {pageUrl && <span className="min-w-0 text-foreground truncate font-mono">{pageUrl}</span>}
           {res?.full_page === true && (
             <span className="ml-auto rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary shrink-0">
               full page

@@ -46,9 +46,9 @@ export function GrepResultRenderer({ args, result, status }: ToolResultRendererP
     <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
       <Search className={cn('size-3 shrink-0', error ? 'text-red-400' : 'text-zinc-500')} />
       {pattern && (
-        <code className="text-[10px] text-zinc-300 truncate font-mono">/{pattern}/</code>
+        <code className="min-w-0 text-[10px] text-zinc-300 truncate font-mono">/{pattern}/</code>
       )}
-      {glob && <span className="text-[10px] text-zinc-500 shrink-0">in {glob}</span>}
+      {glob && <span className="text-[10px] text-zinc-500 shrink-0 truncate max-w-[40%]">in {glob}</span>}
     </div>
   )
 
@@ -101,7 +101,7 @@ export function GrepResultRenderer({ args, result, status }: ToolResultRendererP
           <div key={file} className="mb-1">
             <div className="flex items-center gap-1.5 px-3 py-0.5 text-[10px] text-zinc-400 font-medium sticky top-0 bg-zinc-950">
               <FileText className="size-3 text-zinc-600 shrink-0" />
-              <span className="truncate">{file}</span>
+              <span className="min-w-0 truncate">{file}</span>
             </div>
             {fileMatches.map((m, i) => (
               <div key={`${file}-${i}`} className="flex px-3 hover:bg-zinc-800/30">
@@ -130,7 +130,7 @@ export function GrepResultRenderer({ args, result, status }: ToolResultRendererP
         {files!.map((file, i) => (
           <div key={`${file}-${i}`} className="flex items-center gap-1.5 px-3 py-0.5 hover:bg-zinc-800/30">
             <FileText className="size-3 text-zinc-600 shrink-0" />
-            <span className="text-zinc-300 truncate">{file}</span>
+            <span className="min-w-0 text-zinc-300 truncate">{file}</span>
           </div>
         ))}
       </div>
@@ -149,7 +149,7 @@ export function GrepResultRenderer({ args, result, status }: ToolResultRendererP
         {counts!.map((c, i) => (
           <div key={`${c.file}-${i}`} className="flex items-center gap-1.5 px-3 py-0.5 hover:bg-zinc-800/30">
             <FileText className="size-3 text-zinc-600 shrink-0" />
-            <span className="text-zinc-300 truncate flex-1">{c.file}</span>
+            <span className="min-w-0 text-zinc-300 truncate flex-1">{c.file}</span>
             <span className="text-[10px] text-zinc-500 tabular-nums shrink-0">{c.count}</span>
           </div>
         ))}

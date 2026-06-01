@@ -63,7 +63,7 @@ export function GeneratedImageRenderer({ args, result, status }: ToolResultRende
         {/* Header */}
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b border-border/50">
           <ImageIcon className="size-3 text-muted-foreground shrink-0" />
-          {prompt && <span className="text-foreground truncate" title={prompt}>{prompt}</span>}
+          {prompt && <span className="min-w-0 text-foreground truncate" title={prompt}>{prompt}</span>}
           {size !== null && (
             <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{formatSize(size, t)}</span>
           )}
