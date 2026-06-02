@@ -21,6 +21,7 @@ import { CronCard, SortableCronCard } from '@/client/components/crons/CronCard'
 import { useCrons } from '@/client/hooks/useCrons'
 import { useTasksContext } from '@/client/contexts/TasksContext'
 import { useKins } from '@/client/hooks/useKins'
+import { useToolboxes } from '@/client/hooks/useToolboxes'
 import { Plus, Loader2, Search, Timer, CalendarClock } from 'lucide-react'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import type { CronSummary } from '@/shared/types'
@@ -31,6 +32,7 @@ const CronDetailModal = lazy(() => import('@/client/components/sidebar/CronDetai
 export function CronsPage() {
   const { t } = useTranslation()
   const { kins, llmModels } = useKins()
+  const { toolboxes } = useToolboxes()
   const { activeCronIds } = useTasksContext()
   const {
     crons,
@@ -158,6 +160,8 @@ export function CronsPage() {
                     <CronCard
                       key={cron.id}
                       cron={cron}
+                      llmModels={llmModels}
+                      toolboxes={toolboxes}
                       onClick={() => setDetailCron(cron)}
                       onApprove={() => approveCron(cron.id)}
                       isRunning={activeCronIds?.has(cron.id)}
@@ -177,6 +181,8 @@ export function CronsPage() {
                         <SortableCronCard
                           key={cron.id}
                           cron={cron}
+                          llmModels={llmModels}
+                          toolboxes={toolboxes}
                           onClick={() => setDetailCron(cron)}
                           onToggleActive={(isActive) => updateCron(cron.id, { isActive })}
                           isRunning={activeCronIds?.has(cron.id)}
@@ -191,6 +197,8 @@ export function CronsPage() {
                     <CronCard
                       key={cron.id}
                       cron={cron}
+                      llmModels={llmModels}
+                      toolboxes={toolboxes}
                       onClick={() => setDetailCron(cron)}
                       onToggleActive={(isActive) => updateCron(cron.id, { isActive })}
                       isRunning={activeCronIds?.has(cron.id)}

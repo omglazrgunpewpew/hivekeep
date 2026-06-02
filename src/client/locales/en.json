@@ -310,6 +310,9 @@
       "lastRunLabel": "Last run",
       "targetLabel": "Runs as",
       "autoBadge": "Auto",
+      "executions": "{{count}} runs",
+      "allTools": "All tools",
+      "toolboxes": "{{count}} toolboxes",
       "summary": {
         "active": "{{count}} active",
         "pending": "{{count}} pending"

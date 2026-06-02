@@ -5,13 +5,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avat
 import { Badge } from '@/client/components/ui/badge'
 import { Button } from '@/client/components/ui/button'
 import { Switch } from '@/client/components/ui/switch'
+import { ProviderIcon } from '@/client/components/common/ProviderIcon'
 import { useAuth } from '@/client/hooks/useAuth'
 import { cn } from '@/client/lib/utils'
 import { formatRelativeTime } from '@/client/lib/time'
 import { cronToHuman } from '@/client/lib/cron-human'
 import { cronNextRun, formatCountdown } from '@/client/lib/cron-next'
-import { Clock, CheckCircle2, Loader2, GripHorizontal, FastForward, History, Bell, Bot } from 'lucide-react'
-import type { CronSummary } from '@/shared/types'
+import { Clock, CheckCircle2, Loader2, GripHorizontal, FastForward, History, Bell, Bot, Sparkles, Wrench, Repeat } from 'lucide-react'
+import type { CronSummary, Toolbox } from '@/shared/types'
+
+interface LLMModel {
+  id: string
+  name: string
+  providerId: string
+  providerName: string
+  providerType: string
+  capability: string
+}
 
 /** A single labelled stat cell (next run / last run). */
 function Stat({
@@ -38,12 +48,16 @@ function Stat({
 
 export function CronCard({
   cron,
+  llmModels = [],
+  toolboxes = [],
   onClick,
   onApprove,
   onToggleActive,
   isRunning,
 }: {
   cron: CronSummary
+  llmModels?: LLMModel[]
+  toolboxes?: Toolbox[]
   onClick: () => void
   onApprove?: () => void
   onToggleActive?: (isActive: boolean) => void
@@ -59,6 +73,20 @@ export function CronCard({
 
   const hasDifferentTarget = !!cron.targetKinName && cron.targetKinId !== cron.kinId
   const lastRunValue = cron.lastTriggeredAt ? formatRelativeTime(cron.lastTriggeredAt) : t('sidebar.crons.never')
+
+  // Model override (only shown when the cron pins a model different from its Kin's default)
+  const resolvedModel = cron.model ? llmModels.find((m) => m.id === cron.model) : undefined
+
+  // Toolboxes — only surfaced when the cron restricts the toolset (empty = all
+  // native tools, which is the default and not worth a chip).
+  const toolboxLabel = (() => {
+    if (cron.toolboxIds.length === 0) return null
+    const names = cron.toolboxIds
+      .map((id) => toolboxes.find((tb) => tb.id === id)?.name)
+      .filter((n): n is string => !!n)
+    if (names.length > 0 && names.length <= 2) return names.join(', ')
+    return t('sidebar.crons.toolboxes', { count: cron.toolboxIds.length })
+  })()
 
   // Footer status label + accent
   const statusLabel = cron.requiresApproval
@@ -134,6 +162,32 @@ export function CronCard({
         </span>
       </div>
 
+      {/* Meta chips — model override, thinking effort, restricted toolset */}
+      {(resolvedModel || cron.thinkingEnabled || toolboxLabel) && (
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+          {resolvedModel && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 font-medium text-muted-foreground">
+              <ProviderIcon providerType={resolvedModel.providerType} className="size-3 shrink-0" />
+              <span className="max-w-[10rem] truncate">{resolvedModel.name}</span>
+            </span>
+          )}
+          {cron.thinkingEnabled && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-chart-4/10 px-1.5 py-0.5 font-medium text-chart-4">
+              <Sparkles className="size-2.5 shrink-0" />
+              {cron.thinkingEffort
+                ? t(`chat.thinkingPicker.effort.${cron.thinkingEffort}`)
+                : t('chat.thinkingToggle')}
+            </span>
+          )}
+          {toolboxLabel && (
+            <span className="hidden items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 font-medium text-muted-foreground sm:inline-flex">
+              <Wrench className="size-2.5 shrink-0" />
+              <span className="max-w-[10rem] truncate">{toolboxLabel}</span>
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Next / Last run — full stat grid on sm+, single compact line on mobile */}
       <div className="hidden grid-cols-2 gap-2 sm:grid">
         <Stat
@@ -174,9 +228,17 @@ export function CronCard({
         </div>
       )}
 
-      {/* Footer — status + control. mt-auto keeps footers aligned across a row. */}
+      {/* Footer — status + run count + control. mt-auto aligns footers across a row. */}
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
-        <span className={cn('text-[11px] font-medium', statusAccent)}>{statusLabel}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={cn('text-[11px] font-medium', statusAccent)}>{statusLabel}</span>
+          {cron.executionCount > 0 && (
+            <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground" title={t('sidebar.crons.executions', { count: cron.executionCount })}>
+              <Repeat className="size-3" />
+              {cron.executionCount}
+            </span>
+          )}
+        </div>
         {cron.requiresApproval && onApprove ? (
           <Button
             variant="outline"
@@ -203,11 +265,15 @@ export function CronCard({
 
 export function SortableCronCard({
   cron,
+  llmModels,
+  toolboxes,
   onClick,
   onToggleActive,
   isRunning,
 }: {
   cron: CronSummary
+  llmModels?: LLMModel[]
+  toolboxes?: Toolbox[]
   onClick: () => void
   onToggleActive?: (isActive: boolean) => void
   isRunning?: boolean
@@ -241,6 +307,8 @@ export function SortableCronCard({
       </div>
       <CronCard
         cron={cron}
+        llmModels={llmModels}
+        toolboxes={toolboxes}
         onClick={onClick}
         onToggleActive={onToggleActive}
         isRunning={isRunning}

@@ -316,6 +316,8 @@ export interface CronSummary {
   isActive: boolean
   requiresApproval: boolean
   lastTriggeredAt: number | null
+  /** Number of tasks this cron has spawned so far (one per execution). */
+  executionCount: number
   createdBy: 'user' | 'kin'
   createdAt: number
 }
