@@ -2,7 +2,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
-import { Kanban, BookOpen, PanelLeft } from 'lucide-react'
+import { Kanban, BookOpen } from 'lucide-react'
 import { useProjects, useProject } from '@/client/hooks/useProjects'
 import { useTickets } from '@/client/hooks/useTickets'
 import { ProjectsSidebar } from '@/client/components/project/ProjectsSidebar'
@@ -15,15 +15,12 @@ import { CloneStatusBadge } from '@/client/components/project/CloneStatusBadge'
 import { ActiveKinsIndicator } from '@/client/components/project/ActiveKinsIndicator'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { PageHeader } from '@/client/components/layout/PageHeader'
-import { Button } from '@/client/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/client/components/ui/tabs'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/client/components/ui/sheet'
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/client/components/ui/sidebar'
 import { cn } from '@/client/lib/utils'
 import { stripMarkdown } from '@/client/lib/strip-markdown'
 import { getErrorMessage } from '@/client/lib/api'
@@ -48,8 +45,6 @@ export function ProjectsPage() {
   const [createTicketOpen, setCreateTicketOpen] = useState(false)
   const [editProjectOpen, setEditProjectOpen] = useState(false)
   const [view, setView] = useState<ProjectView>('kanban')
-  // Mobile-only project picker (the desktop sidebar is hidden below 768px).
-  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false)
 
   // Auto-select the first project if none is selected and projects are available
   useEffect(() => {
@@ -81,7 +76,11 @@ export function ProjectsPage() {
   }
 
   return (
-    <div className="surface-base flex h-full overflow-hidden">
+    // `transform: translateZ(0)` scopes the shadcn Sidebar's `position: fixed`
+    // to this wrapper (instead of the viewport), and the kanban's DragOverlay is
+    // portalled to <body> so the transform doesn't offset the drag ghost.
+    <div className="surface-base h-full overflow-hidden" style={{ transform: 'translateZ(0)' }}>
+    <SidebarProvider className="!min-h-0 !h-full">
       <ProjectsSidebar
         projects={projects}
         selectedId={routeProjectId ?? null}
@@ -94,7 +93,9 @@ export function ProjectsPage() {
         }}
       />
 
-      <main className="flex-1 overflow-hidden">
+      <SidebarInset className="min-h-0">
+      <div className="flex h-full min-h-0 overflow-hidden">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {!routeProjectId && projects.length === 0 && !isLoading && (
           <div className="flex h-full items-center justify-center p-6">
             <div className="w-full max-w-md">
@@ -129,46 +130,7 @@ export function ProjectsPage() {
           <div className="flex h-full flex-col">
             <PageHeader
               className="sm:items-start"
-              leading={
-                /* Mobile project picker — the desktop sidebar is hidden below
-                   768px, so this Sheet drawer is how the user switches projects. */
-                <Sheet open={projectDrawerOpen} onOpenChange={setProjectDrawerOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 md:hidden"
-                      aria-label={t('projects.sidebar.openDrawer', { defaultValue: 'Open projects' })}
-                      title={t('projects.sidebar.openDrawer', { defaultValue: 'Open projects' })}
-                    >
-                      <PanelLeft className="size-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
-                    <SheetHeader className="sr-only">
-                      <SheetTitle>{t('projects.sidebar.title')}</SheetTitle>
-                    </SheetHeader>
-                    <ProjectsSidebar
-                      variant="drawer"
-                      projects={projects}
-                      selectedId={routeProjectId ?? null}
-                      onSelect={(id) => {
-                        navigate(`/projects/${id}`)
-                        setProjectDrawerOpen(false)
-                      }}
-                      onCreate={() => {
-                        setProjectDrawerOpen(false)
-                        setCreateOpen(true)
-                      }}
-                      onEdit={(id) => {
-                        if (id !== routeProjectId) navigate(`/projects/${id}`)
-                        setProjectDrawerOpen(false)
-                        setEditProjectOpen(true)
-                      }}
-                    />
-                  </SheetContent>
-                </Sheet>
-              }
+              leading={<SidebarTrigger className="shrink-0" />}
               title={
                 <div className="flex items-baseline gap-2">
                   <h1 className="truncate text-base font-semibold">{project.title}</h1>
@@ -259,6 +221,8 @@ export function ProjectsPage() {
       <Suspense fallback={null}>
         <MiniAppViewer />
       </Suspense>
+      </div>
+      </SidebarInset>
 
       <CreateProjectModal
         open={createOpen}
@@ -292,6 +256,7 @@ export function ProjectsPage() {
           }}
         />
       )}
+    </SidebarProvider>
     </div>
   )
 }
