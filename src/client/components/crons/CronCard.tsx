@@ -50,6 +50,7 @@ export function CronCard({
   cron,
   llmModels = [],
   toolboxes = [],
+  kins = [],
   onClick,
   onApprove,
   onToggleActive,
@@ -58,6 +59,9 @@ export function CronCard({
   cron: CronSummary
   llmModels?: LLMModel[]
   toolboxes?: Toolbox[]
+  /** Owner/target Kins (id + default model) — used to resolve the effective
+   *  model when the cron doesn't pin one of its own. */
+  kins?: { id: string; model: string }[]
   onClick: () => void
   onApprove?: () => void
   onToggleActive?: (isActive: boolean) => void
@@ -74,8 +78,12 @@ export function CronCard({
   const hasDifferentTarget = !!cron.targetKinName && cron.targetKinId !== cron.kinId
   const lastRunValue = cron.lastTriggeredAt ? formatRelativeTime(cron.lastTriggeredAt) : t('sidebar.crons.never')
 
-  // Model override (only shown when the cron pins a model different from its Kin's default)
-  const resolvedModel = cron.model ? llmModels.find((m) => m.id === cron.model) : undefined
+  // Effective model: the cron's own override, else the model of the Kin the task
+  // runs as (delegated target if any, otherwise the owner). Shown on every card.
+  const runKinId = cron.targetKinId ?? cron.kinId
+  const effectiveModelId = cron.model ?? kins.find((k) => k.id === runKinId)?.model ?? null
+  const resolvedModel = effectiveModelId ? llmModels.find((m) => m.id === effectiveModelId) : undefined
+  const modelLabel = resolvedModel?.name ?? effectiveModelId
 
   // Toolboxes — only surfaced when the cron restricts the toolset (empty = all
   // native tools, which is the default and not worth a chip).
@@ -162,13 +170,13 @@ export function CronCard({
         </span>
       </div>
 
-      {/* Meta chips — model override, thinking effort, restricted toolset */}
-      {(resolvedModel || cron.thinkingEnabled || toolboxLabel) && (
+      {/* Meta chips — effective model, thinking effort, restricted toolset */}
+      {(modelLabel || cron.thinkingEnabled || toolboxLabel) && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-          {resolvedModel && (
+          {modelLabel && (
             <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 font-medium text-muted-foreground">
-              <ProviderIcon providerType={resolvedModel.providerType} className="size-3 shrink-0" />
-              <span className="max-w-[10rem] truncate">{resolvedModel.name}</span>
+              {resolvedModel && <ProviderIcon providerType={resolvedModel.providerType} className="size-3 shrink-0" />}
+              <span className="max-w-[10rem] truncate">{modelLabel}</span>
             </span>
           )}
           {cron.thinkingEnabled && (
@@ -267,6 +275,7 @@ export function SortableCronCard({
   cron,
   llmModels,
   toolboxes,
+  kins,
   onClick,
   onToggleActive,
   isRunning,
@@ -274,6 +283,7 @@ export function SortableCronCard({
   cron: CronSummary
   llmModels?: LLMModel[]
   toolboxes?: Toolbox[]
+  kins?: { id: string; model: string }[]
   onClick: () => void
   onToggleActive?: (isActive: boolean) => void
   isRunning?: boolean
@@ -309,6 +319,7 @@ export function SortableCronCard({
         cron={cron}
         llmModels={llmModels}
         toolboxes={toolboxes}
+        kins={kins}
         onClick={onClick}
         onToggleActive={onToggleActive}
         isRunning={isRunning}

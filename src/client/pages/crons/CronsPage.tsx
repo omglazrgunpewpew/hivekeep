@@ -163,6 +163,7 @@ export function CronsPage() {
                       cron={cron}
                       llmModels={llmModels}
                       toolboxes={toolboxes}
+                      kins={kins}
                       onClick={() => setDetailCron(cron)}
                       onApprove={() => approveCron(cron.id)}
                       isRunning={activeCronIds?.has(cron.id)}
@@ -184,6 +185,7 @@ export function CronsPage() {
                           cron={cron}
                           llmModels={llmModels}
                           toolboxes={toolboxes}
+                          kins={kins}
                           onClick={() => setDetailCron(cron)}
                           onToggleActive={(isActive) => updateCron(cron.id, { isActive })}
                           isRunning={activeCronIds?.has(cron.id)}
@@ -200,6 +202,7 @@ export function CronsPage() {
                       cron={cron}
                       llmModels={llmModels}
                       toolboxes={toolboxes}
+                      kins={kins}
                       onClick={() => setDetailCron(cron)}
                       onToggleActive={(isActive) => updateCron(cron.id, { isActive })}
                       isRunning={activeCronIds?.has(cron.id)}
