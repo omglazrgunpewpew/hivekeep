@@ -280,6 +280,8 @@
       "activeLabel": "En cours",
       "queuedLabel": "En file d'attente",
       "historyLabel": "Historique",
+      "scheduled": "Planifiée",
+      "nested": "Sous-tâche imbriquée",
       "queueFilter": {
         "all": "Toutes les files"
       },
@@ -2788,10 +2790,13 @@
     "menuAction": "Lancer une tâche",
     "title": "Lancer une tâche",
     "description": "Lance une tâche autonome sur {{name}} — sans projet ni ticket. Le résultat est déposé dans ce fil quand elle se termine.",
+    "descriptionGeneric": "Lance une tâche autonome — sans projet ni ticket. Choisis le Kin qui doit l'exécuter ; le résultat est déposé dans son fil quand elle se termine.",
+    "kinField": "Kin",
+    "kinPlaceholder": "Choisir un Kin pour exécuter cette tâche",
     "promptField": "Que doit faire cette tâche ?",
     "promptPlaceholder": "ex. comparer les 3 meilleures bases vectorielles et résumer les compromis",
-    "promptHelp": "Décris le travail de cette tâche ponctuelle. Max 2000 caractères.",
-    "promptCounter": "{{count}} / 2000",
+    "promptHelp": "Décris le travail de cette tâche ponctuelle.",
+    "promptCounter": "{{count}} caractères",
     "titleField": "Titre (optionnel)",
     "titlePlaceholder": "Libellé court pour cette tâche",
     "toolboxesField": "Boîtes à outils (optionnel)",
@@ -2964,6 +2969,10 @@
         "descriptionCollapse": "Voir moins",
         "noDescription": "Pas de description.",
         "tasksHistory": "Tâches ({{count}})",
+        "taskKind": {
+          "execute": "Tâche",
+          "enrich": "Enrichissement"
+        },
         "startTask": "Démarrer une tâche",
         "noTasks": "Aucune tâche n'a encore été lancée sur ce ticket.",
         "noTasksTitle": "Aucune tâche pour l'instant",

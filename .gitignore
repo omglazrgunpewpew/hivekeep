@@ -57,6 +57,11 @@ memory-research.md
 memory-experiments/
 channel-files-journal.md
 kin-context-journal.md
+kin-context.json
+
+# External tooling clones living in the working dir (not part of this repo)
+opencode/
+claude-code-sourcemap/
 
 # Internal strategy docs
 branding/

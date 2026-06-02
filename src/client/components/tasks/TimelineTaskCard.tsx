@@ -1,7 +1,4 @@
-import { Zap } from 'lucide-react'
-import { formatDurationMs, computeDurationMs } from '@/client/lib/time'
-import { TaskTimelineItem } from '@/client/components/common/TaskTimelineItem'
-import { isQueuedStatus, isTerminalStatus } from '@/client/lib/task-status'
+import { TaskCard, type TaskCardModel } from '@/client/components/tasks/TaskCard'
 import type { TaskSummary } from '@/shared/types'
 
 /** Group tasks by day, returning [label, tasks][] */
@@ -40,74 +37,41 @@ export function groupByDay(
   return Array.from(groups.values()).map((g) => [g.label, g.tasks])
 }
 
-function formatTime(isoDate: string): string {
-  return new Date(isoDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return n.toLocaleString()
-}
-
-function TokenChip({ headline }: { headline: number }) {
-  return (
-    <span
-      className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 text-primary px-1.5 py-px text-[9px] font-medium tabular-nums"
-      title={`≈ ${headline.toLocaleString()} tokens`}
-    >
-      <Zap className="size-2" />
-      ≈ {formatTokenCount(headline)}
-    </span>
-  )
-}
-
 /**
- * One task row rendered as a timeline item. Shared by the Tasks page columns.
- * Run duration ticks live off the shared `nowMs` clock while executing and
- * freezes at `endedAt` once terminal.
+ * Tasks-page adapter: maps a `TaskSummary` onto the shared {@link TaskCard}
+ * view-model. `isLast` is accepted for call-site compatibility but unused — the
+ * previous timeline rail was replaced by discrete cards.
  */
 export function TimelineTaskCard({
   task,
   onClick,
-  isLast,
   queuePosition,
   nowMs,
 }: {
   task: TaskSummary
   onClick: () => void
-  isLast: boolean
+  isLast?: boolean
   queuePosition?: number
   nowMs: number
 }) {
-  const kinName = task.sourceKinName ?? task.parentKinName
-  const isQueued = isQueuedStatus(task.status)
-  const isFinished = isTerminalStatus(task.status)
+  const model: TaskCardModel = {
+    id: task.id,
+    status: task.status,
+    title: task.title ?? task.description,
+    kinName: task.sourceKinName ?? task.parentKinName,
+    avatarUrl: task.sourceKinAvatarUrl ?? task.parentKinAvatarUrl,
+    startedMs: task.startedAt ? new Date(task.startedAt).getTime() : null,
+    endedMs: task.endedAt ? new Date(task.endedAt).getTime() : null,
+    createdMs: new Date(task.createdAt).getTime(),
+    model: task.model,
+    providerType: task.providerType,
+    thinkingEnabled: task.thinkingEnabled,
+    thinkingEffort: task.thinkingEffort,
+    cronId: task.cronId,
+    depth: task.depth,
+    concurrencyGroup: task.concurrencyGroup,
+    tokenUsage: task.tokenUsage,
+  }
 
-  const startedMs = task.startedAt ? new Date(task.startedAt).getTime() : null
-  const endedMs = task.endedAt ? new Date(task.endedAt).getTime() : null
-  const runMs = computeDurationMs(startedMs, isFinished ? endedMs : null, nowMs)
-  const runDuration = runMs != null ? formatDurationMs(runMs) : null
-
-  const primary = task.title ?? (task.description.length > 55
-    ? task.description.slice(0, 55) + '…'
-    : task.description)
-  const secondary = isQueued && task.concurrencyGroup ? task.concurrencyGroup : kinName
-  const time = runDuration != null ? runDuration : formatTime(task.createdAt)
-
-  const usage = task.tokenUsage
-  const tokenHeadline = usage ? usage.billableInputTokens + usage.outputTokens : 0
-
-  return (
-    <TaskTimelineItem
-      status={task.status}
-      primary={primary}
-      secondary={secondary}
-      time={time}
-      isLast={isLast}
-      prefix={isQueued && queuePosition != null ? `#${queuePosition}` : undefined}
-      trailing={tokenHeadline > 0 ? <TokenChip headline={tokenHeadline} /> : undefined}
-      onClick={onClick}
-    />
-  )
+  return <TaskCard task={model} onClick={onClick} queuePosition={queuePosition} nowMs={nowMs} />
 }

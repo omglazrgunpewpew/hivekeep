@@ -17,12 +17,12 @@ interface ActivityBarItem {
 
 // Order: Kins first (default landing), then the dedicated section pages.
 const ITEMS: ActivityBarItem[] = [
+  // Default landing — "Kins" matches any path not claimed by a section below.
+  { matchPrefix: '/', navigateTo: '/', icon: Home, labelKey: 'activityBar.kins' },
   { matchPrefix: '/projects', navigateTo: '/projects', icon: FolderKanban, labelKey: 'activityBar.projects' },
   { matchPrefix: '/tasks', navigateTo: '/tasks', icon: ListTodo, labelKey: 'activityBar.tasks', badge: true },
   { matchPrefix: '/crons', navigateTo: '/crons', icon: CalendarClock, labelKey: 'activityBar.crons' },
   { matchPrefix: '/mini-apps', navigateTo: '/mini-apps', icon: Blocks, labelKey: 'activityBar.apps' },
-  // Fallback default — "Kins" matches any path not claimed by a section above.
-  { matchPrefix: '/', navigateTo: '/', icon: Home, labelKey: 'activityBar.kins' },
 ]
 
 const SECTION_PREFIXES = ['/projects', '/tasks', '/crons', '/mini-apps']

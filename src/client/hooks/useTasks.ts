@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEStatus } from '@/client/hooks/useSSE'
 import type { TaskSummary, TaskStatus, TaskTokenUsage } from '@/shared/types'
 import { isActiveStatus, isQueuedStatus } from '@/client/lib/task-status'
 
@@ -258,6 +258,60 @@ export function useTasks() {
       }
     },
   })
+
+  // ---------------------------------------------------------------------------
+  // Reconcile the live lists on reconnect / refocus.
+  //
+  // SSE only streams *future* events. Anything that transitions while the tab
+  // is backgrounded, the network is down, or the page is frozen in the bfcache
+  // (closing then reopening the browser — common on mobile) is never replayed,
+  // so `activeTasks`/`queuedTasks` — and the navbar QueueIndicator that mirrors
+  // them — can drift to a stale occupancy snapshot. Refetching the active set
+  // (bounded by maxConcurrent, so cheap) on every "we're back" signal closes
+  // that gap. The paginated history is left untouched on purpose so we don't
+  // collapse the user's scroll position.
+  // ---------------------------------------------------------------------------
+
+  // (a) Regained visibility / focus / network, or restored from the bfcache.
+  useEffect(() => {
+    const resync = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+      fetchActiveTasks()
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') resync()
+    }
+    const onPageShow = (e: PageTransitionEvent) => {
+      // Only bfcache restores need a manual resync; a fresh load already fetched.
+      if (e.persisted) resync()
+    }
+    window.addEventListener('focus', resync)
+    window.addEventListener('online', resync)
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pageshow', onPageShow)
+    return () => {
+      window.removeEventListener('focus', resync)
+      window.removeEventListener('online', resync)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pageshow', onPageShow)
+    }
+  }, [fetchActiveTasks])
+
+  // (b) The SSE stream dropped and recovered while the tab stayed in the
+  // foreground (e.g. a server restart) — none of the signals above fire, so
+  // reconcile here too. The first connection is skipped: the initial-load
+  // effect already fetched the active set.
+  const sseStatus = useSSEStatus()
+  const sseWasConnectedRef = useRef(false)
+  useEffect(() => {
+    if (sseStatus !== 'connected') return
+    if (sseWasConnectedRef.current) {
+      fetchActiveTasks()
+    } else {
+      sseWasConnectedRef.current = true
+    }
+  }, [sseStatus, fetchActiveTasks])
 
   // Derive set of cron IDs that have active tasks
   const activeCronIds = useMemo(() => {

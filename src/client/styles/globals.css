@@ -928,6 +928,29 @@ body {
   initial-value: 0deg;
 }
 
+/* Opaque-centre variant: the spinning gradient stays on the border only.
+   `--color-card` is semi-transparent, so the plain `.gradient-border-spin`
+   lets the conic gradient bleed through the whole surface. Stacking an opaque
+   `--color-background` fill under the card tint keeps the centre solid and
+   matches the resting task cards (`bg-card`). */
+.gradient-border-spin-solid {
+  position: relative;
+  border: 2.5px solid transparent !important;
+  background-image:
+    linear-gradient(var(--color-card), var(--color-card)),
+    linear-gradient(var(--color-background), var(--color-background)),
+    conic-gradient(
+      from var(--border-angle, 0deg),
+      var(--color-gradient-start),
+      var(--color-gradient-mid),
+      var(--color-gradient-end),
+      var(--color-gradient-start)
+    );
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+  animation: border-spin 3s linear infinite;
+}
+
 /* ─── FLOAT / LEVITATE ───────────────────────────────── */
 
 @keyframes levitate {

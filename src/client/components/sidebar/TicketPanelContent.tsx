@@ -10,8 +10,7 @@ import { MessageSquare, Play, ListChecks, Loader2, X, ChevronLeft, Pencil, Spark
 import { cn } from '@/client/lib/utils'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
-import { TaskTimelineItem } from '@/client/components/common/TaskTimelineItem'
-import { isTerminalStatus } from '@/client/lib/task-status'
+import { TaskCard } from '@/client/components/tasks/TaskCard'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import { formatRelativeTime, formatDurationMs, computeDurationMs } from '@/client/lib/time'
 import { useNow } from '@/client/hooks/useNow'
@@ -347,27 +346,24 @@ export function TicketPanelContent({ ticketId }: TicketPanelContentProps) {
             />
           ) : (
             <ul className="space-y-0">
-              {ticket.tasks.map((task, i) => {
-                const isFinished = isTerminalStatus(task.status)
-                const runMs = computeDurationMs(
-                  task.startedAt,
-                  isFinished ? task.endedAt : null,
-                  nowMs,
-                )
-                const runDuration = runMs != null ? formatDurationMs(runMs) : null
-                return (
-                  <li key={task.id}>
-                    <TaskTimelineItem
-                      status={task.status}
-                      primary={task.parentKinName}
-                      secondary={t(`projects.taskStatus.${task.status}`, { defaultValue: task.status })}
-                      time={runDuration ?? formatRelativeTime(task.createdAt)}
-                      isLast={i === ticket.tasks.length - 1}
-                      onClick={() => handleTaskClick(task)}
-                    />
-                  </li>
-                )
-              })}
+              {ticket.tasks.map((task) => (
+                <li key={task.id}>
+                  <TaskCard
+                    task={{
+                      id: task.id,
+                      status: task.status,
+                      title: t(`projects.ticket.panel.taskKind.${task.kind}`),
+                      kinName: task.parentKinName,
+                      avatarUrl: task.parentKinAvatarUrl,
+                      startedMs: task.startedAt,
+                      endedMs: task.endedAt,
+                      createdMs: task.createdAt,
+                    }}
+                    onClick={() => handleTaskClick(task)}
+                    nowMs={nowMs}
+                  />
+                </li>
+              ))}
             </ul>
           )}
         </section>

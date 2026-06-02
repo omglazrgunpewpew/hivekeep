@@ -280,6 +280,8 @@
       "activeLabel": "Active",
       "queuedLabel": "Queued",
       "historyLabel": "History",
+      "scheduled": "Scheduled",
+      "nested": "Nested sub-task",
       "queueFilter": {
         "all": "All queues"
       },
@@ -2788,10 +2790,13 @@
     "menuAction": "Start a task",
     "title": "Start a task",
     "description": "Launch a standalone task on {{name}} — no project or ticket needed. The result is posted back into this thread when it finishes.",
+    "descriptionGeneric": "Launch a standalone task — no project or ticket needed. Pick the Kin that should run it; the result is posted back into its thread when it finishes.",
+    "kinField": "Kin",
+    "kinPlaceholder": "Choose a Kin to run this task",
     "promptField": "What should this task do?",
     "promptPlaceholder": "e.g. research the top 3 vector databases and summarize trade-offs",
-    "promptHelp": "Describe the work for this one-off task. Max 2000 chars.",
-    "promptCounter": "{{count}} / 2000",
+    "promptHelp": "Describe the work for this one-off task.",
+    "promptCounter": "{{count}} chars",
     "titleField": "Title (optional)",
     "titlePlaceholder": "Short label for this task",
     "toolboxesField": "Toolboxes (optional)",
@@ -2964,6 +2969,10 @@
         "descriptionCollapse": "Show less",
         "noDescription": "No description.",
         "tasksHistory": "Tasks ({{count}})",
+        "taskKind": {
+          "execute": "Task",
+          "enrich": "Enrichment"
+        },
         "startTask": "Start a task",
         "noTasks": "No tasks have been spawned on this ticket yet.",
         "noTasksTitle": "No tasks yet",

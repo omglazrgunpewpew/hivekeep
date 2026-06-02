@@ -2,13 +2,18 @@ import { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
 import { Input } from '@/client/components/ui/input'
+import { Button } from '@/client/components/ui/button'
 import { cn } from '@/client/lib/utils'
 import { useNow } from '@/client/hooks/useNow'
-import { Loader2, Search, ListTodo, ChevronDown } from 'lucide-react'
+import { Loader2, Search, ListTodo, ChevronDown, Plus } from 'lucide-react'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { PageHeader } from '@/client/components/layout/PageHeader'
 import { TimelineTaskCard, groupByDay } from '@/client/components/tasks/TimelineTaskCard'
 import { TaskCapacityBar } from '@/client/components/tasks/TaskCapacityBar'
+
+// Lazy-loaded: pulls in the CodeMirror prompt editor, so keep it out of the
+// tasks-page bundle until the user actually opens the launcher.
+const OrphanTaskDialog = lazy(() => import('@/client/components/chat/OrphanTaskDialog').then(m => ({ default: m.OrphanTaskDialog })))
 import { useTasksContext } from '@/client/contexts/TasksContext'
 import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import type { TaskSummary } from '@/shared/types'
@@ -35,16 +40,16 @@ function Column({
   children: React.ReactNode
 }) {
   return (
-    <section className="surface-card flex min-h-0 flex-col rounded-xl border border-border lg:h-full">
-      <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2.5">
+    <section className="flex min-h-0 flex-col lg:h-full lg:px-3 lg:first:pl-0 lg:last:pr-0">
+      <header className="mb-1.5 flex shrink-0 items-center gap-2 px-1 py-0.5">
         <span className={cn('size-2 shrink-0 rounded-full', accent, pulse && 'animate-pulse')} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
         {count != null && (
-          <span className="text-xs font-medium text-muted-foreground">({count})</span>
+          <span className="text-xs font-medium text-muted-foreground/60">{count}</span>
         )}
         {action && <div className="ml-auto">{action}</div>}
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 lg:min-h-0">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-0.5 lg:min-h-0">{children}</div>
     </section>
   )
 }
@@ -66,6 +71,7 @@ export function TasksPage() {
 
   const [queueFilter, setQueueFilter] = useState<string | null>(null)
   const [queueFilterOpen, setQueueFilterOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const hasLiveTasks = activeTasks.length > 0 || queuedTasks.length > 0
@@ -143,15 +149,21 @@ export function TasksPage() {
           icon={ListTodo}
           title={t('activityBar.tasks')}
           actions={
-            <div className="relative w-full sm:w-72">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('sidebar.tasks.search')}
-                className="h-9 pl-8"
-              />
-            </div>
+            <>
+              <div className="relative w-full sm:w-72">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('sidebar.tasks.search')}
+                  className="h-9 pl-8"
+                />
+              </div>
+              <Button onClick={() => setCreateOpen(true)} className="h-9 shrink-0">
+                <Plus className="size-4" />
+                <span className="hidden sm:inline">{t('orphanTask.menuAction')}</span>
+              </Button>
+            </>
           }
         >
           <TaskCapacityBar />
@@ -174,7 +186,7 @@ export function TasksPage() {
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto p-4 lg:overflow-hidden">
-            <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-border">
               {/* Active */}
               <Column
                 accent="bg-primary"
@@ -305,6 +317,13 @@ export function TasksPage() {
           </div>
         )}
       </main>
+
+      {/* Manual task creation — pick a Kin and launch a standalone task */}
+      {createOpen && (
+        <Suspense fallback={null}>
+          <OrphanTaskDialog open={createOpen} onOpenChange={setCreateOpen} />
+        </Suspense>
+      )}
 
       {/* Side panel (task detail) */}
       <Suspense fallback={null}>
