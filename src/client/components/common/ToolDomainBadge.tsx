@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/client/lib/utils'
-import { TOOL_DOMAIN_META } from '@/shared/constants'
+import { getToolDomainMeta } from '@/client/lib/tool-domain-lookup'
 import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
 import type { ToolDomain } from '@/shared/types'
 
@@ -11,10 +11,13 @@ interface ToolDomainBadgeProps {
   className?: string
 }
 
-/** Reusable badge that displays a tool domain with its icon, color, and label. */
+/** Reusable badge that displays a tool domain with its icon, color, and label.
+ *  Built-in domains translate their i18n `labelKey`; custom domains show their
+ *  literal `label`. */
 export function ToolDomainBadge({ domain, showLabel = true, className }: ToolDomainBadgeProps) {
   const { t } = useTranslation()
-  const meta = TOOL_DOMAIN_META[domain]
+  const meta = getToolDomainMeta(domain)
+  const label = meta.labelKey ? t(meta.labelKey) : (meta.label ?? domain)
 
   return (
     <span
@@ -26,7 +29,7 @@ export function ToolDomainBadge({ domain, showLabel = true, className }: ToolDom
       )}
     >
       <ToolDomainIcon domain={domain} className="size-3" />
-      {showLabel && <span>{t(meta.labelKey)}</span>}
+      {showLabel && <span>{label}</span>}
     </span>
   )
 }

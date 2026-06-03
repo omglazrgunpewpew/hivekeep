@@ -360,9 +360,19 @@ registerPreviewRenderer('set_contact_note', ({ args }) => {
 
 // --- Custom tools ---
 
-registerPreviewRenderer('run_custom_tool', ({ args }) => {
-  return (args.tool_name as string) ? truncate(args.tool_name as string, 50) : null
-})
+// Authoring/admin tools all carry a `slug` identifying the target tool.
+for (const name of [
+  'create_custom_tool',
+  'write_custom_tool_file',
+  'run_custom_tool_setup',
+  'test_custom_tool',
+  'update_custom_tool',
+  'delete_custom_tool',
+]) {
+  registerPreviewRenderer(name, ({ args }) => {
+    return (args.slug as string) ? truncate(args.slug as string, 50) : null
+  })
+}
 
 // --- Plugin config ---
 

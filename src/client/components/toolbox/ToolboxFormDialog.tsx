@@ -61,10 +61,19 @@ export function ToolboxFormDialog({
     setName(toolbox?.name ?? '')
     setDescription(toolbox?.description ?? '')
     if (isWildcard) {
-      // Reflect "all native tools" by pre-selecting only the native entries —
-      // "*" expands to native tools only (plugin/MCP/custom must be listed by
-      // name), so the read-only 'all' viewer must mirror that.
-      setSelected(new Set(tools.filter((tool) => tool.source === 'native').map((tool) => tool.name)))
+      // Reflect what "*" grants by pre-selecting the native entries plus every
+      // ENABLED custom tool — "*" expands to native + custom (MCP/plugin must
+      // still be listed by name), so the read-only 'all' viewer mirrors that.
+      setSelected(
+        new Set(
+          tools
+            .filter(
+              (tool) =>
+                tool.source === 'native' || (tool.source === 'custom' && tool.enabled !== false),
+            )
+            .map((tool) => tool.name),
+        ),
+      )
     } else {
       setSelected(new Set(toolbox?.toolNames ?? []))
     }
@@ -96,7 +105,10 @@ export function ToolboxFormDialog({
   }
 
   const selectedCount = isWildcard
-    ? tools.filter((tool) => tool.source === 'native').length
+    ? tools.filter(
+        (tool) =>
+          tool.source === 'native' || (tool.source === 'custom' && tool.enabled !== false),
+      ).length
     : selected.size
 
   return (

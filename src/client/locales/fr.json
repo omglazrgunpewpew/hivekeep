@@ -459,7 +459,7 @@
       },
       "toolboxesTitle": "Boîtes à outils",
       "toolboxesHint": "Choisissez une ou plusieurs boîtes à outils pour accorder ses outils à ce Kin. Une boîte regroupe des outils de toutes les sources (natifs, plugin, MCP, personnalisés).",
-      "defaultsToAll": "Aucune boîte sélectionnée — ce Kin utilise la boîte intégrée « all » (tous les outils natifs).",
+      "defaultsToAll": "Aucune boîte sélectionnée — ce Kin utilise la boîte intégrée « all » (tous les outils natifs et custom).",
       "noToolboxesTitle": "Aucune boîte à outils",
       "noToolboxesDescription": "Créez des boîtes à outils depuis les Réglages pour accorder des outils à ce Kin.",
       "resolvedPreviewTitle": "Outils accordés",
@@ -1091,6 +1091,112 @@
       "forkTooltip": "Fork : clone la tâche échouée avec tous ses messages. Le modèle reprend le contexte précédent."
     }
   },
+  "customTools": {
+    "title": "Outils personnalisés",
+    "description": "Des outils globaux que toi (ou tes Kins) scriptez dans n'importe quel langage. Une fois créés, ajoute-les à une boîte à outils pour les accorder à un Kin — ils s'exécutent sous le nom custom_<slug>.",
+    "create": "Nouvel outil",
+    "edit": "Modifier l'outil",
+    "empty": "Aucun outil personnalisé",
+    "emptyDescription": "Crée un script (Python, Node, Bun, Bash…) qui lit ses arguments JSON sur stdin et écrit son résultat sur stdout.",
+    "deleted": "Outil supprimé",
+    "deleteTitle": "Supprimer l'outil",
+    "deleteConfirm": "Cela supprimera définitivement « {{name}} » et ses fichiers. Les boîtes à outils qui le listent l'ignoreront simplement.",
+    "enabled": "Activé",
+    "byKin": "créé par un Kin",
+    "installDeps": "Installer les dépendances",
+    "installAfterSave": "Enregistre d'abord l'outil, puis installe ses dépendances.",
+    "testTitle": "Test d'exécution",
+    "runTest": "Exécuter",
+    "testAfterSave": "Enregistre d'abord l'outil pour le tester.",
+    "dialogDescription": "Le script vit sur disque dans son propre dossier et peut avoir ses propres dépendances.",
+    "renderer": {
+      "title": "Rendu du résultat (optionnel)",
+      "active": "Actif",
+      "help": "renderer.tsx optionnel qui met en forme le résultat de cet outil dans la vue détaillée du chat. Exporte par défaut une fonction Renderer({ result, args, ui }). Stylise avec le kit ui ou des tokens var(--color-*) en ligne (les classes Tailwind ne s'appliquent pas) ; le thème est automatique. Laisse vide pour afficher le résultat en JSON.",
+      "insertStarter": "Insérer un modèle"
+    },
+    "fields": {
+      "slug": "Slug (immuable)",
+      "name": "Nom",
+      "description": "Description",
+      "descriptionHint": "Explique au LLM ce que fait l'outil et quand l'utiliser.",
+      "language": "Langage",
+      "entrypoint": "Fichier d'entrée",
+      "domain": "Domaine",
+      "parameters": "Paramètres (JSON Schema)",
+      "parametersHint": "Objet JSON Schema décrivant les arguments d'entrée de l'outil.",
+      "code": "Code — {{file}}",
+      "deps": "Dépendances — {{file}}"
+    },
+    "translations": {
+      "title": "Traductions",
+      "locale": "Langue",
+      "uiName": "Nom affiché",
+      "uiDescription": "Description affichée",
+      "paramLabel": "Libellé",
+      "paramDescription": "Description",
+      "help": "Libellés localisés réservés à l'interface. Ils changent l'affichage de l'outil dans l'app (chat, boîte à outils), jamais ce que voit le LLM. Laisse vide pour utiliser les valeurs de base."
+    },
+    "errors": {
+      "slug": "Le slug doit respecter ^[a-z][a-z0-9_]*$",
+      "name": "Le nom est requis",
+      "parameters": "Les paramètres doivent être un JSON valide",
+      "testArgs": "Les arguments de test doivent être un JSON valide"
+    },
+    "test": {
+      "form": "Formulaire",
+      "json": "JSON",
+      "formDisabled": "Corrige le schéma des paramètres pour utiliser le formulaire.",
+      "noParameters": "Cet outil ne prend aucun paramètre.",
+      "required": "requis",
+      "commaSeparated": "Valeurs séparées par des virgules",
+      "jsonField": "JSON",
+      "invalidJson": "JSON invalide — affichage des dernières valeurs du formulaire.",
+      "outputJson": "JSON",
+      "outputRender": "Rendu",
+      "renderAfterRun": "Lance d'abord un test pour prévisualiser le renderer."
+    },
+    "help": {
+      "content": "Les outils personnalisés permettent d'étendre KinBot avec tes propres scripts.",
+      "bullet1": "Chaque outil est un script dans son propre dossier ; il lit ses arguments en JSON sur stdin et imprime son résultat sur stdout.",
+      "bullet2": "Ajoute un requirements.txt (Python) ou package.json (Node/Bun) puis clique sur Installer pour mettre en place les dépendances.",
+      "bullet3": "Accorde un outil à un Kin en ajoutant custom_<slug> à l'une de ses boîtes à outils."
+    },
+    "iconPicker": {
+      "trigger": "Choisir une icône",
+      "placeholder": "Choisir une icône",
+      "search": "Rechercher des icônes…",
+      "noResults": "Aucune icône ne correspond à ta recherche",
+      "truncated": "Affichage des {{count}} premières — affine ta recherche"
+    }
+  },
+  "toolDomains": {
+    "title": "Domaines d'outils",
+    "description": "Des catégories pour regrouper et colorer les outils dans l'interface. Crée les tiennes pour organiser tes outils personnalisés.",
+    "create": "Nouveau domaine",
+    "edit": "Modifier le domaine",
+    "view": "Voir le domaine",
+    "empty": "Aucun domaine personnalisé",
+    "emptyDescription": "Crée un domaine (icône + couleur + libellé) pour organiser tes outils personnalisés.",
+    "deleted": "Domaine supprimé",
+    "deleteTitle": "Supprimer le domaine",
+    "deleteConfirm": "Cela supprimera définitivement le domaine « {{name}} ».",
+    "builtinBadge": "Intégré",
+    "previewLabel": "Aperçu",
+    "dialogDescription": "Choisis un nom d'icône Lucide et un token de couleur.",
+    "fields": {
+      "slug": "Slug (immuable)",
+      "label": "Libellé",
+      "icon": "Icône",
+      "iconHint": "N'importe quel nom d'icône Lucide, ex. CloudSun, Wallet, Bot.",
+      "color": "Couleur",
+      "description": "Description"
+    },
+    "errors": {
+      "slug": "Le slug doit respecter ^[a-z][a-z0-9-]*$",
+      "label": "Le libellé est requis"
+    }
+  },
   "toolboxes": {
     "title": "Boîtes à outils",
     "description": "Des jeux d'outils nommés que tu peux assigner aux tâches. Les outils d'une tâche sont un socle obligatoire plus les outils de chaque boîte que tu lui donnes.",
@@ -1138,7 +1244,7 @@
       "descriptionPlaceholder": "À quoi sert cette boîte ?",
       "toolsField": "Outils",
       "selectedCount": "{{count}} sélectionné(s)",
-      "wildcardNote": "Cette boîte intégrée accorde tous les outils natifs.",
+      "wildcardNote": "Cette boîte intégrée accorde tous les outils natifs ainsi que tous les outils custom (les outils MCP et plugin doivent toujours être ajoutés par nom).",
       "hardExcludedNote": "Cet outil ne peut jamais s'exécuter dans une tâche, même si une boîte l'inclut."
     },
     "help": {
@@ -2330,9 +2436,17 @@
       "update_cron": "Modifier un planning",
       "delete_cron": "Supprimer un planning",
       "list_crons": "Lister les plannings",
-      "register_tool": "Enregistrer un outil",
-      "run_custom_tool": "Exécuter un outil",
+      "create_custom_tool": "Créer un outil personnalisé",
+      "write_custom_tool_file": "Écrire un fichier d'outil",
+      "run_custom_tool_setup": "Installer les dépendances",
+      "test_custom_tool": "Tester un outil",
+      "update_custom_tool": "Modifier un outil",
+      "delete_custom_tool": "Supprimer un outil",
       "list_custom_tools": "Lister les outils",
+      "create_tool_domain": "Créer un domaine d'outils",
+      "list_tool_domains": "Lister les domaines d'outils",
+      "update_tool_domain": "Modifier un domaine d'outils",
+      "delete_tool_domain": "Supprimer un domaine d'outils",
       "generate_image": "Générer une image",
       "run_shell": "Exécuter une commande",
       "add_mcp_server": "Ajouter un serveur MCP",

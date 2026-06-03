@@ -73,7 +73,15 @@ function AppRoot() {
   // while this is in-flight; first paint may briefly show generic badges
   // for new tools, then re-render with the right colour.
   useEffect(() => {
-    void import('@/client/lib/tool-domain-lookup').then((m) => m.loadToolDomainMap())
+    void import('@/client/lib/tool-domain-lookup').then((m) => {
+      void m.loadToolDomainMap()
+      void m.loadToolDomainMeta()
+    })
+    // Localized custom-tool display names (custom_<slug> → human name) so chat
+    // tool-calls show a proper name instead of the raw slug.
+    void import('@/client/lib/custom-tool-names').then((m) => {
+      void m.loadCustomToolNames()
+    })
   }, [])
 
   // Loading state

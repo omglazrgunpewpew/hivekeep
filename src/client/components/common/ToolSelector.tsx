@@ -4,7 +4,7 @@ import { Switch } from '@/client/components/ui/switch'
 import { Badge } from '@/client/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/client/components/ui/collapsible'
 import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
-import { TOOL_DOMAIN_META } from '@/shared/constants'
+import { getToolDomainMeta } from '@/client/lib/tool-domain-lookup'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import type { ToolCatalogEntry, ToolDomain, ToolLabel, ToolSource } from '@/shared/types'
@@ -289,7 +289,7 @@ function DomainGroup({
   children: React.ReactNode
 }) {
   const { t } = useTranslation()
-  const meta = TOOL_DOMAIN_META[domain]
+  const meta = getToolDomainMeta(domain)
   const [open, setOpen] = useState(false)
 
   return (
@@ -307,7 +307,7 @@ function DomainGroup({
               <span className={`flex size-6 items-center justify-center rounded-md ${meta.bg}`}>
                 <ToolDomainIcon domain={domain} className={`size-3.5 ${meta.text}`} />
               </span>
-              <span className="text-sm font-medium">{t(meta.labelKey)}</span>
+              <span className="text-sm font-medium">{meta.labelKey ? t(meta.labelKey) : (meta.label ?? domain)}</span>
               <span className="text-xs text-muted-foreground">
                 {t('kin.tools.countEnabled', { count: enabledCount, total: totalCount })}
               </span>

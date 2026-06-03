@@ -7,8 +7,13 @@
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "^0.2.139",
         "@anthropic-ai/sdk": "^0.81.0",
+        "@codemirror/lang-javascript": "^6.2.5",
+        "@codemirror/lang-json": "^6.0.2",
         "@codemirror/lang-markdown": "^6.5.0",
+        "@codemirror/lang-python": "^6.2.1",
+        "@codemirror/language": "^6.12.3",
         "@codemirror/language-data": "^6.5.2",
+        "@codemirror/legacy-modes": "^6.5.3",
         "@codemirror/view": "^6.43.0",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -29,6 +34,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
+        "country-flag-icons": "^1.6.17",
         "croner": "^10.0.1",
         "cronstrue": "^3.12.0",
         "drizzle-orm": "^0.45.1",
@@ -104,7 +110,7 @@
     },
     "packages/sdk": {
       "name": "@kinbot-developer/sdk",
-      "version": "0.8.0",
+      "version": "0.10.0",
       "peerDependencies": {
         "zod": "^4.0.0",
       },
@@ -1104,6 +1110,8 @@
     "cose-base": ["cose-base@1.0.3", "", { "dependencies": { "layout-base": "^1.0.0" } }, "sha512-s9whTXInMSgAp/NVXVNuVxVKzGH2qck3aQlVHxDCdAEPgtMKwc4Wq6/QKhgdEdgbLSi9rBTAcPoRa6JpiG4ksg=="],
 
     "cosmiconfig": ["cosmiconfig@7.1.0", "", { "dependencies": { "@types/parse-json": "^4.0.0", "import-fresh": "^3.2.1", "parse-json": "^5.0.0", "path-type": "^4.0.0", "yaml": "^1.10.0" } }, "sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA=="],
+
+    "country-flag-icons": ["country-flag-icons@1.6.17", "", {}, "sha512-Nmik0289ZVZSI3c7mJR/amg6DyY7Z59b0sTFSKayeX72mHfPzCPJygwJs2pYgQULzuAyWeCUgwAJ+Dq8OR+JFw=="],
 
     "create-kinbot-plugin": ["create-kinbot-plugin@workspace:packages/create-kinbot-plugin"],
 

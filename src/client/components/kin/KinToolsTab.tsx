@@ -42,15 +42,24 @@ export function KinToolsTab({ kinId, toolboxIds, onToolboxIdsChange }: KinToolsT
 
   // Compute the set of tool names the selection grants. Mirror the server
   // resolver: CORE_TOOLS ∪ (selected toolboxes' listed names); "*" expands to
-  // all NATIVE catalog tools; names absent from the catalog are dropped.
+  // all NATIVE catalog tools plus all CUSTOM catalog tools (MCP/plugin still
+  // need an explicit name); names absent from the catalog are dropped.
   const grantedNames = useMemo<Set<string>>(() => {
     const granted = new Set<string>(CORE_TOOLS)
     const selectedBoxes = toolboxes.filter((tb) => effectiveIds.includes(tb.id))
-    const nativeNames = catalog.filter((tool) => tool.source === 'native').map((tool) => tool.name)
+    const wildcardNames = catalog
+      .filter(
+        (tool) =>
+          tool.source === 'native' ||
+          // Custom tools ride the wildcard, but only the ENABLED ones (matching
+          // the server's enabled-only universe). MCP/plugin still need a name.
+          (tool.source === 'custom' && tool.enabled !== false),
+      )
+      .map((tool) => tool.name)
     for (const box of selectedBoxes) {
       for (const name of box.toolNames) {
         if (name === '*') {
-          for (const n of nativeNames) granted.add(n)
+          for (const n of wildcardNames) granted.add(n)
         } else {
           granted.add(name)
         }

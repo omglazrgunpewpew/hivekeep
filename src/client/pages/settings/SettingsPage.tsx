@@ -36,6 +36,8 @@ import { NotificationPreferences } from '@/client/components/notifications/Notif
 import { PluginsSettings } from '@/client/pages/settings/PluginsSettings'
 import { PluginMarketplace } from '@/client/pages/settings/PluginMarketplace'
 import { ToolboxesSettings } from '@/client/pages/settings/ToolboxesSettings'
+import { CustomToolsSettings } from '@/client/pages/settings/CustomToolsSettings'
+import { CustomDomainsSettings } from '@/client/pages/settings/CustomDomainsSettings'
 import { LogsSettings } from '@/client/pages/settings/LogsSettings'
 import { TokenUsageSettings } from '@/client/pages/settings/TokenUsageSettings'
 import {
@@ -60,6 +62,8 @@ import {
   ScrollText,
   Coins,
   Wrench,
+  Code2,
+  Shapes,
   Mail,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/client/components/ui/tooltip'
@@ -93,6 +97,8 @@ const sectionGroups: SectionGroup[] = [
       { id: 'marketplace', icon: ShoppingBag, labelKey: 'settings.marketplace.title' },
       { id: 'mcp', icon: Puzzle, labelKey: 'settings.mcp.title' },
       { id: 'toolboxes', icon: Wrench, labelKey: 'toolboxes.title' },
+      { id: 'customTools', icon: Code2, labelKey: 'customTools.title' },
+      { id: 'customDomains', icon: Shapes, labelKey: 'toolDomains.title' },
       { id: 'vault', icon: Lock, labelKey: 'settings.vault.title' },
       { id: 'memories', icon: Brain, labelKey: 'settings.memories.title' },
       { id: 'files', icon: FolderOpen, labelKey: 'settings.files.title' },
@@ -152,6 +158,8 @@ const sectionComponents: Record<string, React.FC> = {
   plugins: PluginsSettings,
   marketplace: PluginMarketplace,
   toolboxes: ToolboxesSettings,
+  customTools: CustomToolsSettings,
+  customDomains: CustomDomainsSettings,
   notifications: NotificationPreferences,
   logs: LogsSettings,
   tokenUsage: TokenUsageSettings,

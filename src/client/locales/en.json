@@ -459,7 +459,7 @@
       },
       "toolboxesTitle": "Toolboxes",
       "toolboxesHint": "Pick one or more toolboxes to grant this Kin its tools. A toolbox bundles tools across all sources (native, plugin, MCP, custom).",
-      "defaultsToAll": "No toolbox selected — this Kin gets the built-in 'all' toolbox (every native tool).",
+      "defaultsToAll": "No toolbox selected — this Kin gets the built-in 'all' toolbox (every native and custom tool).",
       "noToolboxesTitle": "No toolboxes yet",
       "noToolboxesDescription": "Create toolboxes from Settings to grant tools to this Kin.",
       "resolvedPreviewTitle": "Granted tools",
@@ -1091,6 +1091,112 @@
       "forkTooltip": "Fork: clone the failed task with all its messages. The model picks up the prior context."
     }
   },
+  "customTools": {
+    "title": "Custom Tools",
+    "description": "Global tools you (or your Kins) script in any language. Once created, add them to a toolbox to grant them to a Kin — they run as custom_<slug>.",
+    "create": "New custom tool",
+    "edit": "Edit custom tool",
+    "empty": "No custom tools yet",
+    "emptyDescription": "Create a script (Python, Node, Bun, Bash…) that reads JSON args on stdin and writes its result to stdout.",
+    "deleted": "Custom tool deleted",
+    "deleteTitle": "Delete custom tool",
+    "deleteConfirm": "This will permanently delete \"{{name}}\" and its files. Toolboxes that list it will simply skip it.",
+    "enabled": "Enabled",
+    "byKin": "created by a Kin",
+    "installDeps": "Install dependencies",
+    "installAfterSave": "Save the tool first, then install its dependencies.",
+    "testTitle": "Test run",
+    "runTest": "Run",
+    "testAfterSave": "Save the tool first to test it.",
+    "dialogDescription": "The script lives on disk in its own directory and may have its own dependencies.",
+    "renderer": {
+      "title": "Result renderer (optional)",
+      "active": "Active",
+      "help": "Optional renderer.tsx that pretty-prints this tool's result in the expanded chat view. Export default function Renderer({ result, args, ui }). Style with the ui kit or inline var(--color-*) tokens (Tailwind classes don't apply); it auto-themes. Leave blank to show the result as JSON.",
+      "insertStarter": "Insert starter"
+    },
+    "fields": {
+      "slug": "Slug (immutable)",
+      "name": "Name",
+      "description": "Description",
+      "descriptionHint": "Tell the LLM what the tool does and when to use it.",
+      "language": "Language",
+      "entrypoint": "Entry file",
+      "domain": "Domain",
+      "parameters": "Parameters (JSON Schema)",
+      "parametersHint": "JSON Schema object describing the tool's input arguments.",
+      "code": "Code — {{file}}",
+      "deps": "Dependencies — {{file}}"
+    },
+    "translations": {
+      "title": "Translations",
+      "locale": "Locale",
+      "uiName": "Display name",
+      "uiDescription": "Display description",
+      "paramLabel": "Label",
+      "paramDescription": "Description",
+      "help": "UI-only localized labels. They change how the tool is shown in the app (chat, toolbox), never what the LLM sees. Leave blank to use the base values."
+    },
+    "errors": {
+      "slug": "Slug must match ^[a-z][a-z0-9_]*$",
+      "name": "Name is required",
+      "parameters": "Parameters must be valid JSON",
+      "testArgs": "Test args must be valid JSON"
+    },
+    "test": {
+      "form": "Form",
+      "json": "JSON",
+      "formDisabled": "Fix the parameters schema to use the form.",
+      "noParameters": "This tool takes no parameters.",
+      "required": "required",
+      "commaSeparated": "Comma-separated values",
+      "jsonField": "JSON",
+      "invalidJson": "Invalid JSON — showing last form values.",
+      "outputJson": "JSON",
+      "outputRender": "Render",
+      "renderAfterRun": "Run a test first to preview the renderer."
+    },
+    "help": {
+      "content": "Custom tools let you extend KinBot with your own scripts.",
+      "bullet1": "Each tool is a script in its own folder; it reads arguments as JSON on stdin and prints its result to stdout.",
+      "bullet2": "Add a requirements.txt (Python) or package.json (Node/Bun) and click Install to set up dependencies.",
+      "bullet3": "Grant a tool to a Kin by adding custom_<slug> to one of its toolboxes."
+    },
+    "iconPicker": {
+      "trigger": "Pick an icon",
+      "placeholder": "Pick an icon",
+      "search": "Search icons…",
+      "noResults": "No icons match your search",
+      "truncated": "Showing first {{count}} — refine your search"
+    }
+  },
+  "toolDomains": {
+    "title": "Tool Domains",
+    "description": "Categories used to group and color tools across the UI. Create your own to organize custom tools.",
+    "create": "New domain",
+    "edit": "Edit domain",
+    "view": "View domain",
+    "empty": "No custom domains yet",
+    "emptyDescription": "Create a domain (icon + color + label) to organize your custom tools.",
+    "deleted": "Domain deleted",
+    "deleteTitle": "Delete domain",
+    "deleteConfirm": "This will permanently delete the \"{{name}}\" domain.",
+    "builtinBadge": "Built-in",
+    "previewLabel": "Preview",
+    "dialogDescription": "Pick a Lucide icon name and a color token.",
+    "fields": {
+      "slug": "Slug (immutable)",
+      "label": "Label",
+      "icon": "Icon",
+      "iconHint": "Any Lucide icon name, e.g. CloudSun, Wallet, Bot.",
+      "color": "Color",
+      "description": "Description"
+    },
+    "errors": {
+      "slug": "Slug must match ^[a-z][a-z0-9-]*$",
+      "label": "Label is required"
+    }
+  },
   "toolboxes": {
     "title": "Toolboxes",
     "description": "Named sets of tools you can assign to tasks. A task's tools are a mandatory core set plus the tools of every toolbox you give it.",
@@ -1138,7 +1244,7 @@
       "descriptionPlaceholder": "What is this toolbox for?",
       "toolsField": "Tools",
       "selectedCount": "{{count}} selected",
-      "wildcardNote": "This built-in grants every native tool.",
+      "wildcardNote": "This built-in grants every native tool plus every custom tool (MCP and plugin tools must still be added by name).",
       "hardExcludedNote": "This tool can never run inside a task, even if a toolbox includes it."
     },
     "help": {
@@ -2330,9 +2436,17 @@
       "update_cron": "Update Schedule",
       "delete_cron": "Delete Schedule",
       "list_crons": "List Schedules",
-      "register_tool": "Register Tool",
-      "run_custom_tool": "Run Custom Tool",
+      "create_custom_tool": "Create Custom Tool",
+      "write_custom_tool_file": "Write Custom Tool File",
+      "run_custom_tool_setup": "Install Custom Tool Deps",
+      "test_custom_tool": "Test Custom Tool",
+      "update_custom_tool": "Update Custom Tool",
+      "delete_custom_tool": "Delete Custom Tool",
       "list_custom_tools": "List Custom Tools",
+      "create_tool_domain": "Create Tool Domain",
+      "list_tool_domains": "List Tool Domains",
+      "update_tool_domain": "Update Tool Domain",
+      "delete_tool_domain": "Delete Tool Domain",
       "generate_image": "Generate Image",
       "run_shell": "Run Shell Command",
       "add_mcp_server": "Add MCP Server",

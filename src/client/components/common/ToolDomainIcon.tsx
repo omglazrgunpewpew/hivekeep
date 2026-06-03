@@ -1,69 +1,32 @@
-import {
-  Search,
-  Globe,
-  Mic,
-  Users,
-  Brain,
-  ShieldCheck,
-  ListTodo,
-  MessageCircle,
-  Clock,
-  Puzzle,
-  Image,
-  Terminal,
-  HardDrive,
-  Plug,
-  Crown,
-  Webhook,
-  ScrollText,
-  Radio,
-  UserCog,
-  Database,
-  AppWindow,
-  FileCode,
-  Kanban,
-  Mail,
-  Calendar,
-} from 'lucide-react'
-import type { LucideProps } from 'lucide-react'
+import { Puzzle, type LucideProps, type LucideIcon } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
+import { getToolDomainMeta } from '@/client/lib/tool-domain-lookup'
 import type { ToolDomain } from '@/shared/types'
 
-/** Map domain icon names to Lucide components (client-side resolution) */
-const DOMAIN_ICONS: Record<ToolDomain, React.FC<LucideProps>> = {
-  search: Search,
-  browse: Globe,
-  voice: Mic,
-  contacts: Users,
-  calendar: Calendar,
-  email: Mail,
-  memory: Brain,
-  vault: ShieldCheck,
-  tasks: ListTodo,
-  'inter-kin': MessageCircle,
-  crons: Clock,
-  custom: Puzzle,
-  images: Image,
-  shell: Terminal,
-  filesystem: FileCode,
-  'file-storage': HardDrive,
-  mcp: Plug,
-  'kin-management': Crown,
-  webhooks: Webhook,
-  channels: Radio,
-  system: ScrollText,
-  users: UserCog,
-  database: Database,
-  'mini-apps': AppWindow,
-  plugins: Puzzle,
-  projects: Kanban,
+/** Resolve a Lucide component by its string name (e.g. "Search"). Falls back to
+ *  Puzzle for an unknown name — custom domains may reference any Lucide icon. */
+export function resolveLucideIcon(name: string | undefined): LucideIcon {
+  if (!name) return Puzzle
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcon | undefined>)[name]
+  return Icon ?? Puzzle
 }
 
 interface ToolDomainIconProps extends LucideProps {
-  domain: ToolDomain
+  /** Domain slug (builtin or custom). Resolved to an icon name via the domain
+   *  metadata cache. Ignored when `iconName` is provided. */
+  domain?: ToolDomain
+  /** Explicit Lucide icon name — used by the domain picker preview. */
+  iconName?: string
 }
 
-/** Renders the Lucide icon for a tool domain. Reusable anywhere. */
-export function ToolDomainIcon({ domain, ...props }: ToolDomainIconProps) {
-  const Icon = DOMAIN_ICONS[domain] ?? Puzzle
+/**
+ * Renders the Lucide icon for a tool domain. Built-in domains resolve their
+ * icon synchronously from TOOL_DOMAIN_META; custom domains resolve via the
+ * hydrated domain-meta cache (with a Puzzle fallback while loading / for
+ * unknown icons). Pass `iconName` to render a specific icon directly.
+ */
+export function ToolDomainIcon({ domain, iconName, ...props }: ToolDomainIconProps) {
+  const name = iconName ?? (domain ? getToolDomainMeta(domain).icon : undefined)
+  const Icon = resolveLucideIcon(name)
   return <Icon {...props} />
 }

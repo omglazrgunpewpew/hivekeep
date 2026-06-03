@@ -7,9 +7,11 @@ import {
 } from '@/client/components/ui/collapsible'
 import { ChevronRight, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
-import { TOOL_DOMAIN_META } from '@/shared/constants'
+import { getToolDomainMeta } from '@/client/lib/tool-domain-lookup'
+import { useCustomToolMeta } from '@/client/lib/custom-tool-names'
 import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
 import { JsonViewer } from '@/client/components/common/JsonViewer'
+import { CustomToolRenderer } from '@/client/components/chat/CustomToolRenderer'
 import { getRenderer, getPreviewRenderer } from '@/client/lib/tool-renderers'
 import { getToolCallsDefaultOpen } from '@/client/lib/tool-call-prefs'
 import type { ToolCallViewItem, ToolCallStatus } from '@/client/hooks/useToolCalls'
@@ -34,13 +36,26 @@ export const ToolCallItem = memo(function ToolCallItem({ toolCall }: ToolCallIte
   const { t } = useTranslation()
   const [open, setOpen] = useState(getToolCallsDefaultOpen)
 
-  const meta = TOOL_DOMAIN_META[toolCall.domain]
+  const meta = getToolDomainMeta(toolCall.domain)
   const StatusIcon = STATUS_ICONS[toolCall.status]
   const statusClass = STATUS_CLASSES[toolCall.status]
   const isError = toolCall.status === 'error'
 
   const CustomRenderer = getRenderer(toolCall.name)
-  const humanName = t(`tools.names.${toolCall.name}`, { defaultValue: toolCall.name })
+  // Custom tools (custom_<slug>) carry user/Kin-authored localized names — prefer
+  // those over the static i18n key so the chat shows a human name, not the slug.
+  // The reactive store re-renders this component when the cache hydrates/refreshes
+  // so a session-new tool (or a newly added renderer) appears without a reload.
+  const isCustomTool = toolCall.name.startsWith('custom_')
+  const { name: customName } = useCustomToolMeta(toolCall.name)
+  // A custom tool MAY ship a server-bundled React result renderer. We attempt it
+  // for ANY custom tool and let CustomToolRenderer fall back to the JSON viewer
+  // (via its ErrorBoundary) when the tool ships no renderer. We deliberately do
+  // NOT gate on a cached `hasRenderer` flag: that boot-time cache proved
+  // unreliable for tools created/edited mid-session (renderer never applied in
+  // real conversations), and the fallback for a renderer-less tool is cheap.
+  const customSlug = isCustomTool ? toolCall.name.slice('custom_'.length) : null
+  const humanName = customName ?? t(`tools.names.${toolCall.name}`, { defaultValue: toolCall.name })
   const previewFn = getPreviewRenderer(toolCall.name)
   const preview = previewFn?.({ toolName: toolCall.name, args: toolCall.args as Record<string, unknown>, status: toolCall.status })
   const timeStr = new Date(toolCall.timestamp).toLocaleTimeString([], {
@@ -80,6 +95,12 @@ export const ToolCallItem = memo(function ToolCallItem({ toolCall }: ToolCallIte
                 args={toolCall.args as Record<string, unknown>}
                 result={toolCall.result}
                 status={toolCall.status}
+              />
+            ) : customSlug ? (
+              <CustomToolRenderer
+                slug={customSlug}
+                result={toolCall.result}
+                args={toolCall.args}
               />
             ) : (
               <>

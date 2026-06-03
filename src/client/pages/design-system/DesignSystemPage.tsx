@@ -70,7 +70,7 @@ import {
 
 import { cn } from '@/client/lib/utils'
 import { TOOL_DOMAIN_META } from '@/shared/constants'
-import type { ToolDomain } from '@/shared/types'
+import type { BuiltinToolDomain } from '@/shared/types'
 import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
 import { ToolDomainBadge } from '@/client/components/common/ToolDomainBadge'
 import { Button } from '@/client/components/ui/button'
@@ -2264,12 +2264,12 @@ export function DesignSystemPage() {
                   Reusable via <code className="text-xs bg-muted px-1 rounded">{'<ToolDomainBadge>'}</code> and <code className="text-xs bg-muted px-1 rounded">{'<ToolDomainIcon>'}</code>.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(Object.keys(TOOL_DOMAIN_META) as ToolDomain[]).map((domain) => (
+                  {(Object.keys(TOOL_DOMAIN_META) as BuiltinToolDomain[]).map((domain) => (
                     <ToolDomainBadge key={domain} domain={domain} />
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-4">
-                  {(Object.keys(TOOL_DOMAIN_META) as ToolDomain[]).map((domain) => {
+                  {(Object.keys(TOOL_DOMAIN_META) as BuiltinToolDomain[]).map((domain) => {
                     const meta = TOOL_DOMAIN_META[domain]
                     return (
                       <div key={domain} className="flex flex-col items-center gap-1.5">
@@ -2333,7 +2333,7 @@ export function DesignSystemPage() {
                           <div className="rounded-2xl rounded-bl-md bg-bubble-kin px-4 py-2.5 text-bubble-kin-foreground shadow-sm"><p className="text-sm">Let me check your memories and search for updates...</p></div>
                           {/* Tool calls triggered mid-stream */}
                           <div className="space-y-1">
-                            {(['memory', 'search'] as ToolDomain[]).map((domain) => {
+                            {(['memory', 'search'] as BuiltinToolDomain[]).map((domain) => {
                               const meta = TOOL_DOMAIN_META[domain]
                               const names: Record<string, string> = { memory: 'Recall Memory', search: 'Web Search' }
                               return (
@@ -2362,7 +2362,7 @@ export function DesignSystemPage() {
                         <Button variant="ghost" size="icon-xs"><X className="size-3.5" /></Button>
                       </div>
                       <div className="p-2 space-y-1">
-                        {(['memory', 'search', 'vault'] as ToolDomain[]).map((domain, i) => {
+                        {(['memory', 'search', 'vault'] as BuiltinToolDomain[]).map((domain, i) => {
                           const meta = TOOL_DOMAIN_META[domain]
                           const names: Record<string, string> = { memory: 'Recall Memory', search: 'Web Search', vault: 'Get Secret' }
                           const isOpen = i === 0
@@ -2422,7 +2422,7 @@ export function DesignSystemPage() {
                           <div className="rounded-2xl rounded-bl-md bg-bubble-kin px-4 py-2.5 text-bubble-kin-foreground shadow-sm"><p className="text-sm">Sure! Let me save your preference and create an avatar for you.</p></div>
                           {/* Tool calls mid-stream */}
                           <div className="space-y-1.5">
-                            {(['memory', 'images'] as ToolDomain[]).map((domain) => {
+                            {(['memory', 'images'] as BuiltinToolDomain[]).map((domain) => {
                               const meta = TOOL_DOMAIN_META[domain]
                               const names: Record<string, string> = { memory: 'Memorize', images: 'Generate Image' }
                               const statuses: Record<string, string> = { memory: 'success', images: 'pending' }
@@ -2456,7 +2456,7 @@ export function DesignSystemPage() {
                         <Button variant="ghost" size="icon-xs"><X className="size-3.5" /></Button>
                       </div>
                       <div className="p-2 space-y-1.5">
-                        {(['search', 'memory', 'images'] as ToolDomain[]).map((domain, i) => {
+                        {(['search', 'memory', 'images'] as BuiltinToolDomain[]).map((domain, i) => {
                           const meta = TOOL_DOMAIN_META[domain]
                           const names: Record<string, string> = { search: 'Web Search', memory: 'Memorize', images: 'Generate Image' }
                           const isOpen = i === 1
@@ -2517,7 +2517,7 @@ export function DesignSystemPage() {
                           <div className="rounded-2xl rounded-bl-md bg-bubble-kin px-4 py-2.5 text-bubble-kin-foreground shadow-sm"><p className="text-sm">I&apos;ll retrieve the key and run the deploy command.</p></div>
                           {/* Tool calls grouped in a card */}
                           <div className="rounded-lg border bg-card overflow-hidden">
-                            {(['vault', 'shell'] as ToolDomain[]).map((domain, i) => {
+                            {(['vault', 'shell'] as BuiltinToolDomain[]).map((domain, i) => {
                               const meta = TOOL_DOMAIN_META[domain]
                               const names: Record<string, string> = { vault: 'Get Secret', shell: 'Run Shell Command' }
                               const isLast = i === 1
@@ -2547,7 +2547,7 @@ export function DesignSystemPage() {
                         <Button variant="ghost" size="icon-xs"><X className="size-3.5" /></Button>
                       </div>
                       <div>
-                        {(['vault', 'shell', 'inter-kin', 'images'] as ToolDomain[]).map((domain, i) => {
+                        {(['vault', 'shell', 'inter-kin', 'images'] as BuiltinToolDomain[]).map((domain, i) => {
                           const meta = TOOL_DOMAIN_META[domain]
                           const names: Record<string, string> = { vault: 'Get Secret', shell: 'Run Shell Command', 'inter-kin': 'Send Message', images: 'Generate Image' }
                           const statuses = ['success', 'success', 'pending', 'error'] as const
