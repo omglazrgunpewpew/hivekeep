@@ -362,14 +362,20 @@ Envoie un message a un Kin. Déclenche le traitement et le streaming SSE de la r
 // Request
 {
   content: string
-  files?: string[]          // IDs de fichiers déjà uploadés
+  fileIds?: string[]        // IDs de fichiers déjà uploadés
+  clientMessageId?: string  // Token de réconciliation optimiste (≤100 chars, PAS la PK).
+                            // Ré-émis tel quel dans l'événement SSE chat:message du
+                            // message utilisateur : le client émetteur réconcilie sa
+                            // bulle optimiste, les autres appareils l'ajoutent.
 }
 
 // Response 202
-{ messageId: string, queuePosition: number }
+{ messageId: string, queuePosition: number }   // messageId = id du queue item, ≠ PK du message
 ```
 
 > La réponse du Kin arrive via SSE (pas dans cette response HTTP).
+> Le message utilisateur lui-même est aussi diffusé en temps réel via `chat:message`
+> (sync multi-appareils / multi-membres), avec `clientMessageId` pour la réconciliation.
 
 ### `GET /api/kins/:id/messages`
 
@@ -1285,8 +1291,12 @@ Connexion SSE **globale** (une seule par client). Le serveur multiplex les évé
 // Réponse LLM terminée
 { event: 'chat:done', data: { kinId: string, messageId: string, tokenUsage?: { inputTokens: number, outputTokens: number, totalTokens: number } } }
 
-// Nouveau message dans le chat (autres sources)
-{ event: 'chat:message', data: { kinId: string, message: MessageShape } }
+// Nouveau message entrant dans le chat — émis pour TOUTES les sources, y compris
+// les messages utilisateur (sync temps-réel multi-appareils / multi-membres).
+// Pour les messages utilisateur web, `clientMessageId` reprend le token envoyé au
+// POST : le client émetteur réconcilie sa bulle optimiste, les autres l'ajoutent.
+// (Le payload est aplati au niveau racine, pas imbriqué sous `message`.)
+{ event: 'chat:message', data: { kinId: string, id: string, clientMessageId?: string | null, role: string, content: string, files: FileShape[], ... } }
 
 // Changement d'état d'une tâche
 { event: 'task:status', data: { taskId: string, kinId: string, status: string } }

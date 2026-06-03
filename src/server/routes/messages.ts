@@ -25,8 +25,13 @@ messageRoutes.post('/', async (c) => {
   }
   const user = c.get('user') as { id: string; name: string }
   const body = await c.req.json()
-  const { content, fileIds } = body as { content: string; fileIds?: string[] }
+  const { content, fileIds, clientMessageId } = body as { content: string; fileIds?: string[]; clientMessageId?: string }
   const hasFiles = fileIds && fileIds.length > 0
+  // Reconciliation token echoed back over SSE (not the message PK) — accept it
+  // only when it's a sane short string to avoid arbitrary passthrough.
+  const reconcileToken = typeof clientMessageId === 'string' && clientMessageId.length > 0 && clientMessageId.length <= 100
+    ? clientMessageId
+    : undefined
 
   if (!content?.trim() && !hasFiles) {
     return c.json({ error: { code: 'EMPTY_MESSAGE', message: 'Message content or files required' } }, 400)
@@ -45,6 +50,7 @@ messageRoutes.post('/', async (c) => {
     sourceType: 'user',
     sourceId: user.id,
     fileIds: hasFiles ? fileIds : undefined,
+    clientMessageId: reconcileToken,
   })
 
   log.debug({ kinId, messageId: id, contentLength: content.length, fileCount: fileIds?.length ?? 0 }, 'Message enqueued')

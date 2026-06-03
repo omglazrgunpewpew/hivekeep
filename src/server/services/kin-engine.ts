@@ -1027,9 +1027,14 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       await linkFilesToMessage(queueItem.fileIds, userMessageId)
     }
 
-    // Emit SSE so the web UI shows the incoming message immediately.
-    // Skip 'user' sourceType (web UI) since those are already handled by optimistic updates.
-    if (queueItem.sourceType !== 'user') {
+    // Emit SSE so every connected client renders the incoming user message in
+    // real-time. This includes the OTHER devices of the same user (multi-device
+    // sync) and other group members watching this Kin. The originating web
+    // client reconciles its optimistic bubble via `clientMessageId` (echoed
+    // below); every other client appends it, and dedup-by-id on the client
+    // guards against the chat:done refetch racing ahead. A bare block keeps the
+    // (previously skipped for sourceType 'user') channel-enrichment code intact.
+    {
       const fileList = queueItem.fileIds && queueItem.fileIds.length > 0
         ? await getFilesForMessage(userMessageId)
         : []
@@ -1076,6 +1081,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
         kinId,
         data: {
           id: userMessageId,
+          clientMessageId: queueItem.clientMessageId ?? null,
           role: 'user',
           content: queueItem.content,
           sourceType: queueItem.sourceType,

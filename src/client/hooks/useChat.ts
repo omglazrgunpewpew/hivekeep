@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { api } from '@/client/lib/api'
+import { mergeIncomingMessage } from '@/client/lib/reconcile-messages'
 import { useSSE } from '@/client/hooks/useSSE'
 import { useChatStreaming } from '@/client/hooks/useChatStreaming'
 import type { ToolCallEntry, TaskStatus, MessageFile, MessageTokenUsage } from '@/shared/types'
@@ -476,7 +477,10 @@ export function useChat(kinId: string | null) {
         systemEvent: (data.systemEvent as ChatMessage['systemEvent']) ?? null,
         createdAt: new Date(data.createdAt as number).toISOString(),
       }
-      setMessages((prev) => [...prev, message])
+      // Reconcile multi-device / optimistic state (dedup by id, replace the
+      // optimistic bubble we sent via its reconciliation token, else append).
+      const reconcileId = data.clientMessageId as string | undefined
+      setMessages((prev) => mergeIncomingMessage(prev, message, reconcileId))
 
       // If this is a task result message, remove the corresponding live task (by precise ID only)
       if (data.sourceType === 'task' && data.resolvedTaskId) {
@@ -670,10 +674,16 @@ export function useChat(kinId: string | null) {
       const hasFiles = fileIds && fileIds.length > 0
       if (!kinId || (!content.trim() && !hasFiles)) return false
 
-      // Optimistic update — add user message immediately (with file previews)
-      const tempId = `temp-${Date.now()}`
+      // Optimistic update — add user message immediately (with file previews).
+      // The optimistic id doubles as a reconciliation token: the server echoes
+      // it back over the chat:message SSE so this bubble is matched (and other
+      // devices append the message instead of waiting for the next refresh).
+      const clientMessageId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `cmid-${Date.now()}-${Math.random().toString(36).slice(2)}`
       const userMessage: ChatMessage = {
-        id: tempId,
+        id: clientMessageId,
         role: 'user',
         content,
         sourceType: 'user',
@@ -700,11 +710,11 @@ export function useChat(kinId: string | null) {
       setMessages((prev) => [...prev, userMessage])
 
       try {
-        await api.post(`/kins/${kinId}/messages`, { content, fileIds })
+        await api.post(`/kins/${kinId}/messages`, { content, fileIds, clientMessageId })
         return true
       } catch {
         // Remove optimistic message on error
-        setMessages((prev) => prev.filter((m) => m.id !== tempId))
+        setMessages((prev) => prev.filter((m) => m.id !== clientMessageId))
         return false
       }
     },

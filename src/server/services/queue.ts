@@ -12,6 +12,16 @@ const log = createLogger('queue')
 const queueFileIds = new Map<string, string[]>()
 
 /**
+ * In-memory sideband for the client-generated reconciliation token attached to
+ * a queue item. Echoed back over SSE (chat:message) when the user message is
+ * persisted, so the originating web client can match the broadcast to its own
+ * optimistic bubble (and other devices simply append it). This is NOT the
+ * message primary key. Single-process, lost on restart (harmless — on a
+ * restart the originating optimistic bubble is gone anyway).
+ */
+const queueClientMessageId = new Map<string, string>()
+
+/**
  * In-memory sideband for free-form structured metadata attached to queue items
  * (e.g. channel adapter context like modality, presence, channel info).
  * Read once by the kin-engine when persisting the user message and merged
@@ -38,6 +48,12 @@ export interface EnqueueParams {
   sessionId?: string
   /** Uploaded file IDs to link to the message once it's created */
   fileIds?: string[]
+  /**
+   * Client-generated reconciliation token (NOT the message PK). Echoed back
+   * over the chat:message SSE so the originating web client can reconcile its
+   * optimistic bubble with the persisted message, while other devices append it.
+   */
+  clientMessageId?: string
   /** Optional pre-generated ID (used by channel origin to self-reference) */
   id?: string
   /** ID of the originating channel queue item (causal chain tracking) */
@@ -94,6 +110,11 @@ export async function enqueueMessage(params: EnqueueParams) {
   // Store file IDs in sideband map for later retrieval by kin-engine
   if (params.fileIds && params.fileIds.length > 0) {
     queueFileIds.set(id, params.fileIds)
+  }
+
+  // Store the client reconciliation token in sideband for later echo over SSE
+  if (params.clientMessageId) {
+    queueClientMessageId.set(id, params.clientMessageId)
   }
 
   // Store free-form message metadata in sideband for later retrieval by kin-engine
@@ -156,6 +177,10 @@ export async function dequeueMessage(kinId: string, mode: 'main' | 'quick' = 'ma
   const fileIds = queueFileIds.get(row.id)
   if (fileIds) queueFileIds.delete(row.id)
 
+  // Pop client reconciliation token from sideband (one-shot — consumed on dequeue)
+  const clientMessageId = queueClientMessageId.get(row.id)
+  if (clientMessageId) queueClientMessageId.delete(row.id)
+
   return {
     id: row.id,
     kinId: row.kin_id,
@@ -174,6 +199,7 @@ export async function dequeueMessage(kinId: string, mode: 'main' | 'quick' = 'ma
     createdAt: new Date(row.created_at),
     processedAt: row.processed_at ? new Date(row.processed_at) : null,
     fileIds: fileIds ?? null,
+    clientMessageId: clientMessageId ?? null,
   }
 }
 
