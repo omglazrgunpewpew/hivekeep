@@ -2531,6 +2531,7 @@
       "list_stt_models": "List Transcription Models",
       "transcribe_audio": "Transcribe Audio",
       "reload_mini_app": "Reload Mini-App",
+      "set_mini_app_maintainer": "Set Mini-App Maintainer",
       "add_project_knowledge": "Add Project Knowledge",
       "search_project_knowledge": "Search Project Knowledge",
       "list_project_knowledge": "List Project Knowledge",
@@ -2870,6 +2871,24 @@
       "generated": "Icon generated!",
       "noProvider": "No image provider configured",
       "error": "Failed to generate icon"
+    },
+    "improve": {
+      "button": "Improve this app",
+      "modalTitle": "Improve \"{{name}}\"",
+      "modalDescription": "Describe what to add, change or fix. Your request is sent to the maintainer Kin ({{kin}}) so it does the work.",
+      "placeholder": "e.g. Add a dark mode toggle in the header…",
+      "submit": "Send to maintainer",
+      "sent": "Request sent to {{kin}}",
+      "error": "Failed to send the request"
+    },
+    "maintainer": {
+      "label": "Maintained by {{kin}}",
+      "change": "Change maintainer",
+      "dialogTitle": "Maintainer of \"{{name}}\"",
+      "dialogDescription": "The maintainer is the Kin responsible for this app and the target of improvement requests. Any Kin can still edit the app.",
+      "selectPlaceholder": "Select a Kin",
+      "reassign": "Reassign",
+      "reassigned": "Maintainer set to {{kin}}"
     }
   },
   "accessibility": {

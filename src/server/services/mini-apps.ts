@@ -1,7 +1,7 @@
 import { eq, and, desc } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { join, resolve, extname, dirname } from 'path'
-import { mkdir, unlink, readdir, stat, rm } from 'fs/promises'
+import { mkdir, unlink, readdir, stat, rm, rename } from 'fs/promises'
 import { existsSync } from 'fs'
 import { db } from '@/server/db/index'
 import { createLogger } from '@/server/logger'
@@ -50,9 +50,9 @@ function guessMimeType(filename: string): string {
 function serializeApp(row: MiniAppRow, kinName: string, kinAvatarUrl: string | null): MiniAppSummary {
   return {
     id: row.id,
-    kinId: row.kinId,
-    kinName,
-    kinAvatarUrl,
+    maintainerKinId: row.kinId,
+    maintainerKinName: kinName,
+    maintainerKinAvatarUrl: kinAvatarUrl,
     name: row.name,
     slug: row.slug,
     description: row.description,
@@ -186,6 +186,38 @@ export async function updateMiniApp(id: string, params: UpdateMiniAppParams): Pr
   await db.update(miniApps).set(updates).where(eq(miniApps.id, id))
   log.info({ appId: id }, 'Mini-app updated')
   return getMiniApp(id)
+}
+
+// ─── Reassign maintainer ──────────────────────────────────────────────────────
+
+/**
+ * Reassign the maintainer Kin of a mini-app. Because app files live on disk at
+ * `dir/<maintainerKinId>/<appId>/`, the directory is moved to the new
+ * maintainer's namespace so file/serve/snapshot paths keep resolving.
+ * Returns the updated summary, or null if the app doesn't exist.
+ */
+export async function setMiniAppMaintainer(appId: string, newMaintainerKinId: string): Promise<MiniAppSummary | null> {
+  const app = await db.select().from(miniApps).where(eq(miniApps.id, appId)).get()
+  if (!app) return null
+  if (app.kinId === newMaintainerKinId) return getMiniApp(appId)
+
+  // Validate the target Kin exists.
+  const targetKin = await db.select().from(kins).where(eq(kins.id, newMaintainerKinId)).get()
+  if (!targetKin) throw new Error('Target Kin not found')
+
+  // Move the on-disk directory to the new namespace (best-effort: an app with no
+  // files yet simply has no source dir).
+  const oldDir = appDir(app.kinId, appId)
+  const newDir = appDir(newMaintainerKinId, appId)
+  if (existsSync(oldDir) && oldDir !== newDir) {
+    await mkdir(dirname(newDir), { recursive: true })
+    if (existsSync(newDir)) await rm(newDir, { recursive: true, force: true })
+    await rename(oldDir, newDir)
+  }
+
+  await db.update(miniApps).set({ kinId: newMaintainerKinId, updatedAt: new Date() }).where(eq(miniApps.id, appId))
+  log.info({ appId, fromKinId: app.kinId, toKinId: newMaintainerKinId }, 'Mini-app maintainer reassigned')
+  return getMiniApp(appId)
 }
 
 // ─── Delete ─────────────────────────────────────────────────────────────────

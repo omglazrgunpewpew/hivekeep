@@ -2531,6 +2531,7 @@
       "list_stt_models": "Lister les modèles de transcription",
       "transcribe_audio": "Transcription audio",
       "reload_mini_app": "Recharger la Mini-App",
+      "set_mini_app_maintainer": "Définir le maintainer (Mini-App)",
       "add_project_knowledge": "Ajouter une connaissance projet",
       "search_project_knowledge": "Rechercher dans les connaissances projet",
       "list_project_knowledge": "Lister les connaissances projet",
@@ -2870,6 +2871,24 @@
       "generated": "Icône générée !",
       "noProvider": "Aucun fournisseur d'images configuré",
       "error": "Échec de la génération"
+    },
+    "improve": {
+      "button": "Améliorer cette app",
+      "modalTitle": "Améliorer « {{name}} »",
+      "modalDescription": "Décris ce qu'il faut ajouter, modifier ou corriger. Ta demande est envoyée au Kin maintainer ({{kin}}) pour qu'il fasse le travail.",
+      "placeholder": "ex. Ajouter un bouton mode sombre dans l'en-tête…",
+      "submit": "Envoyer au maintainer",
+      "sent": "Demande envoyée à {{kin}}",
+      "error": "Échec de l'envoi de la demande"
+    },
+    "maintainer": {
+      "label": "Maintenue par {{kin}}",
+      "change": "Changer de maintainer",
+      "dialogTitle": "Maintainer de « {{name}} »",
+      "dialogDescription": "Le maintainer est le Kin responsable de cette app et la cible des demandes d'amélioration. N'importe quel Kin peut quand même l'éditer.",
+      "selectPlaceholder": "Choisir un Kin",
+      "reassign": "Réassigner",
+      "reassigned": "Maintainer défini sur {{kin}}"
     }
   },
   "accessibility": {

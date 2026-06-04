@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { cn } from '@/client/lib/utils'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Users } from 'lucide-react'
 import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteButton'
 import type { MiniAppSummary } from '@/shared/types'
 
@@ -23,12 +23,14 @@ export function MiniAppCard({
   badge,
   onClick,
   onDelete,
+  onChangeMaintainer,
 }: {
   app: MiniAppSummary
   isActive: boolean
   badge?: string | null
   onClick: () => void
   onDelete: () => void
+  onChangeMaintainer?: () => void
 }) {
   const { t } = useTranslation()
 
@@ -61,10 +63,10 @@ export function MiniAppCard({
         )}
         <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground/70">
           <Avatar className="size-3">
-            {app.kinAvatarUrl && <AvatarImage src={app.kinAvatarUrl} alt={app.kinName} />}
-            <AvatarFallback className="text-[6px]">{app.kinName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            {app.maintainerKinAvatarUrl && <AvatarImage src={app.maintainerKinAvatarUrl} alt={app.maintainerKinName} />}
+            <AvatarFallback className="text-[6px]">{app.maintainerKinName.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="truncate">{app.kinName}</span>
+          <span className="truncate">{app.maintainerKinName}</span>
           <span className="opacity-50">·</span>
           <span>v{app.version}</span>
         </div>
@@ -76,6 +78,16 @@ export function MiniAppCard({
       )}
       {isActive && (
         <div className="size-1.5 shrink-0 rounded-full bg-primary" />
+      )}
+      {onChangeMaintainer && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onChangeMaintainer() }}
+          className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
+          title={t('miniApps.maintainer.change')}
+        >
+          <Users className="size-3" />
+        </button>
       )}
       <ConfirmDeleteButton
         onConfirm={onDelete}
@@ -102,12 +114,14 @@ export function MiniAppTile({
   badge,
   onClick,
   onDelete,
+  onChangeMaintainer,
 }: {
   app: MiniAppSummary
   isActive: boolean
   badge?: string | null
   onClick: () => void
   onDelete: () => void
+  onChangeMaintainer?: () => void
 }) {
   const { t } = useTranslation()
 
@@ -137,10 +151,10 @@ export function MiniAppTile({
       )}
       <div className="flex items-center gap-1 text-[9px] text-muted-foreground/70">
         <Avatar className="size-3">
-          {app.kinAvatarUrl && <AvatarImage src={app.kinAvatarUrl} alt={app.kinName} />}
-          <AvatarFallback className="text-[5px]">{app.kinName.slice(0, 2).toUpperCase()}</AvatarFallback>
+          {app.maintainerKinAvatarUrl && <AvatarImage src={app.maintainerKinAvatarUrl} alt={app.maintainerKinName} />}
+          <AvatarFallback className="text-[5px]">{app.maintainerKinName.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
-        <span className="max-w-[6rem] truncate">{app.kinName}</span>
+        <span className="max-w-[6rem] truncate">{app.maintainerKinName}</span>
         <span className="opacity-50">·</span>
         <span>v{app.version}</span>
       </div>
@@ -151,6 +165,16 @@ export function MiniAppTile({
       )}
       {isActive && !badge && (
         <div className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+      )}
+      {onChangeMaintainer && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onChangeMaintainer() }}
+          className="absolute right-1 top-1 shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
+          title={t('miniApps.maintainer.change')}
+        >
+          <Users className="size-3" />
+        </button>
       )}
       <ConfirmDeleteButton
         onConfirm={onDelete}

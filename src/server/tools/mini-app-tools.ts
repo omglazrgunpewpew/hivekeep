@@ -4,7 +4,8 @@ import { createLogger } from '@/server/logger'
 import {
   createMiniApp,
   getMiniApp,
-  listMiniApps,
+  listAllMiniApps,
+  setMiniAppMaintainer,
   updateMiniApp,
   deleteMiniApp,
   writeAppFile,
@@ -32,6 +33,7 @@ import {
 } from '@/server/services/mini-app-deps'
 import { getTemplateById } from '@/server/tools/mini-app-templates'
 import { sseManager } from '@/server/sse/index'
+import { resolveKinId } from '@/server/services/kin-resolver'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('tools:mini-apps')
@@ -169,10 +171,8 @@ export const updateMiniAppTool: ToolRegistration = {
       execute: async (args) => {
         log.debug({ kinId: ctx.kinId, appId: args.app_id }, 'update_mini_app invoked')
 
-        // Verify ownership
         const existing = await getMiniApp(args.app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only update your own apps' }
 
         try {
           const app = await updateMiniApp(args.app_id, {
@@ -209,7 +209,6 @@ export const deleteMiniAppTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only delete your own apps' }
 
         await deleteMiniApp(app_id)
         sseManager.broadcast({ type: 'miniapp:deleted', kinId: ctx.kinId, data: { appId: app_id } })
@@ -227,10 +226,10 @@ export const listMiniAppsTool: ToolRegistration = {
   concurrencySafe: true,
   create: (ctx) =>
     tool({
-      description: 'List all your mini apps.',
+      description: 'List ALL mini apps (not just ones you maintain). You can edit any of them; `maintainerKinId`/`maintainerKinName` show who is responsible and `maintainedByYou` whether that is you.',
       inputSchema: z.object({}),
       execute: async () => {
-        const apps = await listMiniApps(ctx.kinId)
+        const apps = await listAllMiniApps()
         return {
           apps: apps.map((a) => ({
             id: a.id,
@@ -241,6 +240,9 @@ export const listMiniAppsTool: ToolRegistration = {
             isActive: a.isActive,
             hasBackend: a.hasBackend,
             version: a.version,
+            maintainerKinId: a.maintainerKinId,
+            maintainerKinName: a.maintainerKinName,
+            maintainedByYou: a.maintainerKinId === ctx.kinId,
           })),
         }
       },
@@ -266,7 +268,6 @@ export const writeMiniAppFileTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only write to your own apps' }
 
         try {
           const buffer = is_base64 ? Buffer.from(content, 'base64') : content
@@ -306,7 +307,6 @@ export const readMiniAppFileTool: ToolRegistration = {
       execute: async ({ app_id, path }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only read your own apps' }
 
         try {
           const buffer = await readAppFile(app_id, path)
@@ -340,7 +340,6 @@ export const deleteMiniAppFileTool: ToolRegistration = {
       execute: async ({ app_id, path }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only modify your own apps' }
 
         try {
           const deleted = await deleteAppFile(app_id, path)
@@ -379,7 +378,6 @@ export const listMiniAppFilesTool: ToolRegistration = {
       execute: async ({ app_id }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only list your own apps' }
 
         try {
           const files = await listAppFiles(app_id)
@@ -408,7 +406,6 @@ export const getMiniAppStorageTool: ToolRegistration = {
       execute: async ({ app_id, key }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         const value = await storageGet(app_id, key)
         if (value === null) return { key, value: null, found: false }
@@ -436,7 +433,6 @@ export const setMiniAppStorageTool: ToolRegistration = {
       execute: async ({ app_id, key, value }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         try {
           await storageSet(app_id, key, JSON.stringify(value))
@@ -464,7 +460,6 @@ export const deleteMiniAppStorageTool: ToolRegistration = {
       execute: async ({ app_id, key }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         const deleted = await storageDelete(app_id, key)
         if (!deleted) return { key, deleted: false, message: 'Key not found' }
@@ -488,7 +483,6 @@ export const listMiniAppStorageTool: ToolRegistration = {
       execute: async ({ app_id }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         try {
           const keys = await storageList(app_id)
@@ -515,7 +509,6 @@ export const clearMiniAppStorageTool: ToolRegistration = {
       execute: async ({ app_id }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         try {
           const cleared = await storageClear(app_id)
@@ -544,7 +537,6 @@ export const createMiniAppSnapshotTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only snapshot your own apps' }
 
         try {
           const snapshot = await createSnapshot(app_id, label)
@@ -578,7 +570,6 @@ export const listMiniAppSnapshotsTool: ToolRegistration = {
       execute: async ({ app_id }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only list snapshots of your own apps' }
 
         try {
           const snapshots = await listSnapshots(app_id)
@@ -616,7 +607,6 @@ export const rollbackMiniAppTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only rollback your own apps' }
 
         try {
           const result = await rollbackToSnapshot(app_id, version)
@@ -658,7 +648,7 @@ export const generateMiniAppIconTool: ToolRegistration = {
 
         // Verify the app belongs to this kin
         const row = await getMiniAppRow(app_id)
-        if (!row || row.kinId !== ctx.kinId) {
+        if (!row) {
           return { error: 'Mini-app not found or does not belong to this Kin' }
         }
 
@@ -704,7 +694,6 @@ export const editMiniAppFileTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only edit your own apps' }
 
         try {
           const buffer = await readAppFile(app_id, path)
@@ -788,7 +777,6 @@ export const multiEditMiniAppFileTool: ToolRegistration = {
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only edit your own apps' }
 
         try {
           const buffer = await readAppFile(app_id, path)
@@ -874,7 +862,6 @@ export const getMiniAppConsoleTool: ToolRegistration = {
       execute: async ({ app_id, level, clear }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only access your own apps' }
 
         const entries = getConsoleEntries(app_id, level)
         if (clear) clearConsoleEntries(app_id)
@@ -923,7 +910,6 @@ export const reloadMiniAppTool: ToolRegistration = {
       execute: async ({ app_id }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        if (existing.kinId !== ctx.kinId) return { error: 'You can only reload your own apps' }
 
         sseManager.broadcast({ type: 'miniapp:reload', kinId: ctx.kinId, data: { appId: app_id } })
 
@@ -931,6 +917,35 @@ export const reloadMiniAppTool: ToolRegistration = {
           appId: app_id,
           message: 'Reload requested. The app will reload if it is currently open in a browser tab.',
           note: 'If nobody has the app open, this has no effect — check get_mini_app_console lastServedAt to confirm a reload happened.',
+        }
+      },
+    }),
+}
+
+// ─── set_mini_app_maintainer ──────────────────────────────────────────────────
+
+export const setMiniAppMaintainerTool: ToolRegistration = {
+  availability: ['main'],
+  create: (ctx) =>
+    tool({
+      description:
+        'Reassign the maintainer Kin of a mini app (the Kin responsible for it and the target of "improve this app" requests). Any Kin can do this. `kin` accepts a Kin id or slug.',
+      inputSchema: z.object({
+        app_id: z.string(),
+        kin: z.string().describe('Target maintainer Kin (id or slug)'),
+      }),
+      execute: async ({ app_id, kin }) => {
+        const existing = await getMiniApp(app_id)
+        if (!existing) return { error: 'App not found' }
+        const targetKinId = resolveKinId(kin)
+        if (!targetKinId) return { error: `Kin "${kin}" not found` }
+        try {
+          const app = await setMiniAppMaintainer(app_id, targetKinId)
+          if (!app) return { error: 'App not found' }
+          sseManager.broadcast({ type: 'miniapp:updated', kinId: ctx.kinId, data: { app } })
+          return { appId: app_id, maintainerKinId: app.maintainerKinId, maintainerKinName: app.maintainerKinName, message: `Maintainer set to ${app.maintainerKinName}` }
+        } catch (err) {
+          return { error: err instanceof Error ? err.message : 'Failed to set maintainer' }
         }
       },
     }),

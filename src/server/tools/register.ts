@@ -261,6 +261,7 @@ import {
   reloadMiniAppTool,
   editMiniAppFileTool,
   multiEditMiniAppFileTool,
+  setMiniAppMaintainerTool,
 } from '@/server/tools/mini-app-tools'
 import { getMiniAppTemplatesTool } from '@/server/tools/mini-app-templates'
 import { getMiniAppDocsTool } from '@/server/tools/mini-app-docs'
@@ -591,6 +592,7 @@ export function registerAllTools(): void {
   toolRegistry.register('reload_mini_app', reloadMiniAppTool, 'mini-apps')
   toolRegistry.register('edit_mini_app_file', editMiniAppFileTool, 'mini-apps')
   toolRegistry.register('multi_edit_mini_app_file', multiEditMiniAppFileTool, 'mini-apps')
+  toolRegistry.register('set_mini_app_maintainer', setMiniAppMaintainerTool, 'mini-apps')
 
   // Filesystem tools (main + sub-kin)
   toolRegistry.register('read_file', readFileTool, 'filesystem')

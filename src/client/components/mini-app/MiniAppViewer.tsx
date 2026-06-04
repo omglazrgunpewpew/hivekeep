@@ -13,13 +13,14 @@ import {
   AlertDialogAction,
 } from '@/client/components/ui/alert-dialog'
 import { Input } from '@/client/components/ui/input'
+import { Textarea } from '@/client/components/ui/textarea'
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/client/components/ui/sheet'
 import { VisuallyHidden } from 'radix-ui'
 import { useIsMobile } from '@/client/hooks/use-mobile'
-import { X, RotateCw, Maximize2, Minimize2, Sparkles, Loader2, AlertTriangle, ClipboardList } from 'lucide-react'
+import { X, RotateCw, Maximize2, Minimize2, Sparkles, Wand2, Loader2, AlertTriangle, ClipboardList } from 'lucide-react'
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { lazyWithRetry as lazy } from '@/client/lib/lazy-with-retry'
-import { api } from '@/client/lib/api'
+import { api, getErrorMessage } from '@/client/lib/api'
 const TaskPanelContent = lazy(() => import('@/client/components/sidebar/TaskPanelContent').then(m => ({ default: m.TaskPanelContent })))
 const TicketPanelContent = lazy(() => import('@/client/components/sidebar/TicketPanelContent').then(m => ({ default: m.TicketPanelContent })))
 import { toast } from 'sonner'
@@ -142,9 +143,9 @@ export function MiniAppViewer() {
         slug: app.slug,
         description: app.description,
         icon: app.icon,
-        kinId: app.kinId,
-        kinName: app.kinName,
-        kinAvatarUrl: app.kinAvatarUrl,
+        kinId: app.maintainerKinId,
+        kinName: app.maintainerKinName,
+        kinAvatarUrl: app.maintainerKinAvatarUrl,
         version: app.version,
         isFullPage,
         locale: i18n.language,
@@ -335,9 +336,9 @@ export function MiniAppViewer() {
         }
         case 'open-app': {
           const slug = String(msg.slug || '')
-          if (!slug || !app?.kinId) break
+          if (!slug || !app?.maintainerKinId) break
           // Resolve slug to appId via API, then open
-          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.kinId}/${encodeURIComponent(slug)}`)
+          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerKinId}/${encodeURIComponent(slug)}`)
             .then((data) => {
               if (data.app?.id) {
                 openApp(data.app.id)
@@ -352,10 +353,10 @@ export function MiniAppViewer() {
         }
         case 'share': {
           const targetSlug = String(msg.targetSlug || '')
-          if (!targetSlug || !app?.kinId) break
+          if (!targetSlug || !app?.maintainerKinId) break
           const sharePayload = msg.shareData
           // Resolve target app, open it, and forward shared data once it's ready
-          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.kinId}/${encodeURIComponent(targetSlug)}`)
+          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerKinId}/${encodeURIComponent(targetSlug)}`)
             .then((data) => {
               if (data.app?.id) {
                 pendingShareData.current = sharePayload
@@ -456,7 +457,7 @@ export function MiniAppViewer() {
           const text = String(msg.text || '').trim()
           const silent = Boolean(msg.silent)
 
-          if (!text || !app?.kinId) {
+          if (!text || !app?.maintainerKinId) {
             sendDialogResult(callbackId, false)
             break
           }
@@ -477,7 +478,7 @@ export function MiniAppViewer() {
           // Prefix message with app context
           const prefixed = `[${app.icon || '📦'} ${app.name}] ${text}`
 
-          api.post<{ messageId: string }>(`/kins/${app.kinId}/messages`, { content: prefixed })
+          api.post<{ messageId: string }>(`/kins/${app.maintainerKinId}/messages`, { content: prefixed })
             .then(() => {
               if (!silent) toast.success(t('miniApps.sendMessage.sent'))
               sendDialogResult(callbackId, true)
@@ -519,6 +520,71 @@ export function MiniAppViewer() {
       <span>{errorCount}</span>
     </div>
   ) : null
+
+  // ─── "Improve this app" → message the maintainer Kin ────────────────────────
+  const [improveOpen, setImproveOpen] = useState(false)
+  const [improveText, setImproveText] = useState('')
+  const [improveSubmitting, setImproveSubmitting] = useState(false)
+
+  const submitImprove = useCallback(async () => {
+    const description = improveText.trim()
+    if (!app || !description) return
+    setImproveSubmitting(true)
+    try {
+      const res = await api.post<{ maintainerKinId: string; maintainerKinName: string }>(
+        `/mini-apps/${app.id}/improve`,
+        { description },
+      )
+      toast.success(t('miniApps.improve.sent', { kin: res.maintainerKinName }))
+      setImproveText('')
+      setImproveOpen(false)
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setImproveSubmitting(false)
+    }
+  }, [app, improveText, t])
+
+  const improveButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-7"
+      onClick={() => setImproveOpen(true)}
+      disabled={!app}
+      title={t('miniApps.improve.button')}
+    >
+      <Wand2 className="size-3.5" />
+    </Button>
+  )
+
+  const improveDialog = (
+    <AlertDialog open={improveOpen} onOpenChange={(open) => { if (!improveSubmitting) setImproveOpen(open) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('miniApps.improve.modalTitle', { name: app?.name ?? '' })}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('miniApps.improve.modalDescription', { kin: app?.maintainerKinName ?? '' })}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <Textarea
+          value={improveText}
+          onChange={(e) => setImproveText(e.target.value)}
+          placeholder={t('miniApps.improve.placeholder')}
+          rows={5}
+          autoFocus
+          disabled={improveSubmitting}
+        />
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={improveSubmitting}>{t('common.cancel')}</AlertDialogCancel>
+          <Button onClick={submitImprove} disabled={improveSubmitting || !improveText.trim()}>
+            {improveSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+            {t('miniApps.improve.submit')}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 
   const iframeSrc = activeAppId
     ? `/api/mini-apps/${activeAppId}/serve?v=${activeAppVersion}`
@@ -574,6 +640,7 @@ export function MiniAppViewer() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
         {dialogElement}
+        {improveDialog}
         {/* Header */}
         <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
           {app?.iconUrl ? (
@@ -585,6 +652,7 @@ export function MiniAppViewer() {
             {customTitle || (app?.name ?? '...')}
           </span>
           {errorBadge}
+          {improveButton}
           <Button
             variant="ghost"
             size="icon"
@@ -652,6 +720,7 @@ export function MiniAppViewer() {
   const panelInner = (
       <div className={`flex h-full flex-col ${isMobile ? 'w-full' : 'w-[480px] lg:w-[600px] border-l border-border'}`}>
         {dialogElement}
+        {improveDialog}
 
         {/* Tab bar — only shown when both a mini-app and task are loaded */}
         {hasBothTabs && (
@@ -712,6 +781,7 @@ export function MiniAppViewer() {
                   {customTitle || (app?.name ?? '...')}
                 </span>
                 {errorBadge}
+          {improveButton}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -764,6 +834,7 @@ export function MiniAppViewer() {
                   {customTitle || (app?.name ?? '...')}
                 </span>
                 {errorBadge}
+          {improveButton}
                 <Button variant="ghost" size="icon" className="size-6" onClick={handleGenerateIcon} disabled={generatingIcon} title={t('miniApps.icon.generate')}>
                   {generatingIcon ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
                 </Button>

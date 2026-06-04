@@ -645,9 +645,10 @@ export interface VaultAttachmentSummary {
 /** Mini-app summary as returned by GET /api/mini-apps */
 export interface MiniAppSummary {
   id: string
-  kinId: string
-  kinName: string
-  kinAvatarUrl: string | null
+  /** Kin responsible for the app (reassignable); any Kin can edit it. */
+  maintainerKinId: string
+  maintainerKinName: string
+  maintainerKinAvatarUrl: string | null
   name: string
   slug: string
   description: string | null

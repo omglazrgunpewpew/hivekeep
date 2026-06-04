@@ -47,9 +47,18 @@ export function useMiniApps(kinId: string | null, mode: 'kin' | 'all' = 'kin') {
       setApps((prev) => [app, ...prev])
     },
     'miniapp:updated': (data) => {
-      if (mode === 'kin' && data.kinId !== kinId) return
       const app = data.app as MiniAppSummary
-      setApps((prev) => prev.map((a) => (a.id === app.id ? app : a)))
+      // In kin-scoped mode the maintainer may have changed: drop the app if it
+      // moved away from this Kin, add it if it moved in, else update in place.
+      if (mode === 'kin' && data.kinId !== kinId) {
+        setApps((prev) => prev.filter((a) => a.id !== app.id))
+        return
+      }
+      setApps((prev) =>
+        prev.some((a) => a.id === app.id)
+          ? prev.map((a) => (a.id === app.id ? app : a))
+          : [app, ...prev],
+      )
     },
     'miniapp:deleted': (data) => {
       if (mode === 'kin' && data.kinId !== kinId) return

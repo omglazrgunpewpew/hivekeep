@@ -10,7 +10,9 @@ const mockApp = {
   slug: 'test-app',
   description: 'A test app',
   icon: '🧪',
-  kinId: 'kin-1',
+  kinId: 'kin-1',                 // raw-row shape (getMiniAppRow)
+  maintainerKinId: 'kin-1',      // summary shape (getMiniApp / listAllMiniApps)
+  maintainerKinName: 'Kin One',
   isActive: true,
   hasBackend: false,
   version: 1,
@@ -21,7 +23,8 @@ const mockApp = {
 const mockMiniApps = {
   createMiniApp: mock(() => Promise.resolve({ ...mockApp })),
   getMiniApp: mock(() => Promise.resolve({ ...mockApp })),
-  listMiniApps: mock(() => Promise.resolve([{ ...mockApp }])),
+  listAllMiniApps: mock(() => Promise.resolve([{ ...mockApp }])),
+  setMiniAppMaintainer: mock(() => Promise.resolve({ ...mockApp })),
   updateMiniApp: mock(() => Promise.resolve({ ...mockApp })),
   deleteMiniApp: mock(() => Promise.resolve()),
   writeAppFile: mock(() => Promise.resolve({ path: 'index.html', size: 100 })),
@@ -149,6 +152,7 @@ describe('mini-app-tools', () => {
         mod.reloadMiniAppTool,
         mod.editMiniAppFileTool,
         mod.multiEditMiniAppFileTool,
+        mod.setMiniAppMaintainerTool,
       ]
       for (const t of tools) {
         expect(t.availability).toContain('main')
@@ -291,11 +295,11 @@ describe('mini-app-tools', () => {
       )
     })
 
-    it('blocks reload of other kin apps', async () => {
+    it('allows reload by another kin (decoupled — any Kin can act on any app)', async () => {
       const tool = mod.reloadMiniAppTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('your own apps')
-      expect(mockSSE.sseManager.broadcast).not.toHaveBeenCalled()
+      expect(result.message).toContain('Reload requested')
+      expect(mockSSE.sseManager.broadcast).toHaveBeenCalled()
     })
   })
 
@@ -319,10 +323,11 @@ describe('mini-app-tools', () => {
       expect(result.error).toBe('App not found')
     })
 
-    it('blocks update of other kin apps', async () => {
+    it('allows update by another kin (decoupled)', async () => {
       const tool = mod.updateMiniAppTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1', name: 'x' }, execOpts)
-      expect(result.error).toContain('only update your own')
+      expect(result.message).toContain('updated')
+      expect(mockMiniApps.updateMiniApp).toHaveBeenCalled()
     })
 
     it('handles update error', async () => {
@@ -351,23 +356,32 @@ describe('mini-app-tools', () => {
       expect(result.error).toBe('App not found')
     })
 
-    it('blocks deletion of other kin apps', async () => {
+    it('allows deletion by another kin (decoupled)', async () => {
       const tool = mod.deleteMiniAppTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('only delete your own')
+      expect(result.message).toContain('deleted successfully')
+      expect(mockMiniApps.deleteMiniApp).toHaveBeenCalledWith('app-1')
     })
   })
 
   // ─── list_mini_apps ─────────────────────────────────────────────────────
 
   describe('listMiniAppsTool', () => {
-    it('lists apps for the kin', async () => {
+    it('lists ALL apps with maintainer info + maintainedByYou flag', async () => {
       const tool = mod.listMiniAppsTool.create(ctx)
       const result = await tool.execute({}, execOpts)
       expect(result.apps).toHaveLength(1)
       expect(result.apps[0].id).toBe('app-1')
       expect(result.apps[0].name).toBe('Test App')
-      expect(mockMiniApps.listMiniApps).toHaveBeenCalledWith('kin-1')
+      expect(result.apps[0].maintainerKinId).toBe('kin-1')
+      expect(result.apps[0].maintainedByYou).toBe(true)
+      expect(mockMiniApps.listAllMiniApps).toHaveBeenCalled()
+    })
+
+    it('marks maintainedByYou=false for another kin', async () => {
+      const tool = mod.listMiniAppsTool.create(otherCtx)
+      const result = await tool.execute({}, execOpts)
+      expect(result.apps[0].maintainedByYou).toBe(false)
     })
   })
 
@@ -398,13 +412,14 @@ describe('mini-app-tools', () => {
       expect(callArgs[2]).toBeInstanceOf(Buffer)
     })
 
-    it('blocks write to other kin apps', async () => {
+    it('allows write by another kin (decoupled)', async () => {
       const tool = mod.writeMiniAppFileTool.create(otherCtx)
       const result = await tool.execute(
         { app_id: 'app-1', path: 'x.html', content: 'x' },
         execOpts
       )
-      expect(result.error).toContain('only write to your own')
+      expect(result.success).toBe(true)
+      expect(mockMiniApps.writeAppFile).toHaveBeenCalled()
     })
 
     it('returns error for missing app', async () => {
@@ -448,10 +463,10 @@ describe('mini-app-tools', () => {
       expect(result.content).toBe(binaryData.toString('base64'))
     })
 
-    it('blocks read of other kin apps', async () => {
+    it('allows read by another kin (decoupled)', async () => {
       const tool = mod.readMiniAppFileTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1', path: 'index.html' }, execOpts)
-      expect(result.error).toContain('only read your own')
+      expect(result.content).toBe('<h1>Hello</h1>')
     })
 
     it('handles various text extensions', async () => {
@@ -479,10 +494,10 @@ describe('mini-app-tools', () => {
       expect(result.error).toBe('File not found')
     })
 
-    it('blocks deletion on other kin apps', async () => {
+    it('allows file deletion by another kin (decoupled)', async () => {
       const tool = mod.deleteMiniAppFileTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1', path: 'x.css' }, execOpts)
-      expect(result.error).toContain('only modify your own')
+      expect(result.message).toContain('deleted')
     })
   })
 
@@ -496,10 +511,10 @@ describe('mini-app-tools', () => {
       expect(result.files[0].path).toBe('index.html')
     })
 
-    it('blocks listing other kin apps', async () => {
+    it('allows listing files by another kin (decoupled)', async () => {
       const tool = mod.listMiniAppFilesTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('only list your own')
+      expect(result.files).toHaveLength(1)
     })
   })
 
@@ -529,10 +544,11 @@ describe('mini-app-tools', () => {
       expect(result.value).toBe('plain text')
     })
 
-    it('blocks access to other kin apps', async () => {
+    it('allows storage access by another kin (decoupled)', async () => {
       const tool = mod.getMiniAppStorageTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1', key: 'x' }, execOpts)
-      expect(result.error).toContain('only access your own')
+      expect(result.found).toBe(false)
+      expect(result.error).toBeUndefined()
     })
   })
 
@@ -616,10 +632,10 @@ describe('mini-app-tools', () => {
       expect(result.error).toContain('No files')
     })
 
-    it('blocks snapshot of other kin apps', async () => {
+    it('allows snapshot by another kin (decoupled)', async () => {
       const tool = mod.createMiniAppSnapshotTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('only snapshot your own')
+      expect(result.version).toBe(2)
     })
   })
 
@@ -658,10 +674,10 @@ describe('mini-app-tools', () => {
       expect(result.error).toBe('Snapshot not found')
     })
 
-    it('blocks rollback of other kin apps', async () => {
+    it('allows rollback by another kin (decoupled)', async () => {
       const tool = mod.rollbackMiniAppTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1', version: 1 }, execOpts)
-      expect(result.error).toContain('only rollback your own')
+      expect(result.message).toContain('Rolled back')
     })
   })
 
@@ -682,10 +698,10 @@ describe('mini-app-tools', () => {
       expect(result.error).toContain('not found')
     })
 
-    it('blocks icon generation for other kin apps', async () => {
+    it('allows icon generation by another kin (decoupled)', async () => {
       const tool = mod.generateMiniAppIconTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('does not belong')
+      expect(result.iconUrl).toBe('https://example.com/icon.png')
     })
 
     it('handles NO_IMAGE_PROVIDER error', async () => {
@@ -745,10 +761,11 @@ describe('mini-app-tools', () => {
       expect(result.entries[0].message).toBe('bad')
     })
 
-    it('blocks access to other kin apps', async () => {
+    it('allows console access by another kin (decoupled)', async () => {
       const tool = mod.getMiniAppConsoleTool.create(otherCtx)
       const result = await tool.execute({ app_id: 'app-1' }, execOpts)
-      expect(result.error).toContain('only access your own')
+      expect(result.error).toBeUndefined()
+      expect(result.summary).toBeDefined()
     })
 
     it('reports lastServedAt once the app has been served', async () => {
@@ -826,13 +843,15 @@ describe('mini-app-tools', () => {
       expect(callArgs[2]).toBe('a = 2; b = 2; c = 2;')
     })
 
-    it('blocks edit of other kin apps', async () => {
+    it('allows edit by another kin (decoupled)', async () => {
+      mockMiniApps.readAppFile.mockImplementation(() => Promise.resolve(Buffer.from('value x here')))
       const tool = mod.editMiniAppFileTool.create(otherCtx)
       const result = await tool.execute(
         { app_id: 'app-1', path: 'app.jsx', oldText: 'x', newText: 'y' },
         execOpts
       )
-      expect(result.error).toContain('only edit your own')
+      expect(result.success).toBe(true)
+      expect(mockMiniApps.writeAppFile).toHaveBeenCalled()
     })
 
     it('returns error for missing app', async () => {
@@ -940,7 +959,8 @@ describe('mini-app-tools', () => {
       expect(mockMiniApps.writeAppFile).not.toHaveBeenCalled()
     })
 
-    it('blocks edit of other kin apps', async () => {
+    it('allows edit by another kin (decoupled)', async () => {
+      mockMiniApps.readAppFile.mockImplementation(() => Promise.resolve(Buffer.from('value x here')))
       const tool = mod.multiEditMiniAppFileTool.create(otherCtx)
       const result = await tool.execute(
         {
@@ -950,7 +970,8 @@ describe('mini-app-tools', () => {
         },
         execOpts
       )
-      expect(result.error).toContain('only edit your own')
+      expect(result.success).toBe(true)
+      expect(mockMiniApps.writeAppFile).toHaveBeenCalled()
     })
 
     it('returns error for missing app', async () => {

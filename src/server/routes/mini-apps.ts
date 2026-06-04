@@ -8,6 +8,7 @@ import {
   getMiniAppBySlug,
   listMiniApps,
   updateMiniApp,
+  setMiniAppMaintainer,
   deleteMiniApp,
   writeAppFile,
   readAppFile,
@@ -37,6 +38,10 @@ import {
 } from '@/server/services/mini-app-deps'
 import { searchMemories, createMemory } from '@/server/services/memory'
 import { sseManager } from '@/server/sse/index'
+import { resolveKinId } from '@/server/services/kin-resolver'
+import { enqueueMessage } from '@/server/services/queue'
+import { formatMiniAppImproveRequest } from '@/server/services/mini-app-improve'
+import { MAX_MESSAGE_LENGTH } from '@/shared/constants'
 
 export const miniAppRoutes = new Hono<{ Variables: AppVariables }>()
 
@@ -59,7 +64,7 @@ miniAppRoutes.post('/:id/generate-icon', async (c) => {
       providerId: body.providerId,
       modelId: body.modelId,
     })
-    sseManager.broadcast({ type: 'miniapp:updated', kinId: app.kinId, data: { app } })
+    sseManager.broadcast({ type: 'miniapp:updated', kinId: app.maintainerKinId, data: { app } })
     return c.json({ app })
   } catch (err) {
     if (err instanceof ImageGenerationError) {
@@ -160,26 +165,44 @@ miniAppRoutes.post('/', async (c) => {
   }
 })
 
-// Update app metadata
+// Update app metadata (and optionally reassign the maintainer Kin)
 miniAppRoutes.patch('/:id', async (c) => {
+  const id = c.req.param('id')
   const body = await c.req.json<{
     name?: string
     description?: string | null
     icon?: string | null
     entryFile?: string
     isActive?: boolean
+    maintainerKinId?: string
   }>()
 
-  const app = await updateMiniApp(c.req.param('id'), body)
+  // Reassign maintainer first (this also moves the app's on-disk directory).
+  if (body.maintainerKinId !== undefined) {
+    const targetKinId = resolveKinId(body.maintainerKinId)
+    if (!targetKinId) {
+      return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Target Kin not found' } }, 400)
+    }
+    try {
+      const moved = await setMiniAppMaintainer(id, targetKinId)
+      if (!moved) return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
+      sseManager.broadcast({ type: 'miniapp:updated', kinId: moved.maintainerKinId, data: { app: moved } })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to reassign maintainer'
+      return c.json({ error: { code: 'REASSIGN_FAILED', message } }, 400)
+    }
+  }
+
+  const app = await updateMiniApp(id, body)
   if (!app) {
     return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
   }
 
-  sseManager.broadcast({ type: 'miniapp:updated', kinId: app.kinId, data: { app } })
+  sseManager.broadcast({ type: 'miniapp:updated', kinId: app.maintainerKinId, data: { app } })
   return c.json({ app })
 })
 
-// Delete app
+// Delete app — any Kin / the user can delete any app (decoupled)
 miniAppRoutes.delete('/:id', async (c) => {
   const existing = await getMiniApp(c.req.param('id'))
   if (!existing) {
@@ -188,8 +211,45 @@ miniAppRoutes.delete('/:id', async (c) => {
 
   invalidateBackend(c.req.param('id'))
   await deleteMiniApp(c.req.param('id'))
-  sseManager.broadcast({ type: 'miniapp:deleted', kinId: existing.kinId, data: { appId: existing.id } })
+  sseManager.broadcast({ type: 'miniapp:deleted', kinId: existing.maintainerKinId, data: { appId: existing.id } })
   return c.body(null, 204)
+})
+
+// Improve this app — send the user's improvement request into the maintainer
+// Kin's MAIN conversation so it does the work.
+miniAppRoutes.post('/:id/improve', async (c) => {
+  const user = c.get('user') as { id: string; name: string }
+  const app = await getMiniApp(c.req.param('id'))
+  if (!app) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
+  }
+
+  const body = await c.req.json<{ description?: string }>().catch(() => ({} as { description?: string }))
+  const description = (body.description ?? '').trim()
+  if (!description) {
+    return c.json({ error: { code: 'EMPTY_DESCRIPTION', message: 'A description of the change is required' } }, 400)
+  }
+  if (description.length > MAX_MESSAGE_LENGTH) {
+    return c.json({ error: { code: 'DESCRIPTION_TOO_LONG', message: `Description exceeds ${MAX_MESSAGE_LENGTH} characters` } }, 400)
+  }
+
+  const content = formatMiniAppImproveRequest({
+    appName: app.name,
+    appSlug: app.slug,
+    appId: app.id,
+    description,
+    requesterName: user.name,
+  })
+
+  await enqueueMessage({
+    kinId: app.maintainerKinId,
+    messageType: 'user',
+    content,
+    sourceType: 'user',
+    sourceId: user.id,
+  })
+
+  return c.json({ maintainerKinId: app.maintainerKinId, maintainerKinName: app.maintainerKinName })
 })
 
 // ─── File management ────────────────────────────────────────────────────────

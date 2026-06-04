@@ -784,6 +784,10 @@ export const toolDomains = sqliteTable('tool_domains', {
 
 export const miniApps = sqliteTable('mini_apps', {
   id: text('id').primaryKey(),
+  // Maintainer Kin (reassignable). Any Kin can edit/delete an app; `kinId` is the
+  // Kin responsible for it and the target of "improve this app" requests. Exposed
+  // as `maintainerKinId` in the API. On reassignment the on-disk app directory is
+  // moved (see setMiniAppMaintainer in services/mini-apps.ts).
   kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
