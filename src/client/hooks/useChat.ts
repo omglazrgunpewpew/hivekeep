@@ -676,6 +676,12 @@ export function useChat(kinId: string | null) {
         }),
       )
     },
+
+    'kin:error': (data) => {
+      if (data.kinId !== kinId) return
+      const errorMessage = (data.error as string | undefined) ?? t('errors.kinErrorGeneric')
+      toast.error(errorMessage)
+    },
   })
 
   // Send a message. Returns true on success, false on failure.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { Project, ProjectSummary, ProjectTag, KinThinkingConfig } from '@/shared/types'
 
 interface CreateProjectInput {
@@ -90,6 +90,10 @@ export function useProjects() {
     },
   })
 
+  useSSEResync(() => {
+    refetch()
+  })
+
   const createProject = useCallback(async (input: CreateProjectInput) => {
     const data = await api.post<{ project: Project }>('/projects', input)
     return data.project
@@ -168,6 +172,10 @@ export function useProject(projectId: string | null) {
         prev ? { ...prev, tags: prev.tags.filter((t) => t.id !== tagId) } : prev,
       )
     },
+  })
+
+  useSSEResync(() => {
+    if (projectId) refetch()
   })
 
   return { project, isLoading, refetch }

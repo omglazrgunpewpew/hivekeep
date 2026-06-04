@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { MemorySummary, MemoryCategory, MemoryScope } from '@/shared/types'
 
 const PAGE_SIZE = 50
@@ -97,6 +97,9 @@ export function useMemories(kinId?: string | null) {
     setFilters(newFilters)
     setPage(0)
   }, [])
+
+  // Refetch on reconnect/resume — SSE does not replay missed events
+  useSSEResync(() => { fetchMemories() })
 
   // SSE: real-time memory updates
   useSSE({

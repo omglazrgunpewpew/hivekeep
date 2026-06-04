@@ -86,7 +86,8 @@
     "retry": "Réessayer",
     "uploadFailed": "Échec de l'envoi",
     "copyFailed": "Échec de la copie de l'URL",
-    "loadMessagesFailed": "Échec du chargement des messages"
+    "loadMessagesFailed": "Échec du chargement des messages",
+    "kinErrorGeneric": "Une erreur s'est produite lors du traitement de votre requête"
   },
   "login": {
     "title": "Bon retour",

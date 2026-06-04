@@ -46,6 +46,21 @@ export function useKinChannels() {
       const channelId = data.channelId as string
       setChannels((prev) => prev.filter((c) => c.id !== channelId))
     },
+    'channel:message-received': (data) => {
+      // Optimistic increment: bump the counter and lastActivityAt locally so
+      // other open tabs / devices see the badge update without waiting for a
+      // full refetch. The server already persisted the new value, so we are
+      // just reflecting that change client-side.
+      const channelId = data.channelId as string
+      const now = Date.now()
+      setChannels((prev) =>
+        prev.map((c) =>
+          c.id === channelId
+            ? { ...c, messagesReceived: c.messagesReceived + 1, lastActivityAt: now }
+            : c,
+        ),
+      )
+    },
     'channel:transferred': (data) => {
       // Optimistic update: rebind locally so the badge migrates immediately
       // without waiting for the next refetch. The authoritative refetch

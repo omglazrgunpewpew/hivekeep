@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ConfigField } from '@kinbot-developer/sdk'
 import { api } from '@/client/lib/api'
 import { registerProviderReactIcon } from '@/client/components/common/ProviderIcon'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 
 /** A connected account, surfaced by the unified read model. One account may
  *  carry several capabilities (email + contacts + …). */
@@ -88,6 +89,17 @@ export function useEmailAccounts() {
   useEffect(() => {
     void refetch()
   }, [refetch])
+
+  useSSE({
+    'email-account:created': () => { void refetch() },
+    'email-account:updated': () => { void refetch() },
+    'email-account:deleted': () => { void refetch() },
+    'connected-account:created': () => { void refetch() },
+    'connected-account:updated': () => { void refetch() },
+    'connected-account:deleted': () => { void refetch() },
+  })
+
+  useSSEResync(refetch)
 
   return { accounts, providers, redirectUri, isLoading, refetch }
 }

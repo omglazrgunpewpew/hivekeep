@@ -86,7 +86,8 @@
     "retry": "Retry",
     "uploadFailed": "Upload failed",
     "copyFailed": "Failed to copy URL",
-    "loadMessagesFailed": "Failed to load messages"
+    "loadMessagesFailed": "Failed to load messages",
+    "kinErrorGeneric": "An error occurred while processing your request"
   },
   "login": {
     "title": "Welcome back",

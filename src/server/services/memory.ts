@@ -1072,6 +1072,7 @@ export async function recalibrateImportance(kinId: string): Promise<number> {
   ).all(kinId)
 
   let adjusted = 0
+  const adjustedIds: string[] = []
 
   for (const mem of allMems) {
     const ageMs = now - mem.created_at
@@ -1114,11 +1115,21 @@ export async function recalibrateImportance(kinId: string): Promise<number> {
       `UPDATE memories SET importance = ?, updated_at = ? WHERE id = ?`,
       [newImportance, now, mem.id],
     )
+    adjustedIds.push(mem.id)
     adjusted++
   }
 
   if (adjusted > 0) {
     log.info({ kinId, adjusted, total: allMems.length }, 'Importance recalibration complete')
+
+    // Emit one aggregate SSE event so connected clients refetch their memory
+    // lists with updated importance scores. A single event is sufficient
+    // because the memory:updated handler in useMemories calls fetchMemories().
+    sseManager.sendToKin(kinId, {
+      type: 'memory:updated',
+      kinId,
+      data: { kinId, memoryIds: adjustedIds, reason: 'recalibration' },
+    })
   }
 
   return adjusted

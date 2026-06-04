@@ -360,10 +360,11 @@ export async function triggerCronManually(cronId: string): Promise<{ taskId: str
     toolboxIds: parseToolboxIds(cron.toolboxIds),
   })
 
+  const lastTriggeredAt = new Date().getTime()
   sseManager.sendToKin(cron.kinId, {
     type: 'cron:triggered',
     kinId: cron.kinId,
-    data: { cronId: cron.id, kinId: cron.kinId, taskId },
+    data: { cronId: cron.id, kinId: cron.kinId, taskId, lastTriggeredAt },
   })
 
   log.info({ cronId: cron.id, cronName: cron.name, taskId }, 'Cron triggered manually')
@@ -401,10 +402,11 @@ async function triggerCron(cronId: string) {
   })
 
   // Emit SSE event
+  const lastTriggeredAt = new Date().getTime()
   sseManager.sendToKin(cron.kinId, {
     type: 'cron:triggered',
     kinId: cron.kinId,
-    data: { cronId: cron.id, kinId: cron.kinId, taskId },
+    data: { cronId: cron.id, kinId: cron.kinId, taskId, lastTriggeredAt },
   })
 
   log.info({ cronId: cron.id, cronName: cron.name, taskId }, 'Cron triggered')

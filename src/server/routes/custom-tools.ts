@@ -20,6 +20,7 @@ import {
 } from '@/server/services/custom-tool-renderer'
 import type { CustomToolTranslations } from '@/shared/types'
 import { createLogger } from '@/server/logger'
+import { sseManager } from '@/server/sse/index'
 import type { AppVariables } from '@/server/app'
 
 const log = createLogger('routes:custom-tools')
@@ -153,7 +154,9 @@ customToolRoutes.post('/', async (c) => {
     if (typeof body.code === 'string') {
       await writeCustomToolFile(created.slug, created.entrypoint, body.code)
     }
-    return c.json({ tool: toCustomToolDTO(created) }, 201)
+    const dto = toCustomToolDTO(created)
+    sseManager.broadcast({ type: 'custom-tool:created', data: dto as unknown as Record<string, unknown> })
+    return c.json({ tool: dto }, 201)
   } catch (err) {
     return fail(c, err)
   }
@@ -175,7 +178,9 @@ customToolRoutes.patch('/:slug', async (c) => {
       enabled: body.enabled as boolean | undefined,
       translations: body.translations as CustomToolTranslations | string | null | undefined,
     })
-    return c.json({ tool: toCustomToolDTO(updated) })
+    const dto = toCustomToolDTO(updated)
+    sseManager.broadcast({ type: 'custom-tool:updated', data: dto as unknown as Record<string, unknown> })
+    return c.json({ tool: dto })
   } catch (err) {
     return fail(c, err, 404)
   }
@@ -185,7 +190,9 @@ customToolRoutes.patch('/:slug', async (c) => {
 customToolRoutes.delete('/:slug', async (c) => {
   const slug = c.req.param('slug')
   const ok = await deleteCustomTool(slug)
-  return ok ? c.json({ success: true }) : c.json({ error: { code: 'CUSTOM_TOOL_NOT_FOUND', message: 'Not found' } }, 404)
+  if (!ok) return c.json({ error: { code: 'CUSTOM_TOOL_NOT_FOUND', message: 'Not found' } }, 404)
+  sseManager.broadcast({ type: 'custom-tool:deleted', data: { slug } })
+  return c.json({ success: true })
 })
 
 // PUT /api/custom-tools/:slug/files — write a file { path, content }.

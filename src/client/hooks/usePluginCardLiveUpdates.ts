@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 
 /**
  * Subscribe to live updates for a single plugin card and expose the merged
@@ -26,6 +26,12 @@ export function usePluginCardLiveUpdates(
       if (!incoming) return
       setPatch((prev) => ({ ...prev, ...incoming }))
     },
+  })
+
+  // Clear stale patches on reconnect/resume so fresh initialState (from the
+  // parent's refetch) is shown without leftover overlay data.
+  useSSEResync(() => {
+    setPatch({})
   })
 
   return useMemo(() => ({ ...initialState, ...patch }), [initialState, patch])

@@ -19,6 +19,7 @@
 import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { toolDomains, customTools } from '@/server/db/schema'
+import { sseManager } from '@/server/sse/index'
 import {
   TOOL_DOMAIN_META,
   CURATED_DOMAIN_COLORS,
@@ -101,6 +102,7 @@ export function createToolDomain(input: {
 
   const created = getToolDomain(slug)
   if (!created) throw new Error('Tool domain creation failed: not found after insert')
+  sseManager.broadcast({ type: 'tool-domain:created', data: created as unknown as Record<string, unknown> })
   return created
 }
 
@@ -134,6 +136,7 @@ export function updateToolDomain(
 
   const updated = getToolDomain(slug)
   if (!updated) throw new Error('TOOL_DOMAIN_NOT_FOUND')
+  sseManager.broadcast({ type: 'tool-domain:updated', data: updated as unknown as Record<string, unknown> })
   return updated
 }
 
@@ -147,6 +150,7 @@ export function deleteToolDomain(slug: string): void {
   if (inUse) throw new Error('TOOL_DOMAIN_IN_USE')
 
   db.delete(toolDomains).where(eq(toolDomains.slug, slug)).run()
+  sseManager.broadcast({ type: 'tool-domain:deleted', data: { slug } })
 }
 
 // ─── Resolution (for GET /api/tools/domain-meta) ──────────────────────────────

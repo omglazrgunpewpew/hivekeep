@@ -32,6 +32,7 @@ import { toolRegistry } from '@/server/tools/index'
 import { listCustomTools } from '@/server/services/custom-tools'
 import { CORE_TOOLS } from '@/server/services/tool-presets'
 import { createLogger } from '@/server/logger'
+import { sseManager } from '@/server/sse/index'
 import type { Toolbox } from '@/shared/types'
 
 const log = createLogger('toolboxes')
@@ -261,6 +262,7 @@ export function createToolbox(input: {
 
   const created = getToolbox(id)
   if (!created) throw new Error('Toolbox creation failed: not found after insert')
+  sseManager.broadcast({ type: 'toolbox:created', data: created as unknown as Record<string, unknown> })
   return created
 }
 
@@ -288,6 +290,7 @@ export function updateToolbox(
 
   const updated = getToolbox(id)
   if (!updated) throw new Error('TOOLBOX_NOT_FOUND')
+  sseManager.broadcast({ type: 'toolbox:updated', data: updated as unknown as Record<string, unknown> })
   return updated
 }
 
@@ -296,6 +299,7 @@ export function deleteToolbox(id: string): void {
   if (!existing) throw new Error('TOOLBOX_NOT_FOUND')
   if (existing.builtin) throw new Error('TOOLBOX_BUILTIN_READONLY')
   db.delete(toolboxes).where(eq(toolboxes.id, id)).run()
+  sseManager.broadcast({ type: 'toolbox:deleted', data: { toolboxId: id } })
 }
 
 // ─── Resolution ─────────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { Toolbox } from '@/shared/types'
 
 interface ToolboxesResponse {
@@ -41,6 +42,26 @@ export function useToolboxes() {
   useEffect(() => {
     refetch()
   }, [refetch])
+
+  useSSE({
+    'toolbox:created': (data) => {
+      const toolbox = data as unknown as Toolbox
+      setToolboxes((prev) => {
+        if (prev.some((tb) => tb.id === toolbox.id)) return prev
+        return [...prev, toolbox]
+      })
+    },
+    'toolbox:updated': (data) => {
+      const toolbox = data as unknown as Toolbox
+      setToolboxes((prev) => prev.map((tb) => (tb.id === toolbox.id ? toolbox : tb)))
+    },
+    'toolbox:deleted': (data) => {
+      const id = data.toolboxId as string
+      setToolboxes((prev) => prev.filter((tb) => tb.id !== id))
+    },
+  })
+
+  useSSEResync(refetch)
 
   const createToolbox = useCallback(async (input: CreateToolboxInput) => {
     const { toolbox } = await api.post<ToolboxResponse>('/toolboxes', input)

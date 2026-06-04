@@ -39,14 +39,31 @@ export function useNotifications() {
     },
     'notification:read': (data) => {
       const id = data.notificationId as string
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
+      let wasAlreadyRead = false
+      setNotifications((prev) => {
+        const notif = prev.find((n) => n.id === id)
+        wasAlreadyRead = notif?.isRead ?? false
+        return prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      })
+      if (!wasAlreadyRead) {
+        setUnreadCount((prev) => Math.max(0, prev - 1))
+      }
     },
     'notification:read-all': () => {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
+    },
+    'notification:deleted': (data) => {
+      const id = data.notificationId as string
+      let wasUnread = false
+      setNotifications((prev) => {
+        const notif = prev.find((n) => n.id === id)
+        wasUnread = notif ? !notif.isRead : false
+        return prev.filter((n) => n.id !== id)
+      })
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1))
+      }
     },
   })
 

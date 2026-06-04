@@ -196,7 +196,8 @@ export async function runStreamStep(
     })
   }
 
-  /** Close out an open reasoning block: push the segment and emit reasoning-done. */
+  /** Close out an open reasoning block: push the segment. (No SSE event — the
+   *  client finalizes reasoning from chat:done/refetch; there was no handler.) */
   const closeReasoning = () => {
     if (!inReasoning) return
     if (currentReasoning) {
@@ -216,7 +217,6 @@ export async function runStreamStep(
     currentReasoning = ''
     currentSignature = undefined
     inReasoning = false
-    send('chat:reasoning-done', { messageId: ctx.assistantMessageId })
   }
 
   // Emit a smoothly-rising output-token estimate while the step generates so

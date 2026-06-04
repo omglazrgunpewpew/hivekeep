@@ -13,6 +13,7 @@ import {
   setAccountSendMode,
   setAccountAllowList,
 } from '@/server/services/connected-accounts'
+import { sseManager } from '@/server/sse/index'
 import type { ConfigField, ProviderConfig } from '@kinbot-developer/sdk'
 
 const log = createLogger('routes:connected-accounts')
@@ -109,6 +110,7 @@ connectedAccountRoutes.post('/connect-config/:type', async (c) => {
     }
     label = label || providerConfig.email || providerConfig.apple_id || providerConfig.username || providerConfig.email_address || type
     const account = await createConfigAccount({ type, label, credentials: providerConfig, capabilities, name: body.name })
+    sseManager.broadcast({ type: 'connected-account:created', data: account as unknown as Record<string, unknown> })
     return c.json({ account })
   } catch (err) {
     log.error({ err, type, capabilities }, 'Config connect failed')
@@ -126,6 +128,7 @@ connectedAccountRoutes.patch('/:id', async (c) => {
     if (!body.sendMode && body.allowedKinIds === undefined) {
       return c.json({ error: { code: 'INVALID_INPUT', message: 'Nothing to update' } }, 400)
     }
+    sseManager.broadcast({ type: 'connected-account:updated', data: { accountId: id } })
     return c.json({ ok: true })
   } catch (err) {
     return c.json({ error: { code: 'NOT_FOUND', message: err instanceof Error ? err.message : 'Not found' } }, 404)
@@ -134,7 +137,9 @@ connectedAccountRoutes.patch('/:id', async (c) => {
 
 // DELETE /api/connected-accounts/:id — disconnect (removes all capabilities).
 connectedAccountRoutes.delete('/:id', async (c) => {
-  await deleteConnectedAccount(c.req.param('id'))
+  const id = c.req.param('id')
+  await deleteConnectedAccount(id)
+  sseManager.broadcast({ type: 'connected-account:deleted', data: { accountId: id } })
   return c.json({ ok: true })
 })
 

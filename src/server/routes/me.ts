@@ -6,6 +6,7 @@ import { getUnreadCountsForUser } from '@/server/services/kin-read-state'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 import { config } from '@/server/config'
+import { sseManager } from '@/server/sse/index'
 
 const log = createLogger('routes:me')
 const meRoutes = new Hono<{ Variables: AppVariables }>()
@@ -145,6 +146,19 @@ meRoutes.patch('/', async (c) => {
   }
 
   log.debug({ userId: sessionUser.id, updatedFields: Object.keys(updates) }, 'Profile updated')
+
+  // Notify all of this user's connected tabs/devices when kinOrder or cronOrder
+  // changes, so a reorder in one tab is immediately reflected in others without
+  // requiring a manual refresh.
+  if (updates.kinOrder !== undefined || updates.cronOrder !== undefined) {
+    sseManager.sendToUser(sessionUser.id, {
+      type: 'profile:updated',
+      data: {
+        ...(updates.kinOrder !== undefined && { kinOrder: updates.kinOrder }),
+        ...(updates.cronOrder !== undefined && { cronOrder: updates.cronOrder }),
+      },
+    })
+  }
 
   // Return updated profile
   const updated = await db

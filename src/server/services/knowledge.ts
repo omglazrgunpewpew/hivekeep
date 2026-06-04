@@ -4,7 +4,6 @@ import { db, sqlite } from '@/server/db/index'
 import { createLogger } from '@/server/logger'
 import { knowledgeSources, knowledgeChunks } from '@/server/db/schema'
 import { generateEmbedding } from '@/server/services/embeddings'
-import { sseManager } from '@/server/sse/index'
 import { config } from '@/server/config'
 
 const log = createLogger('knowledge')
@@ -98,12 +97,6 @@ export async function createSource(kinId: string, input: CreateSourceInput) {
 
   const created = db.select().from(knowledgeSources).where(eq(knowledgeSources.id, id)).get()!
 
-  sseManager.sendToKin(kinId, {
-    type: 'knowledge:source-created',
-    kinId,
-    data: { sourceId: id, name: input.name, type: input.type },
-  })
-
   log.debug({ kinId, sourceId: id, type: input.type }, 'Knowledge source created')
   return created
 }
@@ -122,12 +115,6 @@ export async function deleteSource(sourceId: string, kinId: string) {
   } catch { /* ignore */ }
 
   await db.delete(knowledgeSources).where(and(eq(knowledgeSources.id, sourceId), eq(knowledgeSources.kinId, kinId)))
-
-  sseManager.sendToKin(kinId, {
-    type: 'knowledge:source-deleted',
-    kinId,
-    data: { sourceId },
-  })
 
   log.debug({ sourceId, kinId }, 'Knowledge source deleted')
   return true
@@ -166,12 +153,6 @@ export async function processSource(sourceId: string) {
     // Update status to processing
     await db.update(knowledgeSources).set({ status: 'processing', updatedAt: new Date() })
       .where(eq(knowledgeSources.id, sourceId))
-
-    sseManager.sendToKin(kinId, {
-      type: 'knowledge:source-updated',
-      kinId,
-      data: { sourceId, status: 'processing' },
-    })
 
     // Extract text content
     let textContent = source.rawContent ?? ''
@@ -248,12 +229,6 @@ export async function processSource(sourceId: string) {
       updatedAt: new Date(),
     }).where(eq(knowledgeSources.id, sourceId))
 
-    sseManager.sendToKin(kinId, {
-      type: 'knowledge:source-updated',
-      kinId,
-      data: { sourceId, status: 'ready', chunkCount: chunks.length, tokenCount: totalTokens },
-    })
-
     log.info({ sourceId, kinId, chunks: chunks.length, tokens: totalTokens }, 'Knowledge source processed')
   } catch (err) {
     const errorMessage = (err as Error).message || 'Unknown processing error'
@@ -262,12 +237,6 @@ export async function processSource(sourceId: string) {
       errorMessage,
       updatedAt: new Date(),
     }).where(eq(knowledgeSources.id, sourceId))
-
-    sseManager.sendToKin(kinId, {
-      type: 'knowledge:source-updated',
-      kinId,
-      data: { sourceId, status: 'error', errorMessage },
-    })
 
     log.error({ sourceId, kinId, err }, 'Knowledge source processing failed')
     throw err

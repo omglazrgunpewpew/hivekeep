@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { api, toastError, ApiRequestError } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { HumanPromptSummary } from '@/shared/types'
 
 /**
@@ -69,6 +69,9 @@ export function useHumanPrompts(kinId: string | null, taskId?: string | null) {
       setPrompts((prev) => prev.filter((p) => p.id !== promptId))
     },
   })
+
+  // Catch up on prompts missed while backgrounded or disconnected
+  useSSEResync(fetchPending)
 
   // Submit a response to a prompt
   const respond = useCallback(async (promptId: string, response: unknown) => {

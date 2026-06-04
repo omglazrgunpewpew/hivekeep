@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { CronSummary } from '@/shared/types'
 
 interface CronsResponse {
@@ -101,9 +101,12 @@ export function useCrons() {
   useSSE({
     'cron:triggered': (data) => {
       const cronId = data.cronId as string
+      // Use the server-authoritative timestamp from the event payload; fall back
+      // to client time only for backward compatibility with old server versions.
+      const lastTriggeredAt = (data.lastTriggeredAt as number | undefined) ?? Date.now()
       setCrons((prev) =>
         prev.map((c) =>
-          c.id === cronId ? { ...c, lastTriggeredAt: Date.now() } : c,
+          c.id === cronId ? { ...c, lastTriggeredAt } : c,
         ),
       )
     },
@@ -120,6 +123,25 @@ export function useCrons() {
       setCrons((prev) => prev.filter((c) => c.id !== cronId))
       setCronOrder((prev) => prev.filter((id) => id !== cronId))
     },
+    'notification:new': (data) => {
+      // A kin-created cron is awaiting approval — refetch so it appears in the list
+      if (data.type === 'cron:pending-approval') {
+        fetchCrons()
+      }
+    },
+    'profile:updated': (data) => {
+      // Sync cronOrder when another tab/device reorders
+      if (data.cronOrder !== undefined) {
+        const newOrder = data.cronOrder as string[]
+        setCronOrder(newOrder)
+      }
+    },
+  })
+
+  // Catch up on missed events after tab resume or SSE reconnect
+  useSSEResync(() => {
+    fetchCrons()
+    fetchCronOrder()
   })
 
   // Sort: pending-approval first (newest first), then regular crons by user-defined order

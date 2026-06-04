@@ -141,8 +141,12 @@ export function useKins() {
   // Also catch up on resume even if the connection never dropped — a locked
   // phone often keeps the EventSource "open" but silently drops events, so the
   // status transition above never fires. Refreshes the list + per-kin queue
-  // state (which drives the processing indicator and context bar).
-  useSSEResync(fetchKins)
+  // state (which drives the processing indicator and context bar). Also refetch
+  // kinOrder so a reorder made in another tab/device is not missed.
+  useSSEResync(() => {
+    fetchKins()
+    fetchKinOrder()
+  })
 
   // Track which kins are currently processing (queue state from SSE)
   const [kinQueueState, setKinQueueState] = useState<Map<string, { isProcessing: boolean; queueSize: number; processingStartedAt?: number; contextTokens?: number; contextWindow?: number; apiContextTokens?: number;contextBreakdown?: ContextTokenBreakdown; pipelineStatus?: ContextPipelineStatus; compactingPercent?: number; compactingThresholdPercent?: number; summaryCount?: number; maxSummaries?: number; summaryTokens?: number; summaryBudgetTokens?: number; keepPercent?: number }>>(new Map())
@@ -238,6 +242,14 @@ export function useKins() {
       const kinId = data.kinId as string
       const activeProjectId = (data.activeProjectId as string | null) ?? null
       setKins((prev) => prev.map((k) => (k.id === kinId ? { ...k, activeProjectId } : k)))
+    },
+    'profile:updated': (data) => {
+      // Sync kinOrder when another tab/device reorders — avoid clobbering if
+      // this tab was the one that initiated the reorder (optimistic update wins).
+      if (data.kinOrder !== undefined) {
+        const newOrder = data.kinOrder as string[]
+        setKinOrder(newOrder)
+      }
     },
   })
 

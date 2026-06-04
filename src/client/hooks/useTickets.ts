@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { TicketSummary, TicketStatus, Ticket, KinThinkingConfig } from '@/shared/types'
 
 interface CreateTicketInput {
@@ -96,6 +96,8 @@ export function useTickets(projectId: string | null) {
       refetch().catch(() => undefined)
     },
   })
+
+  useSSEResync(refetch)
 
   const createTicket = useCallback(
     async (input: CreateTicketInput): Promise<TicketSummary | null> => {
@@ -222,6 +224,8 @@ export function useTicket(ticketId: string | null) {
       refetch().catch(() => undefined)
     },
   })
+
+  useSSEResync(refetch)
 
   return { ticket, isLoading, refetch }
 }

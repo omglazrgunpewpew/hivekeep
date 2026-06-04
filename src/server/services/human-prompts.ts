@@ -189,6 +189,13 @@ export async function respondToHumanPrompt(promptId: string, response: unknown, 
       return { success: false as const, error: 'TASK_NOT_AWAITING', taskStatus: current?.status }
     }
 
+    // Fetch the task so we can include its title in the SSE payload.
+    const linkedTask = await db
+      .select({ title: tasks.title, description: tasks.description })
+      .from(tasks)
+      .where(eq(tasks.id, prompt.taskId))
+      .get()
+
     // Won the claim — inject the response into the sub-Kin history.
     await db.insert(messages).values({
       id: uuid(),
@@ -208,6 +215,7 @@ export async function respondToHumanPrompt(promptId: string, response: unknown, 
         taskId: prompt.taskId,
         kinId: prompt.kinId,
         status: 'in_progress',
+        title: linkedTask?.title ?? linkedTask?.description ?? undefined,
       },
     })
 

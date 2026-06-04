@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { ChannelConfigSchema } from '@/shared/types'
 
 export interface PlatformInfo {
@@ -89,6 +89,12 @@ export function usePlatforms() {
     'plugin:autoDisabled': () => {
       fetchPlatforms(true).then(setPlatforms)
     },
+  })
+
+  // Re-fetch on reconnect / tab-resume so missed plugin lifecycle events
+  // (fired while backgrounded or disconnected) don't leave the list stale.
+  useSSEResync(() => {
+    fetchPlatforms(true).then(setPlatforms)
   })
 
   return { platforms, loading }

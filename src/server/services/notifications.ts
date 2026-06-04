@@ -324,6 +324,11 @@ export async function deleteNotification(notificationId: string, userId: string)
     .delete(notifications)
     .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)))
 
+  sseManager.sendToUser(userId, {
+    type: 'notification:deleted',
+    data: { notificationId },
+  })
+
   return true
 }
 

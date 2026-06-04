@@ -1044,7 +1044,7 @@ export async function maybeCompact(kinId: string, contextTokens?: number, contex
         sseManager.sendToKin(kinId, {
           type: 'compacting:done',
           kinId,
-          data: { kinId, summary: '', memoriesExtracted: 0 },
+          data: { kinId, summary: '', memoriesExtracted: 0, messageCount: 0 },
         })
         break
       }

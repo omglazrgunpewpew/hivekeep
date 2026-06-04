@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import {
   PROVIDER_API_KEY_URLS,
   PROVIDER_CAPABILITIES,
@@ -124,6 +124,8 @@ export function useProviderTypes(): ProviderTypesView {
     'plugin:disabled': () => { refresh() },
     'plugin:autoDisabled': () => { refresh() },
   })
+
+  useSSEResync(() => { refresh() })
 
   return useMemo<ProviderTypesView>(() => {
     if (!loaded || entries.length === 0) return FALLBACK

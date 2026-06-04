@@ -48,7 +48,6 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
       if (data.kinId !== kinId) return
       if (data.sessionId !== sessionId) return
 
-      setIsProcessing(false)
       handleToken({
         messageId: data.messageId as string,
         token: data.token as string,
@@ -83,15 +82,15 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
         content: data.content as string,
         sourceType: data.sourceType as string,
         sourceId: (data.sourceId as string) ?? null,
-        sourceName: null,
-        sourceAvatarUrl: null,
+        sourceName: (data.sourceName as string) ?? null,
+        sourceAvatarUrl: (data.sourceAvatarUrl as string) ?? null,
         isRedacted: false,
         toolCalls: null,
         resolvedTaskId: null,
         injectedMemories: null,
         memoriesExtracted: null,
         compactingError: null,
-        files: [],
+        files: (data.files as MessageFile[]) ?? [],
           reactions: [],
           stepLimitReached: false,
         tokenUsage: null,

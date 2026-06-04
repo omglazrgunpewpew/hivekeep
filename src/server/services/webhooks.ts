@@ -360,6 +360,12 @@ export async function triggerWebhook(webhookId: string, payload: string, sourceI
       createdAt: now,
     })
 
+    sseManager.sendToKin(webhook.kinId, {
+      type: 'webhook:updated',
+      kinId: webhook.kinId,
+      data: { webhookId, kinId: webhook.kinId },
+    })
+
     log.debug({ webhookId, webhookName: webhook.name }, 'Webhook payload filtered out')
     return { filtered: true }
   }

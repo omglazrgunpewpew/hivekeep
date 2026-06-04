@@ -1,5 +1,6 @@
 import { db, sqlite } from '@/server/db/index'
 import { kinReadState } from '@/server/db/schema'
+import { sseManager } from '@/server/sse/index'
 
 /**
  * Bump the read marker for (userId, kinId) to "now". Used when the user opens
@@ -14,6 +15,11 @@ export async function markKinAsRead(userId: string, kinId: string): Promise<void
       target: [kinReadState.userId, kinReadState.kinId],
       set: { lastReadAt: now },
     })
+
+  sseManager.sendToUser(userId, {
+    type: 'kin:read',
+    data: { kinId, lastReadAt: now.getTime() },
+  })
 }
 
 /**

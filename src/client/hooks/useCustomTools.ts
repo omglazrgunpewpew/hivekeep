@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
 import { refreshCustomToolNames } from '@/client/lib/custom-tool-names'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { CustomTool, CustomToolTranslations } from '@/shared/types'
 
 interface ToolsResponse {
@@ -66,6 +67,29 @@ export function useCustomTools() {
   useEffect(() => {
     refetch()
   }, [refetch])
+
+  useSSE({
+    'custom-tool:created': (data) => {
+      const tool = data as unknown as CustomTool
+      setTools((prev) => {
+        if (prev.some((t) => t.slug === tool.slug)) return prev
+        return [...prev, tool]
+      })
+      refreshCustomToolNames()
+    },
+    'custom-tool:updated': (data) => {
+      const tool = data as unknown as CustomTool
+      setTools((prev) => prev.map((t) => (t.slug === tool.slug ? tool : t)))
+      refreshCustomToolNames()
+    },
+    'custom-tool:deleted': (data) => {
+      const slug = data.slug as string
+      setTools((prev) => prev.filter((t) => t.slug !== slug))
+      refreshCustomToolNames()
+    },
+  })
+
+  useSSEResync(refetch)
 
   const createTool = useCallback(async (input: CreateCustomToolInput) => {
     const { tool } = await api.post<ToolResponse>('/custom-tools', input)

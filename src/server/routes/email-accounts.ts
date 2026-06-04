@@ -22,6 +22,7 @@ import {
   setAllowList,
   type SendMode,
 } from '@/server/services/email-accounts'
+import { sseManager } from '@/server/sse/index'
 
 const log = createLogger('routes:email-accounts')
 const emailAccountRoutes = new Hono()
@@ -231,6 +232,7 @@ emailAccountRoutes.post('/connect-config/:type', async (c) => {
       return c.json({ error: { code: 'NO_EMAIL', message: 'Could not determine the account email address' } }, 400)
     }
     const account = await createConfigEmailAccount({ type, emailAddress, credentials: config, name: body.name })
+    sseManager.broadcast({ type: 'email-account:created', data: account as unknown as Record<string, unknown> })
     return c.json({ account })
   } catch (err) {
     log.error({ err, type }, 'Config email connect failed')
@@ -271,13 +273,14 @@ emailAccountRoutes.get('/oauth/callback', async (c) => {
     }
     const email = await fetchAccountEmail(oauth.profile, tokens.accessToken)
     if (!email) return c.redirect('/?email_error=no_email')
-    await createOAuthEmailAccount({
+    const oauthAccount = await createOAuthEmailAccount({
       type: pending.type,
       emailAddress: email,
       refreshToken: tokens.refreshToken,
       scopes: tokens.scope ? tokens.scope.split(' ') : oauth.scopes,
       capabilities: pending.capabilities,
     })
+    sseManager.broadcast({ type: 'email-account:created', data: oauthAccount as unknown as Record<string, unknown> })
     return c.redirect(`/?email_connected=${encodeURIComponent(email)}`)
   } catch (err) {
     log.error({ err, type: pending.type }, 'OAuth callback failed')
@@ -296,6 +299,7 @@ emailAccountRoutes.patch('/:id', async (c) => {
     if (!account) {
       return c.json({ error: { code: 'INVALID_INPUT', message: 'Nothing to update' } }, 400)
     }
+    sseManager.broadcast({ type: 'email-account:updated', data: account as unknown as Record<string, unknown> })
     return c.json({ account })
   } catch (err) {
     return c.json({ error: { code: 'NOT_FOUND', message: err instanceof Error ? err.message : 'Not found' } }, 404)
@@ -304,7 +308,9 @@ emailAccountRoutes.patch('/:id', async (c) => {
 
 // DELETE /api/email-accounts/:id — disconnect an account.
 emailAccountRoutes.delete('/:id', async (c) => {
-  await deleteEmailAccount(c.req.param('id'))
+  const id = c.req.param('id')
+  await deleteEmailAccount(id)
+  sseManager.broadcast({ type: 'email-account:deleted', data: { accountId: id } })
   return c.json({ ok: true })
 })
 

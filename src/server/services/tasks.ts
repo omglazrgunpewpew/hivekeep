@@ -2906,7 +2906,7 @@ export async function updateTaskStatus(
     sseManager.sendToKin(task.parentKinId, {
       type: 'task:status',
       kinId: task.parentKinId,
-      data: { taskId, kinId: task.parentKinId, status },
+      data: { taskId, kinId: task.parentKinId, status, title: task.title ?? task.description },
     })
   }
 

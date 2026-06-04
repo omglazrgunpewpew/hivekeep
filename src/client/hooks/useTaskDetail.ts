@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import { getToolDomain as lookupToolDomain } from '@/client/lib/tool-domain-lookup'
 import { isTerminalStatus } from '@/client/lib/task-status'
 import type { TaskStatus, ToolCallEntry, ToolDomain, MessageTokenUsage, KinThinkingEffort, TaskTodo, TaskTokenUsage } from '@/shared/types'
@@ -423,6 +423,12 @@ export function useTaskDetail(taskId: string | null) {
   useEffect(() => {
     fetchDetail()
   }, [fetchDetail])
+
+  // Catch up after SSE reconnect or tab resume. SSE does not replay missed
+  // events, so if the connection dropped while the task panel was open any
+  // status/message updates that arrived during the gap are lost. Refetching
+  // immediately on reconnect closes that window (same pattern as useChat).
+  useSSEResync(fetchDetail)
 
   // SSE handlers
   useSSE({

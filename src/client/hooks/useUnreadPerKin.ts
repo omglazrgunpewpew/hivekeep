@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import { api } from '@/client/lib/api'
 
 /**
@@ -77,7 +77,30 @@ export function useUnreadPerKin(selectedKinId: string | null): {
 
   useSSE({
     'chat:message': handleMessage,
+    'kin:read': (data) => {
+      const kinId = data.kinId as string | undefined
+      if (!kinId) return
+      setUnreadCounts((prev) => {
+        if (!prev.has(kinId)) return prev
+        const next = new Map(prev)
+        next.delete(kinId)
+        return next
+      })
+    },
   })
+
+  const fetchUnreadCounts = useCallback(() => {
+    api
+      .get<{ counts: Record<string, number> }>('/me/unread-counts')
+      .then(({ counts }) => {
+        const next = new Map(Object.entries(counts))
+        if (selectedRef.current) next.delete(selectedRef.current)
+        setUnreadCounts(next)
+      })
+      .catch(() => { /* silent */ })
+  }, [])
+
+  useSSEResync(fetchUnreadCounts)
 
   const clearUnread = useCallback((kinId: string) => {
     setUnreadCounts((prev) => {

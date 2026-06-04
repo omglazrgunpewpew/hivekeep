@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { MiniAppSummary } from '@/shared/types'
 
 interface MiniAppsResponse {
@@ -57,6 +57,8 @@ export function useMiniApps(kinId: string | null, mode: 'kin' | 'all' = 'kin') {
       setApps((prev) => prev.filter((a) => a.id !== appId))
     },
   })
+
+  useSSEResync(fetchApps)
 
   return {
     apps,
