@@ -24,6 +24,7 @@ import { Bot, ChevronRight, Command, MessageSquare, Network, Plus, Sparkles } fr
 import { useUnreadPerKin } from '@/client/hooks/useUnreadPerKin'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/client/components/ui/tooltip'
 import { api } from '@/client/lib/api'
+import { useAuth } from '@/client/hooks/useAuth'
 
 interface ChatPageProps {
   /** Open the global settings modal (mounted at App.tsx root). */
@@ -84,13 +85,16 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
   // first real Kin or dismisses it. The conversation IS Sherpa's main thread,
   // so it persists in the Kin list afterward.
   const configuratorKin = kins.find((k) => k.kind === 'configurator')
-  const [onboardingModalDismissed, setOnboardingModalDismissed] = useState(() => {
-    try { return localStorage.getItem('kinbot:onboardingModalDismissed') === 'true' } catch { return false }
-  })
+  // Dismissal is DB-backed (user_profiles.onboarding_modal_dismissed) so a fresh
+  // DB re-shows the modal and it persists across devices. Optimistic local flag
+  // avoids a flash between the PATCH and the user refetch.
+  const { user, refetch: refetchUser } = useAuth()
+  const [dismissedOptimistic, setDismissedOptimistic] = useState(false)
+  const onboardingModalDismissed = dismissedOptimistic || user?.onboardingModalDismissed === true
   const dismissOnboardingModal = useCallback(() => {
-    try { localStorage.setItem('kinbot:onboardingModalDismissed', 'true') } catch { /* ignore */ }
-    setOnboardingModalDismissed(true)
-  }, [])
+    setDismissedOptimistic(true)
+    api.patch('/me', { onboardingModalDismissed: true }).then(() => refetchUser()).catch(() => { /* keep optimistic */ })
+  }, [refetchUser])
   const showOnboardingModal =
     !!configuratorKin &&
     !onboardingModalDismissed &&

@@ -27,6 +27,7 @@ meRoutes.get('/', async (c) => {
       avatarUrl: user.image,
       kinOrder: userProfiles.kinOrder,
       cronOrder: userProfiles.cronOrder,
+      onboardingModalDismissed: userProfiles.onboardingModalDismissed,
       createdAt: user.createdAt,
     })
     .from(user)
@@ -43,6 +44,7 @@ meRoutes.get('/', async (c) => {
 
   return c.json({
     ...profile,
+    onboardingModalDismissed: profile.onboardingModalDismissed ?? false,
     createdAt: profile.createdAt instanceof Date ? profile.createdAt.getTime() : profile.createdAt,
     serverTimezone: config.timezone,
   })
@@ -80,6 +82,9 @@ meRoutes.patch('/', async (c) => {
   if (body.language !== undefined) {
     if (!SUPPORTED_LANGUAGES.includes(body.language)) errors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
   }
+  if (body.onboardingModalDismissed !== undefined) {
+    if (typeof body.onboardingModalDismissed !== 'boolean') errors.push('onboardingModalDismissed must be a boolean')
+  }
   if (body.kinOrder !== undefined) {
     if (!Array.isArray(body.kinOrder) || !body.kinOrder.every((id: unknown) => typeof id === 'string')) {
       errors.push('kinOrder must be an array of strings')
@@ -109,6 +114,7 @@ meRoutes.patch('/', async (c) => {
   if (body.language !== undefined) updates.language = body.language
   if (body.kinOrder !== undefined) updates.kinOrder = body.kinOrder
   if (body.cronOrder !== undefined) updates.cronOrder = body.cronOrder
+  if (body.onboardingModalDismissed !== undefined) updates.onboardingModalDismissed = body.onboardingModalDismissed
 
   if (Object.keys(updates).length > 0) {
     // Use upsert to handle the case where the profile row doesn't exist yet

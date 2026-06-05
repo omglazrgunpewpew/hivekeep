@@ -34,13 +34,16 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const progressValue = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100
 
   return (
-    <div className="surface-base flex min-h-screen flex-col items-center overflow-y-auto px-4 py-12">
+    <div className="surface-base h-screen overflow-y-auto">
       {/* Decorative orbs */}
       <div className="theme-orb theme-orb-1 fixed left-1/4 top-1/4 h-64 w-64 aurora-drift" />
       <div className="theme-orb theme-orb-2 fixed right-1/4 bottom-1/4 h-48 w-48 aurora-drift delay-3" />
       <div className="theme-orb theme-orb-3 fixed left-1/2 top-2/3 h-56 w-56 aurora-drift delay-5" />
 
-      <div className="relative z-10 my-auto w-full max-w-lg animate-fade-in-up">
+      {/* min-h-full centers short steps; taller steps (palette grid) push the
+          height past the viewport and the outer h-screen container scrolls. */}
+      <div className="flex min-h-full flex-col items-center justify-center px-4 py-12">
+      <div className="relative z-10 w-full max-w-lg animate-fade-in-up">
         {/* Header */}
         <div className="mb-8 text-center">
           <img src="/kinbot.svg" alt="KinBot" width={64} height={64} className="mx-auto mb-3 rounded-2xl drop-shadow-lg" />
@@ -72,6 +75,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             <StepBootstrapProvider onComplete={onComplete} />
           )}
         </div>
+      </div>
       </div>
     </div>
   )

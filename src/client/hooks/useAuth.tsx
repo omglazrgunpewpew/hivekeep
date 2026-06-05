@@ -13,6 +13,9 @@ interface UserProfile {
   role: 'admin' | 'member'
   avatarUrl: string | null
   kinOrder: string | null
+  /** Set once the user dismisses the conversational onboarding modal (DB-backed
+   *  so a fresh DB re-shows it; persists across devices/browsers). */
+  onboardingModalDismissed?: boolean
   createdAt: number | null
   /** IANA timezone the server uses to interpret cron schedules. */
   serverTimezone: string
