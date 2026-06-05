@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
+import { Textarea } from '@/client/components/ui/textarea'
 import { Label } from '@/client/components/ui/label'
 import { Switch } from '@/client/components/ui/switch'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
@@ -209,12 +210,14 @@ export function GeneralSettings() {
           {t('settings.general.avatarStyle', 'Avatar art style')}
           <InfoTip content={t('settings.general.avatarStyleTip', 'Applied to every newly generated Kin avatar so they share a consistent look. Leave empty for the default friendly Pixar-robot style. Does not change existing avatars.')} />
         </Label>
-        <Input
+        <Textarea
           id="avatar-style"
           value={avatarStyle}
           onChange={(e) => setAvatarStyle(e.target.value)}
           placeholder={t('settings.general.avatarStylePlaceholder', 'e.g. heroic fantasy, cyberpunk cyborg, watercolor…')}
           maxLength={2000}
+          rows={3}
+          className="resize-y"
         />
         <p className="text-xs text-muted-foreground">
           {t('settings.general.avatarStyleHint', 'A short art-style directive shared by all generated avatars.')}
