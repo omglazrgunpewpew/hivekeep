@@ -93,7 +93,13 @@ messageRoutes.get('/', async (c) => {
     .orderBy(desc(messages.createdAt))
     .limit(limit + 1) // +1 to check hasMore
 
-  const result = await query.all()
+  const rawResult = await query.all()
+  // Drop messages flagged hidden (e.g. the onboarding kickoff trigger) — they
+  // exist only to drive an LLM turn and must never render in the chat.
+  const result = rawResult.filter((m) => {
+    if (!m.metadata) return true
+    try { return (JSON.parse(m.metadata as string) as { hidden?: boolean }).hidden !== true } catch { return true }
+  })
   const hasMore = result.length > limit
   const messageList = hasMore ? result.slice(0, limit) : result
 

@@ -123,6 +123,8 @@ export async function seedConfiguratorKin(adminUserId: string, providerId: strin
       '[A new user just finished initial setup and opened the onboarding chat. Greet them warmly, introduce yourself as their KinBot guide, and start onboarding by getting to know them. Keep it short and friendly.]',
     sourceType: 'system',
     priority: config.queue.userPriority,
+    // Hidden from the chat UI — it's just the trigger for Sherpa's first greeting.
+    messageMetadata: { hidden: true },
   })
 
   log.info({ kinId: kin.id, model }, 'Configurator Kin (Sherpa) seeded')

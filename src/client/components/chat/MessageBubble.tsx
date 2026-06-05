@@ -68,6 +68,9 @@ interface MessageBubbleProps {
   /** LLM provider type ("anthropic", "openai", ...) used to pick the right
    *  cache multipliers when computing the billable token equivalent. */
   providerType?: string | null
+  /** Distraction-less variant (onboarding modal): hides the per-message footer
+   *  (timestamp, reading time, token usage, reactions/actions). */
+  compact?: boolean
   /** Reasoning/thinking segments with offsets into content */
   reasoning?: Array<{ offset: number; text: string }> | string
   /** Adapter-provided, already-localized line of context describing how the
@@ -902,6 +905,7 @@ export const MessageBubble = memo(function MessageBubble({
   onToggleReaction,
   tokenUsage,
   providerType,
+  compact = false,
   reasoning,
   channelContextLine,
   channelBrandColor,
@@ -1077,18 +1081,22 @@ export const MessageBubble = memo(function MessageBubble({
             </div>
           )}
 
-          <ReactionDisplay reactions={reactions ?? []} currentUserId={currentUserId} onToggle={handleToggleReaction} />
+          {!compact && (
+            <>
+              <ReactionDisplay reactions={reactions ?? []} currentUserId={currentUserId} onToggle={handleToggleReaction} />
 
-          <div className="flex items-center gap-1.5">
-            {timestamp && (
-              <RelativeTimestamp timestamp={timestamp} className="text-[10px] text-muted-foreground/70" />
-            )}
-            <ReadingTime content={content} />
-            {tokenUsage && <TokenUsageIndicator tokenUsage={tokenUsage} providerType={providerType} />}
-            {onRegenerate && <RegenerateButton onRegenerate={onRegenerate} />}
-            <ReadAloudButton content={content} />
-            {onToggleReaction && <ReactionPicker onSelect={handleToggleReaction} isUser={false} />}
-          </div>
+              <div className="flex items-center gap-1.5">
+                {timestamp && (
+                  <RelativeTimestamp timestamp={timestamp} className="text-[10px] text-muted-foreground/70" />
+                )}
+                <ReadingTime content={content} />
+                {tokenUsage && <TokenUsageIndicator tokenUsage={tokenUsage} providerType={providerType} />}
+                {onRegenerate && <RegenerateButton onRegenerate={onRegenerate} />}
+                <ReadAloudButton content={content} />
+                {onToggleReaction && <ReactionPicker onSelect={handleToggleReaction} isUser={false} />}
+              </div>
+            </>
+          )}
         </div>
       </div>
       </MessageContextMenu>

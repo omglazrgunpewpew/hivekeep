@@ -1148,6 +1148,17 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
         }
         currentSpeaker = speakerData
       }
+    } else if (kin.createdBy) {
+      // Non-user turn (system kickoff, cron, inter-Kin): there is no speaker,
+      // so speak the Kin owner's language — otherwise a system-triggered
+      // greeting falls back to the default ('fr') and can mismatch the user's
+      // actual language on the next (user) turn.
+      const owner = await db
+        .select({ language: userProfiles.language })
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, kin.createdBy))
+        .get()
+      if (owner) userLanguage = owner.language as 'fr' | 'en'
     }
 
     // Only propagate userId when the source is actually a user (not a kin or task)

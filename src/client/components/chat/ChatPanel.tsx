@@ -1009,6 +1009,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                       role={msg.role}
                       content={msg.content}
                       sourceType={msg.sourceType}
+                      compact={compact}
                       files={msg.files}
                       avatarUrl={
                         isFromUser
