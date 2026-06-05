@@ -226,6 +226,13 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'web_search',
       'browse_url',
       'extract_links',
+      // Platform / system administration.
+      'get_system_info',
+      'get_platform_config',
+      'list_platform_config_options',
+      'update_platform_config',
+      'get_platform_logs',
+      'restart_platform',
     ],
   },
 ]
