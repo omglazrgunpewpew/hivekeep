@@ -74,7 +74,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
         )}
       </div>
       {expanded && hasData && (
-        <pre className="ml-[230px] mt-1 mb-1 text-[10px] text-muted-foreground bg-muted/50 rounded p-2 overflow-x-auto max-h-40">
+        <pre className="ml-0 sm:ml-[230px] mt-1 mb-1 text-[10px] text-muted-foreground bg-muted/50 rounded p-2 overflow-x-auto max-h-40">
           {JSON.stringify(entry.data, null, 2)}
         </pre>
       )}
@@ -166,7 +166,7 @@ export function LogsSettings() {
       {/* Filters bar */}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={levelFilter} onValueChange={setLevelFilter}>
-          <SelectTrigger className="w-[130px] h-8 text-xs">
+          <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -179,7 +179,7 @@ export function LogsSettings() {
         </Select>
 
         <Select value={moduleFilter} onValueChange={setModuleFilter}>
-          <SelectTrigger className="w-[160px] h-8 text-xs">
+          <SelectTrigger className="w-full sm:w-[160px] h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -194,10 +194,10 @@ export function LogsSettings() {
           placeholder={t('settings.logs.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-[180px] h-8 text-xs"
+          className="w-full sm:w-[180px] h-8 text-xs"
         />
 
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
           <span className="text-xs text-muted-foreground">
             {t('settings.logs.entries', { count: filtered.length })}
           </span>
@@ -239,7 +239,7 @@ export function LogsSettings() {
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="glass-strong h-[400px] overflow-y-auto rounded-lg border"
+        className="glass-strong h-[60vh] min-h-[300px] max-h-[400px] overflow-y-auto rounded-lg border"
       >
         {filtered.length === 0 ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">

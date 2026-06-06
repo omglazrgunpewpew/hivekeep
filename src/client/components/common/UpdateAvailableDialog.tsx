@@ -6,8 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogFooter,
 } from '@/client/components/ui/dialog'
-import { ScrollArea } from '@/client/components/ui/scroll-area'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { ArrowUpCircle, Copy, ExternalLink, Download, Loader2 } from 'lucide-react'
@@ -54,8 +55,8 @@ export function UpdateAvailableDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col gap-0 overflow-hidden">
-        <DialogHeader className="pb-3 border-b border-border">
+      <DialogContent variant="panel" size="2xl">
+        <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-primary/10 p-2">
               <ArrowUpCircle className="size-5 text-primary" />
@@ -72,37 +73,35 @@ export function UpdateAvailableDialog({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-hidden py-4">
-          <div className="space-y-4 px-1">
-            {/* Version badges */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-xs">
-                {t('updateAvailable.current')}: v{versionInfo.currentVersion}
-              </Badge>
-              <span className="text-muted-foreground">→</span>
-              <Badge variant="default" className="text-xs">
-                {t('updateAvailable.latest')}: v{versionInfo.latestVersion}
-              </Badge>
-            </div>
-
-            {/* Release notes */}
-            {versionInfo.releaseNotes && (
-              <div className="flex flex-col min-h-0">
-                <h4 className="text-sm font-semibold mb-2">
-                  {t('updateAvailable.releaseNotes')}
-                </h4>
-                <div className="max-h-[40vh] overflow-y-auto rounded-md bg-muted/50 p-3 text-xs text-muted-foreground prose prose-xs prose-neutral dark:prose-invert max-w-none prose-headings:text-sm prose-headings:font-semibold prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-pre:bg-muted prose-pre:text-xs prose-pre:overflow-x-auto prose-code:text-xs prose-code:break-all">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {versionInfo.releaseNotes}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            )}
+        <DialogBody className="space-y-4">
+          {/* Version badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className="text-xs">
+              {t('updateAvailable.current')}: v{versionInfo.currentVersion}
+            </Badge>
+            <span className="text-muted-foreground">→</span>
+            <Badge variant="default" className="text-xs">
+              {t('updateAvailable.latest')}: v{versionInfo.latestVersion}
+            </Badge>
           </div>
-        </div>
 
-        {/* Update instructions — always visible outside scroll */}
-        <div className="border-t border-border pt-4 space-y-3 px-1">
+          {/* Release notes */}
+          {versionInfo.releaseNotes && (
+            <div className="flex flex-col">
+              <h4 className="text-sm font-semibold mb-2">
+                {t('updateAvailable.releaseNotes')}
+              </h4>
+              <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground prose prose-xs prose-neutral dark:prose-invert max-w-none prose-headings:text-sm prose-headings:font-semibold prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-pre:bg-muted prose-pre:text-xs prose-pre:overflow-x-auto prose-code:text-xs prose-code:break-all">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {versionInfo.releaseNotes}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+        </DialogBody>
+
+        {/* Update instructions — fixed footer, always visible outside scroll */}
+        <DialogFooter className="flex-col items-stretch gap-3 sm:flex-col sm:items-stretch">
           <h4 className="text-sm font-semibold">
             {t('updateAvailable.howToUpdate')}
           </h4>
@@ -113,7 +112,7 @@ export function UpdateAvailableDialog({
                 {t('updateAvailable.dockerInstructions')}
               </p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 rounded-md bg-muted px-3 py-2 text-xs font-mono truncate">
+                <code className="flex-1 min-w-0 rounded-md bg-muted px-3 py-2 text-xs font-mono truncate">
                   {DOCKER_UPDATE_COMMAND}
                 </code>
                 <Button
@@ -164,7 +163,7 @@ export function UpdateAvailableDialog({
               {t('updateAvailable.viewOnGitHub')}
             </a>
           )}
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

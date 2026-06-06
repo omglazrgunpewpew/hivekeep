@@ -4,18 +4,9 @@ import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Textarea } from '@/client/components/ui/textarea'
 import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
-import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
+import { Plus, Trash2 } from 'lucide-react'
 import { api, getErrorMessage } from '@/client/lib/api'
 import type { McpServerData } from '@/client/components/mcp/McpServerCard'
 
@@ -140,122 +131,117 @@ export function McpServerFormDialog({
   const canSave = name.trim() !== '' && command.trim() !== ''
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('settings.mcp.edit') : t('settings.mcp.add')}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing ? t('settings.mcp.editHint') : t('settings.mcp.addHint')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={(v) => { if (!v) handleClose() }}
+      title={isEditing ? t('settings.mcp.edit') : t('settings.mcp.add')}
+      description={isEditing ? t('settings.mcp.editHint') : t('settings.mcp.addHint')}
+      size="lg"
+      error={error || null}
+      onSubmit={handleSave}
+      isSubmitting={isSaving}
+      submitDisabled={!canSave}
+      submitLabel={isEditing ? t('common.save') : t('settings.mcp.add')}
+    >
+      <FormField
+        label={t('settings.mcp.name')}
+        htmlFor="mcp-name"
+        tip={t('settings.mcp.nameTip')}
+        required
+      >
+        <Input
+          id="mcp-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('settings.mcp.namePlaceholder')}
+        />
+      </FormField>
 
-        <div className="space-y-4">
-          <FormErrorAlert error={error} />
+      <FormField
+        label={t('settings.mcp.command')}
+        htmlFor="mcp-command"
+        tip={t('settings.mcp.commandTip')}
+        required
+      >
+        <Input
+          id="mcp-command"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          placeholder={t('settings.mcp.commandPlaceholder')}
+          className="font-mono"
+        />
+      </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="mcp-name" className="inline-flex items-center gap-1.5">{t('settings.mcp.name')} <InfoTip content={t('settings.mcp.nameTip')} /></Label>
-            <Input
-              id="mcp-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('settings.mcp.namePlaceholder')}
-            />
-          </div>
+      <FormField
+        label={
+          <>
+            {t('settings.mcp.args')}
+            <span className="ml-1 text-xs text-muted-foreground">
+              ({t('common.optional')})
+            </span>
+          </>
+        }
+        htmlFor="mcp-args"
+        tip={t('settings.mcp.argsTip')}
+      >
+        <Textarea
+          id="mcp-args"
+          value={argsText}
+          onChange={(e) => setArgsText(e.target.value)}
+          placeholder={t('settings.mcp.argsPlaceholder')}
+          rows={3}
+          className="font-mono text-sm"
+        />
+      </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="mcp-command" className="inline-flex items-center gap-1.5">{t('settings.mcp.command')} <InfoTip content={t('settings.mcp.commandTip')} /></Label>
-            <Input
-              id="mcp-command"
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              placeholder={t('settings.mcp.commandPlaceholder')}
-              className="font-mono"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="mcp-args" className="inline-flex items-center gap-1.5">
-              {t('settings.mcp.args')} <InfoTip content={t('settings.mcp.argsTip')} />
-              <span className="ml-1 text-xs text-muted-foreground">
-                ({t('common.optional')})
-              </span>
-            </Label>
-            <Textarea
-              id="mcp-args"
-              value={argsText}
-              onChange={(e) => setArgsText(e.target.value)}
-              placeholder={t('settings.mcp.argsPlaceholder')}
-              rows={3}
-              className="font-mono text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">
-              {t('settings.mcp.env')} <InfoTip content={t('settings.mcp.envTip')} />
-              <span className="ml-1 text-xs text-muted-foreground">
-                ({t('common.optional')})
-              </span>
-            </Label>
-            {isEditing && envVars.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {t('settings.mcp.envPreserveHint', 'Leave values empty to keep existing secrets')}
-              </p>
-            )}
-            <div className="space-y-2">
-              {envVars.map((v, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={v.key}
-                    onChange={(e) => updateEnvVar(i, 'key', e.target.value)}
-                    placeholder={t('settings.mcp.envKeyPlaceholder')}
-                    className="font-mono text-sm flex-[2]"
-                  />
-                  <PasswordInput
-                    value={v.value}
-                    onChange={(e) => updateEnvVar(i, 'value', e.target.value)}
-                    placeholder={isEditing ? '••••••••' : t('settings.mcp.envValuePlaceholder')}
-                    className="text-sm flex-[3]"
-                    autoComplete="off"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeEnvVar(i)}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              ))}
-              <Button variant="outline" size="sm" onClick={addEnvVar} className="text-xs">
-                <Plus className="size-3.5" />
-                {t('settings.mcp.addEnvVar')}
+      <FormField
+        label={
+          <>
+            {t('settings.mcp.env')}
+            <span className="ml-1 text-xs text-muted-foreground">
+              ({t('common.optional')})
+            </span>
+          </>
+        }
+        tip={t('settings.mcp.envTip')}
+        hint={
+          isEditing && envVars.length > 0
+            ? t('settings.mcp.envPreserveHint', 'Leave values empty to keep existing secrets')
+            : undefined
+        }
+      >
+        <div className="space-y-2">
+          {envVars.map((v, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input
+                value={v.key}
+                onChange={(e) => updateEnvVar(i, 'key', e.target.value)}
+                placeholder={t('settings.mcp.envKeyPlaceholder')}
+                className="font-mono text-sm flex-[2]"
+              />
+              <PasswordInput
+                value={v.value}
+                onChange={(e) => updateEnvVar(i, 'value', e.target.value)}
+                placeholder={isEditing ? '••••••••' : t('settings.mcp.envValuePlaceholder')}
+                className="text-sm flex-[3]"
+                autoComplete="off"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => removeEnvVar(i)}
+              >
+                <Trash2 className="size-3.5" />
               </Button>
             </div>
-          </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={addEnvVar} className="text-xs">
+            <Plus className="size-3.5" />
+            {t('settings.mcp.addEnvVar')}
+          </Button>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || !canSave}
-            className="btn-shine"
-          >
-            {isSaving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : isEditing ? (
-              t('common.save')
-            ) : (
-              t('settings.mcp.add')
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </FormField>
+    </FormDialog>
   )
 }

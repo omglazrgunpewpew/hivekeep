@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from '@/client/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/client/components/ui/tabs'
 import { Button } from '@/client/components/ui/button'
@@ -361,9 +362,9 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!flex !max-w-4xl !w-[90vw] max-h-[85vh] flex-col gap-0 !p-0">
-        <DialogHeader className="shrink-0 border-b px-6 py-4">
-          <div className="flex items-center justify-between">
+      <DialogContent variant="panel" size="4xl">
+        <DialogHeader>
+          <div className="flex items-center justify-between gap-2">
             <DialogTitle>{t('chat.contextViewer.title')}</DialogTitle>
             {data && (
               <div className="flex items-center gap-2">
@@ -532,26 +533,30 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
           )}
         </DialogHeader>
 
-        {loading && !data && (
-          <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" />
-            <span className="text-sm">{t('chat.contextViewer.loading')}</span>
-          </div>
-        )}
+        {(loading && !data) || error ? (
+          <DialogBody>
+            {loading && !data && (
+              <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm">{t('chat.contextViewer.loading')}</span>
+              </div>
+            )}
 
-        {error && (
-          <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
-            <p className="text-sm">{t('chat.contextViewer.error')}</p>
-            <p className="text-xs">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchPreview}>
-              {t('chat.contextViewer.retry')}
-            </Button>
-          </div>
-        )}
+            {error && (
+              <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+                <p className="text-sm">{t('chat.contextViewer.error')}</p>
+                <p className="text-xs">{error}</p>
+                <Button variant="outline" size="sm" onClick={fetchPreview}>
+                  {t('chat.contextViewer.retry')}
+                </Button>
+              </div>
+            )}
+          </DialogBody>
+        ) : null}
 
         {data && (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="!gap-0">
-            <div className="flex shrink-0 items-center justify-between border-b px-6 py-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-0">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-5 py-2 sm:px-6">
               <TabsList>
                 <TabsTrigger value="structured">
                   {t('chat.contextViewer.structured')}
@@ -575,7 +580,8 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
               </Button>
             </div>
 
-            <TabsContent value="structured" className="mt-0 overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(85vh - 12rem)' }}>
+            <DialogBody>
+            <TabsContent value="structured" className="mt-0">
               <p className="mb-4 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
                 {t('chat.contextViewer.structuredHint')}
               </p>
@@ -836,7 +842,7 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
               </FadingSection>
             </TabsContent>
 
-            <TabsContent value="raw" className="mt-0 overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(85vh - 12rem)' }}>
+            <TabsContent value="raw" className="mt-0">
               <p className="mb-4 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
                 {t('chat.contextViewer.rawHint')}
               </p>
@@ -844,6 +850,7 @@ export function ContextViewerDialog({ open, onOpenChange, kinId, taskId, session
                 {rawJson}
               </pre>
             </TabsContent>
+            </DialogBody>
           </Tabs>
         )}
       </DialogContent>

@@ -3,21 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
 import { Alert, AlertDescription } from '@/client/components/ui/alert'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
 import { CheckCircle2, ExternalLink, Loader2, RefreshCw } from 'lucide-react'
-import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
-import { InfoTip } from '@/client/components/common/InfoTip'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { useProviderTypes } from '@/client/hooks/useProviderTypes'
 import type { ProviderType } from '@/shared/types'
@@ -339,211 +330,210 @@ export function ProviderFormDialog({ open, onOpenChange, onSaved, provider, prov
   const canSave = (testPassed || canSaveWithoutTest) && familiesValid
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('settings.providers.edit') : t('onboarding.providers.addProvider')}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing ? t('settings.providers.editHint') : t('onboarding.providers.addProviderHint')}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <FormErrorAlert error={error} animate />
-
-          {testPassed && (
-            <Alert className="animate-scale-in border-primary/30 bg-primary/5 text-primary">
-              <CheckCircle2 className="size-4" />
-              <AlertDescription>{t('onboarding.providers.testSuccess')}</AlertDescription>
-            </Alert>
-          )}
-
-          {!isEditing && types.length > 1 && (
-            <div className="space-y-2">
-              <Label>{t('onboarding.providers.type')}</Label>
-              <Select value={providerType} onValueChange={(v) => {
-                setProviderType(v)
-                setProviderName('')
-                resetTest()
-              }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      <span className="flex items-center gap-2">
-                        <ProviderIcon providerType={type} className="size-4 shrink-0" />
-                        <span>{catalogue.displayNames[type] ?? type}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({getCapabilitiesForType(type).join(', ')})
-                        </span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="providerName" className="inline-flex items-center gap-1.5">
-              {t('onboarding.providers.name')}
-              <InfoTip content={t('onboarding.providers.nameTip')} />
-              <span className="text-xs text-muted-foreground">
-                ({t('common.optional')})
-              </span>
-            </Label>
-            <Input
-              id="providerName"
-              value={providerName}
-              onChange={(e) => setProviderName(e.target.value)}
-              placeholder={t('onboarding.providers.namePlaceholder', { type: catalogue.displayNames[providerType] ?? providerType })}
-            />
-          </div>
-
-          {/* Dynamic config form — one input per ConfigField declared by
-              the provider's `configSchema` (LLMProvider / EmbeddingProvider
-              / ImageProvider). Built-ins and plugin providers go through
-              the same path here, so a plugin author can declare `apiToken`,
-              `region`, `baseUrl`, … and the form renders accordingly. */}
-          {(configSchema.length > 0
-            ? configSchema
-            : [{ key: 'apiKey', type: 'secret' as const, label: t('onboarding.providers.apiKey'), required: true }]
-          ).map((field) => {
-            const isSecret = field.type === 'secret'
-            const Tag = isSecret ? PasswordInput : Input
-            return (
-              <div key={field.key} className="space-y-2">
-                <Label htmlFor={field.key}>
-                  {field.label}
-                  {isEditing && (
-                    <span className="ml-1 text-xs text-muted-foreground">
-                      ({t('onboarding.providers.apiKeyEditHint')})
-                    </span>
-                  )}
-                </Label>
-                <Tag
-                  id={field.key}
-                  // Only forward `type` for non-secret fields. PasswordInput
-                  // owns its own type ('password' vs 'text' driven by the
-                  // eye toggle) and explicitly Omit<…,'type'>s it from its
-                  // public surface — passing it here defeats the masking.
-                  {...(isSecret ? {} : { type: field.type === 'url' ? 'url' : 'text' })}
-                  value={configValues[field.key] ?? ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setConfigValues((v) => ({ ...v, [field.key]: e.target.value }))
-                    resetTest()
-                  }}
-                  autoComplete="off"
-                  placeholder={
-                    field.placeholder
-                    ?? (isSecret && isEditing ? '••••••••' : undefined)
-                    ?? (field.type === 'path' ? CREDENTIALS_PATH_PLACEHOLDERS[providerType] ?? '' : undefined)
-                  }
-                />
-                {field.description && (
-                  <p className="text-xs text-muted-foreground">{field.description}</p>
-                )}
-              </div>
-            )
-          })}
-          {apiKeyUrl && !isEditing && (
-            <a
-              href={apiKeyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+    <FormDialog
+      open={open}
+      onOpenChange={(v) => { if (!v) handleClose() }}
+      title={isEditing ? t('settings.providers.edit') : t('onboarding.providers.addProvider')}
+      description={isEditing ? t('settings.providers.editHint') : t('onboarding.providers.addProviderHint')}
+      size="lg"
+      error={error}
+      // Enter submits the currently-valid action: Save when the form is
+      // ready, otherwise Test connection. The footer below mirrors this.
+      onSubmit={canSave ? handleSave : handleTestConnection}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={handleClose}>
+            {t('common.cancel')}
+          </Button>
+          {!canSave ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleTestConnection}
+              disabled={
+                isTesting
+                || (!isEditing
+                  && !isApiKeyOptional
+                  && !hasOptionalApiKey
+                  // All required fields must have a value before testing.
+                  && configSchema.some((f) => f.required && !configValues[f.key]?.trim())
+                )
+              }
             >
-              {t('onboarding.providers.getApiKey', { provider: catalogue.displayNames[providerType] ?? providerType })}
-              <ExternalLink className="size-3" />
-            </a>
-          )}
-
-          {showsFamilyPicker && (
-            <div className="space-y-2">
-              <Label className="text-sm">
-                {t('onboarding.providers.familiesLabel', 'Enable for')}
-              </Label>
-              <div className="grid gap-1.5">
-                {supportedFamilies.map((family) => (
-                  <label
-                    key={family}
-                    className="flex cursor-pointer items-start gap-2 rounded-md border border-border/60 bg-card/50 p-2.5 hover:bg-card/80"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedFamilies.includes(family)}
-                      onChange={() => toggleFamily(family)}
-                      className="mt-0.5"
-                    />
-                    <span className="text-sm">
-                      {t(FAMILY_LABEL_KEY[family]!, FAMILY_LABEL_FALLBACK[family]!)}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  'onboarding.providers.familiesHint',
-                  'A single provider row is created with the selected capabilities. The same API key powers every family you enable — toggling them later is a row edit, not a new entry.',
-                )}
-              </p>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
-              {t('common.cancel')}
-            </Button>
-            {!canSave ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleTestConnection}
-                disabled={
-                  isTesting
-                  || (!isEditing
-                    && !isApiKeyOptional
-                    && !hasOptionalApiKey
-                    // All required fields must have a value before testing.
-                    && configSchema.some((f) => f.required && !configValues[f.key]?.trim())
-                  )
-                }
-              >
-                {isTesting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    {t('onboarding.providers.testing')}
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="size-4" />
-                    {t('onboarding.providers.test')}
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="btn-shine"
-              >
-                {isSaving ? (
+              {isTesting ? (
+                <>
                   <Loader2 className="size-4 animate-spin" />
-                ) : isEditing ? (
-                  t('common.save')
-                ) : (
-                  t('onboarding.providers.add')
+                  {t('onboarding.providers.testing')}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="size-4" />
+                  {t('onboarding.providers.test')}
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="btn-shine"
+            >
+              {isSaving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : isEditing ? (
+                t('common.save')
+              ) : (
+                t('onboarding.providers.add')
+              )}
+            </Button>
+          )}
+        </>
+      }
+    >
+      {testPassed && (
+        <Alert className="animate-scale-in border-primary/30 bg-primary/5 text-primary">
+          <CheckCircle2 className="size-4" />
+          <AlertDescription>{t('onboarding.providers.testSuccess')}</AlertDescription>
+        </Alert>
+      )}
+
+      {!isEditing && types.length > 1 && (
+        <FormField label={t('onboarding.providers.type')}>
+          <Select value={providerType} onValueChange={(v) => {
+            setProviderType(v)
+            setProviderName('')
+            resetTest()
+          }}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {types.map((type) => (
+                <SelectItem key={type} value={type}>
+                  <span className="flex items-center gap-2">
+                    <ProviderIcon providerType={type} className="size-4 shrink-0" />
+                    <span>{catalogue.displayNames[type] ?? type}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({getCapabilitiesForType(type).join(', ')})
+                    </span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      )}
+
+      <FormField
+        label={
+          <>
+            {t('onboarding.providers.name')}
+            <span className="text-xs font-normal text-muted-foreground">
+              ({t('common.optional')})
+            </span>
+          </>
+        }
+        htmlFor="providerName"
+        tip={t('onboarding.providers.nameTip')}
+      >
+        <Input
+          id="providerName"
+          value={providerName}
+          onChange={(e) => setProviderName(e.target.value)}
+          placeholder={t('onboarding.providers.namePlaceholder', { type: catalogue.displayNames[providerType] ?? providerType })}
+        />
+      </FormField>
+
+      {/* Dynamic config form — one input per ConfigField declared by
+          the provider's `configSchema` (LLMProvider / EmbeddingProvider
+          / ImageProvider). Built-ins and plugin providers go through
+          the same path here, so a plugin author can declare `apiToken`,
+          `region`, `baseUrl`, … and the form renders accordingly. */}
+      {(configSchema.length > 0
+        ? configSchema
+        : [{ key: 'apiKey', type: 'secret' as const, label: t('onboarding.providers.apiKey'), required: true }]
+      ).map((field) => {
+        const isSecret = field.type === 'secret'
+        const Tag = isSecret ? PasswordInput : Input
+        return (
+          <FormField
+            key={field.key}
+            htmlFor={field.key}
+            label={
+              <>
+                {field.label}
+                {isEditing && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({t('onboarding.providers.apiKeyEditHint')})
+                  </span>
                 )}
-              </Button>
-            )}
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </>
+            }
+            hint={field.description}
+          >
+            <Tag
+              id={field.key}
+              // Only forward `type` for non-secret fields. PasswordInput
+              // owns its own type ('password' vs 'text' driven by the
+              // eye toggle) and explicitly Omit<…,'type'>s it from its
+              // public surface — passing it here defeats the masking.
+              {...(isSecret ? {} : { type: field.type === 'url' ? 'url' : 'text' })}
+              value={configValues[field.key] ?? ''}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setConfigValues((v) => ({ ...v, [field.key]: e.target.value }))
+                resetTest()
+              }}
+              autoComplete="off"
+              placeholder={
+                field.placeholder
+                ?? (isSecret && isEditing ? '••••••••' : undefined)
+                ?? (field.type === 'path' ? CREDENTIALS_PATH_PLACEHOLDERS[providerType] ?? '' : undefined)
+              }
+            />
+          </FormField>
+        )
+      })}
+      {apiKeyUrl && !isEditing && (
+        <a
+          href={apiKeyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          {t('onboarding.providers.getApiKey', { provider: catalogue.displayNames[providerType] ?? providerType })}
+          <ExternalLink className="size-3" />
+        </a>
+      )}
+
+      {showsFamilyPicker && (
+        <FormField
+          label={t('onboarding.providers.familiesLabel', 'Enable for')}
+          hint={t(
+            'onboarding.providers.familiesHint',
+            'A single provider row is created with the selected capabilities. The same API key powers every family you enable — toggling them later is a row edit, not a new entry.',
+          )}
+        >
+          <div className="grid gap-1.5">
+            {supportedFamilies.map((family) => (
+              <label
+                key={family}
+                className="flex cursor-pointer items-start gap-2 rounded-md border border-border/60 bg-card/50 p-2.5 hover:bg-card/80"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedFamilies.includes(family)}
+                  onChange={() => toggleFamily(family)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm">
+                  {t(FAMILY_LABEL_KEY[family]!, FAMILY_LABEL_FALLBACK[family]!)}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FormField>
+      )}
+    </FormDialog>
   )
 }

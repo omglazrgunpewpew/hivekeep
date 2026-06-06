@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Mail, Plus, Check, X, Pencil, Copy, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -24,7 +24,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogBody,
+  DialogFooter,
 } from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { HelpPanel } from '@/client/components/common/HelpPanel'
 import { SettingsListSkeleton } from '@/client/components/common/SettingsListSkeleton'
@@ -114,10 +118,12 @@ function OAuthAppCard({
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   // Load the saved client id only when the modal opens.
   useEffect(() => {
     if (!open) return
+    setError('')
     api
       .get<{ configured: boolean; clientId: string | null }>(`/email-accounts/oauth-config/${provider.type}`)
       .then((d) => {
@@ -128,6 +134,7 @@ function OAuthAppCard({
 
   const saveCreds = async () => {
     setSaving(true)
+    setError('')
     try {
       await api.put(`/email-accounts/oauth-config/${provider.type}`, { clientId, clientSecret })
       toast.success(t('settings.emailAccounts.credsSaved'))
@@ -135,7 +142,7 @@ function OAuthAppCard({
       setOpen(false)
       onChange()
     } catch (err) {
-      toast.error(getErrorMessage(err))
+      setError(getErrorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -186,79 +193,76 @@ function OAuthAppCard({
         </div>
       </CardContent>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ProviderIcon providerType={provider.type} variant="color" className="size-4" />
-              {t('settings.emailAccounts.oauthAppTitle', { provider: provider.displayName })}
-            </DialogTitle>
-            <DialogDescription>{t('settings.emailAccounts.oauthSetup')}</DialogDescription>
-          </DialogHeader>
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={
+          <span className="flex items-center gap-2">
+            <ProviderIcon providerType={provider.type} variant="color" className="size-4" />
+            {t('settings.emailAccounts.oauthAppTitle', { provider: provider.displayName })}
+          </span>
+        }
+        description={t('settings.emailAccounts.oauthSetup')}
+        size="md"
+        error={error}
+        onSubmit={saveCreds}
+        isSubmitting={saving}
+        submitDisabled={!clientId || (!provider.oauthConfigured && !clientSecret)}
+      >
+        {provider.consoleUrl && (
+          <a
+            href={provider.consoleUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            {t('settings.emailAccounts.oauthConsoleLink', { provider: provider.displayName })}
+            <ExternalLink className="size-3" />
+          </a>
+        )}
 
-          <div className="space-y-3">
-            {provider.consoleUrl && (
-              <a
-                href={provider.consoleUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                {t('settings.emailAccounts.oauthConsoleLink', { provider: provider.displayName })}
-                <ExternalLink className="size-3" />
-              </a>
-            )}
-
-            <div className="space-y-1">
-              <Label className="text-xs">{t('settings.emailAccounts.redirectUri')}</Label>
-              <p className="text-[10px] text-muted-foreground">{t('settings.emailAccounts.redirectUriHelp')}</p>
-              <div className="flex gap-1">
-                <Input
-                  readOnly
-                  value={redirectUri}
-                  className="font-mono text-xs"
-                  onFocus={(e) => e.currentTarget.select()}
-                />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="shrink-0"
-                  aria-label={t('settings.emailAccounts.copy')}
-                  onClick={copyRedirect}
-                >
-                  <Copy className="size-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs">{t('settings.emailAccounts.clientId')}</Label>
-              <Input value={clientId} onChange={(e) => setClientId(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{t('settings.emailAccounts.clientSecret')}</Label>
-              <PasswordInput
-                value={clientSecret}
-                onChange={(e) => setClientSecret(e.target.value)}
-                placeholder={
-                  provider.oauthConfigured ? t('settings.emailAccounts.secretKeep') : undefined
-                }
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button
-                onClick={saveCreds}
-                disabled={saving || !clientId || (!provider.oauthConfigured && !clientSecret)}
-              >
-                {t('common.save')}
-              </Button>
-            </div>
+        <FormField
+          label={t('settings.emailAccounts.redirectUri')}
+          hint={t('settings.emailAccounts.redirectUriHelp')}
+        >
+          <div className="flex gap-1">
+            <Input
+              readOnly
+              value={redirectUri}
+              className="font-mono text-xs"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="shrink-0"
+              aria-label={t('settings.emailAccounts.copy')}
+              onClick={copyRedirect}
+            >
+              <Copy className="size-3.5" />
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </FormField>
+
+        <FormField label={t('settings.emailAccounts.clientId')} htmlFor="oauth-client-id">
+          <Input
+            id="oauth-client-id"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+          />
+        </FormField>
+        <FormField label={t('settings.emailAccounts.clientSecret')} htmlFor="oauth-client-secret">
+          <PasswordInput
+            id="oauth-client-secret"
+            value={clientSecret}
+            onChange={(e) => setClientSecret(e.target.value)}
+            placeholder={
+              provider.oauthConfigured ? t('settings.emailAccounts.secretKeep') : undefined
+            }
+          />
+        </FormField>
+      </FormDialog>
     </Card>
   )
 }
@@ -283,38 +287,45 @@ function AddEmailAccountDialog({
 
   const provider = providers.find((p) => p.type === type) ?? providers[0]
 
+  const providerSelect = (
+    <FormField label={t('settings.emailAccounts.provider')} htmlFor="add-account-provider">
+      <Select value={provider?.type ?? ''} onValueChange={setType}>
+        <SelectTrigger id="add-account-provider">
+          {/* SelectValue renders the selected item's content (logo + name);
+              no explicit icon here or it'd show twice. */}
+          <SelectValue placeholder={t('settings.emailAccounts.provider')} />
+        </SelectTrigger>
+        <SelectContent>
+          {providers.map((p) => (
+            <SelectItem key={p.type} value={p.type}>
+              <span className="flex items-center gap-2">
+                <ProviderIcon providerType={p.type} variant="color" className="size-4" />
+                {p.displayName}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FormField>
+  )
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent variant="panel" size="md">
         <DialogHeader>
           <DialogTitle>{t('settings.emailAccounts.addTitle')}</DialogTitle>
           <DialogDescription>{t('settings.emailAccounts.addDescription')}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs">{t('settings.emailAccounts.provider')}</Label>
-            <Select value={provider?.type ?? ''} onValueChange={setType}>
-              <SelectTrigger className="w-full">
-                {/* SelectValue renders the selected item's content (logo + name);
-                    no explicit icon here or it'd show twice. */}
-                <SelectValue placeholder={t('settings.emailAccounts.provider')} />
-              </SelectTrigger>
-              <SelectContent>
-                {providers.map((p) => (
-                  <SelectItem key={p.type} value={p.type}>
-                    <span className="flex items-center gap-2">
-                      <ProviderIcon providerType={p.type} variant="color" className="size-4" />
-                      {p.displayName}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {provider && (
-            <ConnectStep provider={provider} onChange={onChange} onClose={() => onOpenChange(false)} />
-          )}
-        </div>
+        {provider ? (
+          <ConnectStep
+            provider={provider}
+            onChange={onChange}
+            onClose={() => onOpenChange(false)}
+            header={providerSelect}
+          />
+        ) : (
+          <DialogBody className="space-y-3">{providerSelect}</DialogBody>
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -322,15 +333,19 @@ function AddEmailAccountDialog({
 
 /** The connect action in the Add dialog. OAuth providers connect via redirect
  *  once their app is configured (on the main page); non-OAuth providers (IMAP)
- *  render a credentials form validated server-side before the account is saved. */
+ *  render a credentials form validated server-side before the account is saved.
+ *  Renders the scrollable body (with the provider select `header`) plus the
+ *  separated sticky footer holding the connect action. */
 function ConnectStep({
   provider,
   onChange,
   onClose,
+  header,
 }: {
   provider: EmailProviderInfo
   onChange: () => void
   onClose: () => void
+  header: ReactNode
 }) {
   const { t } = useTranslation()
   const [connecting, setConnecting] = useState(false)
@@ -395,40 +410,53 @@ function ConnectStep({
   if (provider.usesOAuth) {
     if (!provider.oauthConfigured) {
       return (
-        <p className="rounded-md border border-warning/40 bg-warning/5 p-2 text-xs text-warning">
-          {t('settings.emailAccounts.configureAppFirst', { provider: provider.displayName })}
-        </p>
+        <DialogBody className="space-y-3">
+          {header}
+          <p className="rounded-md border border-warning/40 bg-warning/5 p-2 text-xs text-warning">
+            {t('settings.emailAccounts.configureAppFirst', { provider: provider.displayName })}
+          </p>
+        </DialogBody>
       )
     }
     return (
-      <div className="space-y-3">
-        {provider.supportsContacts && (
-          <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
-            <div className="space-y-0.5">
-              <Label htmlFor="with-contacts" className="text-sm font-normal">
-                {t('settings.emailAccounts.alsoContacts')}
-              </Label>
-              <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoContactsHint')}</p>
+      <>
+        <DialogBody className="space-y-3">
+          {header}
+          {provider.supportsContacts && (
+            <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
+              <div className="space-y-0.5">
+                <Label htmlFor="with-contacts" className="text-sm font-normal">
+                  {t('settings.emailAccounts.alsoContacts')}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoContactsHint')}</p>
+              </div>
+              <Switch id="with-contacts" checked={withContacts} onCheckedChange={setWithContacts} />
             </div>
-            <Switch id="with-contacts" checked={withContacts} onCheckedChange={setWithContacts} />
-          </div>
-        )}
-        {provider.supportsCalendar && (
-          <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
-            <div className="space-y-0.5">
-              <Label htmlFor="with-calendar" className="text-sm font-normal">
-                {t('settings.emailAccounts.alsoCalendar')}
-              </Label>
-              <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoCalendarHint')}</p>
+          )}
+          {provider.supportsCalendar && (
+            <div className="flex items-start justify-between gap-3 rounded-md border border-border/60 p-2.5">
+              <div className="space-y-0.5">
+                <Label htmlFor="with-calendar" className="text-sm font-normal">
+                  {t('settings.emailAccounts.alsoCalendar')}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.alsoCalendarHint')}</p>
+              </div>
+              <Switch id="with-calendar" checked={withCalendar} onCheckedChange={setWithCalendar} />
             </div>
-            <Switch id="with-calendar" checked={withCalendar} onCheckedChange={setWithCalendar} />
-          </div>
-        )}
-        <Button className="w-full" onClick={connectOAuth} disabled={connecting}>
-          <Plus className="size-4" />
-          {t('settings.emailAccounts.connect', { provider: provider.displayName })}
-        </Button>
-      </div>
+          )}
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={connectOAuth}
+            disabled={connecting}
+          >
+            <Plus className="size-4" />
+            {t('settings.emailAccounts.connect', { provider: provider.displayName })}
+          </Button>
+        </DialogFooter>
+      </>
     )
   }
 
@@ -436,52 +464,59 @@ function ConnectStep({
   const missingRequired = provider.configSchema.some((f) => f.required && !fields[f.key]?.trim())
 
   return (
-    <div className="space-y-3">
-      {provider.capabilities.length > 1 && (
-        <div className="space-y-1.5 rounded-md border border-border/60 p-2.5">
-          <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.capabilitiesHint')}</p>
-          <div className="flex flex-wrap gap-3">
-            {provider.capabilities.map((cap) => (
-              <label key={cap} className="flex items-center gap-1.5 text-sm">
-                <Switch checked={configCaps.includes(cap)} onCheckedChange={(on) => toggleCap(cap, on)} />
-                {cap === 'email'
-                  ? t('settings.emailAccounts.capEmail')
-                  : cap === 'contacts'
-                    ? t('settings.emailAccounts.capContacts')
-                    : t('settings.emailAccounts.capCalendar')}
-              </label>
-            ))}
+    <>
+      <DialogBody className="space-y-3">
+        {header}
+        {provider.capabilities.length > 1 && (
+          <div className="space-y-1.5 rounded-md border border-border/60 p-2.5">
+            <p className="text-xs text-muted-foreground">{t('settings.emailAccounts.capabilitiesHint')}</p>
+            <div className="flex flex-wrap gap-3">
+              {provider.capabilities.map((cap) => (
+                <label key={cap} className="flex items-center gap-1.5 text-sm">
+                  <Switch checked={configCaps.includes(cap)} onCheckedChange={(on) => toggleCap(cap, on)} />
+                  {cap === 'email'
+                    ? t('settings.emailAccounts.capEmail')
+                    : cap === 'contacts'
+                      ? t('settings.emailAccounts.capContacts')
+                      : t('settings.emailAccounts.capCalendar')}
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      {provider.configSchema.map((field) => {
-        const isSecret = field.type === 'secret'
-        const Tag = isSecret ? PasswordInput : Input
-        return (
-          <div key={field.key} className="space-y-1.5">
-            <Label htmlFor={`imap-${field.key}`} className="text-xs">
-              {field.label}
-              {field.required && <span className="ml-1 text-destructive">*</span>}
-            </Label>
-            <Tag
-              id={`imap-${field.key}`}
-              value={fields[field.key] ?? ''}
-              placeholder={'placeholder' in field ? field.placeholder : undefined}
-              onChange={(e) => setFields((v) => ({ ...v, [field.key]: e.target.value }))}
-            />
-            {field.description && <p className="text-xs text-muted-foreground">{field.description}</p>}
-          </div>
-        )
-      })}
-      <Button
-        className="w-full"
-        onClick={connectConfig}
-        disabled={connecting || missingRequired || configCaps.length === 0}
-      >
-        <Plus className="size-4" />
-        {t('settings.emailAccounts.connect', { provider: provider.displayName })}
-      </Button>
-    </div>
+        )}
+        {provider.configSchema.map((field) => {
+          const isSecret = field.type === 'secret'
+          const Tag = isSecret ? PasswordInput : Input
+          return (
+            <FormField
+              key={field.key}
+              label={field.label}
+              htmlFor={`imap-${field.key}`}
+              required={field.required}
+              hint={field.description}
+            >
+              <Tag
+                id={`imap-${field.key}`}
+                value={fields[field.key] ?? ''}
+                placeholder={'placeholder' in field ? field.placeholder : undefined}
+                onChange={(e) => setFields((v) => ({ ...v, [field.key]: e.target.value }))}
+              />
+            </FormField>
+          )
+        })}
+      </DialogBody>
+      <DialogFooter>
+        <Button
+          type="button"
+          className="w-full sm:w-auto"
+          onClick={connectConfig}
+          disabled={connecting || missingRequired || configCaps.length === 0}
+        >
+          <Plus className="size-4" />
+          {t('settings.emailAccounts.connect', { provider: provider.displayName })}
+        </Button>
+      </DialogFooter>
+    </>
   )
 }
 

@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -175,177 +169,19 @@ export function EditProjectModal({ open, onOpenChange, project, onSave, onDelete
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('projects.edit.title')}</DialogTitle>
-            <DialogDescription>{t('projects.edit.description')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-project-title">{t('projects.create.titleField')}</Label>
-              <Input
-                id="edit-project-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('projects.create.descriptionField')}</Label>
-              <MarkdownEditor
-                value={description}
-                onChange={setDescription}
-                height="280px"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('projects.create.descriptionHint')}
-              </p>
-            </div>
-
-            {/* GitHub integration: PAT vault key + repo picker. When a repo
-                is set, the server kicks off a background clone whose status
-                is shown by <CloneStatusBlock> (with Retry on error). */}
-            <div className="space-y-3 border-t border-border pt-4">
-              <div className="space-y-0.5">
-                <Label>{t('projects.github.sectionTitle')}</Label>
-                <p className="text-xs text-muted-foreground">
-                  {t('projects.github.sectionHint')}
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label>{t('projects.github.patField')}</Label>
-                <VaultPatPicker
-                  value={githubPatVaultKey}
-                  onValueChange={setGithubPatVaultKey}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>{t('projects.github.repoField')}</Label>
-                <GithubRepoPicker
-                  value={githubRepo}
-                  onValueChange={(repo, branch) => {
-                    setGithubRepo(repo)
-                    if (branch) setDefaultBranch(branch)
-                  }}
-                  patVaultKey={githubPatVaultKey}
-                />
-                {!githubPatVaultKey && (
-                  <p className="text-xs text-muted-foreground">
-                    {t('projects.github.repoNeedsPat')}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-project-default-branch">{t('projects.github.defaultBranchField')}</Label>
-                <Input
-                  id="edit-project-default-branch"
-                  value={defaultBranch}
-                  onChange={(e) => setDefaultBranch(e.target.value)}
-                  placeholder="main"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('projects.github.defaultBranchHint')}
-                </p>
-              </div>
-              <CloneStatusBlock
-                projectId={project.id}
-                status={project.cloneStatus}
-                errorMessage={project.cloneError}
-                hasRepo={!!project.githubRepo}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('projects.edit.modelField')}</Label>
-              <ModelPicker
-                models={llmModels}
-                value={modelPickerValue(model, providerId)}
-                onValueChange={(modelId, pid) => {
-                  setModel(modelId)
-                  setProviderId(pid)
-                }}
-                placeholder={t('projects.edit.modelPlaceholder')}
-                allowClear
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('projects.edit.modelHint')}
-              </p>
-            </div>
-
-            {/* Default scout model for tasks on this project's tickets.
-                Empty = inherit the global scout default, then the Kin's model. */}
-            <div className="space-y-1.5">
-              <Label>{t('projects.edit.scoutModelField')}</Label>
-              <ModelPicker
-                models={llmModels}
-                value={modelPickerValue(scoutModel, scoutProviderId)}
-                onValueChange={(modelId, pid) => {
-                  setScoutModel(modelId)
-                  setScoutProviderId(pid)
-                }}
-                placeholder={t('projects.edit.scoutModelPlaceholder')}
-                allowClear
-                clearLabel={t('projects.edit.scoutModelPlaceholder')}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('projects.edit.scoutModelHint')}
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('projects.edit.thinkingField')}</Label>
-              <Select
-                value={thinkingChoice}
-                onValueChange={(v) => setThinkingChoice(v as ThinkingChoice)}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inherit">
-                    <span className="italic text-muted-foreground">
-                      {t('projects.edit.thinkingInherit')}
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
-                  <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
-                  <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
-                  <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
-                  <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {t('projects.edit.thinkingHint')}
-              </p>
-            </div>
-
-            {/* Default toolboxes for tasks started on this project's tickets.
-                Empty = inherit the built-in default; an explicit pick at
-                task-start time still overrides this. */}
-            {toolboxes.length > 0 && (
-              <div className="space-y-1.5">
-                <Label>{t('projects.edit.toolboxesField')}</Label>
-                <ToolboxMultiSelect
-                  toolboxes={toolboxes}
-                  selected={defaultToolboxIds}
-                  onChange={setDefaultToolboxIds}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('projects.edit.toolboxesHint')}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-1.5 border-t border-border pt-4">
-              <Label>{t('projects.edit.tagsSection')}</Label>
-              <TagManager projectId={project.id} tags={project.tags} />
-            </div>
-          </div>
-
-          <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2">
+      <FormDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={t('projects.edit.title')}
+        description={t('projects.edit.description')}
+        size="2xl"
+        onSubmit={handleSave}
+        isSubmitting={submitting}
+        submitDisabled={!hasChanges || !title.trim()}
+        footer={
+          <div className="flex w-full flex-row items-center justify-between gap-2">
             <Button
+              type="button"
               variant="ghost"
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => setDeleteOpen(true)}
@@ -355,16 +191,151 @@ export function EditProjectModal({ open, onOpenChange, project, onSave, onDelete
               {t('projects.edit.delete')}
             </Button>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
                 {t('common.cancel')}
               </Button>
-              <Button onClick={handleSave} disabled={!hasChanges || !title.trim() || submitting}>
+              <Button type="submit" disabled={!hasChanges || !title.trim() || submitting}>
                 {t('common.save')}
               </Button>
             </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <FormField label={t('projects.create.titleField')} htmlFor="edit-project-title">
+          <Input
+            id="edit-project-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </FormField>
+
+        <FormField label={t('projects.create.descriptionField')} hint={t('projects.create.descriptionHint')}>
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            height="280px"
+          />
+        </FormField>
+
+        {/* GitHub integration: PAT vault key + repo picker. When a repo
+            is set, the server kicks off a background clone whose status
+            is shown by <CloneStatusBlock> (with Retry on error). */}
+        <div className="space-y-3 border-t border-border pt-4">
+          <div className="space-y-0.5">
+            <Label>{t('projects.github.sectionTitle')}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t('projects.github.sectionHint')}
+            </p>
+          </div>
+          <FormField label={t('projects.github.patField')}>
+            <VaultPatPicker
+              value={githubPatVaultKey}
+              onValueChange={setGithubPatVaultKey}
+            />
+          </FormField>
+          <FormField
+            label={t('projects.github.repoField')}
+            hint={!githubPatVaultKey ? t('projects.github.repoNeedsPat') : undefined}
+          >
+            <GithubRepoPicker
+              value={githubRepo}
+              onValueChange={(repo, branch) => {
+                setGithubRepo(repo)
+                if (branch) setDefaultBranch(branch)
+              }}
+              patVaultKey={githubPatVaultKey}
+            />
+          </FormField>
+          <FormField
+            label={t('projects.github.defaultBranchField')}
+            htmlFor="edit-project-default-branch"
+            hint={t('projects.github.defaultBranchHint')}
+          >
+            <Input
+              id="edit-project-default-branch"
+              value={defaultBranch}
+              onChange={(e) => setDefaultBranch(e.target.value)}
+              placeholder="main"
+            />
+          </FormField>
+          <CloneStatusBlock
+            projectId={project.id}
+            status={project.cloneStatus}
+            errorMessage={project.cloneError}
+            hasRepo={!!project.githubRepo}
+          />
+        </div>
+
+        <FormField label={t('projects.edit.modelField')} hint={t('projects.edit.modelHint')}>
+          <ModelPicker
+            models={llmModels}
+            value={modelPickerValue(model, providerId)}
+            onValueChange={(modelId, pid) => {
+              setModel(modelId)
+              setProviderId(pid)
+            }}
+            placeholder={t('projects.edit.modelPlaceholder')}
+            allowClear
+          />
+        </FormField>
+
+        {/* Default scout model for tasks on this project's tickets.
+            Empty = inherit the global scout default, then the Kin's model. */}
+        <FormField label={t('projects.edit.scoutModelField')} hint={t('projects.edit.scoutModelHint')}>
+          <ModelPicker
+            models={llmModels}
+            value={modelPickerValue(scoutModel, scoutProviderId)}
+            onValueChange={(modelId, pid) => {
+              setScoutModel(modelId)
+              setScoutProviderId(pid)
+            }}
+            placeholder={t('projects.edit.scoutModelPlaceholder')}
+            allowClear
+            clearLabel={t('projects.edit.scoutModelPlaceholder')}
+          />
+        </FormField>
+
+        <FormField label={t('projects.edit.thinkingField')} hint={t('projects.edit.thinkingHint')}>
+          <Select
+            value={thinkingChoice}
+            onValueChange={(v) => setThinkingChoice(v as ThinkingChoice)}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="inherit">
+                <span className="italic text-muted-foreground">
+                  {t('projects.edit.thinkingInherit')}
+                </span>
+              </SelectItem>
+              <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
+              <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
+              <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
+              <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
+              <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        {/* Default toolboxes for tasks started on this project's tickets.
+            Empty = inherit the built-in default; an explicit pick at
+            task-start time still overrides this. */}
+        {toolboxes.length > 0 && (
+          <FormField label={t('projects.edit.toolboxesField')} hint={t('projects.edit.toolboxesHint')}>
+            <ToolboxMultiSelect
+              toolboxes={toolboxes}
+              selected={defaultToolboxIds}
+              onChange={setDefaultToolboxIds}
+            />
+          </FormField>
+        )}
+
+        <div className="space-y-2 border-t border-border pt-4">
+          <Label>{t('projects.edit.tagsSection')}</Label>
+          <TagManager projectId={project.id} tags={project.tags} />
+        </div>
+      </FormDialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

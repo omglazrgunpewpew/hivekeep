@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api } from '@/client/lib/api'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
+import { api, getErrorMessage } from '@/client/lib/api'
 import { Input } from '@/client/components/ui/input'
-import { Label } from '@/client/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -19,8 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/client/components/ui/select'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { PlatformIcon } from '@/client/components/common/PlatformIcon'
-import { InfoTip } from '@/client/components/common/InfoTip'
 import type { NotificationChannelSummary, AvailableNotificationChannel, ContactForNotification } from '@/shared/types'
 
 interface NotificationChannelFormDialogProps {
@@ -38,6 +29,7 @@ export function NotificationChannelFormDialog({ open, onOpenChange, editChannel,
   const [selectedContactId, setSelectedContactId] = useState('')
   const [label, setLabel] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const selectedChannel = availableChannels.find((c) => c.channelId === channelId)
 
@@ -59,6 +51,7 @@ export function NotificationChannelFormDialog({ open, onOpenChange, editChannel,
         setLabel('')
       }
       setContacts([])
+      setError('')
     }
   }, [open, editChannel])
 
@@ -92,10 +85,10 @@ export function NotificationChannelFormDialog({ open, onOpenChange, editChannel,
 
   const platformChatId = selectedContact?.platformId ?? ''
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     if (!channelId || !platformChatId) return
 
+    setError('')
     setSaving(true)
     try {
       if (editChannel) {
@@ -112,99 +105,85 @@ export function NotificationChannelFormDialog({ open, onOpenChange, editChannel,
       }
       onSaved()
       onOpenChange(false)
-    } catch {
-      // Error toast handled by api client
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {editChannel ? t('settings.notifications.editChannel') : t('settings.notifications.addChannel')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {editChannel ? t('settings.notifications.editChannel') : t('settings.notifications.addChannel')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editChannel ? t('settings.notifications.editChannel') : t('settings.notifications.addChannel')}
+      size="md"
+      error={error}
+      onSubmit={handleSubmit}
+      isSubmitting={saving}
+      submitDisabled={!channelId || !platformChatId}
+      submitLabel={editChannel ? t('common.save') : t('common.create')}
+    >
+      {/* Source channel */}
+      <FormField label={t('settings.notifications.sourceChannel')} tip={t('settings.notifications.sourceChannelTip')}>
+        {availableChannels.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t('settings.notifications.noAvailableChannels')}</p>
+        ) : (
+          <Select value={channelId} onValueChange={(v) => { setChannelId(v); setSelectedContactId('') }} disabled={!!editChannel}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('settings.notifications.sourceChannel')} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableChannels.map((ch) => (
+                <SelectItem key={ch.channelId} value={ch.channelId}>
+                  <div className="flex items-center gap-2">
+                    <PlatformIcon platform={ch.platform} variant="color" className="size-4" />
+                    <span>{ch.channelName}</span>
+                    <span className="text-muted-foreground text-xs">({ch.kinName})</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormField>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Source channel */}
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.notifications.sourceChannel')} <InfoTip content={t('settings.notifications.sourceChannelTip')} /></Label>
-            {availableChannels.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('settings.notifications.noAvailableChannels')}</p>
-            ) : (
-              <Select value={channelId} onValueChange={(v) => { setChannelId(v); setSelectedContactId('') }} disabled={!!editChannel}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('settings.notifications.sourceChannel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableChannels.map((ch) => (
-                    <SelectItem key={ch.channelId} value={ch.channelId}>
-                      <div className="flex items-center gap-2">
-                        <PlatformIcon platform={ch.platform} variant="color" className="size-4" />
-                        <span>{ch.channelName}</span>
-                        <span className="text-muted-foreground text-xs">({ch.kinName})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Recipient (Contact) */}
-          {selectedChannel && (
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('settings.notifications.recipient')} <InfoTip content={t('settings.notifications.recipientTip')} /></Label>
-              {contacts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t('settings.notifications.noContactsForPlatform', { platform: selectedChannel.platform })}
-                </p>
-              ) : (
-                <Select value={selectedContactId} onValueChange={setSelectedContactId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('settings.notifications.selectContact')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contacts.map((c) => (
-                      <SelectItem key={c.contactId} value={c.contactId}>
-                        <div className="flex items-center gap-2">
-                          <span>{c.contactName}</span>
-                          <span className="text-muted-foreground text-xs">({c.platformId})</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+      {/* Recipient (Contact) */}
+      {selectedChannel && (
+        <FormField label={t('settings.notifications.recipient')} tip={t('settings.notifications.recipientTip')}>
+          {contacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t('settings.notifications.noContactsForPlatform', { platform: selectedChannel.platform })}
+            </p>
+          ) : (
+            <Select value={selectedContactId} onValueChange={setSelectedContactId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('settings.notifications.selectContact')} />
+              </SelectTrigger>
+              <SelectContent>
+                {contacts.map((c) => (
+                  <SelectItem key={c.contactId} value={c.contactId}>
+                    <div className="flex items-center gap-2">
+                      <span>{c.contactName}</span>
+                      <span className="text-muted-foreground text-xs">({c.platformId})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
+        </FormField>
+      )}
 
-          {/* Label */}
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.notifications.label')} <InfoTip content={t('settings.notifications.labelTip')} /></Label>
-            <Input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder={t('settings.notifications.labelPlaceholder')}
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={!channelId || !platformChatId || saving}>
-              {editChannel ? t('common.save') : t('common.create')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      {/* Label */}
+      <FormField label={t('settings.notifications.label')} htmlFor="notification-channel-label" tip={t('settings.notifications.labelTip')}>
+        <Input
+          id="notification-channel-label"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder={t('settings.notifications.labelPlaceholder')}
+        />
+      </FormField>
+    </FormDialog>
   )
 }

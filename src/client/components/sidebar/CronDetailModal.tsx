@@ -7,6 +7,7 @@ import { useSidePanel } from '@/client/contexts/SidePanelContext'
 import {
   Dialog,
   DialogContent,
+  DialogBody,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -179,9 +180,9 @@ export function CronDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[85vh] overflow-hidden flex flex-col gap-0 !p-0 sm:max-w-2xl">
+        <DialogContent variant="panel" size="2xl">
           {/* Header */}
-          <DialogHeader className="shrink-0 px-6 pt-6 pb-3 border-b border-border">
+          <DialogHeader>
             <div className="flex items-center gap-3">
               <Avatar className="size-9 shrink-0">
                 {cron.kinAvatarUrl && <AvatarImage src={cron.kinAvatarUrl} alt={kinName} />}
@@ -222,7 +223,7 @@ export function CronDetailModal({
           </DialogHeader>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
+          <DialogBody>
             <div className="space-y-4">
               {/* Schedule */}
               <div className="space-y-1">
@@ -419,10 +420,10 @@ export function CronDetailModal({
                 )}
               </div>
             </div>
-          </div>
+          </DialogBody>
 
           {/* Footer */}
-          <DialogFooter className="shrink-0 flex-row items-center gap-2 px-6 pb-6 pt-3 border-t border-border">
+          <DialogFooter className="flex-row flex-wrap items-center gap-2">
             {cron.requiresApproval && (
               <Button
                 size="sm"

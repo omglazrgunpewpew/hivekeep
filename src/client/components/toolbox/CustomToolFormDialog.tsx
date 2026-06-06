@@ -1,14 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ComponentType, SVGProps } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Label } from '@/client/components/ui/label'
@@ -530,35 +524,35 @@ export function CustomToolFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[92vw] max-w-3xl lg:max-w-5xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? t('customTools.edit') : t('customTools.create')}</DialogTitle>
-          <DialogDescription>{t('customTools.dialogDescription')}</DialogDescription>
-        </DialogHeader>
-
-        <div className="min-w-0 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-slug">{t('customTools.fields.slug')}</Label>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('customTools.edit') : t('customTools.create')}
+      description={t('customTools.dialogDescription')}
+      size="5xl"
+      error={error}
+      onSubmit={handleSubmit}
+      isSubmitting={saving}
+      submitLabel={isEdit ? t('common.save') : t('common.create')}
+    >
+      <div className="min-w-0 space-y-4">
+          <FormRow>
+            <FormField label={t('customTools.fields.slug')} htmlFor="ct-slug">
               <Input id="ct-slug" value={slug} onChange={(e) => setSlug(e.target.value)} disabled={isEdit} placeholder="scrape_url" />
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-name">{t('customTools.fields.name')}</Label>
+            </FormField>
+            <FormField label={t('customTools.fields.name')} htmlFor="ct-name">
               <Input id="ct-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Scrape URL" />
-            </div>
-          </div>
+            </FormField>
+          </FormRow>
 
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="ct-desc">{t('customTools.fields.description')}</Label>
+          <FormField label={t('customTools.fields.description')} htmlFor="ct-desc">
             <Textarea id="ct-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder={t('customTools.fields.descriptionHint')} />
-          </div>
+          </FormField>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <Label>{t('customTools.fields.language')}</Label>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+            <FormField label={t('customTools.fields.language')}>
               <Select value={language} onValueChange={onLanguageChange}>
-                <SelectTrigger className="w-full min-w-0"><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {LANGUAGES.map((l) => (
                     <SelectItem key={l} value={l}>
@@ -570,15 +564,13 @@ export function CustomToolFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-entry">{t('customTools.fields.entrypoint')}</Label>
+            </FormField>
+            <FormField label={t('customTools.fields.entrypoint')} htmlFor="ct-entry">
               <Input id="ct-entry" value={entrypoint} onChange={(e) => setEntrypoint(e.target.value)} />
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <Label>{t('customTools.fields.domain')}</Label>
+            </FormField>
+            <FormField label={t('customTools.fields.domain')}>
               <Select value={domainSlug} onValueChange={setDomainSlug}>
-                <SelectTrigger className="w-full min-w-0"><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {domains.map((d) => (
                     <SelectItem key={d.slug} value={d.slug}>
@@ -590,14 +582,12 @@ export function CustomToolFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
 
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="ct-params">{t('customTools.fields.parameters')}</Label>
+          <FormField label={t('customTools.fields.parameters')} htmlFor="ct-params" hint={t('customTools.fields.parametersHint')}>
             <CodeEditor value={parameters} onChange={setParameters} language="json" height="140px" />
-            <p className="text-xs text-muted-foreground">{t('customTools.fields.parametersHint')}</p>
-          </div>
+          </FormField>
 
           {/* Translations — UI-only localized name / description / param labels. */}
           <div className="min-w-0 space-y-2.5 rounded-lg border border-dashed p-3">
@@ -614,17 +604,15 @@ export function CustomToolFormDialog({
             </div>
             <p className="text-xs text-muted-foreground">{t('customTools.translations.help')}</p>
 
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-tr-name">{t('customTools.translations.uiName')}</Label>
+            <FormField label={t('customTools.translations.uiName')} htmlFor="ct-tr-name">
               <Input
                 id="ct-tr-name"
                 value={localeEntry.name ?? ''}
                 onChange={(e) => setLocaleField('name', e.target.value)}
                 placeholder={name}
               />
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-tr-desc">{t('customTools.translations.uiDescription')}</Label>
+            </FormField>
+            <FormField label={t('customTools.translations.uiDescription')} htmlFor="ct-tr-desc">
               <Textarea
                 id="ct-tr-desc"
                 value={localeEntry.description ?? ''}
@@ -632,7 +620,7 @@ export function CustomToolFormDialog({
                 rows={2}
                 placeholder={description}
               />
-            </div>
+            </FormField>
 
             {paramNames.length > 0 && (
               <div className="min-w-0 space-y-2.5">
@@ -641,7 +629,7 @@ export function CustomToolFormDialog({
                   return (
                     <div key={param} className="min-w-0 space-y-1.5 rounded-md bg-muted/40 p-2">
                       <code className="block truncate text-xs text-muted-foreground">{param}</code>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <Input
                           className="min-w-0"
                           aria-label={t('customTools.translations.paramLabel')}
@@ -664,14 +652,12 @@ export function CustomToolFormDialog({
             )}
           </div>
 
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="ct-code">{t('customTools.fields.code', { file: entrypoint })}</Label>
+          <FormField label={t('customTools.fields.code', { file: entrypoint })} htmlFor="ct-code">
             <CodeEditor value={code} onChange={setCode} language={codeLanguageFor(language)} height="280px" />
-          </div>
+          </FormField>
 
           {depsFile && (
-            <div className="min-w-0 space-y-1.5">
-              <Label htmlFor="ct-deps">{t('customTools.fields.deps', { file: depsFile })}</Label>
+            <FormField label={t('customTools.fields.deps', { file: depsFile })} htmlFor="ct-deps">
               <CodeEditor
                 value={depsContent}
                 onChange={setDepsContent}
@@ -684,7 +670,7 @@ export function CustomToolFormDialog({
               </Button>
               {!isEdit && <p className="text-xs text-muted-foreground">{t('customTools.installAfterSave')}</p>}
               {setupOutput && <pre className="max-h-40 max-w-full overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs whitespace-pre-wrap break-words">{setupOutput}</pre>}
-            </div>
+            </FormField>
           )}
 
           {/* Optional result renderer (renderer.tsx) — secondary / collapsible. */}
@@ -811,18 +797,7 @@ export function CustomToolFormDialog({
               testOutput && <pre className="max-h-40 max-w-full overflow-x-auto overflow-y-auto rounded bg-muted p-2 text-xs whitespace-pre-wrap break-words">{testOutput}</pre>
             )}
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving && <Loader2 className="size-4 animate-spin" />}
-            {isEdit ? t('common.save') : t('common.create')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </FormDialog>
   )
 }

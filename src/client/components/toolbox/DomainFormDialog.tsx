@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
-import { Label } from '@/client/components/ui/label'
 import { Textarea } from '@/client/components/ui/textarea'
 import { cn } from '@/client/lib/utils'
 import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
@@ -78,82 +70,63 @@ export function DomainFormDialog({ open, onOpenChange, domain, onCreate, onUpdat
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {readOnly ? t('toolDomains.view') : isEdit ? t('toolDomains.edit') : t('toolDomains.create')}
-          </DialogTitle>
-          <DialogDescription>{t('toolDomains.dialogDescription')}</DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={readOnly ? t('toolDomains.view') : isEdit ? t('toolDomains.edit') : t('toolDomains.create')}
+      description={t('toolDomains.dialogDescription')}
+      size="md"
+      error={error}
+      isSubmitting={saving}
+      submitLabel={isEdit ? t('common.save') : t('common.create')}
+      cancelLabel={readOnly ? t('common.close') : t('common.cancel')}
+      onSubmit={!readOnly ? handleSubmit : undefined}
+    >
+      {/* Preview */}
+      <div className="flex items-center gap-2">
+        <span className={cn('flex size-9 items-center justify-center rounded-md', CURATED_DOMAIN_COLORS[color as keyof typeof CURATED_DOMAIN_COLORS]?.bg)}>
+          <ToolDomainIcon iconName={icon} className={cn('size-4', CURATED_DOMAIN_COLORS[color as keyof typeof CURATED_DOMAIN_COLORS]?.text)} />
+        </span>
+        <span className="text-sm font-medium">{label || t('toolDomains.previewLabel')}</span>
+      </div>
 
-        <div className="space-y-4">
-          {/* Preview */}
-          <div className="flex items-center gap-2">
-            <span className={cn('flex size-9 items-center justify-center rounded-md', CURATED_DOMAIN_COLORS[color as keyof typeof CURATED_DOMAIN_COLORS]?.bg)}>
-              <ToolDomainIcon iconName={icon} className={cn('size-4', CURATED_DOMAIN_COLORS[color as keyof typeof CURATED_DOMAIN_COLORS]?.text)} />
-            </span>
-            <span className="text-sm font-medium">{label || t('toolDomains.previewLabel')}</span>
-          </div>
+      {!isEdit && (
+        <FormField label={t('toolDomains.fields.slug')} htmlFor="domain-slug">
+          <Input id="domain-slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="weather" />
+        </FormField>
+      )}
 
-          {!isEdit && (
-            <div className="space-y-1.5">
-              <Label htmlFor="domain-slug">{t('toolDomains.fields.slug')}</Label>
-              <Input id="domain-slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="weather" />
-            </div>
-          )}
+      <FormField label={t('toolDomains.fields.label')} htmlFor="domain-label">
+        <Input id="domain-label" value={label} onChange={(e) => setLabel(e.target.value)} disabled={readOnly} placeholder="Weather" />
+      </FormField>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="domain-label">{t('toolDomains.fields.label')}</Label>
-            <Input id="domain-label" value={label} onChange={(e) => setLabel(e.target.value)} disabled={readOnly} placeholder="Weather" />
-          </div>
+      <FormField label={t('toolDomains.fields.icon')} htmlFor="domain-icon" hint={t('toolDomains.fields.iconHint')}>
+        <LucideIconPicker value={icon} onChange={setIcon} disabled={readOnly} />
+      </FormField>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="domain-icon">{t('toolDomains.fields.icon')}</Label>
-            <LucideIconPicker value={icon} onChange={setIcon} disabled={readOnly} />
-            <p className="text-xs text-muted-foreground">{t('toolDomains.fields.iconHint')}</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>{t('toolDomains.fields.color')}</Label>
-            <div className="flex flex-wrap gap-2">
-              {DOMAIN_COLOR_TOKENS.map((token) => (
-                <button
-                  key={token}
-                  type="button"
-                  disabled={readOnly}
-                  onClick={() => setColor(token)}
-                  aria-label={token}
-                  aria-pressed={color === token}
-                  style={{ backgroundColor: `var(--color-${token})` }}
-                  className={cn(
-                    'size-7 rounded-md border-2 transition-transform',
-                    color === token ? 'border-foreground scale-110' : 'border-transparent',
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="domain-desc">{t('toolDomains.fields.description')}</Label>
-            <Textarea id="domain-desc" value={description} onChange={(e) => setDescription(e.target.value)} disabled={readOnly} rows={2} />
-          </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
+      <FormField label={t('toolDomains.fields.color')}>
+        <div className="flex flex-wrap gap-2">
+          {DOMAIN_COLOR_TOKENS.map((token) => (
+            <button
+              key={token}
+              type="button"
+              disabled={readOnly}
+              onClick={() => setColor(token)}
+              aria-label={token}
+              aria-pressed={color === token}
+              style={{ backgroundColor: `var(--color-${token})` }}
+              className={cn(
+                'size-7 rounded-md border-2 transition-transform',
+                color === token ? 'border-foreground scale-110' : 'border-transparent',
+              )}
+            />
+          ))}
         </div>
+      </FormField>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {readOnly ? t('common.close') : t('common.cancel')}
-          </Button>
-          {!readOnly && (
-            <Button onClick={handleSubmit} disabled={saving}>
-              {isEdit ? t('common.save') : t('common.create')}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <FormField label={t('toolDomains.fields.description')} htmlFor="domain-desc">
+        <Textarea id="domain-desc" value={description} onChange={(e) => setDescription(e.target.value)} disabled={readOnly} rows={2} />
+      </FormField>
+    </FormDialog>
   )
 }

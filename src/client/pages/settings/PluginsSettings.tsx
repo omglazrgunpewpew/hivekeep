@@ -5,7 +5,6 @@ import { Button } from '@/client/components/ui/button'
 import { Switch } from '@/client/components/ui/switch'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
-import { Label } from '@/client/components/ui/label'
 import { Badge } from '@/client/components/ui/badge'
 import { Textarea } from '@/client/components/ui/textarea'
 import {
@@ -28,6 +27,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/client/components/ui/collapsible'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { SettingsListSkeleton } from '@/client/components/common/SettingsListSkeleton'
 import { api, toastError } from '@/client/lib/api'
@@ -654,48 +655,34 @@ export function PluginsSettings() {
       )}
 
       {/* Install dialog */}
-      <Dialog open={installOpen} onOpenChange={setInstallOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('settings.plugins.installTitle')}</DialogTitle>
-            <DialogDescription>{t('settings.plugins.installDescription')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="git-url" className="flex items-center gap-2">
-                <GitBranch className="size-3" />
-                {t('settings.plugins.gitUrl')}
-              </Label>
-              <Input
-                id="git-url"
-                placeholder="https://github.com/user/kinbot-plugin-xxx.git"
-                value={installUrl}
-                onChange={(e) => setInstallUrl(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setInstallOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleInstall}
-              disabled={installing || !installUrl}
-            >
-              {installing ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  {t('settings.plugins.installing')}
-                </>
-              ) : (
-                t('settings.plugins.install')
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FormDialog
+        open={installOpen}
+        onOpenChange={setInstallOpen}
+        title={t('settings.plugins.installTitle')}
+        description={t('settings.plugins.installDescription')}
+        size="lg"
+        onSubmit={handleInstall}
+        isSubmitting={installing}
+        submitDisabled={!installUrl}
+        submitLabel={t('settings.plugins.install')}
+      >
+        <FormField
+          label={
+            <>
+              <GitBranch className="size-3" />
+              {t('settings.plugins.gitUrl')}
+            </>
+          }
+          htmlFor="git-url"
+        >
+          <Input
+            id="git-url"
+            placeholder="https://github.com/user/kinbot-plugin-xxx.git"
+            value={installUrl}
+            onChange={(e) => setInstallUrl(e.target.value)}
+          />
+        </FormField>
+      </FormDialog>
 
       {/* Uninstall confirmation dialog */}
       <Dialog open={!!uninstallPlugin} onOpenChange={(open) => !open && setUninstallPlugin(null)}>
@@ -723,41 +710,26 @@ export function PluginsSettings() {
       </Dialog>
 
       {/* Config dialog */}
-      <Dialog open={!!configPlugin} onOpenChange={(open) => !open && setConfigPlugin(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {t('settings.plugins.configureTitle', { name: configPlugin?.name })}
-            </DialogTitle>
-            <DialogDescription>
-              {t('settings.plugins.configureDescription')}
-            </DialogDescription>
-          </DialogHeader>
-
-          {configPlugin && (
-            <div className="space-y-4 py-2">
-              {Object.entries(configPlugin.configSchema).map(([key, field]) => (
-                <ConfigFieldRenderer
-                  key={key}
-                  fieldKey={key}
-                  field={field}
-                  value={configValues[key] ?? field.default ?? ''}
-                  onChange={(v) => setConfigValues((prev) => ({ ...prev, [key]: v }))}
-                />
-              ))}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfigPlugin(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={saveConfig} disabled={saving}>
-              {saving ? t('common.saving') : t('common.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FormDialog
+        open={!!configPlugin}
+        onOpenChange={(open) => !open && setConfigPlugin(null)}
+        title={t('settings.plugins.configureTitle', { name: configPlugin?.name })}
+        description={t('settings.plugins.configureDescription')}
+        size="lg"
+        onSubmit={saveConfig}
+        isSubmitting={saving}
+      >
+        {configPlugin &&
+          Object.entries(configPlugin.configSchema).map(([key, field]) => (
+            <ConfigFieldRenderer
+              key={key}
+              fieldKey={key}
+              field={field}
+              value={configValues[key] ?? field.default ?? ''}
+              onChange={(v) => setConfigValues((prev) => ({ ...prev, [key]: v }))}
+            />
+          ))}
+      </FormDialog>
     </div>
   )
 }
@@ -776,15 +748,12 @@ function ConfigFieldRenderer({
   onChange: (value: any) => void
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={fieldKey}>
-        {field.label}
-        {field.required && <span className="text-destructive ml-1">*</span>}
-      </Label>
-      {field.description && (
-        <p className="text-xs text-muted-foreground">{field.description}</p>
-      )}
-
+    <FormField
+      label={field.label}
+      htmlFor={fieldKey}
+      required={field.required}
+      hint={field.description}
+    >
       {field.type === 'string' && (
         field.secret ? (
           <PasswordInput
@@ -856,6 +825,6 @@ function ConfigFieldRenderer({
           placeholder={field.placeholder}
         />
       )}
-    </div>
+    </FormField>
   )
 }

@@ -1,17 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
 import { Input } from '@/client/components/ui/input'
 import { Button } from '@/client/components/ui/button'
 import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteButton'
 import { Label } from '@/client/components/ui/label'
-import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
@@ -21,8 +15,7 @@ import { KinSelectItem, type KinOption } from '@/client/components/common/KinSel
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
 import type { KinThinkingEffort } from '@/shared/types'
 import { Switch } from '@/client/components/ui/switch'
-import { Loader2, Sparkles, Trash2, Bell, AlertTriangle } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
+import { Sparkles, Trash2, Bell, AlertTriangle } from 'lucide-react'
 import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
 import { useUnsavedChanges } from '@/client/hooks/useUnsavedChanges'
 import { useAuth } from '@/client/hooks/useAuth'
@@ -169,8 +162,7 @@ export function CronFormModal({
     }
   }, [open, cron, defaults, kins, resetDirty])
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit() {
     setError(null)
     setIsSubmitting(true)
 
@@ -245,268 +237,28 @@ export function CronFormModal({
     return scheduleHuman ? cronNextRuns(schedule, 3, serverTimezone) : []
   }, [runOnce, scheduleDatetime, schedule, scheduleHuman, serverTimezone])
 
+  const submitDisabled =
+    isSubmitting ||
+    !name ||
+    (runOnce ? !scheduleDatetime : !schedule) ||
+    scheduleInvalid ||
+    !taskDescription ||
+    (!isEdit && !kinId)
+
   return (
     <>
-    <Dialog open={open} onOpenChange={(v) => { if (!v) guardedClose(); else onOpenChange(true) }}>
-      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 border-b px-6 py-4">
-          <DialogTitle>
-            {isEdit ? t('cron.edit.title') : t('cron.create.title')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {isEdit ? t('cron.edit.title') : t('cron.create.title')}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {/* Error alert */}
-          {error && (
-            <div className="shrink-0 px-6 pt-4">
-              <FormErrorAlert error={error} animate />
-            </div>
-          )}
-
-          {/* Form fields */}
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="cronFormName" className="inline-flex items-center gap-1.5">{t('cron.create.name')} <InfoTip content={t('cron.create.nameTip')} /></Label>
-              <Input
-                id="cronFormName"
-                value={name}
-                onChange={(e) => { setName(e.target.value); markDirty() }}
-                placeholder={t('cron.create.namePlaceholder')}
-                required
-              />
-            </div>
-
-            {/* Owner Kin */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('cron.create.kin')} <InfoTip content={t('cron.create.kinTip')} /></Label>
-              {isEdit ? (
-                <div className="flex items-center gap-2.5 rounded-md border border-input bg-muted/30 px-3 py-2">
-                  {selectedKin && <KinSelectItem kin={selectedKin} />}
-                </div>
-              ) : (
-                <KinSelector
-                  value={kinId}
-                  onValueChange={setKinId}
-                  kins={kins}
-                  placeholder={t('cron.create.kinPlaceholder')}
-                  required
-                />
-              )}
-            </div>
-
-            {/* Schedule type toggle */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('cron.create.scheduleType', 'Schedule type')}</Label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setRunOnce(false); markDirty() }}
-                  className={cn(
-                    'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
-                    !runOnce
-                      ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                  )}
-                >
-                  {t('cron.create.recurring', 'Recurring')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setRunOnce(true); markDirty() }}
-                  className={cn(
-                    'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
-                    runOnce
-                      ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                  )}
-                >
-                  {t('cron.create.oneTime', 'One-time')}
-                </button>
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <div className="space-y-2">
-              <Label htmlFor="cronFormSchedule" className="inline-flex items-center gap-1.5">{t('cron.create.schedule')} <InfoTip content={t('cron.create.scheduleTip')} /></Label>
-              {runOnce ? (
-                <>
-                  <Input
-                    id="cronFormSchedule"
-                    type="datetime-local"
-                    value={scheduleDatetime}
-                    onChange={(e) => { setScheduleDatetime(e.target.value); markDirty() }}
-                    className={cn(scheduleInvalid && 'border-destructive focus-visible:ring-destructive/30')}
-                    required
-                  />
-                  <p className="text-[11px] text-muted-foreground">{t('cron.create.oneTimeHelp', 'Pick a date and time. The cron will fire once and then deactivate.')}</p>
-                  {scheduleInvalid && scheduleDatetime && (
-                    <p className="text-[11px] text-destructive">
-                      {t('cron.create.datetimePast', 'Datetime must be in the future')}
-                    </p>
-                  )}
-                  {scheduleDatetime && !scheduleInvalid && scheduleHuman && (
-                    <p className="text-[11px] text-primary/80 italic">
-                      {scheduleHuman} ({t('cron.create.serverTime')})
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Input
-                    id="cronFormSchedule"
-                    value={schedule}
-                    onChange={(e) => { setSchedule(e.target.value); markDirty() }}
-                    placeholder={t('cron.create.schedulePlaceholder')}
-                    className={cn('font-mono', scheduleInvalid && 'border-destructive focus-visible:ring-destructive/30')}
-                    required
-                  />
-                  <p className="text-[11px] text-muted-foreground">{t('cron.create.scheduleHelp')}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {CRON_PRESETS.map((preset) => (
-                      <button
-                        key={preset.key}
-                        type="button"
-                        onClick={() => { setSchedule(preset.value); markDirty() }}
-                        className={cn(
-                          'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
-                          schedule === preset.value
-                            ? 'border-primary/50 bg-primary/10 text-primary'
-                            : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                        )}
-                      >
-                        {t(`cron.create.${preset.key}`)}
-                      </button>
-                    ))}
-                  </div>
-                  {scheduleInvalid && (
-                    <p className="text-[11px] text-destructive">
-                      {t('cron.create.scheduleInvalid')}
-                    </p>
-                  )}
-                  {scheduleHuman && (
-                    <div className="space-y-0.5">
-                      <p className="text-[11px] text-primary/80 italic">
-                        {scheduleHuman} ({t('cron.create.serverTime')})
-                      </p>
-                      {nextRuns.length > 0 && (
-                        <p className="text-[11px] text-muted-foreground">
-                          {t('cron.create.nextRuns')}: {nextRuns.map((d) =>
-                            d.toLocaleString(i18n.language, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
-                          ).join(', ')}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Task description (MarkdownEditor) */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('cron.create.taskDescription')} <InfoTip content={t('cron.create.taskDescriptionTip')} /></Label>
-              <MarkdownEditor
-                value={taskDescription}
-                onChange={(v) => { setTaskDescription(v); markDirty() }}
-                height="160px"
-              />
-            </div>
-
-            {/* Target Kin (optional) */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('cron.create.targetKin')} <InfoTip content={t('cron.create.targetKinTip')} /></Label>
-              <KinSelector
-                value={targetKinId}
-                onValueChange={setTargetKinId}
-                kins={kins}
-                placeholder="—"
-                noneLabel="—"
-              />
-              <p className="text-[11px] text-muted-foreground">{t('cron.create.targetKinHint')}</p>
-            </div>
-
-            {/* Model (ModelPicker) */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('cron.create.model')} <InfoTip content={t('cron.create.modelTip')} /></Label>
-              <ModelPicker
-                models={llmModels}
-                value={modelPickerValue(model, modelProviderId)}
-                onValueChange={(modelId, pid) => { setModel(modelId); setModelProviderId(pid) }}
-                placeholder={t('cron.create.modelPlaceholder')}
-                allowClear
-              />
-            </div>
-
-            {/* Thinking effort */}
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">
-                <Sparkles className="size-3.5" />
-                {t('chat.thinkingPicker.title')}
-              </Label>
-              <Select
-                value={thinkingEffort}
-                onValueChange={(v) => { setThinkingEffort(v as KinThinkingEffort | 'off'); markDirty() }}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
-                  <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
-                  <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
-                  <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
-                  <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Toolboxes */}
-            {toolboxes.length > 0 && (
-              <div className="space-y-2">
-                <Label className="inline-flex items-center gap-1.5">
-                  {t('cron.create.toolboxes')} <InfoTip content={t('cron.create.toolboxesTip')} />
-                </Label>
-                <ToolboxMultiSelect
-                  toolboxes={toolboxes}
-                  selected={selectedToolboxIds}
-                  onChange={(next) => { setSelectedToolboxIds(next); markDirty() }}
-                  disabled={isSubmitting}
-                />
-                <p className="text-[11px] text-muted-foreground">{t('cron.create.toolboxesHelp')}</p>
-              </div>
-            )}
-
-            {/* Trigger parent turn */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3 rounded-md border border-input bg-muted/30 px-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <Label htmlFor="cronTriggerParentTurn" className="inline-flex items-center gap-1.5 cursor-pointer">
-                    <Bell className="size-3.5" />
-                    {t('cron.triggerParentTurn.label')}
-                  </Label>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{t('cron.triggerParentTurn.help')}</p>
-                </div>
-                <Switch
-                  id="cronTriggerParentTurn"
-                  checked={triggerParentTurn}
-                  onCheckedChange={(v) => { setTriggerParentTurn(v); markDirty() }}
-                  className="shrink-0"
-                />
-              </div>
-              {triggerParentTurn && (
-                <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning">
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                  <span>{t('cron.triggerParentTurn.warning')}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="shrink-0 flex items-center border-t px-6 py-3">
+      <FormDialog
+        open={open}
+        onOpenChange={(v) => { if (!v) guardedClose() }}
+        title={isEdit ? t('cron.edit.title') : t('cron.create.title')}
+        size="2xl"
+        error={error}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitDisabled={submitDisabled}
+        submitLabel={isEdit ? t('cron.edit.save') : t('cron.create.submit')}
+        footer={
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center">
             {isEdit && onDelete && cron && (
               <ConfirmDeleteButton
                 onConfirm={handleDelete}
@@ -514,30 +266,281 @@ export function CronFormModal({
                 description={t('cron.edit.deleteConfirm')}
                 confirmLabel={t('cron.edit.deleteAction')}
                 trigger={
-                  <Button type="button" variant="destructive" size="sm" className="mr-auto">
+                  <Button type="button" variant="destructive" size="sm" className="sm:mr-auto">
                     <Trash2 className="mr-1.5 size-3.5" />
                     {t('cron.edit.delete')}
                   </Button>
                 }
               />
             )}
-
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => guardedClose()}
+              disabled={isSubmitting}
+              className="sm:ml-auto"
+            >
+              {t('common.cancel')}
+            </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !name || (runOnce ? !scheduleDatetime : !schedule) || scheduleInvalid || !taskDescription || (!isEdit && !kinId)}
-              className="ml-auto btn-shine"
               size="sm"
+              disabled={submitDisabled}
+              className="btn-shine"
             >
-              {isSubmitting && <Loader2 className="mr-1.5 size-3.5 animate-spin" />}
               {isEdit ? t('cron.edit.save') : t('cron.create.submit')}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        }
+      >
+        {/* Name */}
+        <FormField
+          label={t('cron.create.name')}
+          htmlFor="cronFormName"
+          tip={t('cron.create.nameTip')}
+          required
+        >
+          <Input
+            id="cronFormName"
+            value={name}
+            onChange={(e) => { setName(e.target.value); markDirty() }}
+            placeholder={t('cron.create.namePlaceholder')}
+            required
+          />
+        </FormField>
 
-    {/* Unsaved changes confirmation */}
-    <UnsavedChangesDialog {...confirmDialogProps} />
+        {/* Owner Kin */}
+        <FormField label={t('cron.create.kin')} tip={t('cron.create.kinTip')}>
+          {isEdit ? (
+            <div className="flex items-center gap-2.5 rounded-md border border-input bg-muted/30 px-3 py-2">
+              {selectedKin && <KinSelectItem kin={selectedKin} />}
+            </div>
+          ) : (
+            <KinSelector
+              value={kinId}
+              onValueChange={setKinId}
+              kins={kins}
+              placeholder={t('cron.create.kinPlaceholder')}
+              required
+            />
+          )}
+        </FormField>
+
+        {/* Schedule type toggle */}
+        <FormField label={t('cron.create.scheduleType', 'Schedule type')}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => { setRunOnce(false); markDirty() }}
+              className={cn(
+                'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+                !runOnce
+                  ? 'border-primary/50 bg-primary/10 text-primary'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+              )}
+            >
+              {t('cron.create.recurring', 'Recurring')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRunOnce(true); markDirty() }}
+              className={cn(
+                'rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+                runOnce
+                  ? 'border-primary/50 bg-primary/10 text-primary'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+              )}
+            >
+              {t('cron.create.oneTime', 'One-time')}
+            </button>
+          </div>
+        </FormField>
+
+        {/* Schedule */}
+        {runOnce ? (
+          <FormField
+            label={t('cron.create.schedule')}
+            htmlFor="cronFormSchedule"
+            tip={t('cron.create.scheduleTip')}
+            required
+            hint={t('cron.create.oneTimeHelp', 'Pick a date and time. The cron will fire once and then deactivate.')}
+            error={
+              scheduleInvalid && scheduleDatetime
+                ? t('cron.create.datetimePast', 'Datetime must be in the future')
+                : undefined
+            }
+          >
+            <Input
+              id="cronFormSchedule"
+              type="datetime-local"
+              value={scheduleDatetime}
+              onChange={(e) => { setScheduleDatetime(e.target.value); markDirty() }}
+              className={cn(scheduleInvalid && 'border-destructive focus-visible:ring-destructive/30')}
+              required
+            />
+            {scheduleDatetime && !scheduleInvalid && scheduleHuman && (
+              <p className="text-[11px] text-primary/80 italic">
+                {scheduleHuman} ({t('cron.create.serverTime')})
+              </p>
+            )}
+          </FormField>
+        ) : (
+          <FormField
+            label={t('cron.create.schedule')}
+            htmlFor="cronFormSchedule"
+            tip={t('cron.create.scheduleTip')}
+            required
+            hint={t('cron.create.scheduleHelp')}
+            error={scheduleInvalid ? t('cron.create.scheduleInvalid') : undefined}
+          >
+            <Input
+              id="cronFormSchedule"
+              value={schedule}
+              onChange={(e) => { setSchedule(e.target.value); markDirty() }}
+              placeholder={t('cron.create.schedulePlaceholder')}
+              className={cn('font-mono', scheduleInvalid && 'border-destructive focus-visible:ring-destructive/30')}
+              required
+            />
+            <div className="flex flex-wrap gap-1.5">
+              {CRON_PRESETS.map((preset) => (
+                <button
+                  key={preset.key}
+                  type="button"
+                  onClick={() => { setSchedule(preset.value); markDirty() }}
+                  className={cn(
+                    'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
+                    schedule === preset.value
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                  )}
+                >
+                  {t(`cron.create.${preset.key}`)}
+                </button>
+              ))}
+            </div>
+            {scheduleHuman && (
+              <div className="space-y-0.5">
+                <p className="text-[11px] text-primary/80 italic">
+                  {scheduleHuman} ({t('cron.create.serverTime')})
+                </p>
+                {nextRuns.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('cron.create.nextRuns')}: {nextRuns.map((d) =>
+                      d.toLocaleString(i18n.language, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+                    ).join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
+          </FormField>
+        )}
+
+        {/* Task description (MarkdownEditor) */}
+        <FormField label={t('cron.create.taskDescription')} tip={t('cron.create.taskDescriptionTip')}>
+          <MarkdownEditor
+            value={taskDescription}
+            onChange={(v) => { setTaskDescription(v); markDirty() }}
+            height="160px"
+          />
+        </FormField>
+
+        {/* Target Kin (optional) */}
+        <FormField
+          label={t('cron.create.targetKin')}
+          tip={t('cron.create.targetKinTip')}
+          hint={t('cron.create.targetKinHint')}
+        >
+          <KinSelector
+            value={targetKinId}
+            onValueChange={setTargetKinId}
+            kins={kins}
+            placeholder="—"
+            noneLabel="—"
+          />
+        </FormField>
+
+        {/* Model (ModelPicker) */}
+        <FormField label={t('cron.create.model')} tip={t('cron.create.modelTip')}>
+          <ModelPicker
+            models={llmModels}
+            value={modelPickerValue(model, modelProviderId)}
+            onValueChange={(modelId, pid) => { setModel(modelId); setModelProviderId(pid) }}
+            placeholder={t('cron.create.modelPlaceholder')}
+            allowClear
+          />
+        </FormField>
+
+        {/* Thinking effort */}
+        <FormField
+          label={
+            <>
+              <Sparkles className="size-3.5" />
+              {t('chat.thinkingPicker.title')}
+            </>
+          }
+        >
+          <Select
+            value={thinkingEffort}
+            onValueChange={(v) => { setThinkingEffort(v as KinThinkingEffort | 'off'); markDirty() }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
+              <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
+              <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
+              <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
+              <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        {/* Toolboxes */}
+        {toolboxes.length > 0 && (
+          <FormField
+            label={t('cron.create.toolboxes')}
+            tip={t('cron.create.toolboxesTip')}
+            hint={t('cron.create.toolboxesHelp')}
+          >
+            <ToolboxMultiSelect
+              toolboxes={toolboxes}
+              selected={selectedToolboxIds}
+              onChange={(next) => { setSelectedToolboxIds(next); markDirty() }}
+              disabled={isSubmitting}
+            />
+          </FormField>
+        )}
+
+        {/* Trigger parent turn */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3 rounded-md border border-input bg-muted/30 px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="cronTriggerParentTurn" className="inline-flex items-center gap-1.5 cursor-pointer">
+                <Bell className="size-3.5" />
+                {t('cron.triggerParentTurn.label')}
+              </Label>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{t('cron.triggerParentTurn.help')}</p>
+            </div>
+            <Switch
+              id="cronTriggerParentTurn"
+              checked={triggerParentTurn}
+              onCheckedChange={(v) => { setTriggerParentTurn(v); markDirty() }}
+              className="shrink-0"
+            />
+          </div>
+          {triggerParentTurn && (
+            <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning">
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <span>{t('cron.triggerParentTurn.warning')}</span>
+            </div>
+          )}
+        </div>
+      </FormDialog>
+
+      {/* Unsaved changes confirmation */}
+      <UnsavedChangesDialog {...confirmDialogProps} />
     </>
   )
 }

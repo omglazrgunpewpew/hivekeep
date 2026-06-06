@@ -5,8 +5,10 @@ import { Input } from '@/client/components/ui/input'
 import { Button } from '@/client/components/ui/button'
 import { Label } from '@/client/components/ui/label'
 import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -142,7 +144,7 @@ export function VaultTypeManagerDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent variant="panel" size="lg">
         <DialogHeader>
           <DialogTitle>{t('settings.vault.manageTypes')}</DialogTitle>
           <DialogDescription>
@@ -150,7 +152,7 @@ export function VaultTypeManagerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <DialogBody className="space-y-4">
           {/* Existing custom types */}
           {customTypes.length > 0 && (
             <div className="space-y-2">
@@ -179,46 +181,48 @@ export function VaultTypeManagerDialog({
             <div className="space-y-3 rounded-lg border p-3">
               <FormErrorAlert error={error} />
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{t('settings.vault.typeName')}</Label>
+              <FormRow>
+                <FormField label={t('settings.vault.typeName')} htmlFor="vault-type-name">
                   <Input
+                    id="vault-type-name"
                     value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     placeholder={t('settings.vault.typeNamePlaceholder')}
-                    className="h-8 text-sm"
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">{t('settings.vault.typeSlug')}</Label>
+                </FormField>
+                <FormField label={t('settings.vault.typeSlug')} htmlFor="vault-type-slug">
                   <Input
+                    id="vault-type-slug"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder={t('settings.vault.typeSlugPlaceholder')}
-                    className="h-8 text-sm font-mono"
+                    className="font-mono"
                   />
-                </div>
-              </div>
+                </FormField>
+              </FormRow>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs">
-                  {t('settings.vault.typeIcon')}
-                  <span className="ml-1 text-muted-foreground">({t('common.optional')})</span>
-                </Label>
+              <FormField
+                label={
+                  <>
+                    {t('settings.vault.typeIcon')}
+                    <span className="ml-1 text-muted-foreground">({t('common.optional')})</span>
+                  </>
+                }
+                htmlFor="vault-type-icon"
+              >
                 <Input
+                  id="vault-type-icon"
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
                   placeholder={t('settings.vault.typeIconPlaceholder')}
-                  className="h-8 text-sm"
                 />
-              </div>
+              </FormField>
 
               {/* Fields builder */}
-              <div className="space-y-1.5">
-                <Label className="text-xs">{t('settings.vault.typeFields')}</Label>
+              <FormField label={t('settings.vault.typeFields')}>
                 <div className="space-y-2">
                   {fields.map((field, i) => (
-                    <div key={i} className="flex items-center gap-2">
+                    <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <Input
                         value={field.name}
                         onChange={(e) => updateField(i, { name: e.target.value })}
@@ -231,37 +235,40 @@ export function VaultTypeManagerDialog({
                         placeholder={t('settings.vault.fieldLabelPlaceholder')}
                         className="h-8 text-xs flex-1"
                       />
-                      <Select
-                        value={field.type}
-                        onValueChange={(v) => updateField(i, { type: v as VaultFieldType })}
-                      >
-                        <SelectTrigger className="h-8 text-xs w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FIELD_TYPE_VALUES.map((ft) => (
-                            <SelectItem key={ft} value={ft}>
-                              {t(FIELD_TYPE_KEYS[ft])}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => removeField(i)}
-                        disabled={fields.length <= 1}
-                      >
-                        <Trash2 className="size-3 text-destructive" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={field.type}
+                          onValueChange={(v) => updateField(i, { type: v as VaultFieldType })}
+                        >
+                          <SelectTrigger className="h-8 text-xs w-full sm:w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FIELD_TYPE_VALUES.map((ft) => (
+                              <SelectItem key={ft} value={ft}>
+                                {t(FIELD_TYPE_KEYS[ft])}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => removeField(i)}
+                          disabled={fields.length <= 1}
+                        >
+                          <Trash2 className="size-3 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" onClick={addField} className="w-full mt-1">
+                <Button type="button" variant="outline" size="sm" onClick={addField} className="w-full mt-1">
                   <Plus className="size-3" />
                   {t('settings.vault.addField')}
                 </Button>
-              </div>
+              </FormField>
 
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" size="sm" onClick={resetForm}>
@@ -283,7 +290,7 @@ export function VaultTypeManagerDialog({
               {t('settings.vault.createType')}
             </Button>
           )}
-        </div>
+        </DialogBody>
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>

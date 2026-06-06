@@ -4,14 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Badge } from '@/client/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { SettingsListSkeleton } from '@/client/components/common/SettingsListSkeleton'
 import { api, toastError } from '@/client/lib/api'
@@ -22,7 +15,6 @@ import {
   Check,
   RefreshCw,
   User,
-  Trash2,
   ExternalLink,
   Package,
 } from 'lucide-react'
@@ -186,29 +178,19 @@ export function PluginMarketplace() {
       )}
 
       {/* Uninstall confirmation dialog */}
-      <Dialog open={!!uninstallTarget} onOpenChange={(open) => !open && setUninstallTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('settings.plugins.uninstallTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('settings.plugins.uninstallDescription', { name: uninstallTarget })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUninstallTarget(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button variant="destructive" onClick={confirmUninstall} disabled={uninstalling}>
-              {uninstalling ? (
-                <Loader2 className="size-4 mr-2 animate-spin" />
-              ) : (
-                <Trash2 className="size-4 mr-2" />
-              )}
-              {t('settings.marketplace.uninstall')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FormDialog
+        open={!!uninstallTarget}
+        onOpenChange={(open) => !open && setUninstallTarget(null)}
+        title={t('settings.plugins.uninstallTitle')}
+        description={t('settings.plugins.uninstallDescription', { name: uninstallTarget })}
+        size="md"
+        onSubmit={confirmUninstall}
+        isSubmitting={uninstalling}
+        submitLabel={t('settings.marketplace.uninstall')}
+        submitVariant="destructive"
+      >
+        <></>
+      </FormDialog>
     </div>
   )
 }

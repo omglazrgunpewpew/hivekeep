@@ -247,17 +247,19 @@ function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
 
   return (
     <div className="glass-strong rounded-lg overflow-hidden">
-      {/* Header — wider grid: group | billable in | output | hit% | calls */}
-      <div className="grid grid-cols-[1fr_90px_80px_60px_60px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 border-b border-border/30">
-        <span>{t('settings.tokenUsage.columnGroup')}</span>
-        <span className="text-right">{t('settings.tokenUsage.columnInputBillable')}</span>
-        <span className="text-right">{t('settings.tokenUsage.columnOutput')}</span>
-        <span className="text-right" title={t('settings.tokenUsage.columnCacheHitFull')}>%</span>
-        <span className="text-right">{t('settings.tokenUsage.columnCalls')}</span>
-      </div>
-      {/* Rows */}
-      <div className="max-h-[300px] overflow-y-auto">
-        {rows.map((row) => {
+      <div className="overflow-x-auto">
+        <div className="min-w-[420px]">
+          {/* Header — wider grid: group | billable in | output | hit% | calls */}
+          <div className="grid grid-cols-[1fr_90px_80px_60px_60px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 border-b border-border/30">
+            <span>{t('settings.tokenUsage.columnGroup')}</span>
+            <span className="text-right">{t('settings.tokenUsage.columnInputBillable')}</span>
+            <span className="text-right">{t('settings.tokenUsage.columnOutput')}</span>
+            <span className="text-right" title={t('settings.tokenUsage.columnCacheHitFull')}>%</span>
+            <span className="text-right">{t('settings.tokenUsage.columnCalls')}</span>
+          </div>
+          {/* Rows */}
+          <div className="max-h-[300px] overflow-y-auto">
+            {rows.map((row) => {
           // Provider-aware billable input is computed server-side (CASE WHEN
           // per provider_type, summed across rows in the group).
           const billable = row.billableInputTokens
@@ -297,7 +299,9 @@ function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
               </span>
             </div>
           )
-        })}
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -314,9 +318,9 @@ function KinFilter({ value, onValueChange, kins, t }: {
   const selectedKin = kins.find((k) => k.id === value)
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <Select value={value || '__all__'} onValueChange={(v) => onValueChange(v === '__all__' ? '' : v)}>
-        <SelectTrigger className={`w-[200px] h-8 text-xs ${value ? 'pr-7' : ''}`}>
+        <SelectTrigger className={`w-full sm:w-[200px] h-8 text-xs ${value ? 'pr-7' : ''}`}>
           {selectedKin ? (
             <div className="flex items-center gap-2 min-w-0">
               <Avatar className="size-4 shrink-0">
@@ -371,9 +375,9 @@ function ProviderFilter({ value, onValueChange, providers, t }: {
   t: TFunction
 }) {
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <Select value={value || '__all__'} onValueChange={(v) => onValueChange(v === '__all__' ? '' : v)}>
-        <SelectTrigger className={`w-[200px] h-8 text-xs ${value ? 'pr-7' : ''}`}>
+        <SelectTrigger className={`w-full sm:w-[200px] h-8 text-xs ${value ? 'pr-7' : ''}`}>
           {value ? (
             <div className="flex items-center gap-2 min-w-0">
               <ProviderIcon providerType={value} className="size-3.5 shrink-0" variant="color" />
@@ -444,20 +448,22 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
   return (
     <div className="space-y-2">
       <div className="glass-strong rounded-lg overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-[140px_1fr_1fr_80px_80px_70px_50px_50px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 border-b border-border/30">
-          <span>{t('settings.tokenUsage.detailDate')}</span>
-          <span>{t('settings.tokenUsage.detailKin')}</span>
-          <span>{t('settings.tokenUsage.detailModel')}</span>
-          <span>{t('settings.tokenUsage.detailCallSite')}</span>
-          <span className="text-right">{t('settings.tokenUsage.columnInputBillable')}</span>
-          <span className="text-right">{t('settings.tokenUsage.columnOutput')}</span>
-          <span className="text-right" title={t('settings.tokenUsage.columnCacheHitFull')}>%</span>
-          <span className="text-right">{t('settings.tokenUsage.detailSteps')}</span>
-        </div>
-        {/* Rows */}
-        <div className="max-h-[400px] overflow-y-auto">
-          {rows.map((row) => {
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px]">
+            {/* Header */}
+            <div className="grid grid-cols-[140px_1fr_1fr_80px_80px_70px_50px_50px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 border-b border-border/30">
+              <span>{t('settings.tokenUsage.detailDate')}</span>
+              <span>{t('settings.tokenUsage.detailKin')}</span>
+              <span>{t('settings.tokenUsage.detailModel')}</span>
+              <span>{t('settings.tokenUsage.detailCallSite')}</span>
+              <span className="text-right">{t('settings.tokenUsage.columnInputBillable')}</span>
+              <span className="text-right">{t('settings.tokenUsage.columnOutput')}</span>
+              <span className="text-right" title={t('settings.tokenUsage.columnCacheHitFull')}>%</span>
+              <span className="text-right">{t('settings.tokenUsage.detailSteps')}</span>
+            </div>
+            {/* Rows */}
+            <div className="max-h-[400px] overflow-y-auto">
+              {rows.map((row) => {
             const kin = row.kinId ? kinMap.get(row.kinId) : null
             const date = new Date(row.createdAt)
             const usage = {
@@ -515,7 +521,9 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
                 </span>
               </div>
             )
-          })}
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -684,12 +692,12 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
   return (
     <div className="space-y-6">
       {/* Header + Period selector */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold">{t('settings.tokenUsage.title')}</h3>
           <p className="text-sm text-muted-foreground">{t('settings.tokenUsage.description')}</p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex flex-wrap items-center gap-1 shrink-0">
           {PERIODS.map((p) => (
             <Button
               key={p}

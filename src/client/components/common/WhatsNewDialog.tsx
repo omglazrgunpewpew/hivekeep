@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
 } from '@/client/components/ui/dialog'
-import { ScrollArea } from '@/client/components/ui/scroll-area'
 import { Badge } from '@/client/components/ui/badge'
 import { Sparkles, Plus, Wrench, Bug, FlaskConical, AlertTriangle } from 'lucide-react'
 import { api } from '@/client/lib/api'
@@ -119,8 +119,8 @@ export function WhatsNewDialog({ open, onOpenChange, currentVersion }: WhatsNewD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col gap-0 overflow-hidden">
-        <DialogHeader className="pb-3 border-b border-border">
+      <DialogContent variant="panel" size="lg">
+        <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-primary/10 p-2">
               <Sparkles className="size-5 text-primary" />
@@ -136,7 +136,7 @@ export function WhatsNewDialog({ open, onOpenChange, currentVersion }: WhatsNewD
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 py-4">
+        <DialogBody>
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               {t('common.loading')}
@@ -146,7 +146,7 @@ export function WhatsNewDialog({ open, onOpenChange, currentVersion }: WhatsNewD
               {t('whatsNew.empty')}
             </div>
           ) : (
-            <div className="space-y-6 px-1">
+            <div className="space-y-6">
               {sections.map((section) => (
                 <div key={section.version}>
                   {/* Version header */}
@@ -199,7 +199,7 @@ export function WhatsNewDialog({ open, onOpenChange, currentVersion }: WhatsNewD
               ))}
             </div>
           )}
-        </ScrollArea>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   )

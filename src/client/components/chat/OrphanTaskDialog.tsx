@@ -1,16 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, getErrorMessage } from '@/client/lib/api'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
@@ -135,105 +127,95 @@ export function OrphanTaskDialog({ open, onOpenChange, kinId, kinName }: OrphanT
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('orphanTask.title')}</DialogTitle>
-          <DialogDescription>
-            {pickerMode
-              ? t('orphanTask.descriptionGeneric')
-              : t('orphanTask.description', { name: kinName })}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          {pickerMode && (
-            <div className="space-y-1.5">
-              <Label>{t('orphanTask.kinField')}</Label>
-              <KinSelector
-                value={selectedKinId}
-                onValueChange={setSelectedKinId}
-                kins={kins.map((k) => ({ id: k.id, name: k.name, role: k.role, avatarUrl: k.avatarUrl }))}
-                placeholder={t('orphanTask.kinPlaceholder')}
-              />
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label>{t('orphanTask.promptField')}</Label>
-            <MarkdownEditor
-              value={prompt}
-              onChange={setPrompt}
-              height="220px"
-            />
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs text-muted-foreground">{t('orphanTask.promptHelp')}</p>
-              <p className="text-xs tabular-nums text-muted-foreground">
-                {t('orphanTask.promptCounter', { count: promptLength })}
-              </p>
-            </div>
-          </div>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('orphanTask.title')}
+      description={
+        pickerMode
+          ? t('orphanTask.descriptionGeneric')
+          : t('orphanTask.description', { name: kinName })
+      }
+      size="3xl"
+      onSubmit={handleSubmit}
+      isSubmitting={submitting}
+      submitDisabled={!canSubmit}
+      submitLabel={t('orphanTask.start')}
+    >
+      {pickerMode && (
+        <FormField label={t('orphanTask.kinField')}>
+          <KinSelector
+            value={selectedKinId}
+            onValueChange={setSelectedKinId}
+            kins={kins.map((k) => ({ id: k.id, name: k.name, role: k.role, avatarUrl: k.avatarUrl }))}
+            placeholder={t('orphanTask.kinPlaceholder')}
+          />
+        </FormField>
+      )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="orphan-task-title">{t('orphanTask.titleField')}</Label>
-            <Input
-              id="orphan-task-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
-              placeholder={t('orphanTask.titlePlaceholder')}
-              maxLength={TITLE_MAX}
-            />
-          </div>
+      <FormField
+        label={t('orphanTask.promptField')}
+        hint={
+          <span className="flex items-start justify-between gap-2">
+            <span>{t('orphanTask.promptHelp')}</span>
+            <span className="tabular-nums">
+              {t('orphanTask.promptCounter', { count: promptLength })}
+            </span>
+          </span>
+        }
+      >
+        <MarkdownEditor
+          value={prompt}
+          onChange={setPrompt}
+          height="220px"
+        />
+      </FormField>
 
-          {toolboxes.length > 0 && (
-            <div className="space-y-1.5">
-              <Label>{t('orphanTask.toolboxesField')}</Label>
-              <ToolboxMultiSelect
-                toolboxes={toolboxes}
-                selected={selectedToolboxIds}
-                onChange={setSelectedToolboxIds}
-                disabled={submitting}
-              />
-              <p className="text-xs text-muted-foreground">{t('orphanTask.toolboxesHelp')}</p>
-            </div>
-          )}
+      <FormField label={t('orphanTask.titleField')} htmlFor="orphan-task-title">
+        <Input
+          id="orphan-task-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
+          placeholder={t('orphanTask.titlePlaceholder')}
+          maxLength={TITLE_MAX}
+        />
+      </FormField>
 
-          <div className="space-y-1.5">
-            <Label>{t('orphanTask.modelField')}</Label>
-            <ModelPicker
-              models={llmModels}
-              value={modelPickerValue(model, providerId)}
-              onValueChange={(modelId, pid) => {
-                setModel(modelId)
-                setProviderId(pid)
-              }}
-              placeholder={t('orphanTask.modelInherit')}
-              clearLabel={t('orphanTask.modelInherit')}
-              allowClear
-              isLoading={modelsLoading}
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">{t('orphanTask.modelHelp')}</p>
-          </div>
+      {toolboxes.length > 0 && (
+        <FormField label={t('orphanTask.toolboxesField')} hint={t('orphanTask.toolboxesHelp')}>
+          <ToolboxMultiSelect
+            toolboxes={toolboxes}
+            selected={selectedToolboxIds}
+            onChange={setSelectedToolboxIds}
+            disabled={submitting}
+          />
+        </FormField>
+      )}
 
-          <div className="space-y-1.5">
-            <Label>{t('orphanTask.thinkingField')}</Label>
-            <ThinkingEffortSelect
-              value={thinkingChoice}
-              onChange={setThinkingChoice}
-              inheritLabel={t('orphanTask.thinkingInherit')}
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">{t('orphanTask.thinkingHelp')}</p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {t('orphanTask.start')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <FormField label={t('orphanTask.modelField')} hint={t('orphanTask.modelHelp')}>
+        <ModelPicker
+          models={llmModels}
+          value={modelPickerValue(model, providerId)}
+          onValueChange={(modelId, pid) => {
+            setModel(modelId)
+            setProviderId(pid)
+          }}
+          placeholder={t('orphanTask.modelInherit')}
+          clearLabel={t('orphanTask.modelInherit')}
+          allowClear
+          isLoading={modelsLoading}
+          disabled={submitting}
+        />
+      </FormField>
+
+      <FormField label={t('orphanTask.thinkingField')} hint={t('orphanTask.thinkingHelp')}>
+        <ThinkingEffortSelect
+          value={thinkingChoice}
+          onChange={setThinkingChoice}
+          inheritLabel={t('orphanTask.thinkingInherit')}
+          disabled={submitting}
+        />
+      </FormField>
+    </FormDialog>
   )
 }

@@ -6,9 +6,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogFooter,
 } from '@/client/components/ui/dialog'
 import { Badge } from '@/client/components/ui/badge'
-import { ScrollArea } from '@/client/components/ui/scroll-area'
+import { Button } from '@/client/components/ui/button'
 import { Loader2, Inbox } from 'lucide-react'
 import { api } from '@/client/lib/api'
 import type { WebhookLog, WebhookSummary } from '@/shared/types'
@@ -59,7 +61,7 @@ export function WebhookLogDialog({ open, onOpenChange, webhook }: WebhookLogDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent variant="panel" size="xl">
         <DialogHeader>
           <DialogTitle>{t('settings.webhooks.logs')}</DialogTitle>
           {webhook && (
@@ -67,17 +69,17 @@ export function WebhookLogDialog({ open, onOpenChange, webhook }: WebhookLogDial
           )}
         </DialogHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-            <Inbox className="size-8" />
-            <span className="text-sm">{t('settings.webhooks.logsEmpty')}</span>
-          </div>
-        ) : (
-          <ScrollArea className="max-h-[400px]">
+        <DialogBody>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+              <Inbox className="size-8" />
+              <span className="text-sm">{t('settings.webhooks.logsEmpty')}</span>
+            </div>
+          ) : (
             <div className="space-y-2">
               {logs.map((log) => {
                 const isExpanded = expandedIds.has(log.id)
@@ -100,7 +102,7 @@ export function WebhookLogDialog({ open, onOpenChange, webhook }: WebhookLogDial
                         )}
                       </div>
                       {log.sourceIp && (
- <Badge variant="outline" size="xs" className="font-mono">
+                        <Badge variant="outline" size="xs" className="font-mono">
                           {log.sourceIp}
                         </Badge>
                       )}
@@ -120,8 +122,14 @@ export function WebhookLogDialog({ open, onOpenChange, webhook }: WebhookLogDial
                 )
               })}
             </div>
-          </ScrollArea>
-        )}
+          )}
+        </DialogBody>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t('common.close')}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

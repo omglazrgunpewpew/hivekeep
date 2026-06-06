@@ -1,16 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, getErrorMessage } from '@/client/lib/api'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Textarea } from '@/client/components/ui/textarea'
 import { KinSelector } from '@/client/components/common/KinSelector'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
@@ -148,88 +140,92 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
   const runPromptOverLimit = runPromptLength > RUN_PROMPT_MAX
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('projects.startTask.title')}</DialogTitle>
-          <DialogDescription>{t('projects.startTask.description')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label>{t('projects.startTask.kinField')}</Label>
-            <KinSelector
-              value={selectedKinId}
-              onValueChange={setSelectedKinId}
-              kins={kinOptions}
-              placeholder={t('projects.startTask.kinPlaceholder')}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="start-task-run-prompt">{t('projects.startTask.runPromptField')}</Label>
-            <Textarea
-              id="start-task-run-prompt"
-              value={runPrompt}
-              onChange={(e) => setRunPrompt(e.target.value.slice(0, RUN_PROMPT_MAX))}
-              placeholder={t('projects.startTask.runPromptPlaceholder')}
-              rows={3}
-              maxLength={RUN_PROMPT_MAX}
-            />
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-xs text-muted-foreground">{t('projects.startTask.runPromptHelp')}</p>
-              <p className={`text-xs tabular-nums ${runPromptOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {t('projects.startTask.runPromptCounter', { count: runPromptLength })}
-              </p>
-            </div>
-          </div>
-          {toolboxes.length > 0 && (
-            <div className="space-y-1.5">
-              <Label>{t('projects.startTask.toolboxesField')}</Label>
-              <ToolboxMultiSelect
-                toolboxes={toolboxes}
-                selected={selectedToolboxIds}
-                onChange={setSelectedToolboxIds}
-                disabled={submitting}
-              />
-              <p className="text-xs text-muted-foreground">{t('projects.startTask.toolboxesHelp')}</p>
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label>{t('projects.startTask.modelField')}</Label>
-            <ModelPicker
-              models={llmModels}
-              value={modelPickerValue(model, providerId)}
-              onValueChange={(modelId, pid) => {
-                setModel(modelId)
-                setProviderId(pid)
-              }}
-              placeholder={t('projects.startTask.modelInherit')}
-              clearLabel={t('projects.startTask.modelInherit')}
-              allowClear
-              isLoading={modelsLoading}
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">{t('projects.startTask.modelHelp')}</p>
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t('projects.startTask.thinkingField')}</Label>
-            <ThinkingEffortSelect
-              value={thinkingChoice}
-              onChange={setThinkingChoice}
-              inheritLabel={t('projects.startTask.thinkingInherit')}
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">{t('projects.startTask.thinkingHelp')}</p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={handleSubmit} disabled={!selectedKinId || submitting || runPromptOverLimit}>
-            {t('projects.startTask.start')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('projects.startTask.title')}
+      description={t('projects.startTask.description')}
+      size="lg"
+      onSubmit={handleSubmit}
+      isSubmitting={submitting}
+      submitDisabled={!selectedKinId || runPromptOverLimit}
+      submitLabel={t('projects.startTask.start')}
+    >
+      <FormField label={t('projects.startTask.kinField')}>
+        <KinSelector
+          value={selectedKinId}
+          onValueChange={setSelectedKinId}
+          kins={kinOptions}
+          placeholder={t('projects.startTask.kinPlaceholder')}
+        />
+      </FormField>
+
+      <FormField
+        label={t('projects.startTask.runPromptField')}
+        htmlFor="start-task-run-prompt"
+        hint={
+          <span className="flex items-start justify-between gap-2">
+            <span>{t('projects.startTask.runPromptHelp')}</span>
+            <span className={`tabular-nums ${runPromptOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {t('projects.startTask.runPromptCounter', { count: runPromptLength })}
+            </span>
+          </span>
+        }
+      >
+        <Textarea
+          id="start-task-run-prompt"
+          value={runPrompt}
+          onChange={(e) => setRunPrompt(e.target.value.slice(0, RUN_PROMPT_MAX))}
+          placeholder={t('projects.startTask.runPromptPlaceholder')}
+          rows={3}
+          maxLength={RUN_PROMPT_MAX}
+        />
+      </FormField>
+
+      {toolboxes.length > 0 && (
+        <FormField
+          label={t('projects.startTask.toolboxesField')}
+          hint={t('projects.startTask.toolboxesHelp')}
+        >
+          <ToolboxMultiSelect
+            toolboxes={toolboxes}
+            selected={selectedToolboxIds}
+            onChange={setSelectedToolboxIds}
+            disabled={submitting}
+          />
+        </FormField>
+      )}
+
+      <FormField
+        label={t('projects.startTask.modelField')}
+        hint={t('projects.startTask.modelHelp')}
+      >
+        <ModelPicker
+          models={llmModels}
+          value={modelPickerValue(model, providerId)}
+          onValueChange={(modelId, pid) => {
+            setModel(modelId)
+            setProviderId(pid)
+          }}
+          placeholder={t('projects.startTask.modelInherit')}
+          clearLabel={t('projects.startTask.modelInherit')}
+          allowClear
+          isLoading={modelsLoading}
+          disabled={submitting}
+        />
+      </FormField>
+
+      <FormField
+        label={t('projects.startTask.thinkingField')}
+        hint={t('projects.startTask.thinkingHelp')}
+      >
+        <ThinkingEffortSelect
+          value={thinkingChoice}
+          onChange={setThinkingChoice}
+          inheritLabel={t('projects.startTask.thinkingInherit')}
+          disabled={submitting}
+        />
+      </FormField>
+    </FormDialog>
   )
 }

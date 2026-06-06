@@ -15,20 +15,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/client/components/ui/alert-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/client/components/ui/dialog'
 import { Input } from '@/client/components/ui/input'
-import { Label } from '@/client/components/ui/label'
-import { UserPlus, Copy, Trash2, Link2, Clock, CheckCircle2, XCircle, Users } from 'lucide-react'
+import { UserPlus, Copy, Trash2, Clock, CheckCircle2, XCircle, Users } from 'lucide-react'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { HelpPanel } from '@/client/components/common/HelpPanel'
-import { api, toastError } from '@/client/lib/api'
+import { api, toastError, getErrorMessage } from '@/client/lib/api'
 import { useAuth } from '@/client/hooks/useAuth'
 import type { UserSummary, InvitationSummary } from '@/shared/types'
 
@@ -42,6 +35,7 @@ export function UsersSettings() {
   const [inviteLabel, setInviteLabel] = useState('')
   const [inviteExpiry, setInviteExpiry] = useState(7)
   const [inviteCreating, setInviteCreating] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
   const [revealedLink, setRevealedLink] = useState<string | null>(null)
   const [revokingInvitation, setRevokingInvitation] = useState<InvitationSummary | null>(null)
 
@@ -83,6 +77,7 @@ export function UsersSettings() {
 
   const handleCreateInvitation = async () => {
     setInviteCreating(true)
+    setInviteError(null)
     try {
       const data = await api.post<{ invitation: { url: string } }>('/invitations', {
         label: inviteLabel || undefined,
@@ -95,7 +90,7 @@ export function UsersSettings() {
       setRevealedLink(data.invitation.url)
       toast.success(t('settings.users.invitations.created'))
     } catch (err: unknown) {
-      toastError(err)
+      setInviteError(getErrorMessage(err))
     } finally {
       setInviteCreating(false)
     }
@@ -279,81 +274,71 @@ export function UsersSettings() {
           )
         })}
 
-        <Button variant="outline" onClick={() => setInviteOpen(true)} className="w-full">
+        <Button
+          variant="outline"
+          onClick={() => { setInviteError(null); setInviteOpen(true) }}
+          className="w-full"
+        >
           <UserPlus className="size-4" />
           {t('settings.users.invitations.create')}
         </Button>
       </div>
 
       {/* Create invitation dialog */}
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('settings.users.invitations.create')}</DialogTitle>
-            <DialogDescription>
-              {t('settings.users.description')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('settings.users.invitations.label')}</Label>
-              <Input
-                value={inviteLabel}
-                onChange={(e) => setInviteLabel(e.target.value)}
-                placeholder={t('settings.users.invitations.labelPlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('settings.users.invitations.expiresIn')}</Label>
-              <Input
-                type="number"
-                min={1}
-                max={365}
-                value={inviteExpiry}
-                onChange={(e) => setInviteExpiry(Number(e.target.value))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={handleCreateInvitation} disabled={inviteCreating}>
-              <Link2 className="size-4" />
-              {inviteCreating ? t('common.loading') : t('settings.users.invitations.create')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FormDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        title={t('settings.users.invitations.create')}
+        description={t('settings.users.description')}
+        size="md"
+        error={inviteError}
+        onSubmit={handleCreateInvitation}
+        isSubmitting={inviteCreating}
+        submitLabel={t('settings.users.invitations.create')}
+      >
+        <FormField label={t('settings.users.invitations.label')} htmlFor="invite-label">
+          <Input
+            id="invite-label"
+            value={inviteLabel}
+            onChange={(e) => setInviteLabel(e.target.value)}
+            placeholder={t('settings.users.invitations.labelPlaceholder')}
+          />
+        </FormField>
+        <FormField label={t('settings.users.invitations.expiresIn')} htmlFor="invite-expiry">
+          <Input
+            id="invite-expiry"
+            type="number"
+            min={1}
+            max={365}
+            value={inviteExpiry}
+            onChange={(e) => setInviteExpiry(Number(e.target.value))}
+          />
+        </FormField>
+      </FormDialog>
 
       {/* Revealed link dialog */}
-      <Dialog open={!!revealedLink} onOpenChange={(v) => { if (!v) setRevealedLink(null) }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('settings.users.invitations.created')}</DialogTitle>
-            <DialogDescription>
-              {t('settings.users.invitations.copyLink')}
-            </DialogDescription>
-          </DialogHeader>
-          {revealedLink && (
-            <div className="flex gap-2">
-              <Input value={revealedLink} readOnly className="font-mono text-xs" />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(revealedLink!, { successKey: 'settings.users.invitations.linkCopied' })}
-              >
-                <Copy className="size-4" />
-              </Button>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setRevealedLink(null)}>
-              {t('common.close')}
+      <FormDialog
+        open={!!revealedLink}
+        onOpenChange={(v) => { if (!v) setRevealedLink(null) }}
+        title={t('settings.users.invitations.created')}
+        description={t('settings.users.invitations.copyLink')}
+        size="lg"
+        cancelLabel={t('common.close')}
+      >
+        {revealedLink && (
+          <div className="flex gap-2">
+            <Input value={revealedLink} readOnly className="font-mono text-xs" />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => copyToClipboard(revealedLink!, { successKey: 'settings.users.invitations.linkCopied' })}
+            >
+              <Copy className="size-4" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+      </FormDialog>
 
       {/* Delete user confirmation */}
       <AlertDialog open={!!deletingUser} onOpenChange={(v) => { if (!v) setDeletingUser(null) }}>

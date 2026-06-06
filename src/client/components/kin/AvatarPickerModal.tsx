@@ -5,17 +5,19 @@ import type { Area } from 'react-easy-crop'
 import { api } from '@/client/lib/api'
 import {
   Dialog,
+  DialogBody,
   DialogContent,
-  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/client/components/ui/dialog'
 import { Button } from '@/client/components/ui/button'
+import { Label } from '@/client/components/ui/label'
 import { Textarea } from '@/client/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { ToggleGroup, ToggleGroupItem } from '@/client/components/ui/toggle-group'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
-import { Label } from '@/client/components/ui/label'
+import { FormField } from '@/client/components/common/FormField'
 import { Slider } from '@/client/components/ui/slider'
 import { Switch } from '@/client/components/ui/switch'
 import { Dialog as DialogPrimitive } from 'radix-ui'
@@ -242,12 +244,12 @@ export function AvatarPickerModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent variant="panel" size="md">
           <DialogHeader>
             <DialogTitle>{t('kin.avatar.title')}</DialogTitle>
-            <DialogDescription className="sr-only">{t('kin.avatar.title')}</DialogDescription>
           </DialogHeader>
 
+          <DialogBody>
           <div className="flex flex-col items-center gap-5">
             {/* Cropper overlay */}
             {cropSrc && (
@@ -275,19 +277,6 @@ export function AvatarPickerModal({
                     onValueChange={([v]) => v !== undefined && setZoom(v)}
                     className="flex-1"
                   />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" className="flex-1" onClick={handleCropCancel}>
-                    {t('common.cancel')}
-                  </Button>
-                  <Button type="button" className="btn-shine flex-1" onClick={handleCropConfirm} disabled={isCropping}>
-                    {isCropping ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Crop className="size-4" />
-                    )}
-                    {t('kin.avatar.cropConfirm')}
-                  </Button>
                 </div>
               </div>
             )}
@@ -384,14 +373,13 @@ export function AvatarPickerModal({
                     </p>
                   </div>
                   {canGenerate && hasImageModels && (
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">{t('kin.avatar.imageModel')}</Label>
+                    <FormField label={t('kin.avatar.imageModel')}>
                       <ModelPicker
                         models={imageModels ?? []}
                         value={selectedModelValue}
                         onValueChange={(modelId, pid) => setSelectedModelValue(modelPickerValue(modelId, pid))}
                       />
-                    </div>
+                    </FormField>
                   )}
                   {!canGenerate && (
                     !hasImageCapability ? (
@@ -527,14 +515,13 @@ export function AvatarPickerModal({
                   </div>
 
                   {canGenerate && hasImageModels && (
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">{t('kin.avatar.imageModel')}</Label>
+                    <FormField label={t('kin.avatar.imageModel')}>
                       <ModelPicker
                         models={imageModels ?? []}
                         value={selectedModelValue}
                         onValueChange={(modelId, pid) => setSelectedModelValue(modelPickerValue(modelId, pid))}
                       />
-                    </div>
+                    </FormField>
                   )}
                   {!canGenerate && (
                     !hasImageCapability ? (
@@ -597,19 +584,37 @@ export function AvatarPickerModal({
                 </p>
               )}
             </div>
-
-            {/* Confirm button */}
-            <Button
-              type="button"
-              className="btn-shine w-full"
-              onClick={handleConfirm}
-              disabled={!hasNewAvatar || isGenerating}
-            >
-              {t('kin.avatar.confirm')}
-            </Button>
             </>
             )}
           </div>
+          </DialogBody>
+
+          <DialogFooter>
+            {cropSrc ? (
+              <>
+                <Button type="button" variant="outline" onClick={handleCropCancel}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="button" className="btn-shine" onClick={handleCropConfirm} disabled={isCropping}>
+                  {isCropping ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Crop className="size-4" />
+                  )}
+                  {t('kin.avatar.cropConfirm')}
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                className="btn-shine"
+                onClick={handleConfirm}
+                disabled={!hasNewAvatar || isGenerating}
+              >
+                {t('kin.avatar.confirm')}
+              </Button>
+            )}
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

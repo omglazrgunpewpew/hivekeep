@@ -6,6 +6,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogBody,
+  DialogFooter,
 } from '@/client/components/ui/dialog'
 import { Input } from '@/client/components/ui/input'
 import { Badge } from '@/client/components/ui/badge'
@@ -209,7 +211,7 @@ export function ProviderModelsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent variant="panel" size="2xl">
         <DialogHeader>
           <DialogTitle>
             {t('settings.providers.modelsModal.title', { name: providerName })}
@@ -222,6 +224,7 @@ export function ProviderModelsModal({
           </DialogDescription>
         </DialogHeader>
 
+        <DialogBody className="space-y-4">
         {/* Capabilities header — useful for every provider, especially
             search-only ones where there's nothing else to browse. */}
         {capabilities.length > 0 && (
@@ -289,7 +292,7 @@ export function ProviderModelsModal({
 
             {showCapabilityTabs && (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList>
+                <TabsList className="max-w-full flex-wrap overflow-x-auto">
                   <TabsTrigger value={ALL_TAB}>
                     {t('settings.providers.modelsModal.allCapabilities', 'All')}
                     <Badge variant="secondary" size="xs" className="ml-1.5">
@@ -344,7 +347,7 @@ export function ProviderModelsModal({
               </Button>
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto rounded-md border border-border">
+            <div className="rounded-md border border-border">
               {filteredModels.length === 0 && filteredVoices.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground text-center">
                   {totalCount === 0
@@ -428,15 +431,20 @@ export function ProviderModelsModal({
                 </ul>
               )}
             </div>
+          </div>
+        )}
+        </DialogBody>
 
-            <p className="text-xs text-muted-foreground">
+        {!isLoading && !error && (data || voicesData) && browseableCaps.length > 0 && (
+          <DialogFooter>
+            <p className="mr-auto text-xs text-muted-foreground">
               {t('settings.providers.modelsModal.footer', {
                 shown: filteredModels.length + filteredVoices.length,
                 total: totalCount,
                 defaultValue: 'Showing {{shown}} of {{total}}',
               })}
             </p>
-          </div>
+          </DialogFooter>
         )}
       </DialogContent>
     </Dialog>

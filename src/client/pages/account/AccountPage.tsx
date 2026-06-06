@@ -5,17 +5,18 @@ import type { Area } from 'react-easy-crop'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
 import { Badge } from '@/client/components/ui/badge'
 import { Slider } from '@/client/components/ui/slider'
 import { LanguageSelector } from '@/client/components/common/LanguageSelector'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { getUserInitials } from '@/client/lib/utils'
-import { Separator } from '@/client/components/ui/separator'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
+  DialogBody,
   DialogFooter,
   DialogTitle,
 } from '@/client/components/ui/dialog'
@@ -198,14 +199,14 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col overflow-hidden p-0 sm:max-w-md">
+      <DialogContent variant="panel" size="md">
         <DialogTitle className="sr-only">{t('account.title')}</DialogTitle>
         <DialogDescription className="sr-only">{t('account.subtitle')}</DialogDescription>
 
         {/* Hero header */}
-        <div className="relative flex flex-col items-center px-6 pt-8 pb-5">
+        <DialogHeader className="relative flex flex-col items-center">
           {/* Gradient background band */}
-          <div className="absolute inset-x-0 top-0 h-20 gradient-subtle rounded-t-2xl" />
+          <div className="absolute inset-x-0 top-0 h-20 gradient-subtle" />
 
           {/* Cropper overlay */}
           {cropSrc ? (
@@ -290,7 +291,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
               </div>
             </>
           )}
-        </div>
+        </DialogHeader>
         <input
           ref={fileInputRef}
           type="file"
@@ -299,61 +300,68 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
           className="hidden"
         />
 
-        <Separator />
-
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="contents">
+          <DialogBody className="space-y-4">
             {/* Name fields */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="acctFirstName">{t('account.firstName')}</Label>
+            <FormRow>
+              <FormField
+                label={t('account.firstName')}
+                htmlFor="acctFirstName"
+                hint={
+                  <span className={`block text-right ${firstName.length > 100 ? 'text-destructive' : ''}`}>
+                    {firstName.length}/100
+                  </span>
+                }
+              >
                 <Input
                   id="acctFirstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   maxLength={100}
                 />
-                <p className={`text-xs text-right ${firstName.length > 100 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {firstName.length}/100
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="acctLastName">{t('account.lastName')}</Label>
+              </FormField>
+              <FormField
+                label={t('account.lastName')}
+                htmlFor="acctLastName"
+                hint={
+                  <span className={`block text-right ${lastName.length > 100 ? 'text-destructive' : ''}`}>
+                    {lastName.length}/100
+                  </span>
+                }
+              >
                 <Input
                   id="acctLastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   maxLength={100}
                 />
-                <p className={`text-xs text-right ${lastName.length > 100 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {lastName.length}/100
-                </p>
-              </div>
-            </div>
+              </FormField>
+            </FormRow>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="acctPseudonym">{t('account.pseudonym')}</Label>
+            <FormField
+              label={t('account.pseudonym')}
+              htmlFor="acctPseudonym"
+              hint={
+                <span className="flex items-center justify-between gap-2">
+                  <span>{t('account.pseudonymHint', 'Letters, numbers, underscores, hyphens')}</span>
+                  <span className={pseudonym.length > 30 ? 'text-destructive' : ''}>
+                    {pseudonym.length}/30
+                  </span>
+                </span>
+              }
+            >
               <Input
                 id="acctPseudonym"
                 value={pseudonym}
                 onChange={(e) => setPseudonym(e.target.value)}
                 maxLength={30}
               />
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  {t('account.pseudonymHint', 'Letters, numbers, underscores, hyphens')}
-                </p>
-                <p className={`text-xs ${pseudonym.length > 30 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {pseudonym.length}/30
-                </p>
-              </div>
-            </div>
+            </FormField>
 
-            <div className="space-y-1.5">
-              <Label>{t('account.language')}</Label>
+            <FormField label={t('account.language')}>
               <LanguageSelector value={language} onValueChange={setLanguage} />
-            </div>
+            </FormField>
 
             {/* Password change section */}
             <div className="space-y-3">
@@ -369,30 +377,27 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
               {showPassword && (
                 <div className="space-y-3 rounded-lg border p-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="currentPassword">{t('account.password.current')}</Label>
+                  <FormField label={t('account.password.current')} htmlFor="currentPassword">
                     <PasswordInput
                       id="currentPassword"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="newPassword">{t('account.password.new')}</Label>
+                  </FormField>
+                  <FormField label={t('account.password.new')} htmlFor="newPassword">
                     <PasswordInput
                       id="newPassword"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                     />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="confirmPassword">{t('account.password.confirm')}</Label>
+                  </FormField>
+                  <FormField label={t('account.password.confirm')} htmlFor="confirmPassword">
                     <PasswordInput
                       id="confirmPassword"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
-                  </div>
+                  </FormField>
                   <Button
                     type="button"
                     variant="outline"
@@ -413,12 +418,10 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
                 </div>
               )}
             </div>
-          </div>
-
-          <Separator />
+          </DialogBody>
 
           {/* Footer */}
-          <DialogFooter className="px-6 py-4">
+          <DialogFooter>
             <Button
               type="button"
               variant="ghost"

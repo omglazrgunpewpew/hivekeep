@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, getErrorMessage } from '@/client/lib/api'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Textarea } from '@/client/components/ui/textarea'
 import { KinSelector } from '@/client/components/common/KinSelector'
 import { useTickets } from '@/client/hooks/useTickets'
@@ -89,47 +81,43 @@ export function EnrichTicketDialog({ open, onOpenChange, ticketId, projectId }: 
   }))
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="size-4" />
-            {t('projects.enrich.title')}
-          </DialogTitle>
-          <DialogDescription>{t('projects.enrich.description')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label>{t('projects.startTask.kinField')}</Label>
-            <KinSelector
-              value={selectedKinId}
-              onValueChange={setSelectedKinId}
-              kins={kinOptions}
-              placeholder={t('projects.startTask.kinPlaceholder')}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="enrich-focus">{t('projects.enrich.focusField')}</Label>
-            <Textarea
-              id="enrich-focus"
-              value={focus}
-              onChange={(e) => setFocus(e.target.value)}
-              placeholder={t('projects.enrich.focusPlaceholder')}
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">{t('projects.enrich.focusHelp')}</p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={handleSubmit} disabled={!selectedKinId || submitting}>
-            <Sparkles className="mr-1 size-3.5" />
-            {t('projects.enrich.start')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <span className="flex items-center gap-2">
+          <Sparkles className="size-4" />
+          {t('projects.enrich.title')}
+        </span>
+      }
+      description={t('projects.enrich.description')}
+      size="md"
+      onSubmit={handleSubmit}
+      isSubmitting={submitting}
+      submitDisabled={!selectedKinId}
+      submitLabel={t('projects.enrich.start')}
+    >
+      <FormField label={t('projects.startTask.kinField')}>
+        <KinSelector
+          value={selectedKinId}
+          onValueChange={setSelectedKinId}
+          kins={kinOptions}
+          placeholder={t('projects.startTask.kinPlaceholder')}
+        />
+      </FormField>
+      <FormField
+        label={t('projects.enrich.focusField')}
+        htmlFor="enrich-focus"
+        hint={t('projects.enrich.focusHelp')}
+      >
+        <Textarea
+          id="enrich-focus"
+          value={focus}
+          onChange={(e) => setFocus(e.target.value)}
+          placeholder={t('projects.enrich.focusPlaceholder')}
+          rows={3}
+        />
+      </FormField>
+    </FormDialog>
   )
 }

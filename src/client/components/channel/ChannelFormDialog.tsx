@@ -1,17 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Textarea } from '@/client/components/ui/textarea'
-import { Label } from '@/client/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import {
   Collapsible,
   CollapsibleContent,
@@ -21,8 +13,7 @@ import { KinSelector } from '@/client/components/common/KinSelector'
 import type { KinOption } from '@/client/components/common/KinSelectItem'
 import { PlatformSelector } from '@/client/components/common/PlatformSelector'
 import { DynamicField } from '@/client/components/common/DynamicField'
-import { AlertTriangle, ChevronRight, HelpCircle, Lightbulb, Loader2 } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
+import { AlertTriangle, ChevronRight, HelpCircle, Lightbulb } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { usePlatforms } from '@/client/hooks/usePlatforms'
 import type { ChannelConfigSchema, ChannelSummary } from '@/shared/types'
@@ -138,6 +129,7 @@ export function ChannelFormDialog({
   const [platform, setPlatform] = useState('')
   const [formValues, setFormValues] = useState<Record<string, unknown>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   // Transfer reason (only used when the user changes the Kin on edit).
   const [transferReason, setTransferReason] = useState('')
 
@@ -173,6 +165,7 @@ export function ChannelFormDialog({
     // edited channel changes; stale text from a previous edit must not
     // leak into a new transfer.
     setTransferReason('')
+    setError(null)
   }, [channel, open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset form values to the active platform's schema defaults whenever
@@ -182,8 +175,8 @@ export function ChannelFormDialog({
     setFormValues(buildInitialFormValues(activeSchema))
   }, [platform, activeSchema, isEdit])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSave = async () => {
+    setError(null)
     setIsLoading(true)
 
     try {
@@ -213,6 +206,8 @@ export function ChannelFormDialog({
         })
       }
       onOpenChange(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setIsLoading(false)
     }
@@ -227,109 +222,99 @@ export function ChannelFormDialog({
     : !!name.trim() && !!selectedKinId && !!platform && !requiredFieldsMissing
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? t('common.edit') : t('settings.channels.add')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {isEdit ? t('common.edit') : t('settings.channels.add')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('common.edit') : t('settings.channels.add')}
+      size="lg"
+      error={error}
+      onSubmit={handleSave}
+      isSubmitting={isLoading}
+      submitDisabled={!canSubmit}
+      submitLabel={t('common.save')}
+    >
+      {/* Name */}
+      <FormField
+        label={t('settings.channels.name')}
+        htmlFor="channel-name"
+        tip={t('settings.channels.nameTip')}
+        required
+      >
+        <Input
+          id="channel-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t('settings.channels.namePlaceholder')}
+          required
+        />
+      </FormField>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.channels.name')} <InfoTip content={t('settings.channels.nameTip')} /></Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('settings.channels.namePlaceholder')}
-              required
+      {/* Kin selector */}
+      <FormField
+        label={t('settings.channels.kinLabel')}
+        htmlFor="channel-kin"
+        tip={t('settings.channels.kinTip')}
+      >
+        <KinSelector
+          value={selectedKinId}
+          onValueChange={setSelectedKinId}
+          kins={kins}
+          placeholder={t('settings.channels.kinPlaceholder')}
+        />
+        {kinChanged && (
+          <p className="flex items-start gap-1.5 text-xs text-warning">
+            <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+            <span>{t('settings.channels.transferWarning', 'Selecting a different Kin will transfer this channel. The previous Kin loses the binding and both Kins get an audit-trail row in their conversation.')}</span>
+          </p>
+        )}
+      </FormField>
+
+      {/* Optional reason: only shown when the user picked a different Kin */}
+      {kinChanged && (
+        <FormField
+          label={t('settings.channels.transferReasonLabel', 'Transfer reason (optional)')}
+          htmlFor="channel-transfer-reason"
+        >
+          <Textarea
+            id="channel-transfer-reason"
+            value={transferReason}
+            onChange={(e) => setTransferReason(e.target.value.slice(0, 200))}
+            placeholder={t('settings.channels.transferReasonPlaceholder', "Optional note about why you're transferring this channel (200 chars max).")}
+            rows={2}
+            maxLength={200}
+          />
+          <p className="text-[10px] text-muted-foreground/70 text-right tabular-nums">
+            {transferReason.length} / 200
+          </p>
+        </FormField>
+      )}
+
+      {/* Platform selector (only for create) */}
+      {!isEdit && platforms.length > 0 && (
+        <FormField label={t('settings.channels.platform')} htmlFor="channel-platform">
+          <PlatformSelector
+            value={platform}
+            onValueChange={setPlatform}
+          />
+        </FormField>
+      )}
+
+      {/* Dynamic per-adapter config fields (only for create) */}
+      {!isEdit && activeSchema && activeSchema.fields.length > 0 && (
+        <div className="space-y-4">
+          {activeSchema.fields.map((field) => (
+            <DynamicField
+              key={field.name}
+              field={field}
+              value={formValues[field.name]}
+              onChange={(v) =>
+                setFormValues((prev) => ({ ...prev, [field.name]: v }))
+              }
             />
-          </div>
-          {/* Kin selector */}
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.channels.kinLabel')} <InfoTip content={t('settings.channels.kinTip')} /></Label>
-            <KinSelector
-              value={selectedKinId}
-              onValueChange={setSelectedKinId}
-              kins={kins}
-              placeholder={t('settings.channels.kinPlaceholder')}
-            />
-            {kinChanged && (
-              <p className="flex items-start gap-1.5 text-xs text-warning">
-                <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                <span>{t('settings.channels.transferWarning', 'Selecting a different Kin will transfer this channel. The previous Kin loses the binding and both Kins get an audit-trail row in their conversation.')}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Optional reason: only shown when the user picked a different Kin */}
-          {kinChanged && (
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">
-                {t('settings.channels.transferReasonLabel', 'Transfer reason (optional)')}
-              </Label>
-              <Textarea
-                value={transferReason}
-                onChange={(e) => setTransferReason(e.target.value.slice(0, 200))}
-                placeholder={t('settings.channels.transferReasonPlaceholder', "Optional note about why you're transferring this channel (200 chars max).")}
-                rows={2}
-                maxLength={200}
-              />
-              <p className="text-[10px] text-muted-foreground/70 text-right tabular-nums">
-                {transferReason.length} / 200
-              </p>
-            </div>
-          )}
-
-          {/* Platform selector (only for create) */}
-          {!isEdit && platforms.length > 0 && (
-            <div className="space-y-2">
-              <Label>{t('settings.channels.platform')}</Label>
-              <PlatformSelector
-                value={platform}
-                onValueChange={setPlatform}
-              />
-            </div>
-          )}
-
-          {/* Dynamic per-adapter config fields (only for create) */}
-          {!isEdit && activeSchema && activeSchema.fields.length > 0 && (
-            <div className="space-y-4">
-              {activeSchema.fields.map((field) => (
-                <DynamicField
-                  key={field.name}
-                  field={field}
-                  value={formValues[field.name]}
-                  onChange={(v) =>
-                    setFormValues((prev) => ({ ...prev, [field.name]: v }))
-                  }
-                />
-              ))}
-              <PlatformSetupGuide platform={platform} />
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={isLoading || !canSubmit} className="btn-shine">
-              {isLoading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  {t('common.loading')}
-                </>
-              ) : (
-                t('common.save')
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          ))}
+          <PlatformSetupGuide platform={platform} />
+        </div>
+      )}
+    </FormDialog>
   )
 }

@@ -13,16 +13,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/client/components/ui/alert-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
-import { Label } from '@/client/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -211,8 +204,8 @@ export function WebhooksSettings() {
       />
 
       {webhooks.length > 0 && (
-        <div className="flex gap-2">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative min-w-[180px] flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={t('settings.webhooks.search', 'Search webhooks...')}
@@ -300,62 +293,62 @@ export function WebhooksSettings() {
       />
 
       {/* Token reveal dialog (shown after create or regenerate) */}
-      <Dialog open={!!revealedToken} onOpenChange={(v) => { if (!v) setRevealedToken(null) }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('settings.webhooks.added')}</DialogTitle>
-            <DialogDescription className="text-warning">
-              {t('settings.webhooks.tokenWarning')}
-            </DialogDescription>
-          </DialogHeader>
-          {revealedToken && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>{t('common.url')}</Label>
-                <div className="flex gap-2">
-                  <Input value={revealedToken.url} readOnly className="font-mono text-xs" />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copy(revealedToken.url, { successKey: 'settings.webhooks.urlCopied' })}
-                  >
-                    <Copy className="size-4" />
-                  </Button>
-                </div>
+      <FormDialog
+        open={!!revealedToken}
+        onOpenChange={(v) => { if (!v) setRevealedToken(null) }}
+        title={t('settings.webhooks.added')}
+        description={
+          <span className="text-warning">{t('settings.webhooks.tokenWarning')}</span>
+        }
+        size="lg"
+        cancelLabel={t('common.close')}
+      >
+        {revealedToken && (
+          <>
+            <FormField label={t('common.url')}>
+              <div className="flex gap-2">
+                <Input value={revealedToken.url} readOnly className="font-mono text-xs" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => copy(revealedToken.url, { successKey: 'settings.webhooks.urlCopied' })}
+                >
+                  <Copy className="size-4" />
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>{t('settings.webhooks.tokenLabel')}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={showToken ? revealedToken.token : '•'.repeat(32)}
-                    readOnly
-                    className="font-mono text-xs"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowToken(!showToken)}
-                  >
-                    {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copy(revealedToken.token, { successKey: 'settings.webhooks.tokenCopied' })}
-                  >
-                    <Copy className="size-4" />
-                  </Button>
-                </div>
+            </FormField>
+            <FormField label={t('settings.webhooks.tokenLabel')}>
+              <div className="flex gap-2">
+                <Input
+                  value={showToken ? revealedToken.token : '•'.repeat(32)}
+                  readOnly
+                  className="font-mono text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setShowToken(!showToken)}
+                >
+                  {showToken ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => copy(revealedToken.token, { successKey: 'settings.webhooks.tokenCopied' })}
+                >
+                  <Copy className="size-4" />
+                </Button>
               </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setRevealedToken(null)}>
-              {t('common.close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </FormField>
+          </>
+        )}
+      </FormDialog>
     </div>
   )
 }

@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -28,10 +20,10 @@ import {
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
-import { Label } from '@/client/components/ui/label'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { getErrorMessage } from '@/client/lib/api'
-import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { formatTicketRef } from '@/client/lib/ticket-ref'
 import { TICKET_STATUSES } from '@/shared/constants'
@@ -62,6 +54,7 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
   const [status, setStatus] = useState<TicketStatus>(ticket.status)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(ticket.tags.map((tg) => tg.id))
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -72,6 +65,7 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
       setDescription(ticket.description)
       setStatus(ticket.status)
       setSelectedTagIds(ticket.tags.map((tg) => tg.id))
+      setError(null)
     }
   }, [open, ticket])
 
@@ -92,6 +86,7 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
   async function handleSave() {
     const trimmedTitle = title.trim()
     if (!trimmedTitle) return
+    setError(null)
     setSubmitting(true)
     try {
       await onSave({
@@ -102,7 +97,7 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
       })
       onOpenChange(false)
     } catch (err) {
-      toast.error(getErrorMessage(err))
+      setError(getErrorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -115,7 +110,7 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
       setDeleteOpen(false)
       onOpenChange(false)
     } catch (err) {
-      toast.error(getErrorMessage(err))
+      setError(getErrorMessage(err))
     } finally {
       setDeleting(false)
     }
@@ -123,116 +118,120 @@ export function EditTicketModal({ open, onOpenChange, ticket, projectSlug, avail
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {ticketRef && (
-                <span
-                  className="font-mono text-xs font-normal text-muted-foreground"
-                  aria-label={t('projects.ticket.panel.ticketRef', { ref: ticketRef })}
-                >
-                  {ticketRef}
-                </span>
-              )}
-              <span>{t('projects.ticket.edit.title')}</span>
-            </DialogTitle>
-            <DialogDescription>{t('projects.ticket.edit.description')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-ticket-title">{t('projects.ticket.create.titleField')}</Label>
-              <Input
-                id="edit-ticket-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-ticket-status">{t('projects.ticket.panel.status')}</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as TicketStatus)}>
-                <SelectTrigger id="edit-ticket-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TICKET_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {t(`projects.status.${s}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('projects.ticket.create.descriptionField')}</Label>
-              <MarkdownEditor
-                value={description}
-                onChange={setDescription}
-                height="240px"
-              />
-            </div>
-
-            {availableTags.length > 0 && (
-              <div className="space-y-1.5">
-                <Label>{t('projects.ticket.create.tagsField')}</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableTags.map((tag) => {
-                    const selected = selectedTagIds.includes(tag.id)
-                    return (
-                      <button
-                        key={tag.id}
-                        type="button"
-                        onClick={() => toggleTag(tag.id)}
-                        className={cn(
-                          'rounded-full border px-2.5 py-0.5 text-xs transition-colors',
-                          selected
-                            ? 'border-transparent'
-                            : 'border-border bg-transparent text-muted-foreground hover:bg-muted',
-                        )}
-                        style={
-                          selected
-                            ? {
-                                backgroundColor: `${tag.color}20`,
-                                color: tag.color,
-                                borderColor: `${tag.color}40`,
-                              }
-                            : undefined
-                        }
-                      >
-                        {tag.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
+      <FormDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={
+          <span className="flex items-center gap-2">
+            {ticketRef && (
+              <span
+                className="font-mono text-xs font-normal text-muted-foreground"
+                aria-label={t('projects.ticket.panel.ticketRef', { ref: ticketRef })}
+              >
+                {ticketRef}
+              </span>
             )}
-
-          </div>
-
-          <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2">
+            <span>{t('projects.ticket.edit.title')}</span>
+          </span>
+        }
+        description={t('projects.ticket.edit.description')}
+        size="2xl"
+        error={error}
+        onSubmit={handleSave}
+        isSubmitting={submitting}
+        submitDisabled={!hasChanges || !title.trim()}
+        submitLabel={t('common.save')}
+        footer={
+          <>
             <Button
+              type="button"
               variant="ghost"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
               onClick={() => setDeleteOpen(true)}
               disabled={submitting}
             >
               <Trash2 className="mr-1 size-4" />
               {t('projects.ticket.panel.delete')}
             </Button>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-                {t('common.cancel')}
-              </Button>
-              <Button onClick={handleSave} disabled={!hasChanges || !title.trim() || submitting}>
-                {t('common.save')}
-              </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={!hasChanges || !title.trim() || submitting}
+              className="btn-shine"
+            >
+              {submitting && <Loader2 className="size-4 animate-spin" />}
+              {t('common.save')}
+            </Button>
+          </>
+        }
+      >
+        <FormField label={t('projects.ticket.create.titleField')} htmlFor="edit-ticket-title">
+          <Input
+            id="edit-ticket-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </FormField>
+
+        <FormField label={t('projects.ticket.panel.status')} htmlFor="edit-ticket-status">
+          <Select value={status} onValueChange={(v) => setStatus(v as TicketStatus)}>
+            <SelectTrigger id="edit-ticket-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TICKET_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(`projects.status.${s}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField label={t('projects.ticket.create.descriptionField')}>
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            height="240px"
+          />
+        </FormField>
+
+        {availableTags.length > 0 && (
+          <FormField label={t('projects.ticket.create.tagsField')}>
+            <div className="flex flex-wrap gap-1.5">
+              {availableTags.map((tag) => {
+                const selected = selectedTagIds.includes(tag.id)
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={cn(
+                      'rounded-full border px-2.5 py-0.5 text-xs transition-colors',
+                      selected
+                        ? 'border-transparent'
+                        : 'border-border bg-transparent text-muted-foreground hover:bg-muted',
+                    )}
+                    style={
+                      selected
+                        ? {
+                            backgroundColor: `${tag.color}20`,
+                            color: tag.color,
+                            borderColor: `${tag.color}40`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {tag.label}
+                  </button>
+                )
+              })}
             </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </FormField>
+        )}
+      </FormDialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

@@ -1,14 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/client/components/ui/dialog'
-import { Button } from '@/client/components/ui/button'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { Label } from '@/client/components/ui/label'
@@ -61,6 +54,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
   const [thinkingChoice, setThinkingChoice] = useState<ThinkingChoice>('inherit')
   const [defaultToolboxIds, setDefaultToolboxIds] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   function reset() {
     setTitle('')
@@ -74,11 +68,13 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
     setScoutProviderId('')
     setThinkingChoice('inherit')
     setDefaultToolboxIds([])
+    setError('')
   }
 
   async function handleSubmit() {
     const trimmed = title.trim()
     if (!trimmed) return
+    setError('')
     setSubmitting(true)
     try {
       // model/providerId are coupled — only send when both are set so the
@@ -106,6 +102,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
       reset()
       onOpenChange(false)
     } catch (err) {
+      setError(getErrorMessage(err))
       toast.error(getErrorMessage(err))
     } finally {
       setSubmitting(false)
@@ -113,175 +110,147 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o) }}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{t('projects.create.title')}</DialogTitle>
-          <DialogDescription>{t('projects.create.description')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="project-title">{t('projects.create.titleField')}</Label>
-            <Input
-              id="project-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('projects.create.titlePlaceholder')}
-              autoFocus
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t('projects.create.descriptionField')}</Label>
-            <MarkdownEditor
-              value={description}
-              onChange={setDescription}
-              height="280px"
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('projects.create.descriptionHint')}
-            </p>
-          </div>
+    <FormDialog
+      open={open}
+      onOpenChange={(o) => { if (!o) reset(); onOpenChange(o) }}
+      title={t('projects.create.title')}
+      description={t('projects.create.description')}
+      size="2xl"
+      error={error}
+      onSubmit={handleSubmit}
+      isSubmitting={submitting}
+      submitDisabled={!title.trim()}
+      submitLabel={t('common.create')}
+    >
+      <FormField label={t('projects.create.titleField')} htmlFor="project-title" required>
+        <Input
+          id="project-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={t('projects.create.titlePlaceholder')}
+          autoFocus
+        />
+      </FormField>
 
-          {/* Sub-Kin defaults: model + thinking effort. Pre-setting them at
-              creation time mirrors the edit modal so the user doesn't have
-              to reopen the project to wire them up before spawning tasks. */}
-          <div className="space-y-1.5">
-            <Label>{t('projects.edit.modelField')}</Label>
-            <ModelPicker
-              models={llmModels}
-              value={modelPickerValue(model, providerId)}
-              onValueChange={(modelId, pid) => {
-                setModel(modelId)
-                setProviderId(pid)
-              }}
-              placeholder={t('projects.edit.modelPlaceholder')}
-              allowClear
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('projects.edit.modelHint')}
-            </p>
-          </div>
+      <FormField label={t('projects.create.descriptionField')} hint={t('projects.create.descriptionHint')}>
+        <MarkdownEditor
+          value={description}
+          onChange={setDescription}
+          height="280px"
+        />
+      </FormField>
 
-          {/* Default scout model for tasks on this project's tickets.
-              Empty = inherit the global scout default, then the Kin's model. */}
-          <div className="space-y-1.5">
-            <Label>{t('projects.edit.scoutModelField')}</Label>
-            <ModelPicker
-              models={llmModels}
-              value={modelPickerValue(scoutModel, scoutProviderId)}
-              onValueChange={(modelId, pid) => {
-                setScoutModel(modelId)
-                setScoutProviderId(pid)
-              }}
-              placeholder={t('projects.edit.scoutModelPlaceholder')}
-              allowClear
-              clearLabel={t('projects.edit.scoutModelPlaceholder')}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('projects.edit.scoutModelHint')}
-            </p>
-          </div>
+      {/* Sub-Kin defaults: model + thinking effort. Pre-setting them at
+          creation time mirrors the edit modal so the user doesn't have
+          to reopen the project to wire them up before spawning tasks. */}
+      <FormField label={t('projects.edit.modelField')} hint={t('projects.edit.modelHint')}>
+        <ModelPicker
+          models={llmModels}
+          value={modelPickerValue(model, providerId)}
+          onValueChange={(modelId, pid) => {
+            setModel(modelId)
+            setProviderId(pid)
+          }}
+          placeholder={t('projects.edit.modelPlaceholder')}
+          allowClear
+        />
+      </FormField>
 
-          <div className="space-y-1.5">
-            <Label>{t('projects.edit.thinkingField')}</Label>
-            <Select
-              value={thinkingChoice}
-              onValueChange={(v) => setThinkingChoice(v as ThinkingChoice)}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="inherit">
-                  <span className="italic text-muted-foreground">
-                    {t('projects.edit.thinkingInherit')}
-                  </span>
-                </SelectItem>
-                <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
-                <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
-                <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
-                <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
-                <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {t('projects.edit.thinkingHint')}
-            </p>
-          </div>
+      {/* Default scout model for tasks on this project's tickets.
+          Empty = inherit the global scout default, then the Kin's model. */}
+      <FormField label={t('projects.edit.scoutModelField')} hint={t('projects.edit.scoutModelHint')}>
+        <ModelPicker
+          models={llmModels}
+          value={modelPickerValue(scoutModel, scoutProviderId)}
+          onValueChange={(modelId, pid) => {
+            setScoutModel(modelId)
+            setScoutProviderId(pid)
+          }}
+          placeholder={t('projects.edit.scoutModelPlaceholder')}
+          allowClear
+          clearLabel={t('projects.edit.scoutModelPlaceholder')}
+        />
+      </FormField>
 
-          {/* Default toolboxes for tasks started on this project's tickets.
-              Empty = inherit the built-in default; an explicit pick at
-              task-start time still overrides this. */}
-          {toolboxes.length > 0 && (
-            <div className="space-y-1.5">
-              <Label>{t('projects.edit.toolboxesField')}</Label>
-              <ToolboxMultiSelect
-                toolboxes={toolboxes}
-                selected={defaultToolboxIds}
-                onChange={setDefaultToolboxIds}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('projects.edit.toolboxesHint')}
-              </p>
-            </div>
-          )}
+      <FormField label={t('projects.edit.thinkingField')} hint={t('projects.edit.thinkingHint')}>
+        <Select
+          value={thinkingChoice}
+          onValueChange={(v) => setThinkingChoice(v as ThinkingChoice)}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="inherit">
+              <span className="italic text-muted-foreground">
+                {t('projects.edit.thinkingInherit')}
+              </span>
+            </SelectItem>
+            <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
+            <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
+            <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
+            <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
+            <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
 
-          {/* GitHub integration: PAT + repo picker. Optional at create time
-              — leaving them blank yields a project with no sub-task worktree
-              support, which the user can wire up later from the edit modal. */}
-          <div className="space-y-3 border-t border-border pt-4">
-            <div className="space-y-0.5">
-              <Label>{t('projects.github.sectionTitle')}</Label>
-              <p className="text-xs text-muted-foreground">
-                {t('projects.github.sectionHint')}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="project-pat">{t('projects.github.patField')}</Label>
-              <VaultPatPicker
-                value={githubPatVaultKey}
-                onValueChange={setGithubPatVaultKey}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="project-repo">{t('projects.github.repoField')}</Label>
-              <GithubRepoPicker
-                value={githubRepo}
-                onValueChange={(repo, branch) => {
-                  setGithubRepo(repo)
-                  if (branch) setDefaultBranch(branch)
-                }}
-                patVaultKey={githubPatVaultKey}
-              />
-              {!githubPatVaultKey && (
-                <p className="text-xs text-muted-foreground">
-                  {t('projects.github.repoNeedsPat')}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="project-default-branch">{t('projects.github.defaultBranchField')}</Label>
-              <Input
-                id="project-default-branch"
-                value={defaultBranch}
-                onChange={(e) => setDefaultBranch(e.target.value)}
-                placeholder="main"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('projects.github.defaultBranchHint')}
-              </p>
-            </div>
-          </div>
+      {/* Default toolboxes for tasks started on this project's tickets.
+          Empty = inherit the built-in default; an explicit pick at
+          task-start time still overrides this. */}
+      {toolboxes.length > 0 && (
+        <FormField label={t('projects.edit.toolboxesField')} hint={t('projects.edit.toolboxesHint')}>
+          <ToolboxMultiSelect
+            toolboxes={toolboxes}
+            selected={defaultToolboxIds}
+            onChange={setDefaultToolboxIds}
+          />
+        </FormField>
+      )}
+
+      {/* GitHub integration: PAT + repo picker. Optional at create time
+          — leaving them blank yields a project with no sub-task worktree
+          support, which the user can wire up later from the edit modal. */}
+      <div className="space-y-3 border-t border-border pt-4">
+        <div className="space-y-0.5">
+          <Label>{t('projects.github.sectionTitle')}</Label>
+          <p className="text-xs text-muted-foreground">
+            {t('projects.github.sectionHint')}
+          </p>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            {t('common.cancel')}
-          </Button>
-          <Button onClick={handleSubmit} disabled={!title.trim() || submitting}>
-            {t('common.create')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <FormField label={t('projects.github.patField')} htmlFor="project-pat">
+          <VaultPatPicker
+            value={githubPatVaultKey}
+            onValueChange={setGithubPatVaultKey}
+          />
+        </FormField>
+        <FormField
+          label={t('projects.github.repoField')}
+          htmlFor="project-repo"
+          hint={!githubPatVaultKey ? t('projects.github.repoNeedsPat') : undefined}
+        >
+          <GithubRepoPicker
+            value={githubRepo}
+            onValueChange={(repo, branch) => {
+              setGithubRepo(repo)
+              if (branch) setDefaultBranch(branch)
+            }}
+            patVaultKey={githubPatVaultKey}
+          />
+        </FormField>
+        <FormField
+          label={t('projects.github.defaultBranchField')}
+          htmlFor="project-default-branch"
+          hint={t('projects.github.defaultBranchHint')}
+        >
+          <Input
+            id="project-default-branch"
+            value={defaultBranch}
+            onChange={(e) => setDefaultBranch(e.target.value)}
+            placeholder="main"
+          />
+        </FormField>
+      </div>
+    </FormDialog>
   )
 }

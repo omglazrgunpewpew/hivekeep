@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
+  DialogFooter,
 } from '@/client/components/ui/dialog'
 import { Keyboard } from 'lucide-react'
 
@@ -95,7 +97,7 @@ export function KeyboardShortcutsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent variant="panel" size="md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Keyboard className="size-4" />
@@ -106,7 +108,7 @@ export function KeyboardShortcutsDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <DialogBody className="space-y-5">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.titleKey}>
               <h3 className="mb-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -134,11 +136,13 @@ export function KeyboardShortcutsDialog() {
               </div>
             </div>
           ))}
-        </div>
+        </DialogBody>
 
-        <p className="text-center text-xs text-muted-foreground pt-2 border-t">
-          {t('shortcuts.hint')}
-        </p>
+        <DialogFooter>
+          <p className="w-full text-center text-xs text-muted-foreground">
+            {t('shortcuts.hint')}
+          </p>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

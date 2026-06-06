@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/client/components/ui/dialog'
@@ -17,6 +19,7 @@ import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteBut
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
+import { FormField } from '@/client/components/common/FormField'
 import { AvatarPickerModal, type AvatarPickerResult } from '@/client/components/kin/AvatarPickerModal'
 import { KinToolsTab } from '@/client/components/kin/KinToolsTab'
 import { CompactingAnimation } from '@/client/components/kin/CompactingAnimation'
@@ -30,7 +33,6 @@ import {
   SelectValue,
 } from '@/client/components/ui/select'
 import { AlertTriangle, Archive, ArrowLeft, Bot, Brain, Camera, Loader2, Network, Settings, ShieldCheck, Sparkles, Trash2, Upload, User, Wrench } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
 import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
 import { useUnsavedChanges } from '@/client/hooks/useUnsavedChanges'
 import { useHasCapability } from '@/client/hooks/useHasCapability'
@@ -464,7 +466,9 @@ export function KinFormModal({
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) guardedClose(); else onOpenChange(true) }}>
         <DialogContent
-          className="flex h-[min(85vh,720px)] max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-5xl"
+          variant="panel"
+          size="5xl"
+          className="h-[min(85vh,720px)] max-h-[85vh]"
           onPointerDownOutside={(e) => {
             // Prevent parent dialog close when a nested dialog (e.g. MemoryFormDialog) is open
             if (document.querySelectorAll('[role="dialog"][data-state="open"]').length > 1) e.preventDefault()
@@ -479,7 +483,7 @@ export function KinFormModal({
           {/* ─── WIZARD: Describe step ─── */}
           {hasWizard && wizardStep === 'describe' ? (
             <>
-              <DialogHeader className="shrink-0 border-b px-6 py-4">
+              <DialogHeader>
                 <DialogTitle className="gradient-primary-text">
                   {t('kin.wizard.title')}
                 </DialogTitle>
@@ -488,7 +492,7 @@ export function KinFormModal({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex flex-1 flex-col items-center overflow-y-auto px-8 py-10">
+              <DialogBody className="flex flex-col items-center">
                 <div className="m-auto w-full max-w-xl animate-fade-in-up space-y-6">
                   <p className="text-center text-muted-foreground">
                     {t('kin.wizard.subtitle')}
@@ -545,56 +549,56 @@ export function KinFormModal({
                     className="hidden"
                     onChange={handleImportFile}
                   />
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setWizardStep('form')}
-                        disabled={isGenerating}
-                      >
-                        {t('kin.wizard.skipManual')}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => importFileRef.current?.click()}
-                        disabled={isGenerating}
-                        className="text-xs"
-                      >
-                        <Upload className="size-3.5" />
-                        {t('kin.wizard.importFile', { defaultValue: 'Import' })}
-                      </Button>
-                    </div>
-
-                    <Button
-                      type="button"
-                      onClick={handleGenerate}
-                      disabled={isGenerating || !wizardDescription.trim() || !hasLlm}
-                      className="btn-shine gradient-primary text-white"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="size-4 animate-spin" />
-                          {t('kin.wizard.generating')}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="size-4" />
-                          {t('kin.wizard.generate')}
-                        </>
-                      )}
-                    </Button>
-                  </div>
                 </div>
-              </div>
+              </DialogBody>
+
+              <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setWizardStep('form')}
+                    disabled={isGenerating}
+                  >
+                    {t('kin.wizard.skipManual')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => importFileRef.current?.click()}
+                    disabled={isGenerating}
+                    className="text-xs"
+                  >
+                    <Upload className="size-3.5" />
+                    {t('kin.wizard.importFile', { defaultValue: 'Import' })}
+                  </Button>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !wizardDescription.trim() || !hasLlm}
+                  className="btn-shine gradient-primary text-white"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      {t('kin.wizard.generating')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-4" />
+                      {t('kin.wizard.generate')}
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
             </>
           ) : (
             <>
               {/* ─── FORM: Standard create/edit ─── */}
-              <DialogHeader className="shrink-0 border-b px-6 py-4">
+              <DialogHeader>
                 <DialogTitle>
                   {isEdit ? t('kin.edit.title') : t('kin.create.title')}
                 </DialogTitle>
@@ -603,42 +607,45 @@ export function KinFormModal({
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="flex min-h-0 flex-1">
-                {/* Left sidebar navigation */}
-                <nav className="w-48 shrink-0 border-r surface-sidebar overflow-y-auto py-4 px-3">
-                  <ul className="flex w-full min-w-0 flex-col gap-1">
-                    {TABS.map(({ id, icon: Icon, labelKey }) => (
-                      <li key={id}>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab(id)}
-                          data-active={activeTab === id}
-                          className={cn(
-                            'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors',
-                            'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                            activeTab === id
-                              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                              : 'text-sidebar-foreground',
-                          )}
-                        >
-                          <Icon className="size-4 shrink-0" />
-                          <span className="truncate">{t(labelKey)}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
+              <form onSubmit={handleSubmit} className="contents">
+                {/* Body: left nav + scrollable content. Stacks vertically on
+                    mobile (nav becomes a horizontal scrollable tab bar). */}
+                <DialogBody className="flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:flex-row">
+                  {/* Left sidebar navigation */}
+                  <nav className="shrink-0 border-b surface-sidebar overflow-x-auto px-3 py-2 sm:w-40 sm:border-b-0 sm:border-r sm:overflow-y-auto sm:py-4 md:w-48">
+                    <ul className="flex w-full min-w-0 flex-row gap-1 sm:flex-col">
+                      {TABS.map(({ id, icon: Icon, labelKey }) => (
+                        <li key={id} className="shrink-0 sm:shrink">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab(id)}
+                            data-active={activeTab === id}
+                            className={cn(
+                              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors',
+                              'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                              activeTab === id
+                                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                                : 'text-sidebar-foreground',
+                            )}
+                          >
+                            <Icon className="size-4 shrink-0" />
+                            <span className="truncate">{t(labelKey)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
 
-                {/* Right content area */}
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                  {error && (
-                    <div className="shrink-0 px-6 pt-4">
-                      <FormErrorAlert error={error} animate />
-                    </div>
-                  )}
+                  {/* Right content area */}
+                  <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    {error && (
+                      <div className="shrink-0 px-6 pt-4">
+                        <FormErrorAlert error={error} animate />
+                      </div>
+                    )}
 
-                  <div className="flex-1 overflow-y-auto">
-                    <div className="p-6">
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="p-6">
                       {activeTab === 'general' && (
                         <div className="space-y-4">
                           {/* No-LLM banner — surfaces the constraint up-front
@@ -708,7 +715,7 @@ export function KinFormModal({
                           )}
 
                           {/* Avatar + Identity row */}
-                          <div className="flex items-start gap-6">
+                          <div className="flex flex-col items-start gap-6 sm:flex-row">
                             {/* Avatar — click to open picker */}
                             <button
                               type="button"
@@ -734,10 +741,14 @@ export function KinFormModal({
                             </button>
 
                             {/* Name, Role & Model */}
-                            <div className="flex-1 space-y-4">
-                              <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="kinFormName" className="inline-flex items-center gap-1.5">{t('kin.create.name')} <span className="text-destructive">*</span> <InfoTip content={t('kin.create.nameTip')} /></Label>
+                            <div className="w-full flex-1 space-y-4">
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <FormField
+                                  label={t('kin.create.name')}
+                                  htmlFor="kinFormName"
+                                  tip={t('kin.create.nameTip')}
+                                  required
+                                >
                                   <Input
                                     id="kinFormName"
                                     value={name}
@@ -745,9 +756,13 @@ export function KinFormModal({
                                     placeholder={t('kin.create.namePlaceholder')}
                                     required
                                   />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="kinFormRole" className="inline-flex items-center gap-1.5">{t('kin.create.role')} <span className="text-destructive">*</span> <InfoTip content={t('kin.create.roleTip')} /></Label>
+                                </FormField>
+                                <FormField
+                                  label={t('kin.create.role')}
+                                  htmlFor="kinFormRole"
+                                  tip={t('kin.create.roleTip')}
+                                  required
+                                >
                                   <Input
                                     id="kinFormRole"
                                     value={role}
@@ -755,59 +770,60 @@ export function KinFormModal({
                                     placeholder={t('kin.create.rolePlaceholder')}
                                     required
                                   />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="inline-flex items-center gap-1.5">{t('kin.create.model')} {!isEdit && <span className="text-destructive">*</span>} <InfoTip content={t('kin.create.modelTip')} /></Label>
+                                </FormField>
+                                <FormField
+                                  label={t('kin.create.model')}
+                                  tip={t('kin.create.modelTip')}
+                                  required={!isEdit}
+                                >
                                   <ModelPicker
                                     models={llmModels}
                                     value={modelPickerValue(model, providerId ?? '')}
                                     onValueChange={(modelId, pid) => { setModel(modelId); setProviderId(pid || null); markDirty() }}
                                     placeholder={t('kin.create.modelPlaceholder')}
                                   />
-                                </div>
+                                </FormField>
                               </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="kinFormSlug">{t('kin.edit.slug')}</Label>
+                              <FormField
+                                label={t('kin.edit.slug')}
+                                htmlFor="kinFormSlug"
+                                hint={isEdit ? t('kin.edit.slugHelp') : t('kin.create.slugHelpCreate', { defaultValue: 'Optional. Auto-generated from the name if left empty.' })}
+                              >
                                 <Input
                                   id="kinFormSlug"
                                   value={slug}
                                   onChange={(e) => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')); markDirty() }}
                                   placeholder={t('kin.create.slugPlaceholder')}
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                  {isEdit ? t('kin.edit.slugHelp') : t('kin.create.slugHelpCreate', { defaultValue: 'Optional. Auto-generated from the name if left empty.' })}
-                                </p>
-                              </div>
+                              </FormField>
                             </div>
                           </div>
 
                           {/* Character */}
-                          <div className="space-y-2">
-                            <Label className="inline-flex items-center gap-1.5">{t('kin.create.character')} <InfoTip content={t('kin.create.characterTip')} /></Label>
+                          <FormField label={t('kin.create.character')} tip={t('kin.create.characterTip')}>
                             <MarkdownEditor
                               value={character}
                               onChange={(v) => { setCharacter(v); markDirty() }}
                               height="180px"
                             />
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-xs text-muted-foreground">{t('kin.create.characterHint')}</p>
                               <p className="text-xs text-muted-foreground tabular-nums">~{Math.ceil(character.length / 4)} tokens</p>
                             </div>
-                          </div>
+                          </FormField>
 
                           {/* Expertise */}
-                          <div className="space-y-2">
-                            <Label className="inline-flex items-center gap-1.5">{t('kin.create.expertise')} <InfoTip content={t('kin.create.expertiseTip')} /></Label>
+                          <FormField label={t('kin.create.expertise')} tip={t('kin.create.expertiseTip')}>
                             <MarkdownEditor
                               value={expertise}
                               onChange={(v) => { setExpertise(v); markDirty() }}
                               height="180px"
                             />
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-xs text-muted-foreground">{t('kin.create.expertiseHint')}</p>
                               <p className="text-xs text-muted-foreground tabular-nums">~{Math.ceil(expertise.length / 4)} tokens</p>
                             </div>
-                          </div>
+                          </FormField>
 
                           {/* Total system prompt token estimate */}
                           {(character.length > 0 || expertise.length > 0) && (
@@ -820,11 +836,12 @@ export function KinFormModal({
                               delegates heavy read-only exploration to. Clearing
                               it (the "inherit" option) falls back to the
                               project → global → main-model chain. */}
-                          <div className="space-y-2 border-t border-border/40 pt-4">
-                            <Label className="inline-flex items-center gap-1.5">
-                              {t('kin.create.scoutModel')}
-                              <InfoTip content={t('kin.create.scoutModelTip')} />
-                            </Label>
+                          <FormField
+                            className="border-t border-border/40 pt-4"
+                            label={t('kin.create.scoutModel')}
+                            tip={t('kin.create.scoutModelTip')}
+                            hint={t('kin.create.scoutModelHint')}
+                          >
                             <ModelPicker
                               models={llmModels}
                               value={modelPickerValue(scoutModel ?? '', scoutProviderId ?? '')}
@@ -837,8 +854,7 @@ export function KinFormModal({
                               allowClear
                               clearLabel={t('kin.create.scoutModelInherit')}
                             />
-                            <p className="text-xs text-muted-foreground">{t('kin.create.scoutModelHint')}</p>
-                          </div>
+                          </FormField>
 
                         </div>
                       )}
@@ -870,8 +886,7 @@ export function KinFormModal({
                           <p className="text-xs text-muted-foreground">{t('kin.compacting.overrideHint')}</p>
 
                           {/* Compacting model — 3-way selector */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.modelLabel')}</Label>
+                          <FormField label={t('kin.compacting.modelLabel')} hint={t('kin.compacting.modelHint')}>
                             <Select
                               value={
                                 compactingConfig?.compactingModel == null ? 'default'
@@ -889,7 +904,7 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -909,12 +924,10 @@ export function KinFormModal({
                                 placeholder={t('kin.compacting.selectCustomModel')}
                               />
                             )}
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.modelHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Threshold percent */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.thresholdPercentLabel')}</Label>
+                          <FormField label={t('kin.compacting.thresholdPercentLabel')} hint={t('kin.compacting.thresholdPercentHint')}>
                             <Input
                               type="number"
                               min={50}
@@ -928,12 +941,10 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.thresholdPercentHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Keep percent */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.keepPercentLabel')}</Label>
+                          <FormField label={t('kin.compacting.keepPercentLabel')} hint={t('kin.compacting.keepPercentHint')}>
                             <Input
                               type="number"
                               min={20}
@@ -947,12 +958,10 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.keepPercentHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Summary budget percent */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.summaryBudgetLabel')}</Label>
+                          <FormField label={t('kin.compacting.summaryBudgetLabel')} hint={t('kin.compacting.summaryBudgetHint')}>
                             <Input
                               type="number"
                               min={5}
@@ -966,12 +975,10 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.summaryBudgetHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Max summaries */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.maxSummariesLabel')}</Label>
+                          <FormField label={t('kin.compacting.maxSummariesLabel')} hint={t('kin.compacting.maxSummariesHint')}>
                             <Input
                               type="number"
                               min={3}
@@ -985,8 +992,7 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.maxSummariesHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Absolute token ceilings — bound the real footprint on large-window
                               models (e.g. 1M), where the percentages above would otherwise be huge. */}
@@ -996,8 +1002,7 @@ export function KinFormModal({
                           </div>
 
                           {/* Keep max tokens */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.keepMaxTokensLabel')}</Label>
+                          <FormField label={t('kin.compacting.keepMaxTokensLabel')} hint={t('kin.compacting.keepMaxTokensHint')}>
                             <Input
                               type="number"
                               min={20000}
@@ -1011,12 +1016,10 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.keepMaxTokensHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Trigger max tokens */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.triggerMaxTokensLabel')}</Label>
+                          <FormField label={t('kin.compacting.triggerMaxTokensLabel')} hint={t('kin.compacting.triggerMaxTokensHint')}>
                             <Input
                               type="number"
                               min={50000}
@@ -1030,12 +1033,10 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.triggerMaxTokensHint')}</p>
-                          </div>
+                          </FormField>
 
                           {/* Summary max tokens */}
-                          <div className="space-y-1.5">
-                            <Label className="text-xs">{t('kin.compacting.summaryMaxTokensLabel')}</Label>
+                          <FormField label={t('kin.compacting.summaryMaxTokensLabel')} hint={t('kin.compacting.summaryMaxTokensHint')}>
                             <Input
                               type="number"
                               min={8000}
@@ -1049,8 +1050,7 @@ export function KinFormModal({
                                 markDirty()
                               }}
                             />
-                            <p className="text-[10px] text-muted-foreground">{t('kin.compacting.summaryMaxTokensHint')}</p>
-                          </div>
+                          </FormField>
                         </div>
                       )}
 
@@ -1095,8 +1095,11 @@ export function KinFormModal({
                           </div>
 
                           {thinkingConfig?.enabled && (
-                            <div className="space-y-1.5">
-                              <Label htmlFor="thinking-budget">{t('kin.thinking.budgetLabel')}</Label>
+                            <FormField
+                              label={t('kin.thinking.budgetLabel')}
+                              htmlFor="thinking-budget"
+                              hint={t('kin.thinking.budgetHint')}
+                            >
                               <Input
                                 id="thinking-budget"
                                 type="number"
@@ -1110,8 +1113,7 @@ export function KinFormModal({
                                   markDirty()
                                 }}
                               />
-                              <p className="text-[10px] text-muted-foreground">{t('kin.thinking.budgetHint')}</p>
-                            </div>
+                            </FormField>
                           )}
                         </div>
                       )}
@@ -1124,71 +1126,72 @@ export function KinFormModal({
                           description={t('kin.create.thinkingEmptyDescription')}
                         />
                       )}
+                      </div>
                     </div>
                   </div>
+                </DialogBody>
 
-                  {/* Footer */}
-                  <div className="shrink-0 border-t px-6 py-3">
-                    {isEdit ? (
-                      <div className="flex items-center justify-between">
-                        <ConfirmDeleteButton
-                          onConfirm={handleDelete}
-                          title={t('kin.settings.delete')}
-                          description={t('kin.settings.deleteConfirm')}
-                          confirmLabel={t('kin.settings.deleteAction')}
-                          trigger={
-                            <Button type="button" variant="destructive" size="sm" disabled={isDeleting}>
-                              <Trash2 className="size-4" />
-                              {t('kin.settings.delete')}
-                            </Button>
-                          }
-                        />
-
-                        <Button type="submit" disabled={isLoading || !name || !role} className="btn-shine">
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="size-4 animate-spin" />
-                              {t('common.loading')}
-                            </>
-                          ) : (
-                            t('kin.settings.save')
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        {hasWizard ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setWizardStep('describe')}
-                          >
-                            <ArrowLeft className="size-4" />
-                            {t('kin.wizard.back')}
+                {/* Footer */}
+                <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+                  {isEdit ? (
+                    <>
+                      <ConfirmDeleteButton
+                        onConfirm={handleDelete}
+                        title={t('kin.settings.delete')}
+                        description={t('kin.settings.deleteConfirm')}
+                        confirmLabel={t('kin.settings.deleteAction')}
+                        trigger={
+                          <Button type="button" variant="destructive" size="sm" disabled={isDeleting}>
+                            <Trash2 className="size-4" />
+                            {t('kin.settings.delete')}
                           </Button>
+                        }
+                      />
+
+                      <Button type="submit" disabled={isLoading || !name || !role} className="btn-shine">
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="size-4 animate-spin" />
+                            {t('common.loading')}
+                          </>
                         ) : (
-                          <div />
+                          t('kin.settings.save')
                         )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {hasWizard ? (
                         <Button
-                          type="submit"
-                          disabled={isLoading || !name || !role || !model}
-                          className="btn-shine"
-                          size="lg"
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setWizardStep('describe')}
                         >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="size-4 animate-spin" />
-                              {t('common.loading')}
-                            </>
-                          ) : (
-                            t('kin.create.submit')
-                          )}
+                          <ArrowLeft className="size-4" />
+                          {t('kin.wizard.back')}
                         </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                      ) : (
+                        <div />
+                      )}
+                      <Button
+                        type="submit"
+                        disabled={isLoading || !name || !role || !model}
+                        className="btn-shine"
+                        size="lg"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="size-4 animate-spin" />
+                            {t('common.loading')}
+                          </>
+                        ) : (
+                          t('kin.create.submit')
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </DialogFooter>
               </form>
             </>
           )}

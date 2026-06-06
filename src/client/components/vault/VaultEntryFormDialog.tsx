@@ -3,17 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Textarea } from '@/client/components/ui/textarea'
-import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
-import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField } from '@/client/components/common/FormField'
 import {
   Select,
   SelectContent,
@@ -21,8 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/client/components/ui/select'
-import { Loader2 } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { VAULT_BUILTIN_TYPES, VAULT_TYPE_META } from '@/shared/constants'
 import type { VaultTypeField, VaultTypeSummary } from '@/shared/types'
@@ -171,138 +160,120 @@ export function VaultEntryFormDialog({
   }, [isEditing, key, fields, fieldValues])
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('settings.vault.edit') : t('settings.vault.add')}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing ? t('settings.vault.editHint') : t('settings.vault.addHint')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={(v) => { if (!v) handleClose() }}
+      title={isEditing ? t('settings.vault.edit') : t('settings.vault.add')}
+      description={isEditing ? t('settings.vault.editHint') : t('settings.vault.addHint')}
+      size="lg"
+      error={error || null}
+      onSubmit={handleSave}
+      isSubmitting={isSaving}
+      submitDisabled={!canSave}
+      submitLabel={isEditing ? t('common.save') : t('settings.vault.add')}
+      cancelLabel={t('common.cancel')}
+    >
+      {/* Entry type selector (only for new entries) */}
+      {!isEditing && (
+        <FormField
+          label={t('settings.vault.entryType')}
+          htmlFor="vault-entry-type"
+          tip={t('settings.vault.entryTypeTip')}
+        >
+          <Select value={entryType} onValueChange={(v) => { setEntryType(v); setFieldValues({}) }}>
+            <SelectTrigger id="vault-entry-type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {typeOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      )}
 
-        <div className="space-y-4">
-          <FormErrorAlert error={error} />
+      {/* Key field */}
+      <FormField
+        label={t('settings.vault.key')}
+        htmlFor="vault-key"
+        tip={t('settings.vault.keyTip')}
+      >
+        <Input
+          id="vault-key"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder={t('settings.vault.keyPlaceholder')}
+          disabled={isEditing}
+          className="font-mono"
+        />
+      </FormField>
 
-          {/* Entry type selector (only for new entries) */}
-          {!isEditing && (
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('settings.vault.entryType')} <InfoTip content={t('settings.vault.entryTypeTip')} /></Label>
-              <Select value={entryType} onValueChange={(v) => { setEntryType(v); setFieldValues({}) }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {typeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Key field */}
-          <div className="space-y-2">
-            <Label htmlFor="vault-key" className="inline-flex items-center gap-1.5">{t('settings.vault.key')} <InfoTip content={t('settings.vault.keyTip')} /></Label>
-            <Input
-              id="vault-key"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder={t('settings.vault.keyPlaceholder')}
-              disabled={isEditing}
-              className="font-mono"
+      {/* Dynamic fields based on entry type */}
+      {fields.map((field) => (
+        <FormField
+          key={field.name}
+          label={field.label}
+          htmlFor={`vault-field-${field.name}`}
+          required={field.required}
+          hint={
+            isEditing && field.type === 'password'
+              ? `(${t('settings.vault.valueEditHint')})`
+              : !field.required
+                ? `(${t('common.optional')})`
+                : undefined
+          }
+        >
+          {field.type === 'textarea' ? (
+            <Textarea
+              id={`vault-field-${field.name}`}
+              value={fieldValues[field.name] ?? ''}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
+              rows={3}
             />
-          </div>
-
-          {/* Dynamic fields based on entry type */}
-          {fields.map((field) => (
-            <div key={field.name} className="space-y-2">
-              <Label htmlFor={`vault-field-${field.name}`}>
-                {field.label}
-                {!field.required && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    ({t('common.optional')})
-                  </span>
-                )}
-                {isEditing && field.type === 'password' && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    ({t('settings.vault.valueEditHint')})
-                  </span>
-                )}
-              </Label>
-              {field.type === 'textarea' ? (
-                <Textarea
-                  id={`vault-field-${field.name}`}
-                  value={fieldValues[field.name] ?? ''}
-                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                  placeholder={field.placeholder}
-                  rows={3}
-                />
-              ) : field.type === 'password' ? (
-                <PasswordInput
-                  id={`vault-field-${field.name}`}
-                  value={fieldValues[field.name] ?? ''}
-                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                  placeholder={field.placeholder ?? (isEditing ? '••••••••' : undefined)}
-                  autoComplete="off"
-                />
-              ) : (
-                <Input
-                  id={`vault-field-${field.name}`}
-                  type={field.type === 'number' ? 'number' : 'text'}
-                  value={fieldValues[field.name] ?? ''}
-                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                  placeholder={field.placeholder}
-                  autoComplete="off"
-                />
-              )}
-            </div>
-          ))}
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="vault-description" className="inline-flex items-center gap-1.5">
-              {t('settings.vault.descriptionLabel')} <InfoTip content={t('settings.vault.descriptionTip')} />
-              <span className="ml-1 text-xs text-muted-foreground">
-                ({t('common.optional')})
-              </span>
-            </Label>
-            <Input
-              id="vault-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('settings.vault.descriptionPlaceholder')}
+          ) : field.type === 'password' ? (
+            <PasswordInput
+              id={`vault-field-${field.name}`}
+              value={fieldValues[field.name] ?? ''}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              placeholder={field.placeholder ?? (isEditing ? '••••••••' : undefined)}
+              autoComplete="off"
             />
-          </div>
-
-          {/* Attachments (only for existing entries) */}
-          {isEditing && entry && (
-            <VaultAttachmentList entryId={entry.id} />
+          ) : (
+            <Input
+              id={`vault-field-${field.name}`}
+              type={field.type === 'number' ? 'number' : 'text'}
+              value={fieldValues[field.name] ?? ''}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
+              autoComplete="off"
+            />
           )}
-        </div>
+        </FormField>
+      ))}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || !canSave}
-            className="btn-shine"
-          >
-            {isSaving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : isEditing ? (
-              t('common.save')
-            ) : (
-              t('settings.vault.add')
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {/* Description */}
+      <FormField
+        label={t('settings.vault.descriptionLabel')}
+        htmlFor="vault-description"
+        tip={t('settings.vault.descriptionTip')}
+        hint={`(${t('common.optional')})`}
+      >
+        <Input
+          id="vault-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t('settings.vault.descriptionPlaceholder')}
+        />
+      </FormField>
+
+      {/* Attachments (only for existing entries) */}
+      {isEditing && entry && (
+        <VaultAttachmentList entryId={entry.id} />
+      )}
+    </FormDialog>
   )
 }

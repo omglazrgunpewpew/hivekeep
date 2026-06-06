@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Textarea } from '@/client/components/ui/textarea'
 import { Input } from '@/client/components/ui/input'
-import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import {
   Select,
   SelectContent,
@@ -19,8 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/client/components/ui/select'
-import { Loader2 } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
 import { KinSelector } from '@/client/components/common/KinSelector'
 import type { KinOption } from '@/client/components/common/KinSelectItem'
 import { MEMORY_CATEGORIES } from '@/shared/constants'
@@ -71,8 +61,7 @@ export function MemoryFormDialog({
     }
   }, [memory, kinId, open])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setIsLoading(true)
 
     try {
@@ -102,101 +91,96 @@ export function MemoryFormDialog({
   }
 
   const showKinPicker = !kinId && !isEdit
-  const canSubmit = content.trim() && category && (kinId || selectedKinId || isEdit)
+  const canSubmit = !!(content.trim() && category && (kinId || selectedKinId || isEdit))
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? t('settings.memories.edit') : t('settings.memories.add')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {isEdit ? t('settings.memories.edit') : t('settings.memories.add')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? t('settings.memories.edit') : t('settings.memories.add')}
+      size="lg"
+      onSubmit={handleSubmit}
+      isSubmitting={isLoading}
+      submitDisabled={!canSubmit}
+      submitLabel={t('common.save')}
+    >
+      {showKinPicker && kins && kins.length > 0 && (
+        <FormField label={t('settings.memories.kin')} tip={t('settings.memories.kinTip')}>
+          <KinSelector
+            value={selectedKinId}
+            onValueChange={setSelectedKinId}
+            kins={kins}
+            placeholder={t('settings.memories.kinPlaceholder')}
+          />
+        </FormField>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {showKinPicker && kins && kins.length > 0 && (
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('settings.memories.kin')} <InfoTip content={t('settings.memories.kinTip')} /></Label>
-              <KinSelector
-                value={selectedKinId}
-                onValueChange={setSelectedKinId}
-                kins={kins}
-                placeholder={t('settings.memories.kinPlaceholder')}
-              />
-            </div>
-          )}
+      <FormField
+        label={t('settings.memories.content')}
+        htmlFor="memory-content"
+        tip={t('settings.memories.contentTip')}
+        required
+      >
+        <Textarea
+          id="memory-content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={t('settings.memories.contentPlaceholder')}
+          rows={3}
+          required
+        />
+      </FormField>
 
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.memories.content')} <InfoTip content={t('settings.memories.contentTip')} /></Label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={t('settings.memories.contentPlaceholder')}
-              rows={3}
-              required
-            />
-          </div>
+      <FormRow>
+        <FormField
+          label={t('settings.memories.categoryLabel')}
+          htmlFor="memory-category"
+          tip={t('settings.memories.categoryTip')}
+          required
+        >
+          <Select value={category} onValueChange={(v) => setCategory(v as MemoryCategory)}>
+            <SelectTrigger id="memory-category">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MEMORY_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {t(`settings.memories.category.${cat}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('settings.memories.categoryLabel')} <InfoTip content={t('settings.memories.categoryTip')} /></Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as MemoryCategory)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MEMORY_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {t(`settings.memories.category.${cat}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <FormField
+          label={t('settings.memories.subject')}
+          htmlFor="memory-subject"
+          tip={t('settings.memories.subjectTip')}
+        >
+          <Input
+            id="memory-subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder={t('settings.memories.subjectPlaceholder')}
+          />
+        </FormField>
+      </FormRow>
 
-            <div className="space-y-2">
-              <Label className="inline-flex items-center gap-1.5">{t('settings.memories.subject')} <InfoTip content={t('settings.memories.subjectTip')} /></Label>
-              <Input
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder={t('settings.memories.subjectPlaceholder')}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">{t('settings.memories.scopeLabel')} <InfoTip content={t('settings.memories.scopeTip')} /></Label>
-            <Select value={scope} onValueChange={(v) => setScope(v as MemoryScope)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">{t('settings.memories.scopePrivate')}</SelectItem>
-                <SelectItem value="shared">{t('settings.memories.scopeShared')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={isLoading || !canSubmit} className="btn-shine">
-              {isLoading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  {t('common.loading')}
-                </>
-              ) : (
-                t('common.save')
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <FormField
+        label={t('settings.memories.scopeLabel')}
+        htmlFor="memory-scope"
+        tip={t('settings.memories.scopeTip')}
+      >
+        <Select value={scope} onValueChange={(v) => setScope(v as MemoryScope)}>
+          <SelectTrigger id="memory-scope">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="private">{t('settings.memories.scopePrivate')}</SelectItem>
+            <SelectItem value="shared">{t('settings.memories.scopeShared')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
+    </FormDialog>
   )
 }
