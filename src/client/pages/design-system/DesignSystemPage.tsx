@@ -105,6 +105,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -245,6 +247,7 @@ function ColorSwatch({ name, className }: { name: string; className: string }) {
 
 export function DesignSystemPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [formDialogOpen, setFormDialogOpen] = useState(false)
   const [dialogSuccessOpen, setDialogSuccessOpen] = useState(false)
   const [progressVal, setProgressVal] = useState(42)
   const [collapsibleOpen, setCollapsibleOpen] = useState(false)
@@ -881,6 +884,50 @@ export function DesignSystemPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+              </SubSection>
+
+              <SubSection title="FormDialog (recommended for forms)">
+                <p className="text-sm text-muted-foreground max-w-2xl mb-3">
+                  Standard form modal. Fixed header, a single scrollable body, and a
+                  separated sticky footer whose submit/cancel buttons never scroll away
+                  or overlap the content. Responsive down to ~360px (near-full width on
+                  phones, buttons stack). Pair with <code>FormField</code>/<code>FormRow</code>;
+                  inputs and selects are full-width by default. Use this instead of
+                  hand-assembling Dialog + DialogContent + DialogFooter.
+                </p>
+                <Button variant="outline" className="btn-press" onClick={() => setFormDialogOpen(true)}>
+                  <Plus className="size-4" /> Open FormDialog
+                </Button>
+                <FormDialog
+                  open={formDialogOpen}
+                  onOpenChange={setFormDialogOpen}
+                  title="Create a new Kin"
+                  description="Give your AI assistant a name and personality."
+                  size="lg"
+                  onSubmit={() => setFormDialogOpen(false)}
+                  submitLabel="Create"
+                >
+                  <FormRow>
+                    <FormField label="First name" htmlFor="ds-fd-first">
+                      <Input id="ds-fd-first" placeholder="e.g. Chef" />
+                    </FormField>
+                    <FormField label="Last name" htmlFor="ds-fd-last">
+                      <Input id="ds-fd-last" placeholder="e.g. Cuisinier" />
+                    </FormField>
+                  </FormRow>
+                  <FormField label="Role" htmlFor="ds-fd-role" tip="Shown in the Kin's system prompt.">
+                    <Input id="ds-fd-role" placeholder="e.g. Expert gastronomique" />
+                  </FormField>
+                  <FormField label="Model" htmlFor="ds-fd-model">
+                    <Select>
+                      <SelectTrigger id="ds-fd-model"><SelectValue placeholder="Choose" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="claude">Claude Sonnet 4</SelectItem>
+                        <SelectItem value="gpt4">GPT-4o</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                </FormDialog>
               </SubSection>
 
               <SubSection title="Success Dialog">

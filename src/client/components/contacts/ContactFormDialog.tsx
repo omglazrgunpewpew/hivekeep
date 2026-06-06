@@ -2,16 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/client/components/ui/input'
 import { Button } from '@/client/components/ui/button'
-import { Label } from '@/client/components/ui/label'
-import { FormErrorAlert } from '@/client/components/common/FormErrorAlert'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog'
+import { FormDialog } from '@/client/components/common/FormDialog'
+import { FormField, FormRow } from '@/client/components/common/FormField'
 import {
   Select,
   SelectContent,
@@ -24,8 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/client/components/ui/popover'
-import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react'
-import { InfoTip } from '@/client/components/common/InfoTip'
+import { Check, ChevronsUpDown, Plus, X } from 'lucide-react'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { CONTACT_IDENTIFIER_SUGGESTIONS } from '@/shared/constants'
 import type { ContactData } from '@/client/components/contacts/ContactCard'
@@ -259,150 +250,119 @@ export function ContactFormDialog({
     nicknames.some((n) => n.nickname.trim() !== '')
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('settings.contacts.edit') : t('settings.contacts.add')}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing ? t('settings.contacts.editHint') : t('settings.contacts.addHint')}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={(v) => { if (!v) handleClose() }}
+      title={isEditing ? t('settings.contacts.edit') : t('settings.contacts.add')}
+      description={isEditing ? t('settings.contacts.editHint') : t('settings.contacts.addHint')}
+      size="lg"
+      error={error}
+      onSubmit={handleSave}
+      isSubmitting={isSaving}
+      submitDisabled={!hasName}
+      submitLabel={isEditing ? t('common.save') : t('settings.contacts.add')}
+    >
+      <FormRow>
+        <FormField label={t('settings.contacts.firstName')} htmlFor="contact-first-name">
+          <Input
+            id="contact-first-name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder={t('settings.contacts.firstNamePlaceholder')}
+          />
+        </FormField>
+        <FormField label={t('settings.contacts.lastName')} htmlFor="contact-last-name">
+          <Input
+            id="contact-last-name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder={t('settings.contacts.lastNamePlaceholder')}
+          />
+        </FormField>
+      </FormRow>
 
-        <div className="space-y-4">
-          <FormErrorAlert error={error} />
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="contact-first-name">{t('settings.contacts.firstName')}</Label>
+      <FormField label={t('settings.contacts.nicknames')} tip={t('settings.contacts.nicknamesTip')}>
+        <div className="space-y-2">
+          {nicknames.map((row, index) => (
+            <div key={index} className="flex items-center gap-2">
               <Input
-                id="contact-first-name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder={t('settings.contacts.firstNamePlaceholder')}
+                value={row.nickname}
+                onChange={(e) => updateNickname(index, e.target.value)}
+                placeholder={t('settings.contacts.nicknamePlaceholder')}
+                className="flex-1"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-last-name">{t('settings.contacts.lastName')}</Label>
-              <Input
-                id="contact-last-name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder={t('settings.contacts.lastNamePlaceholder')}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">
-              {t('settings.contacts.nicknames')}{' '}
-              <InfoTip content={t('settings.contacts.nicknamesTip')} />
-            </Label>
-            <div className="space-y-2">
-              {nicknames.map((row, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    value={row.nickname}
-                    onChange={(e) => updateNickname(index, e.target.value)}
-                    placeholder={t('settings.contacts.nicknamePlaceholder')}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeNickname(index)}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </div>
-              ))}
-              <Button variant="outline" size="sm" onClick={addNickname} className="w-full">
-                <Plus className="size-3.5" />
-                {t('settings.contacts.addNickname')}
-              </Button>
-            </div>
-          </div>
-
-          {users.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="contact-linked-user" className="inline-flex items-center gap-1.5">
-                {t('settings.contacts.linkToUser')}{' '}
-                <InfoTip content={t('settings.contacts.linkToUserTip')} />
-              </Label>
-              <Select
-                value={linkedUserId ?? '_none'}
-                onValueChange={(v) => setLinkedUserId(v === '_none' ? null : v)}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => removeNickname(index)}
               >
-                <SelectTrigger id="contact-linked-user">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">{t('settings.contacts.noUserLink')}</SelectItem>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name} ({u.pseudonym})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label className="inline-flex items-center gap-1.5">
-              {t('settings.contacts.identifiers')}{' '}
-              <InfoTip content={t('settings.contacts.identifiersTip')} />
-            </Label>
-            <div className="space-y-2">
-              {identifiers.map((ident, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <LabelCombo
-                    value={ident.label}
-                    onChange={(v) => updateIdentifier(index, 'label', v)}
-                  />
-                  <Input
-                    value={ident.value}
-                    onChange={(e) => updateIdentifier(index, 'value', e.target.value)}
-                    placeholder={t('settings.contacts.identifierValuePlaceholder')}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeIdentifier(index)}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </div>
-              ))}
-              <Button variant="outline" size="sm" onClick={addIdentifier} className="w-full">
-                <Plus className="size-3.5" />
-                {t('settings.contacts.addIdentifier')}
+                <X className="size-3.5" />
               </Button>
             </div>
-          </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={addNickname} className="w-full">
+            <Plus className="size-3.5" />
+            {t('settings.contacts.addNickname')}
+          </Button>
         </div>
+      </FormField>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || !hasName}
-            className="btn-shine"
+      {users.length > 0 && (
+        <FormField
+          label={t('settings.contacts.linkToUser')}
+          htmlFor="contact-linked-user"
+          tip={t('settings.contacts.linkToUserTip')}
+        >
+          <Select
+            value={linkedUserId ?? '_none'}
+            onValueChange={(v) => setLinkedUserId(v === '_none' ? null : v)}
           >
-            {isSaving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : isEditing ? (
-              t('common.save')
-            ) : (
-              t('settings.contacts.add')
-            )}
+            <SelectTrigger id="contact-linked-user">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">{t('settings.contacts.noUserLink')}</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name} ({u.pseudonym})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      )}
+
+      <FormField label={t('settings.contacts.identifiers')} tip={t('settings.contacts.identifiersTip')}>
+        <div className="space-y-2">
+          {identifiers.map((ident, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <LabelCombo
+                value={ident.label}
+                onChange={(v) => updateIdentifier(index, 'label', v)}
+              />
+              <Input
+                value={ident.value}
+                onChange={(e) => updateIdentifier(index, 'value', e.target.value)}
+                placeholder={t('settings.contacts.identifierValuePlaceholder')}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => removeIdentifier(index)}
+              >
+                <X className="size-3.5" />
+              </Button>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={addIdentifier} className="w-full">
+            <Plus className="size-3.5" />
+            {t('settings.contacts.addIdentifier')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </FormField>
+    </FormDialog>
   )
 }
