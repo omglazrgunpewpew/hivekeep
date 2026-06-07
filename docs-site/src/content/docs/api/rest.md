@@ -14,88 +14,88 @@ Authenticate using either:
 
 Auth routes (`/api/auth/*`) are handled by [Better Auth](https://www.better-auth.com/) and don't require pre-authentication.
 
-## Kins
+## Agents
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins` | List all Kins |
-| `POST` | `/api/kins` | Create a new Kin |
-| `GET` | `/api/kins/:id` | Get Kin details |
-| `PATCH` | `/api/kins/:id` | Update a Kin |
-| `DELETE` | `/api/kins/:id` | Delete a Kin |
-| `GET` | `/api/kins/:id/tools` | List available tools (grouped by domain) |
-| `GET` | `/api/kins/:id/context-usage` | Get context window usage |
-| `GET` | `/api/kins/:id/context-preview` | Get full LLM context preview (system prompt, messages, tools, token estimates). Accepts `?taskId` or `?sessionId` query params |
-| `POST` | `/api/kins/:id/avatar` | Upload avatar (multipart) |
-| `POST` | `/api/kins/:id/avatar/generate` | Generate avatar with AI |
-| `POST` | `/api/kins/avatar/preview` | Preview generated avatar |
-| `POST` | `/api/kins/generate-config` | AI-generate Kin config from description |
-| `GET` | `/api/kins/:id/export` | Export Kin as archive |
-| `POST` | `/api/kins/import` | Import Kin from archive |
+| `GET` | `/api/agents` | List all Agents |
+| `POST` | `/api/agents` | Create a new Agent |
+| `GET` | `/api/agents/:id` | Get Agent details |
+| `PATCH` | `/api/agents/:id` | Update a Agent |
+| `DELETE` | `/api/agents/:id` | Delete a Agent |
+| `GET` | `/api/agents/:id/tools` | List available tools (grouped by domain) |
+| `GET` | `/api/agents/:id/context-usage` | Get context window usage |
+| `GET` | `/api/agents/:id/context-preview` | Get full LLM context preview (system prompt, messages, tools, token estimates). Accepts `?taskId` or `?sessionId` query params |
+| `POST` | `/api/agents/:id/avatar` | Upload avatar (multipart) |
+| `POST` | `/api/agents/:id/avatar/generate` | Generate avatar with AI |
+| `POST` | `/api/agents/avatar/preview` | Preview generated avatar |
+| `POST` | `/api/agents/generate-config` | AI-generate Agent config from description |
+| `GET` | `/api/agents/:id/export` | Export Agent as archive |
+| `POST` | `/api/agents/import` | Import Agent from archive |
 
 ## Messages
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:kinId/messages` | Get conversation history |
-| `POST` | `/api/kins/:kinId/messages` | Send a message to a Kin |
-| `POST` | `/api/kins/:kinId/messages/inject` | Inject a message with high priority (aborts current stream if active, used by `/btw` command) |
+| `GET` | `/api/agents/:agentId/messages` | Get conversation history |
+| `POST` | `/api/agents/:agentId/messages` | Send a message to a Agent |
+| `POST` | `/api/agents/:agentId/messages/inject` | Inject a message with high priority (aborts current stream if active, used by `/btw` command) |
 
 ## Reactions
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:kinId/messages/:messageId/reactions` | List reactions on a message |
-| `POST` | `/api/kins/:kinId/messages/:messageId/reactions` | Add or toggle a reaction |
+| `GET` | `/api/agents/:agentId/messages/:messageId/reactions` | List reactions on a message |
+| `POST` | `/api/agents/:agentId/messages/:messageId/reactions` | Add or toggle a reaction |
 
 ## Compacting
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:id/compacting/summaries` | List compacting summaries (with date ranges, token estimates, depth) |
-| `GET` | `/api/kins/:id/compacting/snapshots` | List compacting summaries (backwards-compatible alias, returns legacy format) |
-| `POST` | `/api/kins/:id/compacting/run` | Trigger manual compacting |
-| `POST` | `/api/kins/:id/compacting/purge` | Purge compacting data (deactivate all active summaries) |
-| `POST` | `/api/kins/:id/compacting/rollback` | Rollback to a summary (archives newer summaries) |
+| `GET` | `/api/agents/:id/compacting/summaries` | List compacting summaries (with date ranges, token estimates, depth) |
+| `GET` | `/api/agents/:id/compacting/snapshots` | List compacting summaries (backwards-compatible alias, returns legacy format) |
+| `POST` | `/api/agents/:id/compacting/run` | Trigger manual compacting |
+| `POST` | `/api/agents/:id/compacting/purge` | Purge compacting data (deactivate all active summaries) |
+| `POST` | `/api/agents/:id/compacting/rollback` | Rollback to a summary (archives newer summaries) |
 
 ## Memories
 
-Memories can be accessed via Kin-scoped routes or global maintenance routes.
+Memories can be accessed via Agent-scoped routes or global maintenance routes.
 
-### Kin-scoped
+### Agent-scoped
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:id/memories` | List memories for a Kin |
-| `POST` | `/api/kins/:id/memories` | Create a memory |
-| `PATCH` | `/api/kins/:id/memories/:memoryId` | Update a memory |
-| `DELETE` | `/api/kins/:id/memories/:memoryId` | Delete a memory |
+| `GET` | `/api/agents/:id/memories` | List memories for a Agent |
+| `POST` | `/api/agents/:id/memories` | Create a memory |
+| `PATCH` | `/api/agents/:id/memories/:memoryId` | Update a memory |
+| `DELETE` | `/api/agents/:id/memories/:memoryId` | Delete a memory |
 
 ### Global maintenance
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/memories` | List all memories (cross-Kin) |
+| `GET` | `/api/memories` | List all memories (cross-Agent) |
 | `POST` | `/api/memories/backfill-importance` | Backfill importance scores |
 | `POST` | `/api/memories/consolidate` | Run memory consolidation |
 | `POST` | `/api/memories/reembed` | Re-embed all memories |
 
 ## Knowledge
 
-Kin-scoped knowledge base (RAG document sources).
+Agent-scoped knowledge base (RAG document sources).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:kinId/knowledge` | List knowledge sources |
-| `POST` | `/api/kins/:kinId/knowledge` | Add a knowledge source |
-| `GET` | `/api/kins/:kinId/knowledge/search` | Search knowledge |
-| `GET` | `/api/kins/:kinId/knowledge/:sourceId` | Get source details |
-| `DELETE` | `/api/kins/:kinId/knowledge/:sourceId` | Delete a source |
-| `POST` | `/api/kins/:kinId/knowledge/:sourceId/reprocess` | Reprocess a source |
+| `GET` | `/api/agents/:agentId/knowledge` | List knowledge sources |
+| `POST` | `/api/agents/:agentId/knowledge` | Add a knowledge source |
+| `GET` | `/api/agents/:agentId/knowledge/search` | Search knowledge |
+| `GET` | `/api/agents/:agentId/knowledge/:sourceId` | Get source details |
+| `DELETE` | `/api/agents/:agentId/knowledge/:sourceId` | Delete a source |
+| `POST` | `/api/agents/:agentId/knowledge/:sourceId/reprocess` | Reprocess a source |
 
 ## Channels
 
-Channels are managed globally (not scoped to a Kin).
+Channels are managed globally (not scoped to a Agent).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -131,7 +131,7 @@ Platform-specific webhook endpoints (no auth required, verified by platform sign
 | `GET` | `/api/mini-apps/:id` | Get mini-app details |
 | `PATCH` | `/api/mini-apps/:id` | Update a mini-app |
 | `DELETE` | `/api/mini-apps/:id` | Delete a mini-app |
-| `GET` | `/api/mini-apps/by-slug/:kinId/:slug` | Get mini-app by Kin + slug |
+| `GET` | `/api/mini-apps/by-slug/:agentId/:slug` | Get mini-app by Agent + slug |
 | `GET` | `/api/mini-apps/gallery/browse` | Browse mini-app gallery |
 | `POST` | `/api/mini-apps/:id/generate-icon` | Generate an icon with AI |
 
@@ -194,12 +194,12 @@ Ephemeral conversation sessions for quick interactions.
 
 All session responses include an `expiresAt` field (Unix timestamp in ms, or `null`). Sending a message to an expired session returns `409 SESSION_EXPIRED`.
 
-### Kin-scoped
+### Agent-scoped
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/kins/:kinId/quick-sessions` | List sessions for a Kin |
-| `POST` | `/api/kins/:kinId/quick-sessions` | Create a session |
+| `GET` | `/api/agents/:agentId/quick-sessions` | List sessions for a Agent |
+| `POST` | `/api/agents/:agentId/quick-sessions` | Create a session |
 
 ### Session detail
 
@@ -212,7 +212,7 @@ All session responses include an `expiresAt` field (Unix timestamp in ms, or `nu
 
 ## Tasks
 
-Sub-tasks spawned by Kins (inter-Kin delegation, subtasks). Tasks support **concurrency groups** — tasks in the same group are limited to a max number of parallel executions, with excess tasks queued and auto-promoted.
+Sub-tasks spawned by Agents (inter-Agent delegation, subtasks). Tasks support **concurrency groups** — tasks in the same group are limited to a max number of parallel executions, with excess tasks queued and auto-promoted.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -279,7 +279,7 @@ See [Providers](/hivekeep/docs/providers/supported/) for the full provider refer
 
 ## Cron Jobs
 
-Cron jobs are managed globally (not scoped to a Kin).
+Cron jobs are managed globally (not scoped to a Agent).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -457,8 +457,8 @@ Token usage tracking for all LLM calls. All routes require admin role.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/usage` | Paginated list of LLM usage records with filters (kinId, providerId, providerType, modelId, taskId, cronId, callSite, from/to timestamps) |
-| `GET` | `/api/usage/summary` | Aggregated usage grouped by dimension (groupBy: `provider_type`, `model_id`, `kin_id`, `call_site`, `day`) |
+| `GET` | `/api/usage` | Paginated list of LLM usage records with filters (agentId, providerId, providerType, modelId, taskId, cronId, callSite, from/to timestamps) |
+| `GET` | `/api/usage/summary` | Aggregated usage grouped by dimension (groupBy: `provider_type`, `model_id`, `agent_id`, `call_site`, `day`) |
 
 ## SSE
 

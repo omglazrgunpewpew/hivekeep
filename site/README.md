@@ -14,11 +14,11 @@ Deployed as a GitHub Pages **project site** at `https://marlburrow.github.io/hiv
 
 ## Where to drop your assets
 
-**1. Avatars (JSON + images)** — `src/kins.json` (kept out of a `data/` folder on purpose: the repo's root `.gitignore` ignores `data/`)
+**1. Avatars (JSON + images)** — `src/agents.json` (kept out of a `data/` folder on purpose: the repo's root `.gitignore` ignores `data/`)
 Each entry: `{ "name": string, "domain": string, "avatar": string | null, "status"?: "online" | "working" | "idle" }`
 - Put avatar images in `public/avatars/` and set `"avatar": "/avatars/atlas.png"`.
 - `null` avatar → a themed placeholder robot is shown automatically.
-- `status` (optional) only affects the hero "// your kins" panel (first 5 entries).
+- `status` (optional) only affects the hero "// your agents" panel (first 5 entries).
 - `name` + `domain` appear in the hero panel **and** the "household" directory.
 
 **2. Screenshots** — `public/screens/`

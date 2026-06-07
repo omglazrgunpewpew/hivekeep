@@ -106,10 +106,10 @@ export async function setGlobalPrompt(value: string): Promise<void> {
   return setSetting('global_prompt', value)
 }
 
-/** Optional global art-style directive applied to every generated Kin avatar
+/** Optional global art-style directive applied to every generated Agent avatar
  *  (e.g. "heroic fantasy", "cyberpunk cyborg"). Empty/null → the built-in
  *  Pixar-robot baseline. Editable by the user (Settings) and the configurator
- *  Kin (set_avatar_style). See sherpa.md §9. */
+ *  Agent (set_avatar_style). See queenie.md §9. */
 export async function getAvatarStylePrompt(): Promise<string | null> {
   return getSetting('avatar_style_prompt')
 }
@@ -119,11 +119,11 @@ export async function setAvatarStylePrompt(value: string): Promise<void> {
   return setSetting('avatar_style_prompt', value)
 }
 
-/** Optional global avatar SUBJECT/type applied to every generated Kin avatar
+/** Optional global avatar SUBJECT/type applied to every generated Agent avatar
  *  (e.g. "a human character", "a dragon", "a cyborg"). Empty/null → the default
  *  friendly robot. Independent of the art STYLE (see avatar_style_prompt).
  *  A custom subject forces text-to-image generation (the img2img base is a
- *  robot, so it can't be transformed into another subject). See sherpa.md §9. */
+ *  robot, so it can't be transformed into another subject). See queenie.md §9. */
 export async function getAvatarSubject(): Promise<string | null> {
   return getSetting('avatar_subject')
 }
@@ -134,7 +134,7 @@ export async function setAvatarSubject(value: string): Promise<void> {
 }
 
 /** Whether avatars use the img2img base reference (default true). When false,
- *  avatars are always generated text-to-image. See sherpa.md §9. */
+ *  avatars are always generated text-to-image. See queenie.md §9. */
 export async function isAvatarBaseEnabled(): Promise<boolean> {
   const v = await getSetting('avatar_base_enabled')
   return v !== 'false'
@@ -178,7 +178,7 @@ export async function setEmbeddingProviderId(providerId: string | null): Promise
   return setSetting('embedding_provider_id', providerId)
 }
 
-// ─── Default LLM (for new kins) ──────────────────────────────────────────────
+// ─── Default LLM (for new agents) ──────────────────────────────────────────────
 
 export async function getDefaultLlmModel(): Promise<string | null> {
   return getSetting('default_llm_model')
@@ -201,8 +201,8 @@ export async function setDefaultLlmProviderId(providerId: string | null): Promis
 // ─── Default Scout Model (cheap delegation for the `scout` tool) ─────────────
 //
 // Global fallback for the scout model resolved by resolveScoutModel(). Sits
-// near the end of the chain: per-spawn override → Kin scout → project scout →
-// THIS global default → Kin's own main model. Mirrors getDefaultLlmModel /
+// near the end of the chain: per-spawn override → Agent scout → project scout →
+// THIS global default → Agent's own main model. Mirrors getDefaultLlmModel /
 // setDefaultLlmModel exactly (k/v, no dedicated column). A scout-less install
 // leaves both null and every scout falls back to the main model.
 

@@ -38,7 +38,7 @@ import {
 } from '@/server/services/mini-app-deps'
 import { searchMemories, createMemory } from '@/server/services/memory'
 import { sseManager } from '@/server/sse/index'
-import { resolveKinId } from '@/server/services/kin-resolver'
+import { resolveAgentId } from '@/server/services/agent-resolver'
 import { enqueueMessage } from '@/server/services/queue'
 import { formatMiniAppImproveRequest } from '@/server/services/mini-app-improve'
 import { MAX_MESSAGE_LENGTH } from '@/shared/constants'
@@ -47,9 +47,9 @@ export const miniAppRoutes = new Hono<{ Variables: AppVariables }>()
 
 // ─── Lookup by slug ─────────────────────────────────────────────────────────
 
-miniAppRoutes.get('/by-slug/:kinId/:slug', async (c) => {
-  const { kinId, slug } = c.req.param()
-  const found = await getMiniAppBySlug(kinId, slug)
+miniAppRoutes.get('/by-slug/:agentId/:slug', async (c) => {
+  const { agentId, slug } = c.req.param()
+  const found = await getMiniAppBySlug(agentId, slug)
   if (!found) {
     return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
   }
@@ -64,7 +64,7 @@ miniAppRoutes.post('/:id/generate-icon', async (c) => {
       providerId: body.providerId,
       modelId: body.modelId,
     })
-    sseManager.broadcast({ type: 'miniapp:updated', kinId: app.maintainerKinId, data: { app } })
+    sseManager.broadcast({ type: 'miniapp:updated', agentId: app.maintainerAgentId, data: { app } })
     return c.json({ app })
   } catch (err) {
     if (err instanceof ImageGenerationError) {
@@ -83,14 +83,14 @@ miniAppRoutes.post('/:id/generate-icon', async (c) => {
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
 
-// List apps for a kin
+// List apps for a agent
 miniAppRoutes.get('/', async (c) => {
-  const kinId = c.req.query('kinId')
-  if (kinId) {
-    const apps = await listMiniApps(kinId)
+  const agentId = c.req.query('agentId')
+  if (agentId) {
+    const apps = await listMiniApps(agentId)
     return c.json({ apps })
   }
-  // No kinId → return all apps across all Kins
+  // No agentId → return all apps across all Agents
   const { listAllMiniApps } = await import('@/server/services/mini-apps')
   const apps = await listAllMiniApps()
   return c.json({ apps })
@@ -108,7 +108,7 @@ miniAppRoutes.get('/:id', async (c) => {
 // Create app
 miniAppRoutes.post('/', async (c) => {
   const body = await c.req.json<{
-    kinId: string
+    agentId: string
     name: string
     slug: string
     description?: string
@@ -118,8 +118,8 @@ miniAppRoutes.post('/', async (c) => {
     dependencies?: Record<string, string>
   }>()
 
-  if (!body.kinId || !body.name || !body.slug) {
-    return c.json({ error: { code: 'INVALID_INPUT', message: 'kinId, name, and slug are required' } }, 400)
+  if (!body.agentId || !body.name || !body.slug) {
+    return c.json({ error: { code: 'INVALID_INPUT', message: 'agentId, name, and slug are required' } }, 400)
   }
 
   try {
@@ -146,7 +146,7 @@ miniAppRoutes.post('/', async (c) => {
     }
 
     const app = await createMiniApp({
-      kinId: body.kinId,
+      agentId: body.agentId,
       name: body.name,
       slug: body.slug,
       description: body.description,
@@ -157,7 +157,7 @@ miniAppRoutes.post('/', async (c) => {
       await writeAppFile(app.id, filePath, content)
     }
 
-    sseManager.broadcast({ type: 'miniapp:created', kinId: body.kinId, data: { app } })
+    sseManager.broadcast({ type: 'miniapp:created', agentId: body.agentId, data: { app } })
     return c.json({ app, warning }, 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to create app'
@@ -165,7 +165,7 @@ miniAppRoutes.post('/', async (c) => {
   }
 })
 
-// Update app metadata (and optionally reassign the maintainer Kin)
+// Update app metadata (and optionally reassign the maintainer Agent)
 miniAppRoutes.patch('/:id', async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json<{
@@ -174,19 +174,19 @@ miniAppRoutes.patch('/:id', async (c) => {
     icon?: string | null
     entryFile?: string
     isActive?: boolean
-    maintainerKinId?: string
+    maintainerAgentId?: string
   }>()
 
   // Reassign maintainer first (this also moves the app's on-disk directory).
-  if (body.maintainerKinId !== undefined) {
-    const targetKinId = resolveKinId(body.maintainerKinId)
-    if (!targetKinId) {
-      return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Target Kin not found' } }, 400)
+  if (body.maintainerAgentId !== undefined) {
+    const targetAgentId = resolveAgentId(body.maintainerAgentId)
+    if (!targetAgentId) {
+      return c.json({ error: { code: 'KIN_NOT_FOUND', message: 'Target Agent not found' } }, 400)
     }
     try {
-      const moved = await setMiniAppMaintainer(id, targetKinId)
+      const moved = await setMiniAppMaintainer(id, targetAgentId)
       if (!moved) return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
-      sseManager.broadcast({ type: 'miniapp:updated', kinId: moved.maintainerKinId, data: { app: moved } })
+      sseManager.broadcast({ type: 'miniapp:updated', agentId: moved.maintainerAgentId, data: { app: moved } })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to reassign maintainer'
       return c.json({ error: { code: 'REASSIGN_FAILED', message } }, 400)
@@ -198,11 +198,11 @@ miniAppRoutes.patch('/:id', async (c) => {
     return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
   }
 
-  sseManager.broadcast({ type: 'miniapp:updated', kinId: app.maintainerKinId, data: { app } })
+  sseManager.broadcast({ type: 'miniapp:updated', agentId: app.maintainerAgentId, data: { app } })
   return c.json({ app })
 })
 
-// Delete app — any Kin / the user can delete any app (decoupled)
+// Delete app — any Agent / the user can delete any app (decoupled)
 miniAppRoutes.delete('/:id', async (c) => {
   const existing = await getMiniApp(c.req.param('id'))
   if (!existing) {
@@ -211,12 +211,12 @@ miniAppRoutes.delete('/:id', async (c) => {
 
   invalidateBackend(c.req.param('id'))
   await deleteMiniApp(c.req.param('id'))
-  sseManager.broadcast({ type: 'miniapp:deleted', kinId: existing.maintainerKinId, data: { appId: existing.id } })
+  sseManager.broadcast({ type: 'miniapp:deleted', agentId: existing.maintainerAgentId, data: { appId: existing.id } })
   return c.body(null, 204)
 })
 
 // Improve this app — send the user's improvement request into the maintainer
-// Kin's MAIN conversation so it does the work.
+// Agent's MAIN conversation so it does the work.
 miniAppRoutes.post('/:id/improve', async (c) => {
   const user = c.get('user') as { id: string; name: string }
   const app = await getMiniApp(c.req.param('id'))
@@ -242,14 +242,14 @@ miniAppRoutes.post('/:id/improve', async (c) => {
   })
 
   await enqueueMessage({
-    kinId: app.maintainerKinId,
+    agentId: app.maintainerAgentId,
     messageType: 'user',
     content,
     sourceType: 'user',
     sourceId: user.id,
   })
 
-  return c.json({ maintainerKinId: app.maintainerKinId, maintainerKinName: app.maintainerKinName })
+  return c.json({ maintainerAgentId: app.maintainerAgentId, maintainerAgentName: app.maintainerAgentName })
 })
 
 // ─── File management ────────────────────────────────────────────────────────
@@ -312,7 +312,7 @@ miniAppRoutes.put('/:id/files/*', async (c) => {
     if (app) {
       sseManager.broadcast({
         type: 'miniapp:file-updated',
-        kinId: app.kinId,
+        agentId: app.agentId,
         data: { appId: app.id, path: filePath, version: app.version },
       })
     }
@@ -346,7 +346,7 @@ miniAppRoutes.delete('/:id/files/*', async (c) => {
     if (app) {
       sseManager.broadcast({
         type: 'miniapp:file-updated',
-        kinId: app.kinId,
+        agentId: app.agentId,
         data: { appId: app.id, path: filePath, version: app.version },
       })
     }
@@ -478,7 +478,7 @@ miniAppRoutes.post('/:id/snapshots/:version/rollback', async (c) => {
 
     const updated = await getMiniApp(app.id)
     if (updated) {
-      sseManager.broadcast({ type: 'miniapp:updated', kinId: app.kinId, data: { app: updated } })
+      sseManager.broadcast({ type: 'miniapp:updated', agentId: app.agentId, data: { app: updated } })
     }
 
     return c.json({ message: result.message })
@@ -675,7 +675,7 @@ miniAppRoutes.get('/:id/memories/search', async (c) => {
 
   const limit = Math.min(Math.max(1, Number(c.req.query('limit') ?? 20)), 50)
 
-  const results = await searchMemories(app.kinId, query, limit)
+  const results = await searchMemories(app.agentId, query, limit)
   return c.json({
     memories: results.map((m) => ({
       id: m.id,
@@ -704,7 +704,7 @@ miniAppRoutes.post('/:id/memories', async (c) => {
   const validCategories = ['fact', 'preference', 'decision', 'knowledge'] as const
   const category = validCategories.includes(body.category as any) ? (body.category as typeof validCategories[number]) : 'knowledge'
 
-  const memory = await createMemory(app.kinId, {
+  const memory = await createMemory(app.agentId, {
     content: body.content,
     category,
     subject: body.subject || null,
@@ -922,7 +922,7 @@ miniAppRoutes.get('/:id/serve', async (c) => {
     return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
   }
 
-  const dir = getAppDir(app.kinId, app.id)
+  const dir = getAppDir(app.agentId, app.id)
   const entryPath = join(dir, app.entryFile)
 
   if (!existsSync(entryPath)) {
@@ -943,7 +943,7 @@ miniAppRoutes.get('/:id/serve', async (c) => {
 
   // If the app uses bare ES imports but no import map could be built, surface a clear,
   // actionable error in the console (the cryptic "Failed to resolve module specifier" would
-  // otherwise be all the Kin sees). This message flows into the console buffer.
+  // otherwise be all the Agent sees). This message flows into the console buffer.
   let moduleHelpTag = ''
   if (!importMapTag && !htmlHasInlineImportMap(html) && findBareModuleImports(html).length > 0) {
     const help =
@@ -993,7 +993,7 @@ miniAppRoutes.get('/:id/static/*', async (c) => {
     return c.json({ error: { code: 'MISSING_PATH', message: 'Asset path is required' } }, 400)
   }
 
-  const dir = getAppDir(app.kinId, app.id)
+  const dir = getAppDir(app.agentId, app.id)
   const absoluteDir = join(process.cwd(), dir)
   const fullPath = join(absoluteDir, assetPath)
 

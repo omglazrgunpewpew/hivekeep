@@ -117,9 +117,9 @@ describe('SDK contract — external plugin end-to-end', () => {
     const exports = externalPlugin(ctx)
 
     const t = exports.tools!.hello!.create({
-      kinId: 'kin-1',
+      agentId: 'agent-1',
       userId: 'u-1',
-      isSubKin: false,
+      isSubAgent: false,
     })
 
     const result = (await t.execute!({ name: 'Marl' }, {})) as { reply: string }
@@ -212,11 +212,11 @@ describe('SDK contract — external plugin end-to-end', () => {
   it('hook handlers receive typed payloads when fired through the registry', async () => {
     const exports = externalPlugin(makeCtx())
 
-    let sawBeforeChat: { kinId: string; message: string } | null = null
+    let sawBeforeChat: { agentId: string; message: string } | null = null
     let sawAfterToolCall: { toolName: string; toolResult: unknown } | null = null
 
     const beforeHandler = (ctx: any) => {
-      sawBeforeChat = { kinId: ctx.kinId, message: ctx.message }
+      sawBeforeChat = { agentId: ctx.agentId, message: ctx.message }
       exports.hooks!.beforeChat!(ctx)
     }
     const afterHandler = (ctx: any) => {
@@ -230,14 +230,14 @@ describe('SDK contract — external plugin end-to-end', () => {
     hookHandlers.push({ name: 'afterToolCall', fn: afterHandler })
 
     await hookRegistry.execute('beforeChat', {
-      kinId: 'k-1',
+      agentId: 'k-1',
       message: 'hello',
     })
-    expect(sawBeforeChat!).toEqual({ kinId: 'k-1', message: 'hello' })
+    expect(sawBeforeChat!).toEqual({ agentId: 'k-1', message: 'hello' })
 
     await hookRegistry.execute('afterToolCall', {
-      kinId: 'k-1',
-      isSubKin: false,
+      agentId: 'k-1',
+      isSubAgent: false,
       toolName: 'hello',
       toolArgs: { name: 'Marl' },
       toolResult: { reply: 'Hi, Marl!' },
@@ -253,7 +253,7 @@ describe('SDK contract — external plugin end-to-end', () => {
     const result = await exports.onCardAction!({
       cardInstanceId: 'c1',
       actionId: 'confirm',
-      kinId: 'k-1',
+      agentId: 'k-1',
     })
     expect(result).toEqual({ ok: true })
   })

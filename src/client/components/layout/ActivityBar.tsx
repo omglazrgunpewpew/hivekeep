@@ -15,10 +15,10 @@ interface ActivityBarItem {
   badge?: boolean
 }
 
-// Order: Kins first (default landing), then the dedicated section pages.
+// Order: Agents first (default landing), then the dedicated section pages.
 const ITEMS: ActivityBarItem[] = [
-  // Default landing — "Kins" matches any path not claimed by a section below.
-  { matchPrefix: '/', navigateTo: '/', icon: Home, labelKey: 'activityBar.kins' },
+  // Default landing — "Agents" matches any path not claimed by a section below.
+  { matchPrefix: '/', navigateTo: '/', icon: Home, labelKey: 'activityBar.agents' },
   { matchPrefix: '/projects', navigateTo: '/projects', icon: FolderKanban, labelKey: 'activityBar.projects' },
   { matchPrefix: '/tasks', navigateTo: '/tasks', icon: ListTodo, labelKey: 'activityBar.tasks', badge: true },
   { matchPrefix: '/crons', navigateTo: '/crons', icon: CalendarClock, labelKey: 'activityBar.crons' },
@@ -35,12 +35,12 @@ export function ActivityBar() {
 
   const activeCount = activeTasks.length
   const hasAwaiting = activeTasks.some(
-    (task) => task.status === 'awaiting_human_input' || task.status === 'awaiting_kin_response',
+    (task) => task.status === 'awaiting_human_input' || task.status === 'awaiting_agent_response',
   )
 
   function isActive(item: ActivityBarItem): boolean {
     if (item.matchPrefix === '/') {
-      // "Kins" — active iff no dedicated section claims the path.
+      // "Agents" — active iff no dedicated section claims the path.
       return !SECTION_PREFIXES.some((p) => location.pathname.startsWith(p))
     }
     return location.pathname.startsWith(item.matchPrefix)

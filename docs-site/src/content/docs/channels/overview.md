@@ -1,9 +1,9 @@
 ---
 title: Channels Overview
-description: Connect your Kins to external messaging platforms like Telegram, Discord, Slack, WhatsApp, Signal, and Matrix.
+description: Connect your Agents to external messaging platforms like Telegram, Discord, Slack, WhatsApp, Signal, and Matrix.
 ---
 
-Channels let your Kins communicate with users on external messaging platforms. Each Kin can connect to multiple channels across different platforms, receiving messages, processing them through the AI pipeline, and responding directly on the platform.
+Channels let your Agents communicate with users on external messaging platforms. Each Agent can connect to multiple channels across different platforms, receiving messages, processing them through the AI pipeline, and responding directly on the platform.
 
 ## Supported Platforms
 
@@ -21,7 +21,7 @@ Channels let your Kins communicate with users on external messaging platforms. E
 1. **Create a channel** in the Hivekeep UI, selecting a platform and providing credentials (bot token, API key, etc.)
 2. **Credentials are encrypted** in Hivekeep's vault, never stored in plain text
 3. **The adapter starts** and connects to the platform (webhook, gateway, or polling)
-4. **Incoming messages** are routed to the Kin's conversation queue, processed by the AI, and replies are sent back through the adapter
+4. **Incoming messages** are routed to the Agent's conversation queue, processed by the AI, and replies are sent back through the adapter
 5. **Long messages** are automatically split at paragraph/line/sentence boundaries to respect platform limits
 
 ## Architecture
@@ -45,13 +45,13 @@ Adapters handle platform-specific details: webhook verification, gateway heartbe
 Hivekeep handles file attachments intelligently when received from channels:
 
 - **Images** are passed as native image parts to the LLM for vision-capable models
-- **Text-based files** (`.md`, `.txt`, `.json`, `.csv`, etc.) are read and inlined directly into the LLM context so the Kin can access their content
+- **Text-based files** (`.md`, `.txt`, `.json`, `.csv`, etc.) are read and inlined directly into the LLM context so the Agent can access their content
 - **PDFs** are passed as native file parts for providers with document support
-- **Other binary files** include the stored path so the Kin can use `read_file` to access them
+- **Other binary files** include the stored path so the Agent can use `read_file` to access them
 
 ## Channel Tools
 
-Kins have built-in tools for interacting with their channels:
+Agents have built-in tools for interacting with their channels:
 
 - **`list_channels`** — List all connected channels with status and message counts
 - **`list_channel_conversations`** — Discover known users and chat IDs for proactive messaging
@@ -64,25 +64,25 @@ These tools are available to main agents only.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `CHANNELS_MAX_PER_KIN` | 5 | Maximum channel connections per Kin |
+| `CHANNELS_MAX_PER_KIN` | 5 | Maximum channel connections per Agent |
 
 ## User Mapping & Contacts
 
 When a user messages through a channel for the first time, Hivekeep can automatically create a **contact** linked to their platform identity. This enables:
 
 - Consistent user identification across conversations
-- The Kin remembering who someone is across sessions
+- The Agent remembering who someone is across sessions
 - Proactive messaging to known users via `send_channel_message`
 
 ## Causal Chain Delivery
 
-When a channel message triggers multi-turn processing (inter-Kin delegation, task results, wakeups), Hivekeep automatically delivers the final response back to the originating platform without requiring the Kin to call `send_channel_message()`.
+When a channel message triggers multi-turn processing (inter-Agent delegation, task results, wakeups), Hivekeep automatically delivers the final response back to the originating platform without requiring the Agent to call `send_channel_message()`.
 
-This works through a **`channelOriginId`** that propagates through the entire causal chain: queue items, messages, tasks, inter-Kin requests/replies, and sub-Kin spawns. When processing completes, Hivekeep checks if the turn belongs to a channel-originated chain and delivers the response automatically.
+This works through a **`channelOriginId`** that propagates through the entire causal chain: queue items, messages, tasks, inter-Agent requests/replies, and sub-Agent spawns. When processing completes, Hivekeep checks if the turn belongs to a channel-originated chain and delivers the response automatically.
 
-**Auto-delivered message types:** `kin_reply`, `task_result`, `wakeup`
+**Auto-delivered message types:** `agent_reply`, `task_result`, `wakeup`
 
-The Kin also receives a prompt block informing it that delivery is automatic and advising it to adapt formatting for the target platform.
+The Agent also receives a prompt block informing it that delivery is automatic and advising it to adapt formatting for the target platform.
 
 | Setting | Default | Description |
 |---------|---------|-------------|

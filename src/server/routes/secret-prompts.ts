@@ -26,15 +26,15 @@ secretPromptRoutes.post('/:id/respond', async (c) => {
 })
 
 /**
- * GET /api/secret-prompts/pending?kinId=... — pending secure-input prompts for
+ * GET /api/secret-prompts/pending?agentId=... — pending secure-input prompts for
  * hydration on page load / modal reconnect. Returns field metadata only (never
  * secret values).
  */
 secretPromptRoutes.get('/pending', async (c) => {
-  const kinId = c.req.query('kinId')
-  if (!kinId) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'kinId is required' } }, 400)
+  const agentId = c.req.query('agentId')
+  if (!agentId) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'agentId is required' } }, 400)
   }
-  const prompts = await getPendingSecretPrompts(kinId)
+  const prompts = await getPendingSecretPrompts(agentId)
   return c.json({ prompts })
 })

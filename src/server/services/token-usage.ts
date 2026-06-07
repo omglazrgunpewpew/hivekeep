@@ -60,7 +60,7 @@ export interface RecordUsageParams {
   providerType?: string | null
   providerId?: string | null
   modelId?: string | null
-  kinId?: string | null
+  agentId?: string | null
   taskId?: string | null
   cronId?: string | null
   sessionId?: string | null
@@ -97,7 +97,7 @@ export function recordUsage(params: RecordUsageParams): void {
       providerType: params.providerType ?? null,
       providerId: params.providerId ?? null,
       modelId: params.modelId ?? null,
-      kinId: params.kinId ?? null,
+      agentId: params.agentId ?? null,
       taskId: params.taskId ?? null,
       cronId: params.cronId ?? null,
       sessionId: params.sessionId ?? null,
@@ -118,7 +118,7 @@ export function recordUsage(params: RecordUsageParams): void {
 // ─── Query ──────────────────────────────────────────────────────────────────
 
 export interface UsageQueryFilters {
-  kinId?: string
+  agentId?: string
   providerId?: string
   providerType?: string
   modelId?: string
@@ -159,7 +159,7 @@ export function queryUsage(filters: UsageQueryFilters) {
   return { rows, totals: totals!, count: totals!.count }
 }
 
-export type UsageGroupBy = 'provider_type' | 'model_id' | 'kin_id' | 'call_site' | 'day'
+export type UsageGroupBy = 'provider_type' | 'model_id' | 'agent_id' | 'call_site' | 'day'
 
 export function getUsageSummary(filters: UsageQueryFilters & { groupBy: UsageGroupBy }) {
   const conditions = buildConditions(filters)
@@ -169,7 +169,7 @@ export function getUsageSummary(filters: UsageQueryFilters & { groupBy: UsageGro
     switch (filters.groupBy) {
       case 'provider_type': return llmUsage.providerType
       case 'model_id': return llmUsage.modelId
-      case 'kin_id': return llmUsage.kinId
+      case 'agent_id': return llmUsage.agentId
       case 'call_site': return llmUsage.callSite
       case 'day': return sql`date(${llmUsage.createdAt} / 1000, 'unixepoch')`
     }
@@ -285,7 +285,7 @@ export function getTaskTotalsBatch(taskIds: string[]): Map<string, TaskTokenUsag
 
 function buildConditions(filters: UsageQueryFilters) {
   const conditions = []
-  if (filters.kinId) conditions.push(eq(llmUsage.kinId, filters.kinId))
+  if (filters.agentId) conditions.push(eq(llmUsage.agentId, filters.agentId))
   if (filters.providerId) conditions.push(eq(llmUsage.providerId, filters.providerId))
   if (filters.providerType) conditions.push(eq(llmUsage.providerType, filters.providerType))
   if (filters.modelId) conditions.push(eq(llmUsage.modelId, filters.modelId))

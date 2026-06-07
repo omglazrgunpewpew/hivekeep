@@ -1,6 +1,6 @@
 # Hivekeep
 
-Self-hosted platform of specialized AI agents (Kins) for individuals and small groups. Each Kin has a persistent identity, expertise, memory, and tools. Kins share a single continuous session (no "new conversation"), collaborate with each other, spawn sub-Kins for tasks, and execute scheduled jobs.
+Self-hosted platform of specialized AI agents (Agents) for individuals and small groups. Each Agent has a persistent identity, expertise, memory, and tools. Agents share a single continuous session (no "new conversation"), collaborate with each other, spawn sub-Agents for tasks, and execute scheduled jobs.
 
 ## Documentation map
 
@@ -14,9 +14,9 @@ Read these files **before starting any phase**. They are the source of truth.
 | `sse.md` | **Real-time/SSE cheat sheet** — emit↔handle rules, the 8 recurring sync-bug traps, optimistic reconciliation, review checklist. Read before touching SSE or shared state. |
 | `config.md` | All configurable values with env vars and defaults |
 | `structure.md` | Project file tree, naming conventions, imports, i18n, error format |
-| `prompt-system.md` | How the Kin system prompt is assembled (blocks 1-12) |
+| `prompt-system.md` | How the Agent system prompt is assembled (blocks 1-12) |
 | `compacting.md` | Compacting algorithm + memory extraction pipeline |
-| `sherpa.md` | **Conversational onboarding** spec — the `Sherpa` configurator Kin, vault-centralized secrets, secure-input tools, avatar-style customization (Phase 27) |
+| `queenie.md` | **Conversational onboarding** spec — the `Queenie` configurator Agent, vault-centralized secrets, secure-input tools, avatar-style customization (Phase 27) |
 | `DEVELOPMENT_PLAN.md` | Phased development plan with checkboxes — **follow this plan** |
 
 ## Tech stack
@@ -38,7 +38,7 @@ Read these files **before starting any phase**. They are the source of truth.
 Use absolute paths with tsconfig aliases:
 ```typescript
 import { buildSystemPrompt } from '@/server/services/prompt-builder'
-import type { Kin } from '@/shared/types'
+import type { Agent } from '@/shared/types'
 ```
 No index barrels in deep folders — use explicit imports.
 
@@ -56,7 +56,7 @@ All API routes return JSON. Errors follow this format:
 ### i18n
 
 - Base language: English (`en.json`). Supported: `en`, `fr`
-- Key convention: `namespace.element.action` (e.g. `sidebar.kins.title`)
+- Key convention: `namespace.element.action` (e.g. `sidebar.agents.title`)
 - Use `useTranslation()` hook — never hardcode text in JSX
 - Language detected from `user_profiles.language`, not the browser
 
@@ -96,14 +96,14 @@ All API routes return JSON. Errors follow this format:
 
 ## Architecture principles
 
-- **Queue per Kin**: each Kin has a FIFO queue. One message processed at a time. User messages have priority over automated ones.
-- **SSE is global**: one SSE connection per client, multiplexed by `kinId`. No per-Kin SSE connections. **See `sse.md`** for emit↔handle rules, the recurring sync-bug traps, and the review checklist — read it before touching SSE or shared real-time state.
+- **Queue per Agent**: each Agent has a FIFO queue. One message processed at a time. User messages have priority over automated ones.
+- **SSE is global**: one SSE connection per client, multiplexed by `agentId`. No per-Agent SSE connections. **See `sse.md`** for emit↔handle rules, the recurring sync-bug traps, and the review checklist — read it before touching SSE or shared real-time state.
 - **Compacting**: summarizes old messages to stay within token limits. Never deletes original messages. Triggers after each LLM turn if thresholds are exceeded.
-- **Memory**: dual-channel (automatic extraction pipeline + explicit Kin tools). Hybrid search (sqlite-vec KNN + FTS5 rank fusion).
+- **Memory**: dual-channel (automatic extraction pipeline + explicit Agent tools). Hybrid search (sqlite-vec KNN + FTS5 rank fusion).
 - **Vault secrets**: encrypted at rest (AES-256-GCM). Never exposed in prompts — only accessible via `get_secret()` tool. Redaction blocks compacting.
-- **Sub-Kins (tasks)**: ephemeral instances for delegated work. `await` mode re-enters parent queue; `async` mode deposits result as informational. Max depth configurable.
-- **Inter-Kin communication**: `request`/`reply` pattern with correlation IDs. Replies are always `inform` (no ping-pong). Rate-limited.
-- **Crons**: in-process scheduler (croner). Spawn sub-Kins on schedule. Results are informational (no LLM turn on parent). Kin-created crons require user approval.
+- **Sub-Agents (tasks)**: ephemeral instances for delegated work. `await` mode re-enters parent queue; `async` mode deposits result as informational. Max depth configurable.
+- **Inter-Agent communication**: `request`/`reply` pattern with correlation IDs. Replies are always `inform` (no ping-pong). Rate-limited.
+- **Crons**: in-process scheduler (croner). Spawn sub-Agents on schedule. Results are informational (no LLM turn on parent). Agent-created crons require user approval.
 - **Event bus + hooks**: foundation for observability and future plugin system.
 - **Providers are pluggable**: one config per provider, multiple capabilities auto-detected (`llm`, `embedding`, `image`, `search`, `stt`, `tts`).
 - **Search**: `web_search` action tool + `list_search_providers` discovery tool. Provider resolved via `resolveSearchProvider(slug?)` (explicit slug → global default in `app_settings.default_search_provider_id` → first valid). Built-ins: Brave, SerpAPI, Tavily, Perplexity Sonar. `SearchProvider.capabilities` (static) drives capability-mismatch warnings emitted by the host before calling the upstream API. `SearchRequest.extra` is a free-form passthrough for provider-specific quirks. Follow-up reads go through the existing `browse_url` tool (no separate `web_fetch`).
@@ -145,7 +145,7 @@ src/
     services/       # Business logic
     llm/            # AI provider primitives by capability: llm/ embedding/ image/ search/ stt/ tts/ core/
     providers/      # Provider registry glue (image cache/dispatch, index)
-    tools/          # Native tools exposed to Kins
+    tools/          # Native tools exposed to Agents
     db/             # SQLite connection + Drizzle schema + migrations
     auth/           # Better Auth config + middleware
     hooks/          # Lifecycle hooks
@@ -153,7 +153,7 @@ src/
     config.ts       # Centralized configuration
   client/           # Frontend (React + Vite)
     pages/          # Page components
-    components/     # Reusable components (ui/, sidebar/, chat/, kin/, common/)
+    components/     # Reusable components (ui/, sidebar/, chat/, agent/, common/)
     hooks/          # Custom React hooks
     lib/            # Utilities (api client, i18n, utils)
     locales/        # i18n translation files

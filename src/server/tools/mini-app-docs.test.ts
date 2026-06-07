@@ -3,9 +3,9 @@ import { getMiniAppDocsTool } from './mini-app-docs'
 import type { ToolExecutionContext } from '@/server/tools/types'
 
 const ctx: ToolExecutionContext = {
-  kinId: 'test-kin-id',
+  agentId: 'test-agent-id',
   userId: 'test-user-id',
-  isSubKin: false,
+  isSubAgent: false,
 }
 
 // Create the tool instance once

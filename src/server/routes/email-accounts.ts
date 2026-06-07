@@ -291,11 +291,11 @@ emailAccountRoutes.get('/oauth/callback', async (c) => {
 // PATCH /api/email-accounts/:id — update send mode / allow-list.
 emailAccountRoutes.patch('/:id', async (c) => {
   const id = c.req.param('id')
-  const body = await c.req.json<{ sendMode?: SendMode; allowedKinIds?: string[] | null }>()
+  const body = await c.req.json<{ sendMode?: SendMode; allowedAgentIds?: string[] | null }>()
   try {
     let account
     if (body.sendMode) account = await setSendMode(id, body.sendMode)
-    if (body.allowedKinIds !== undefined) account = await setAllowList(id, body.allowedKinIds)
+    if (body.allowedAgentIds !== undefined) account = await setAllowList(id, body.allowedAgentIds)
     if (!account) {
       return c.json({ error: { code: 'INVALID_INPUT', message: 'Nothing to update' } }, 400)
     }

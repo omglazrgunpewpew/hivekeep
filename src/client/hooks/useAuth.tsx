@@ -12,7 +12,7 @@ interface UserProfile {
   language: 'en' | 'fr'
   role: 'admin' | 'member'
   avatarUrl: string | null
-  kinOrder: string | null
+  agentOrder: string | null
   /** Set once the user dismisses the conversational onboarding modal (DB-backed
    *  so a fresh DB re-shows it; persists across devices/browsers). */
   onboardingModalDismissed?: boolean

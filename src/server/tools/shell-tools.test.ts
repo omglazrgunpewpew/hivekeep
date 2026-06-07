@@ -28,7 +28,7 @@ const { runShellTool, detectShellWrapper, detectHookBypass } = await import('./s
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const CTX = { kinId: 'test-kin-shell' } as any
+const CTX = { agentId: 'test-agent-shell' } as any
 
 function createTool() {
   return (runShellTool as ToolRegistration).create(CTX)
@@ -42,7 +42,7 @@ async function execute(params: Record<string, unknown>) {
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
-const KIN_DIR = `${WORKSPACE_BASE}/test-kin-shell`
+const KIN_DIR = `${WORKSPACE_BASE}/test-agent-shell`
 
 beforeAll(() => {
   mkdirSync(KIN_DIR, { recursive: true })
@@ -57,7 +57,7 @@ afterAll(() => {
 describe('runShellTool', () => {
   describe('metadata', () => {
     it('has correct availability', () => {
-      expect((runShellTool as ToolRegistration).availability).toEqual(['main', 'sub-kin'])
+      expect((runShellTool as ToolRegistration).availability).toEqual(['main', 'sub-agent'])
     })
 
     it('creates a tool with description', () => {
@@ -88,10 +88,10 @@ describe('runShellTool', () => {
       expect(result.output).toContain('line2')
     })
 
-    it('uses kin workspace as default cwd', async () => {
+    it('uses agent workspace as default cwd', async () => {
       const result = await execute({ command: 'pwd' })
       expect(result.success).toBe(true)
-      expect(result.output).toBe(`${WORKSPACE_BASE}/test-kin-shell`)
+      expect(result.output).toBe(`${WORKSPACE_BASE}/test-agent-shell`)
     })
 
     it('uses custom cwd when provided', async () => {
@@ -103,13 +103,13 @@ describe('runShellTool', () => {
     it('sets HIVEKEEP_KIN_ID environment variable', async () => {
       const result = await execute({ command: 'echo $HIVEKEEP_KIN_ID' })
       expect(result.success).toBe(true)
-      expect(result.output).toBe('test-kin-shell')
+      expect(result.output).toBe('test-agent-shell')
     })
 
     it('sets HIVEKEEP_WORKSPACE environment variable', async () => {
       const result = await execute({ command: 'echo $HIVEKEEP_WORKSPACE' })
       expect(result.success).toBe(true)
-      expect(result.output).toBe(`${WORKSPACE_BASE}/test-kin-shell`)
+      expect(result.output).toBe(`${WORKSPACE_BASE}/test-agent-shell`)
     })
   })
 

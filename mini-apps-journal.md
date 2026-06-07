@@ -45,7 +45,7 @@
 
 ### Why
 - Serves as authoritative API documentation for all SDK surfaces
-- Kins can reference types when generating TypeScript mini-apps
+- Agents can reference types when generating TypeScript mini-apps
 - Human developers get autocomplete if working locally
 - Been the #1 priority for 3 consecutive runs
 
@@ -97,7 +97,7 @@ const { download, downloading } = useDownload()
 **Tests:** 1515 pass, 0 fail. Build clean (pre-commit OOM'd, CI verified).
 
 **Hook inventory (19 total):**
-useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, **useDownload**
+useHivekeep, useStorage, useTheme, useAgent, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, **useDownload**
 
 **Next priorities:**
 1. Update data-viewer template to include an "Export CSV" button using useDownload
@@ -105,19 +105,19 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 3. Consider `useLocalStorage` hook (persistent local state, separate from Hivekeep.storage)
 4. Responsive breakpoint CSS utilities if not already comprehensive
 
-## 2026-03-01 (run 3) — SDK API Expansion: kin, user, resize, notification
+## 2026-03-01 (run 3) — SDK API Expansion: agent, user, resize, notification
 
 **What:** Added 4 new SDK APIs to `hivekeep-sdk.js` (v1.12.0) and the corresponding parent-side handlers in `MiniAppViewer.tsx`.
 
 **New APIs:**
-- **`Hivekeep.kin`** — getter returning `{id, name, avatarUrl}` about the parent Kin. Derived from app-meta (added `kinAvatarUrl` to the payload).
+- **`Hivekeep.agent`** — getter returning `{id, name, avatarUrl}` about the parent Agent. Derived from app-meta (added `agentAvatarUrl` to the payload).
 - **`Hivekeep.user`** — getter returning `{id, name, pseudonym, locale, timezone, avatarUrl}` about the current user. Viewer now sends user profile from `useAuth()` in app-meta.
 - **`Hivekeep.resize(width?, height?)`** — request panel resize. Width clamped 320-1200px, height clamped 200-2000px. Works in side-panel mode.
 - **`Hivekeep.notification(title, body?)`** — request a browser notification via the parent window (which has Notification permission). Returns `Promise<boolean>`. Handles permission request flow.
 
 **Files changed:**
 - `src/server/mini-app-sdk/hivekeep-sdk.js` — added internal state, app-meta extraction, resize/notification functions, public API entries
-- `src/client/components/mini-app/MiniAppViewer.tsx` — imports `useAuth`, sends user/kinAvatarUrl in app-meta, handles resize/notification messages
+- `src/client/components/mini-app/MiniAppViewer.tsx` — imports `useAuth`, sends user/agentAvatarUrl in app-meta, handles resize/notification messages
 - `src/server/tools/mini-app-tools.ts` — documented new APIs in tool descriptions
 
 **Next priorities:**
@@ -167,7 +167,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 3. Consider a `Form` compound component with validation
 4. Add Breadcrumbs component
 5. Add Popover component
-6. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory, etc.)
+6. SDK API expansion (Hivekeep.agent, Hivekeep.user, Hivekeep.memory, etc.)
 
 ## 2026-03-01 (run 2) — Templates rewritten to use @hivekeep/components
 
@@ -179,11 +179,11 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 - **Form:** Now uses `Card` (with Header/Title/Description/Content), `Input`, `Select`, `Textarea`, `Checkbox`, `Button`, `Alert`, `Divider`, `Stack`, `Spinner`. Added success alert on submit.
 - **Kanban & Todo:** Left unchanged (already good examples of storage + drag-drop patterns, less component-heavy by nature)
 
-**Impact:** Templates now serve as living documentation for the component library. Kins seeing these templates learn how to import and use components properly.
+**Impact:** Templates now serve as living documentation for the component library. Agents seeing these templates learn how to import and use components properly.
 
 **Next priorities:**
 1. Add Grid component for responsive layouts
-2. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory, etc.)
+2. SDK API expansion (Hivekeep.agent, Hivekeep.user, Hivekeep.memory, etc.)
 3. Add Breadcrumbs, Popover components
 4. Update tool descriptions with component usage examples
 
@@ -217,10 +217,10 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 **What:** Added 3 new API namespaces to `hivekeep-sdk.js` for richer mini-app capabilities.
 
 **New SDK APIs:**
-- **`Hivekeep.apps.list()`** — List all mini-apps from the same Kin (returns {id, name, slug, description, icon, version}). Calls `/api/mini-apps?kinId=...` directly.
+- **`Hivekeep.apps.list()`** — List all mini-apps from the same Agent (returns {id, name, slug, description, icon, version}). Calls `/api/mini-apps?agentId=...` directly.
 - **`Hivekeep.apps.get(appId)`** — Get details of a specific mini-app by ID.
-- **`Hivekeep.conversation.history(limit?)`** — Fetch recent conversation messages (default 20, max 100). Returns {id, role, content, createdAt, sourceType}. Calls `/api/kins/:kinId/messages` directly.
-- **`Hivekeep.conversation.send(text, options?)`** — Send a message to the Kin's conversation (alias of sendMessage with same rate limiting).
+- **`Hivekeep.conversation.history(limit?)`** — Fetch recent conversation messages (default 20, max 100). Returns {id, role, content, createdAt, sourceType}. Calls `/api/agents/:agentId/messages` directly.
+- **`Hivekeep.conversation.send(text, options?)`** — Send a message to the Agent's conversation (alias of sendMessage with same rate limiting).
 - **`Hivekeep.share(targetSlug, data)`** — Share JSON data with another mini-app. Stores data in sender's storage under `__share__<slug>` key, then opens the target app.
 
 **Design decisions:**
@@ -241,7 +241,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 
 ## 2026-03-02 (run 3) — Form compound component with validation
 
-**What:** Added a `Form` compound component with built-in validation to `hivekeep-components.js`. This is the most requested missing piece for Kins building interactive apps.
+**What:** Added a `Form` compound component with built-in validation to `hivekeep-components.js`. This is the most requested missing piece for Agents building interactive apps.
 
 **New components (29 total):**
 - **`Form`** — Compound form component with validation orchestration. Props: `onSubmit` (receives values object), `initialValues`, `validateOnChange`, `validateOnBlur`. Children can be a render function `({values, errors, submitting, reset}) => ...`.
@@ -277,10 +277,10 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 
 ## 2026-03-02 (run 4) — SDK API: Hivekeep.memory (v1.15.0)
 
-**What:** Added `Hivekeep.memory.search()` and `Hivekeep.memory.store()` APIs, allowing mini-apps to search and create memories for their parent Kin.
+**What:** Added `Hivekeep.memory.search()` and `Hivekeep.memory.store()` APIs, allowing mini-apps to search and create memories for their parent Agent.
 
 **New SDK APIs:**
-- **`Hivekeep.memory.search(query, limit?)`** — Hybrid semantic + full-text search across the Kin's memories. Returns `{id, content, category, subject, score, updatedAt}`. Default 20 results, max 50.
+- **`Hivekeep.memory.search(query, limit?)`** — Hybrid semantic + full-text search across the Agent's memories. Returns `{id, content, category, subject, score, updatedAt}`. Default 20 results, max 50.
 - **`Hivekeep.memory.store(content, {category?, subject?})`** — Store a new memory. Categories: fact, preference, decision, knowledge (default: knowledge). Max 2000 chars. Returns the created memory.
 
 **Server routes added:**
@@ -288,7 +288,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 - `POST /api/mini-apps/:id/memories` — delegates to `createMemory()` with validation
 
 **Design decisions:**
-- Routes use the app's kinId from DB lookup (not from client) for security
+- Routes use the app's agentId from DB lookup (not from client) for security
 - Reuses existing `searchMemories` and `createMemory` from memory service — full hybrid search with embeddings
 - sourceChannel set to 'explicit' (type constraint; mini-app origin is implicit from the API path)
 - 2000 char limit on content to prevent abuse
@@ -341,7 +341,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 **What:** Added 2 new templates (7 total), showcasing recent SDK features and components.
 
 **New templates:**
-- **Chat Interface** (`chat`) — Full conversational UI with `Hivekeep.sendMessage()` for Kin communication and `Hivekeep.memory.search()` for memory lookup. Uses `useStorage` for message persistence, auto-scroll, typing indicator, and memory results panel. Imports `Button`, `Badge`, `Spinner` from `@hivekeep/components`.
+- **Chat Interface** (`chat`) — Full conversational UI with `Hivekeep.sendMessage()` for Agent communication and `Hivekeep.memory.search()` for memory lookup. Uses `useStorage` for message persistence, auto-scroll, typing indicator, and memory results panel. Imports `Button`, `Badge`, `Spinner` from `@hivekeep/components`.
 - **Settings Panel** (`settings`) — Preferences UI with `Switch`, `Select`, `Input`, `Card`, `Button`, `Badge` components. Storage-backed persistence, dirty state tracking, reset to defaults. Three sections: Appearance, Notifications, Profile.
 
 **Design decisions:**
@@ -432,7 +432,7 @@ Hivekeep.on('shared-data', ({ from, fromName, data, ts }) => {
 1. Fix the 3 pre-existing test failures (drizzle-orm schema imports)
 2. New template ideas: form builder improvements
 3. `Hivekeep.shortcut(key, callback)` — keyboard shortcut registration
-4. `Hivekeep.apps.list()` — list other mini-apps from the same Kin
+4. `Hivekeep.apps.list()` — list other mini-apps from the same Agent
 
 ## 2026-03-02 (run 9) — DataGrid Component
 
@@ -597,18 +597,18 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 **What:** Added 9 new React hooks to `@hivekeep/react` SDK + 7 new convenience re-exports.
 
 ### New Hooks
-1. **`useKin()`** → `{ kin, loading }` — reactive access to parent Kin info (id, name, avatarUrl)
+1. **`useAgent()`** → `{ agent, loading }` — reactive access to parent Agent info (id, name, avatarUrl)
 2. **`useUser()`** → `{ user, loading }` — reactive access to current user info (id, name, locale, timezone)
 3. **`useForm(initialValues, validate?)`** → `{ values, errors, touched, handleChange, handleBlur, handleSubmit, reset, isValid, isDirty }` — full form state management with validation
 4. **`useMediaQuery(query)`** → `boolean` — reactive CSS media query matching
 5. **`useDebounce(value, delayMs?)`** → debounced value (default 300ms)
 6. **`useInterval(callback, delayMs)`** — declarative setInterval (null to pause)
 7. **`useClickOutside(ref, handler)`** — detect clicks outside an element
-8. **`useMemory()`** → `{ search, store, results, loading }` — search/store Kin memories
-9. **`useConversation()`** → `{ history, send, messages, loading }` — interact with Kin conversation
+8. **`useMemory()`** → `{ search, store, results, loading }` — search/store Agent memories
+9. **`useConversation()`** → `{ history, send, messages, loading }` — interact with Agent conversation
 
 ### New Re-exports
-`kin`, `user`, `memory`, `conversation`, `notification`, `resize`, `share`
+`agent`, `user`, `memory`, `conversation`, `notification`, `resize`, `share`
 
 ### Tool Docs Updated
 Updated `mini-app-tools.ts` with full documentation of all 12 hooks (3 existing + 9 new).
@@ -620,7 +620,7 @@ Updated `mini-app-tools.ts` with full documentation of all 12 hooks (3 existing 
 **Tests:** 1339 pass, 0 fail. Build clean.
 
 **Hook inventory (12 total):**
-useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation
+useHivekeep, useStorage, useTheme, useAgent, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation
 
 **Next priorities:**
 1. Settings template could use useForm for demo
@@ -634,7 +634,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 
 ### New Hooks (18 total)
 1. **`useShortcut(key, callback)`** — Register keyboard shortcut with auto-cleanup on unmount. Wraps `Hivekeep.shortcut()`.
-2. **`useApps()`** → `{ apps, loading, refresh }` — List mini-apps from the same Kin. Fetches on mount, supports manual refresh.
+2. **`useApps()`** → `{ apps, loading, refresh }` — List mini-apps from the same Agent. Fetches on mount, supports manual refresh.
 3. **`useSharedData(onData?)`** → `{ data, clear }` — Listen for data shared from another app via `Hivekeep.share()`. Stores last received payload.
 4. **`usePrevious(value)`** → previous render's value. Common React pattern useful for comparing state changes.
 5. **`useOnline()`** → `boolean` — Reactive network status (navigator.onLine + event listeners). Useful for offline-aware mini-apps.
@@ -654,7 +654,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 **Tests:** 1389 pass, 0 fail. Build clean.
 
 **Hook inventory (18 total):**
-useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, **useShortcut**, **useApps**, **useSharedData**, **usePrevious**, **useOnline**
+useHivekeep, useStorage, useTheme, useAgent, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, **useShortcut**, **useApps**, **useSharedData**, **usePrevious**, **useOnline**
 
 **Next priorities:**
 1. New template: settings page using Panel, RadioGroup, Slider, Switch (update existing?)
@@ -674,7 +674,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 4. **`useEventStream(eventName?, callback?)`** → `{ messages, connected, clear }` — subscribe to real-time SSE events from backend. Auto-connects on mount, disconnects on unmount. With callback: no accumulation. Without: messages accumulate as `[{event, data, ts}]`.
 
 ### Why These Hooks
-Every mini-app that calls an API needs loading/error states. Previously Kins had to manually write useState/useEffect patterns for each API call. These hooks eliminate that boilerplate:
+Every mini-app that calls an API needs loading/error states. Previously Agents had to manually write useState/useEffect patterns for each API call. These hooks eliminate that boilerplate:
 - `useFetch` for external APIs (weather, stocks, etc.)
 - `useApi` for the app's own backend
 - `useAsync` for user-triggered mutations
@@ -690,7 +690,7 @@ Updated `mini-app-tools.ts` with full documentation of all 4 new hooks.
 **Tests:** 1547 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
 **Hook inventory (22 total):**
-useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, **useFetch**, **useApi**, **useAsync**, **useEventStream**
+useHivekeep, useStorage, useTheme, useAgent, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, **useFetch**, **useApi**, **useAsync**, **useEventStream**
 
 **Next priorities:**
 1. Template that demos useFetch + useApi (e.g., weather dashboard or API explorer template)
@@ -716,7 +716,7 @@ useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useD
 - `GET /events/tick` — SSE stream emitting ticks every 2s (max 50)
 
 ### Why
-No existing template used the data-fetching hooks (useFetch, useApi, useAsync, useEventStream) added in run 16. This template serves as both a learning reference for Kins and a functional starting point for API-driven mini-apps.
+No existing template used the data-fetching hooks (useFetch, useApi, useAsync, useEventStream) added in run 16. This template serves as both a learning reference for Agents and a functional starting point for API-driven mini-apps.
 
 **Files changed:**
 - `src/server/tools/mini-app-templates.ts` — +290 lines (new template + backend)
@@ -738,7 +738,7 @@ No existing template used the data-fetching hooks (useFetch, useApi, useAsync, u
 2. **`usePagination(path, options?)`** → `{ items, loading, error, page, totalPages, setPage, next, prev, refetch }` — traditional page-based pagination. Replaces items on each page change (vs. infinite scroll which appends). Supports total page count via `getTotal` callback. Options: source, pageSize, pageParam, limitParam, getItems, getTotal.
 
 ### Why These Hooks
-Pagination is one of the most common patterns in data-heavy mini-apps. Previously Kins had to manually implement page tracking, URL construction, and result merging. These hooks cover both UX patterns:
+Pagination is one of the most common patterns in data-heavy mini-apps. Previously Agents had to manually implement page tracking, URL construction, and result merging. These hooks cover both UX patterns:
 - `useInfiniteScroll` for feeds, timelines, social content (mobile-friendly)
 - `usePagination` for tables, admin panels, structured data (desktop-friendly)
 
@@ -755,7 +755,7 @@ Pagination is one of the most common patterns in data-heavy mini-apps. Previousl
 **Tests:** 1582 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
 **Hook inventory (24 total):**
-useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, useFetch, useApi, useAsync, useEventStream, **useInfiniteScroll**, **usePagination**
+useHivekeep, useStorage, useTheme, useAgent, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, useFetch, useApi, useAsync, useEventStream, **useInfiniteScroll**, **usePagination**
 
 **Next priorities:**
 1. Template that demos useInfiniteScroll + usePagination (e.g., paginated data table)
@@ -786,7 +786,7 @@ Card, Stack, Tabs, Badge, Input, Select, Button, Table, Spinner, EmptyState, Sta
 useApi (department list), usePagination (table view), useInfiniteScroll (card view), useTheme
 
 ### Why
-No existing template demonstrated the pagination hooks (useInfiniteScroll, usePagination) added in run 18. This template shows both patterns in context with shared filtering, making it a practical reference for Kins building data-heavy apps.
+No existing template demonstrated the pagination hooks (useInfiniteScroll, usePagination) added in run 18. This template shows both patterns in context with shared filtering, making it a practical reference for Agents building data-heavy apps.
 
 **Files changed:**
 - `src/server/tools/mini-app-templates.ts` — +253 lines (new template + backend)
@@ -824,7 +824,7 @@ useHivekeep, useForm, useAsync, useApi, toast
 Card, Input, Select, Textarea, Checkbox, Switch, RadioGroup, DatePicker, Button, Alert, Divider, Stack, Badge, Table, Tabs, Spinner, EmptyState, Stat
 
 ### Why
-Previous form template only did synchronous client-side submission (console.log). Real apps need async backend calls with loading states, server validation, and error handling. This is the #1 pattern Kins will need.
+Previous form template only did synchronous client-side submission (console.log). Real apps need async backend calls with loading states, server validation, and error handling. This is the #1 pattern Agents will need.
 
 **Files changed:**
 - `src/server/tools/mini-app-templates.ts` — form template rewritten (+189/-80 lines)
@@ -1009,7 +1009,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 **Next priorities:**
 1. Consider `Combobox` (searchable select) and `TagInput` (multi-tag entry) components
 2. Add TypeScript declarations for routing exports in hivekeep-react.d.ts if not already complete
-3. Improve tool descriptions to document the routing primitives for Kins
+3. Improve tool descriptions to document the routing primitives for Agents
 
 ## 2026-03-05 (run 26) — Combobox & TagInput Components
 
@@ -1252,4 +1252,4 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 **Next priorities:**
 1. Consider `TreeView` component (hierarchical data)
 2. Add `Sortable` or `DragList` for vertical reordering within lists
-3. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory.search)
+3. SDK API expansion (Hivekeep.agent, Hivekeep.user, Hivekeep.memory.search)

@@ -17,7 +17,7 @@ test.describe.serial('Login flow', () => {
     await loginAs(page)
 
     // Should redirect to main app after login
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
   test('session persists after page reload', async ({ page }) => {
@@ -25,13 +25,13 @@ test.describe.serial('Login flow', () => {
     await page.goto('/')
     await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
 
     // Reload the page
     await page.reload()
 
     // Should still be in the app, not redirected to login
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('Sign in to your Hivekeep workspace')).not.toBeVisible()
   })
 
@@ -40,7 +40,7 @@ test.describe.serial('Login flow', () => {
     await page.goto('/')
     await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
 
     // Open user menu (avatar button showing initials "TU" for Test User)
     await page.locator('button:has([data-slot="avatar"])').first().click()
@@ -95,7 +95,7 @@ test.describe.serial('Login flow', () => {
     await page.getByRole('button', { name: 'Sign in' }).click()
 
     // Should succeed and redirect
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
   test('cleared cookies force re-login', async ({ page }) => {
@@ -103,7 +103,7 @@ test.describe.serial('Login flow', () => {
     await page.goto('/')
     await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
 
     // Clear cookies (simulates session expiry)
     await page.context().clearCookies()

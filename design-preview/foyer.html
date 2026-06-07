@@ -87,16 +87,16 @@ nav{
 .reassure .pill{display:inline-flex;align-items:center;gap:7px;}
 .reassure .pip{width:7px;height:7px;border-radius:50%;background:oklch(0.65 0.18 155);}
 
-/* ----- Kins cluster ----- */
-.kins{position:relative;height:430px;}
-.kin{position:absolute;animation:float 6s ease-in-out infinite;}
-.kin .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px 13px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:11px;}
-.kin .name{font-weight:700;font-size:.92rem;line-height:1.1;}
-.kin .role{font-size:.74rem;color:var(--ink-soft);font-weight:500;}
-.kin.k1{top:18px;left:40px;animation-delay:0s;}
-.kin.k2{top:120px;right:6px;animation-delay:1.1s;}
-.kin.k3{top:236px;left:14px;animation-delay:.5s;}
-.kin.k4{top:318px;right:54px;animation-delay:1.7s;}
+/* ----- Agents cluster ----- */
+.agents{position:relative;height:430px;}
+.agent{position:absolute;animation:float 6s ease-in-out infinite;}
+.agent .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px 13px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:11px;}
+.agent .name{font-weight:700;font-size:.92rem;line-height:1.1;}
+.agent .role{font-size:.74rem;color:var(--ink-soft);font-weight:500;}
+.agent.k1{top:18px;left:40px;animation-delay:0s;}
+.agent.k2{top:120px;right:6px;animation-delay:1.1s;}
+.agent.k3{top:236px;left:14px;animation-delay:.5s;}
+.agent.k4{top:318px;right:54px;animation-delay:1.7s;}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .thread{position:absolute;inset:0;z-index:-1;}
 .badge-mem{position:absolute;top:188px;left:150px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:.32rem .6rem;border-radius:999px;box-shadow:0 6px 16px oklch(0.52 0.24 300/.4);animation:float 5s ease-in-out infinite .8s;}
@@ -163,8 +163,8 @@ section.block{padding:96px 0;}
 .tlegend span{display:flex;align-items:center;gap:8px;}
 .tlegend .sw{width:11px;height:11px;border-radius:3px;}
 
-/* ---------- SHERPA ---------- */
-.sherpa .split{align-items:center;}
+/* ---------- QUEENIE ---------- */
+.queenie .split{align-items:center;}
 
 /* ---------- FOOTER CTA ---------- */
 .cta-foot{padding:104px 0;text-align:center;position:relative;}
@@ -175,7 +175,7 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
 .foot-in{display:flex;justify-content:space-between;align-items:center;padding:28px 0;color:var(--ink-soft);font-size:.9rem;flex-wrap:wrap;gap:14px;}
 
 @media(max-width:860px){
-  .hero-grid{grid-template-columns:1fr;} .kins{height:330px;margin-top:10px;}
+  .hero-grid{grid-template-columns:1fr;} .agents{height:330px;margin-top:10px;}
   .split{grid-template-columns:1fr;gap:30px;} .bento{grid-template-columns:1fr;} .bcard.span2{grid-column:auto;}
   .nav-links{display:none;}
 }
@@ -231,16 +231,16 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
       </div>
     </div>
 
-    <div class="kins">
+    <div class="agents">
       <svg class="thread" viewBox="0 0 400 430" fill="none" aria-hidden="true">
         <path d="M120 70 C 200 120, 260 130, 320 170" stroke="oklch(0.52 0.24 300/.35)" stroke-width="2" stroke-dasharray="5 6"/>
         <path d="M320 170 C 230 210, 160 240, 90 285" stroke="oklch(0.62 0.26 340/.35)" stroke-width="2" stroke-dasharray="5 6"/>
         <path d="M90 285 C 170 320, 230 350, 300 372" stroke="oklch(0.78 0.13 40/.4)" stroke-width="2" stroke-dasharray="5 6"/>
       </svg>
-      <div class="kin k1"><div class="card"><span class="bot" style="color:oklch(0.55 0.22 300)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche &amp; veille</div></div></div></div>
-      <div class="kin k2"><div class="card"><span class="bot" style="color:oklch(0.66 0.18 350)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
-      <div class="kin k3"><div class="card"><span class="bot" style="color:oklch(0.72 0.14 45)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Sherpa</div><div class="role">Configurateur</div></div></div></div>
-      <div class="kin k4"><div class="card"><span class="bot" style="color:oklch(0.60 0.16 250)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance crypto</div></div></div></div>
+      <div class="agent k1"><div class="card"><span class="bot" style="color:oklch(0.55 0.22 300)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche &amp; veille</div></div></div></div>
+      <div class="agent k2"><div class="card"><span class="bot" style="color:oklch(0.66 0.18 350)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
+      <div class="agent k3"><div class="card"><span class="bot" style="color:oklch(0.72 0.14 45)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Queenie</div><div class="role">Configurateur</div></div></div></div>
+      <div class="agent k4"><div class="card"><span class="bot" style="color:oklch(0.60 0.16 250)"><svg width="46" height="54"><use href="#bot"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance crypto</div></div></div></div>
       <div class="badge-mem">🧠 se souvient de vous</div>
     </div>
   </div>
@@ -266,9 +266,9 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
         <h2 class="serif">Ils ne vous oublient jamais.</h2>
         <p>Pas un chatbot qui repart de zéro à chaque fois. Une session continue unique et une mémoire hybride qui accumule des mois de contexte — et une équipe qui se passe le travail.</p>
         <div class="feats">
-          <div class="feat"><div class="ic">♾️</div><div><h4>Session continue unique</h4><p>Jamais de « nouvelle conversation ». Le Kin sait toujours où vous en êtes.</p></div></div>
+          <div class="feat"><div class="ic">♾️</div><div><h4>Session continue unique</h4><p>Jamais de « nouvelle conversation ». Le Agent sait toujours où vous en êtes.</p></div></div>
           <div class="feat"><div class="ic">🔎</div><div><h4>Mémoire hybride</h4><p>Recherche sémantique + plein texte, fusionnées. Rien n'est jamais supprimé.</p></div></div>
-          <div class="feat"><div class="ic">🤝</div><div><h4>Collaboration inter-agents</h4><p>Un Kin délègue à un autre, ou spawne des sous-agents pour aller plus vite.</p></div></div>
+          <div class="feat"><div class="ic">🤝</div><div><h4>Collaboration inter-agents</h4><p>Un Agent délègue à un autre, ou spawne des sous-agents pour aller plus vite.</p></div></div>
         </div>
       </div>
       <div class="chatcard">
@@ -300,23 +300,23 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
         <div class="term mono">
           <div><span class="c">$</span> docker run -d -p 3000:3000 \</div>
           <div>&nbsp;&nbsp;-v hivekeep-data:/app/data <span class="p2">ghcr.io/.../hivekeep</span></div>
-          <div class="cmt"># puis ouvrez le navigateur — Sherpa s'occupe du reste</div>
+          <div class="cmt"># puis ouvrez le navigateur — Queenie s'occupe du reste</div>
         </div>
       </div>
       <div class="bcard"><span class="gradline"></span>
         <h3>🛠️ Self-improving</h3>
-        <p>Vos Kins écrivent leurs propres outils, construisent des mini-apps intégrées et publient des plugins.</p>
+        <p>Vos Agents écrivent leurs propres outils, construisent des mini-apps intégrées et publient des plugins.</p>
         <div class="chips">
           <span class="chip on">custom tools</span><span class="chip">mini-apps</span><span class="chip">plugins NPM</span><span class="chip">MCP</span>
         </div>
       </div>
       <div class="bcard span2"><span class="gradline"></span>
         <h3>🔒 Vos secrets ne voient jamais le LLM</h3>
-        <p>Coffre chiffré AES-256-GCM. Les Kins référencent une clé du vault — sans jamais en lire la valeur.</p>
+        <p>Coffre chiffré AES-256-GCM. Les Agents référencent une clé du vault — sans jamais en lire la valeur.</p>
       </div>
       <div class="bcard"><span class="gradline"></span>
         <h3>📊 Zéro surprise de coûts</h3>
-        <p>Chaque token compté, par Kin et par modèle, cache compris.</p>
+        <p>Chaque token compté, par Agent et par modèle, cache compris.</p>
         <div class="tokbar">
           <i style="width:34%;background:oklch(0.52 0.24 300)"></i>
           <i style="width:22%;background:oklch(0.62 0.26 340)"></i>
@@ -334,8 +334,8 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
   </div>
 </section>
 
-<!-- ===================== SHERPA ===================== -->
-<section class="block sherpa">
+<!-- ===================== QUEENIE ===================== -->
+<section class="block queenie">
   <div class="wrap">
     <div class="split">
       <div class="chatcard">
@@ -349,10 +349,10 @@ footer{border-top:1px solid var(--line);background:var(--bg-2);}
       <div class="sec-head">
         <span class="eyebrow">Onboarding conversationnel</span>
         <h2 class="serif">Pas de YAML. Une conversation.</h2>
-        <p>Sherpa, votre agent configurateur, branche vos providers, sécurise vos secrets et crée vos premiers Kins — en discutant. Et il reste disponible à vie.</p>
+        <p>Queenie, votre agent configurateur, branche vos providers, sécurise vos secrets et crée vos premiers Agents — en discutant. Et il reste disponible à vie.</p>
         <div class="feats">
           <div class="feat"><div class="ic">💬</div><div><h4>Tout par le chat</h4><p>Zéro fichier de config, zéro terminal après le <span class="mono">docker run</span>.</p></div></div>
-          <div class="feat"><div class="ic">🎨</div><div><h4>Avatars auto-générés</h4><p>Chaque Kin reçoit un avatar dans le style que vous choisissez.</p></div></div>
+          <div class="feat"><div class="ic">🎨</div><div><h4>Avatars auto-générés</h4><p>Chaque Agent reçoit un avatar dans le style que vous choisissez.</p></div></div>
         </div>
       </div>
     </div>

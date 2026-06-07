@@ -1,7 +1,7 @@
 /**
  * In-memory ring buffer for mini-app console entries.
  * Console messages are forwarded from the iframe SDK → parent → server via POST.
- * Kins can retrieve them via the get_mini_app_console tool.
+ * Agents can retrieve them via the get_mini_app_console tool.
  */
 
 export interface ConsoleEntry {

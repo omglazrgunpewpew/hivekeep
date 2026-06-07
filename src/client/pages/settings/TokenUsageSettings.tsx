@@ -29,9 +29,9 @@ function hitRateColor(ratio: number): string {
 }
 
 type Period = '24h' | '7d' | '30d' | 'all'
-type GroupBy = 'provider_type' | 'model_id' | 'kin_id' | 'call_site' | 'day'
+type GroupBy = 'provider_type' | 'model_id' | 'agent_id' | 'call_site' | 'day'
 
-interface KinInfo {
+interface AgentInfo {
   id: string
   name: string
   role: string
@@ -39,7 +39,7 @@ interface KinInfo {
 }
 
 const PERIODS: Period[] = ['24h', '7d', '30d', 'all']
-const GROUP_OPTIONS: GroupBy[] = ['model_id', 'provider_type', 'kin_id', 'call_site', 'day']
+const GROUP_OPTIONS: GroupBy[] = ['model_id', 'provider_type', 'agent_id', 'call_site', 'day']
 
 function periodToFrom(period: Period): number | undefined {
   if (period === 'all') return undefined
@@ -171,33 +171,33 @@ function DailySparkline({ data, t }: { data: UsageSummaryRow[]; t: (key: string)
 
 // ─── Row Label (with avatar/icon) ──────────────────────────────────────────
 
-function RowLabel({ group, groupBy, kinMap }: {
+function RowLabel({ group, groupBy, agentMap }: {
   group: string
   groupBy: GroupBy
-  kinMap: Map<string, KinInfo>
+  agentMap: Map<string, AgentInfo>
 }) {
-  if (groupBy === 'kin_id') {
+  if (groupBy === 'agent_id') {
     if (!group) return <span className="truncate font-medium text-muted-foreground">(unknown)</span>
-    const kin = kinMap.get(group)
-    if (kin) {
-      const name = kin.name || group.slice(0, 8)
+    const agent = agentMap.get(group)
+    if (agent) {
+      const name = agent.name || group.slice(0, 8)
       const initials = name.slice(0, 2).toUpperCase()
       return (
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="size-5 shrink-0">
-            {kin.avatarUrl && <AvatarImage src={kin.avatarUrl} alt={name} />}
+            {agent.avatarUrl && <AvatarImage src={agent.avatarUrl} alt={name} />}
             <AvatarFallback className="text-[8px] bg-secondary">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <span className="block truncate text-xs font-medium">{name}</span>
-            {kin.role && (
-              <span className="block truncate text-[10px] text-muted-foreground leading-tight">{kin.role}</span>
+            {agent.role && (
+              <span className="block truncate text-[10px] text-muted-foreground leading-tight">{agent.role}</span>
             )}
           </div>
         </div>
       )
     }
-    // Fallback for unknown kin — show truncated UUID
+    // Fallback for unknown agent — show truncated UUID
     return <span className="truncate font-medium text-muted-foreground" title={group}>{group.slice(0, 8)}…</span>
   }
 
@@ -215,11 +215,11 @@ function RowLabel({ group, groupBy, kinMap }: {
 
 // ─── Breakdown Table ────────────────────────────────────────────────────────
 
-function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
+function BreakdownTable({ rows, loading, groupBy, agentMap, t }: {
   rows: UsageSummaryRow[]
   loading: boolean
   groupBy: GroupBy
-  kinMap: Map<string, KinInfo>
+  agentMap: Map<string, AgentInfo>
   t: TFunction
 }) {
   if (loading) {
@@ -270,7 +270,7 @@ function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
               className="grid grid-cols-[1fr_80px_80px_80px_50px_50px] gap-2 px-3 py-1.5 text-xs hover:bg-muted/30 border-b border-border/20 items-center"
               title={tooltip}
             >
-              <RowLabel group={row.group} groupBy={groupBy} kinMap={kinMap} />
+              <RowLabel group={row.group} groupBy={groupBy} agentMap={agentMap} />
               <span className="text-right font-mono tabular-nums font-semibold text-success">
                 {formatTokens(cacheHit)}
               </span>
@@ -296,45 +296,45 @@ function BreakdownTable({ rows, loading, groupBy, kinMap, t }: {
   )
 }
 
-// ─── Kin Filter ─────────────────────────────────────────────────────────────
+// ─── Agent Filter ─────────────────────────────────────────────────────────────
 
-function KinFilter({ value, onValueChange, kins, t }: {
+function AgentFilter({ value, onValueChange, agents, t }: {
   value: string
   onValueChange: (v: string) => void
-  kins: KinInfo[]
+  agents: AgentInfo[]
   t: TFunction
 }) {
-  const selectedKin = kins.find((k) => k.id === value)
+  const selectedAgent = agents.find((k) => k.id === value)
 
   return (
     <div className="relative w-full sm:w-auto">
       <Select value={value || '__all__'} onValueChange={(v) => onValueChange(v === '__all__' ? '' : v)}>
         <SelectTrigger className={`w-full sm:w-[200px] h-8 text-xs ${value ? 'pr-7' : ''}`}>
-          {selectedKin ? (
+          {selectedAgent ? (
             <div className="flex items-center gap-2 min-w-0">
               <Avatar className="size-4 shrink-0">
-                {selectedKin.avatarUrl && <AvatarImage src={selectedKin.avatarUrl} alt={selectedKin.name} />}
-                <AvatarFallback className="text-[7px] bg-secondary">{(selectedKin.name || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
+                {selectedAgent.avatarUrl && <AvatarImage src={selectedAgent.avatarUrl} alt={selectedAgent.name} />}
+                <AvatarFallback className="text-[7px] bg-secondary">{(selectedAgent.name || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="truncate">{selectedKin.name}</span>
+              <span className="truncate">{selectedAgent.name}</span>
             </div>
           ) : (
-            <span className="text-muted-foreground">{t('settings.tokenUsage.filterKin')}</span>
+            <span className="text-muted-foreground">{t('settings.tokenUsage.filterAgent')}</span>
           )}
         </SelectTrigger>
         <SelectContent position="popper">
-          <SelectItem value="__all__" className="text-xs">{t('settings.tokenUsage.filterKin')}</SelectItem>
-          {kins.map((kin) => (
-            <SelectItem key={kin.id} value={kin.id} className="text-xs py-1.5">
+          <SelectItem value="__all__" className="text-xs">{t('settings.tokenUsage.filterAgent')}</SelectItem>
+          {agents.map((agent) => (
+            <SelectItem key={agent.id} value={agent.id} className="text-xs py-1.5">
               <div className="flex items-center gap-2 min-w-0">
                 <Avatar className="size-5 shrink-0">
-                  {kin.avatarUrl && <AvatarImage src={kin.avatarUrl} alt={kin.name} />}
-                  <AvatarFallback className="text-[8px] bg-secondary">{kin.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  {agent.avatarUrl && <AvatarImage src={agent.avatarUrl} alt={agent.name} />}
+                  <AvatarFallback className="text-[8px] bg-secondary">{agent.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <span className="block truncate text-xs">{kin.name}</span>
-                  {kin.role && (
-                    <span className="block truncate text-[10px] text-muted-foreground leading-tight">{kin.role}</span>
+                  <span className="block truncate text-xs">{agent.name}</span>
+                  {agent.role && (
+                    <span className="block truncate text-[10px] text-muted-foreground leading-tight">{agent.role}</span>
                   )}
                 </div>
               </div>
@@ -405,13 +405,13 @@ function ProviderFilter({ value, onValueChange, providers, t }: {
 
 const PAGE_SIZE = 25
 
-function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t }: {
+function DetailTable({ rows, loading, page, totalCount, onPageChange, agentMap, t }: {
   rows: LlmUsageRow[]
   loading: boolean
   page: number
   totalCount: number
   onPageChange: (page: number) => void
-  kinMap: Map<string, KinInfo>
+  agentMap: Map<string, AgentInfo>
   t: (key: string, opts?: Record<string, unknown>) => string
 }) {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
@@ -442,7 +442,7 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
             {/* Header */}
             <div className="grid grid-cols-[140px_1fr_1fr_70px_70px_70px_60px_45px_45px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 border-b border-border/30">
               <span>{t('settings.tokenUsage.detailDate')}</span>
-              <span>{t('settings.tokenUsage.detailKin')}</span>
+              <span>{t('settings.tokenUsage.detailAgent')}</span>
               <span>{t('settings.tokenUsage.detailModel')}</span>
               <span>{t('settings.tokenUsage.detailCallSite')}</span>
               <span className="text-right" title={t('settings.tokenUsage.cacheHitInput')}>{t('settings.tokenUsage.columnCacheHit')}</span>
@@ -454,7 +454,7 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
             {/* Rows */}
             <div className="max-h-[400px] overflow-y-auto">
               {rows.map((row) => {
-            const kin = row.kinId ? kinMap.get(row.kinId) : null
+            const agent = row.agentId ? agentMap.get(row.agentId) : null
             const date = new Date(row.createdAt)
             const usage = {
               inputTokens: row.inputTokens ?? 0,
@@ -479,13 +479,13 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
                   {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
                 <div className="min-w-0">
-                  {kin ? (
+                  {agent ? (
                     <div className="flex items-center gap-1.5 min-w-0">
                       <Avatar className="size-4 shrink-0">
-                        {kin.avatarUrl && <AvatarImage src={kin.avatarUrl} alt={kin.name} />}
-                        <AvatarFallback className="text-[7px] bg-secondary">{kin.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        {agent.avatarUrl && <AvatarImage src={agent.avatarUrl} alt={agent.name} />}
+                        <AvatarFallback className="text-[7px] bg-secondary">{agent.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
-                      <span className="truncate">{kin.name}</span>
+                      <span className="truncate">{agent.name}</span>
                     </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
@@ -550,12 +550,12 @@ function DetailTable({ rows, loading, page, totalCount, onPageChange, kinMap, t 
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: string } = {}) {
+export function TokenUsageSettings({ initialAgentFilter }: { initialAgentFilter?: string } = {}) {
   const { t } = useTranslation()
 
   const [period, setPeriod] = useState<Period>('7d')
-  const [groupBy, setGroupBy] = useState<GroupBy>(initialKinFilter ? 'model_id' : 'model_id')
-  const [kinFilter, setKinFilter] = useState<string>(initialKinFilter ?? '')
+  const [groupBy, setGroupBy] = useState<GroupBy>(initialAgentFilter ? 'model_id' : 'model_id')
+  const [agentFilter, setAgentFilter] = useState<string>(initialAgentFilter ?? '')
   const [providerFilter, setProviderFilter] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [summaryRows, setSummaryRows] = useState<UsageSummaryRow[]>([])
@@ -567,31 +567,31 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
   const [detailPage, setDetailPage] = useState(0)
   const [detailLoading, setDetailLoading] = useState(false)
 
-  // Kin info for resolving UUIDs to names/avatars
-  const [kins, setKins] = useState<KinInfo[]>([])
-  const kinMap = useMemo(() => new Map(kins.map((k) => [k.id, k])), [kins])
+  // Agent info for resolving UUIDs to names/avatars
+  const [agents, setAgents] = useState<AgentInfo[]>([])
+  const agentMap = useMemo(() => new Map(agents.map((k) => [k.id, k])), [agents])
 
   // Available filter options (populated from data)
-  const [kinOptionIds, setKinOptionIds] = useState<string[]>([])
+  const [agentOptionIds, setAgentOptionIds] = useState<string[]>([])
   const [providerOptions, setProviderOptions] = useState<string[]>([])
 
-  // Fetch kins + filter options on mount
+  // Fetch agents + filter options on mount
   useEffect(() => {
     Promise.all([
-      api.get<{ kins: KinInfo[] }>('/kins'),
-      api.get<{ summary: UsageSummaryRow[] }>('/usage/summary?groupBy=kin_id'),
+      api.get<{ agents: AgentInfo[] }>('/agents'),
+      api.get<{ summary: UsageSummaryRow[] }>('/usage/summary?groupBy=agent_id'),
       api.get<{ summary: UsageSummaryRow[] }>('/usage/summary?groupBy=provider_type'),
-    ]).then(([kinsRes, kinUsageRes, providersRes]) => {
-      setKins(kinsRes.kins)
-      setKinOptionIds(kinUsageRes.summary.filter((r) => r.group).map((r) => r.group))
+    ]).then(([agentsRes, agentUsageRes, providersRes]) => {
+      setAgents(agentsRes.agents)
+      setAgentOptionIds(agentUsageRes.summary.filter((r) => r.group).map((r) => r.group))
       setProviderOptions(providersRes.summary.filter((r) => r.group).map((r) => r.group))
     }).catch(() => {})
   }, [])
 
-  // Kins that have usage data (for filter dropdown)
-  const kinFilterOptions = useMemo(
-    () => kins.filter((k) => kinOptionIds.includes(k.id)),
-    [kins, kinOptionIds],
+  // Agents that have usage data (for filter dropdown)
+  const agentFilterOptions = useMemo(
+    () => agents.filter((k) => agentOptionIds.includes(k.id)),
+    [agents, agentOptionIds],
   )
 
   // Fetch data when filters change
@@ -600,7 +600,7 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
     const from = periodToFrom(period)
     const base = {
       from,
-      kinId: kinFilter || undefined,
+      agentId: agentFilter || undefined,
       providerType: providerFilter || undefined,
     }
 
@@ -625,12 +625,12 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
         setDailyData([])
       })
       .finally(() => setLoading(false))
-  }, [period, groupBy, kinFilter, providerFilter])
+  }, [period, groupBy, agentFilter, providerFilter])
 
   // Reset detail page when filters change
   useEffect(() => {
     setDetailPage(0)
-  }, [period, kinFilter, providerFilter])
+  }, [period, agentFilter, providerFilter])
 
   // Fetch detail rows (individual requests)
   const fetchDetail = useCallback((page: number) => {
@@ -638,7 +638,7 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
     const from = periodToFrom(period)
     const query = buildQuery({
       from,
-      kinId: kinFilter || undefined,
+      agentId: agentFilter || undefined,
       providerType: providerFilter || undefined,
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
@@ -653,7 +653,7 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
         setDetailCount(0)
       })
       .finally(() => setDetailLoading(false))
-  }, [period, kinFilter, providerFilter])
+  }, [period, agentFilter, providerFilter])
 
   useEffect(() => {
     fetchDetail(detailPage)
@@ -721,19 +721,19 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
               className="h-7 px-2.5 text-xs"
               onClick={() => setGroupBy(opt)}
             >
-              {t(`settings.tokenUsage.groupBy${opt === 'provider_type' ? 'Provider' : opt === 'model_id' ? 'Model' : opt === 'kin_id' ? 'Kin' : opt === 'call_site' ? 'CallSite' : 'Day'}`)}
+              {t(`settings.tokenUsage.groupBy${opt === 'provider_type' ? 'Provider' : opt === 'model_id' ? 'Model' : opt === 'agent_id' ? 'Agent' : opt === 'call_site' ? 'CallSite' : 'Day'}`)}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Filters — dropdowns */}
-      {(kinFilterOptions.length > 0 || providerOptions.length > 0) && (
+      {(agentFilterOptions.length > 0 || providerOptions.length > 0) && (
         <div className="space-y-1.5">
           <span className="text-xs text-muted-foreground">{t('settings.tokenUsage.filters')}</span>
           <div className="flex flex-wrap items-center gap-2">
-            {kinFilterOptions.length > 0 && (
-              <KinFilter value={kinFilter} onValueChange={setKinFilter} kins={kinFilterOptions} t={t} />
+            {agentFilterOptions.length > 0 && (
+              <AgentFilter value={agentFilter} onValueChange={setAgentFilter} agents={agentFilterOptions} t={t} />
             )}
             {providerOptions.length > 0 && (
               <ProviderFilter value={providerFilter} onValueChange={setProviderFilter} providers={providerOptions} t={t} />
@@ -743,7 +743,7 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
       )}
 
       {/* Breakdown Table */}
-      <BreakdownTable rows={summaryRows} loading={loading} groupBy={groupBy} kinMap={kinMap} t={t} />
+      <BreakdownTable rows={summaryRows} loading={loading} groupBy={groupBy} agentMap={agentMap} t={t} />
 
       {/* Detail Table — individual requests */}
       <div className="space-y-1.5">
@@ -754,7 +754,7 @@ export function TokenUsageSettings({ initialKinFilter }: { initialKinFilter?: st
           page={detailPage}
           totalCount={detailCount}
           onPageChange={handleDetailPageChange}
-          kinMap={kinMap}
+          agentMap={agentMap}
           t={t}
         />
       </div>

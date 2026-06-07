@@ -114,7 +114,7 @@ export async function vaultifyProviderConfig(
   type: string,
   providerId: string,
   rawConfig: Record<string, unknown>,
-  createdByKinId?: string,
+  createdByAgentId?: string,
 ): Promise<Record<string, unknown>> {
   const secretFields = new Set(getSecretFieldKeys(type))
   const out: Record<string, unknown> = {}
@@ -131,7 +131,7 @@ export async function vaultifyProviderConfig(
     const key = providerVaultKey(type, providerId, k)
     const existing = await getSecretByKey(key)
     if (existing) await updateSecretValueByKey(key, v)
-    else await createSecret(key, v, createdByKinId, `${k} for provider ${type}`)
+    else await createSecret(key, v, createdByAgentId, `${k} for provider ${type}`)
     out[k] = VAULT_REF_PREFIX + key
   }
   return out

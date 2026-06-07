@@ -30,7 +30,7 @@ import { useExportConversation } from '@/client/hooks/useExportConversation'
 const ConversationSearch = lazy(() => import('@/client/components/chat/ConversationSearch').then(m => ({ default: m.ConversationSearch })))
 const OrphanTaskDialog = lazy(() => import('@/client/components/chat/OrphanTaskDialog').then(m => ({ default: m.OrphanTaskDialog })))
 import { QueuePreview } from '@/client/components/chat/QueuePreview'
-import type { ContextTokenBreakdown, ContextPipelineStatus, KinThinkingEffort } from '@/shared/types'
+import type { ContextTokenBreakdown, ContextPipelineStatus, AgentThinkingEffort } from '@/shared/types'
 import { ChatEmptyState } from '@/client/components/chat/ChatEmptyState'
 import { DateSeparator } from '@/client/components/chat/DateSeparator'
 import { TimeGapIndicator } from '@/client/components/chat/TimeGapIndicator'
@@ -44,7 +44,7 @@ import { ArrowDown, ArrowUp, Upload, Pin, PinOff, AlertTriangle, Bot, Loader2 } 
 import { toast } from 'sonner'
 import { api } from '@/client/lib/api'
 
-interface KinInfo {
+interface AgentInfo {
   id: string
   name: string
   role: string
@@ -53,7 +53,7 @@ interface KinInfo {
   avatarUrl: string | null
   activeProjectId?: string | null
   thinkingEnabled?: boolean
-  thinkingEffort?: KinThinkingEffort | null
+  thinkingEffort?: AgentThinkingEffort | null
 }
 
 interface LLMModel {
@@ -66,44 +66,44 @@ interface LLMModel {
 }
 
 interface ChatPanelProps {
-  kin: KinInfo
+  agent: AgentInfo
   llmModels: LLMModel[]
   modelUnavailable?: boolean
   queueState?: { isProcessing: boolean; queueSize: number; processingStartedAt?: number; contextTokens?: number; contextWindow?: number; apiContextTokens?: number; contextBreakdown?: ContextTokenBreakdown; pipelineStatus?: ContextPipelineStatus; compactingPercent?: number; compactingThresholdPercent?: number; summaryCount?: number; maxSummaries?: number; summaryTokens?: number; summaryBudgetTokens?: number; keepPercent?: number }
   onModelChange: (modelId: string, providerId: string) => void
-  onEditKin: () => void
-  onOpenSettings?: (section?: string, filters?: { kinId?: string }) => void
+  onEditAgent: () => void
+  onOpenSettings?: (section?: string, filters?: { agentId?: string }) => void
   /** Distraction-less variant (used by the onboarding modal): renders a minimal
    *  header (avatar + name only, no model picker / actions toolbar) and drops the
    *  desktop sidebar trigger. Everything else (messages, input, prompts, secure
    *  input) is unchanged. */
   compact?: boolean
   /** When true, reasoning/thinking blocks are hidden in every message (used by
-   *  the onboarding modal so Sherpa's meta-reasoning doesn't break first-use
+   *  the onboarding modal so Queenie's meta-reasoning doesn't break first-use
    *  magic). The same thread shows thinking normally in the regular chat. */
   hideThinking?: boolean
 }
 
-export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState, onModelChange, onEditKin, onOpenSettings, compact = false, hideThinking = false }: ChatPanelProps) {
+export function ChatPanel({ agent, llmModels, modelUnavailable = false, queueState, onModelChange, onEditAgent, onOpenSettings, compact = false, hideThinking = false }: ChatPanelProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const userInitials = user ? getUserInitials(user) : 'U'
-  const { messages, streamingMessage, streamingReasoning, streamingOutputTokens, liveTasks, liveCompacting, isLoading, isStreaming, hasMore, isLoadingMore, tokenStalled, sendMessage, stopStreaming, clearConversation, fetchOlderMessages } = useChat(kin.id)
-  const { toolCalls, toolCallCount, streamingToolCallCount, toolCallsByMessage } = useToolCalls(kin.id, messages)
-  const { prompts: pendingPrompts, respond: respondToPrompt, isResponding } = useHumanPrompts(kin.id)
-  const { content: draftContent, setContent: setDraftContent, clearDraft } = useDraftMessage(kin.id)
-  const { items: queueItems, removeItem: removeQueueItem, injectItem: injectQueueItem, isRemoving: isRemovingQueueItem } = useQueueItems(kin.id)
-  const { pendingFiles, addFiles, removeFile, clearFiles, isUploading } = useFileUpload(kin.id)
-  const { activeSession, isOpen: isQuickOpen, setIsOpen: setQuickOpen, createSession, closeSession } = useQuickSession(kin.id)
+  const { messages, streamingMessage, streamingReasoning, streamingOutputTokens, liveTasks, liveCompacting, isLoading, isStreaming, hasMore, isLoadingMore, tokenStalled, sendMessage, stopStreaming, clearConversation, fetchOlderMessages } = useChat(agent.id)
+  const { toolCalls, toolCallCount, streamingToolCallCount, toolCallsByMessage } = useToolCalls(agent.id, messages)
+  const { prompts: pendingPrompts, respond: respondToPrompt, isResponding } = useHumanPrompts(agent.id)
+  const { content: draftContent, setContent: setDraftContent, clearDraft } = useDraftMessage(agent.id)
+  const { items: queueItems, removeItem: removeQueueItem, injectItem: injectQueueItem, isRemoving: isRemovingQueueItem } = useQueueItems(agent.id)
+  const { pendingFiles, addFiles, removeFile, clearFiles, isUploading } = useFileUpload(agent.id)
+  const { activeSession, isOpen: isQuickOpen, setIsOpen: setQuickOpen, createSession, closeSession } = useQuickSession(agent.id)
   const [showQuickHistory, setShowQuickHistory] = useState(false)
-  const { exportAsMarkdown, exportAsJSON } = useExportConversation(messages, kin.name)
-  const { users: mentionableUsers, kins: mentionableKins } = useMentionables()
+  const { exportAsMarkdown, exportAsJSON } = useExportConversation(messages, agent.name)
+  const { users: mentionableUsers, agents: mentionableAgents } = useMentionables()
   // Active project (if any) drives the `#ticket` autocomplete: it gives us
   // the projectId to scope search to + the slug so the popover knows when a
   // hit can use the short form (`#42`) vs. the qualified form (`slug#42`).
-  const { project: activeProject } = useProject(kin.activeProjectId ?? null)
-  const { toggleReaction } = useReactions(kin.id)
-  const [thinkingEnabled, setThinkingEnabled] = useState(kin.thinkingEnabled ?? false)
+  const { project: activeProject } = useProject(agent.activeProjectId ?? null)
+  const { toggleReaction } = useReactions(agent.id)
+  const [thinkingEnabled, setThinkingEnabled] = useState(agent.thinkingEnabled ?? false)
   const [isToolCallsOpen, setIsToolCallsOpen] = useState(false)
   const { openTask } = useSidePanel()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
@@ -120,26 +120,26 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     }
   })
 
-  const [thinkingEffort, setThinkingEffort] = useState<KinThinkingEffort | null>(kin.thinkingEffort ?? null)
+  const [thinkingEffort, setThinkingEffort] = useState<AgentThinkingEffort | null>(agent.thinkingEffort ?? null)
 
-  // Sync thinking state from prop when kin changes
+  // Sync thinking state from prop when agent changes
   useEffect(() => {
-    setThinkingEnabled(kin.thinkingEnabled ?? false)
-    setThinkingEffort(kin.thinkingEffort ?? null)
-  }, [kin.id, kin.thinkingEnabled, kin.thinkingEffort])
+    setThinkingEnabled(agent.thinkingEnabled ?? false)
+    setThinkingEffort(agent.thinkingEffort ?? null)
+  }, [agent.id, agent.thinkingEnabled, agent.thinkingEffort])
 
-  const updateThinking = useCallback(async (next: { enabled: boolean; effort: KinThinkingEffort | null }) => {
+  const updateThinking = useCallback(async (next: { enabled: boolean; effort: AgentThinkingEffort | null }) => {
     const prevEnabled = thinkingEnabled
     const prevEffort = thinkingEffort
     setThinkingEnabled(next.enabled)
     setThinkingEffort(next.effort)
     try {
-      await api.patch(`/kins/${kin.id}`, { thinkingConfig: { enabled: next.enabled, effort: next.effort } })
+      await api.patch(`/agents/${agent.id}`, { thinkingConfig: { enabled: next.enabled, effort: next.effort } })
     } catch {
       setThinkingEnabled(prevEnabled)
       setThinkingEffort(prevEffort)
     }
-  }, [thinkingEnabled, thinkingEffort, kin.id])
+  }, [thinkingEnabled, thinkingEffort, agent.id])
 
   // Slash command + keyboard shortcut: simple toggle (defaults to medium when enabling)
   const toggleThinking = useCallback(() => {
@@ -202,7 +202,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
 
   const handleForceCompact = useCallback(async () => {
     try {
-      await api.post(`/kins/${kin.id}/compacting/run`)
+      await api.post(`/agents/${agent.id}/compacting/run`)
     } catch (err: unknown) {
       const code = (err as { error?: { code?: string } })?.error?.code
       if (code === 'NOTHING_TO_COMPACT') {
@@ -211,7 +211,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         toast.error(t('chat.compacting.error'))
       }
     }
-  }, [kin.id, t])
+  }, [agent.id, t])
 
   // Ctrl+F to open search
   useEffect(() => {
@@ -225,18 +225,18 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Reset known message IDs when switching kins
+  // Reset known message IDs when switching agents
   useEffect(() => {
     knownMessageIdsRef.current = new Set()
     initialLoadDoneRef.current = false
-  }, [kin.id])
+  }, [agent.id])
 
-  // Auto-focus message input when switching kins
+  // Auto-focus message input when switching agents
   useEffect(() => {
     // Small delay to ensure the input is mounted and ready
     const timer = setTimeout(() => inputRef.current?.focus(), 50)
     return () => clearTimeout(timer)
-  }, [kin.id])
+  }, [agent.id])
 
   // Escape key to refocus the message input
   useEffect(() => {
@@ -260,7 +260,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
   // Track whether user has scrolled away from bottom
   const isNearBottomRef = useRef(true)
 
-  // On mount (fresh for each kin thanks to key=kin.id), scroll to bottom
+  // On mount (fresh for each agent thanks to key=agent.id), scroll to bottom
   // instantly once messages are loaded — runs before paint so the user
   // never sees the conversation at the wrong scroll position.
   const needsInstantScrollRef = useRef(true)
@@ -364,9 +364,9 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
-  // Only reconnect observer when hasMore or kin changes — NOT on every message/callback change
+  // Only reconnect observer when hasMore or agent changes — NOT on every message/callback change
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, kin.id])
+  }, [hasMore, agent.id])
 
   // Keep isLoadingMoreRef in sync for the observer guard
   useEffect(() => {
@@ -534,7 +534,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     }
   }, [addFiles])
 
-  // Resolve kin info for the currently open task detail modal
+  // Resolve agent info for the currently open task detail modal
   const detailTask = detailTaskId ? liveTasks.find((t) => t.taskId === detailTaskId) : null
 
   const handleSend = useCallback(
@@ -566,13 +566,13 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
   const handleInject = useCallback(
     async (content: string) => {
       try {
-        await api.post(`/kins/${kin.id}/messages/inject`, { content })
+        await api.post(`/agents/${agent.id}/messages/inject`, { content })
         clearDraft()
       } catch {
         toast.error(t('chat.sendFailed'))
       }
     },
-    [kin.id, clearDraft, t],
+    [agent.id, clearDraft, t],
   )
 
   // Regenerate: find the last user message and re-send it
@@ -633,9 +633,9 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     // Hide the internal instruction injected by the force-compact endpoint
     // (sourceType 'compacting_followup'). It's a user-role message in the DB
     // because that's how the engine consumes queue items, but it's actually
-    // an internal trigger to make the kin acknowledge the compaction +
+    // an internal trigger to make the agent acknowledge the compaction +
     // refresh the navbar context counter — the user never typed it and
-    // shouldn't see it as if they did. The kin's reply (sourceType 'kin')
+    // shouldn't see it as if they did. The agent's reply (sourceType 'agent')
     // stays visible.
     const filtered = messages.filter((m) => m.sourceType !== 'compacting_followup')
     if (!streamingMessage) return filtered
@@ -650,7 +650,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
     const hasContent = streamingMessage.content.length > 0
     // When thinking is hidden (onboarding), reasoning-only doesn't count toward
     // showing the bubble — otherwise a blank bubble would flash next to the
-    // typing indicator while Sherpa "thinks" before the first text token.
+    // typing indicator while Queenie "thinks" before the first text token.
     const hasReasoning = !hideThinking && streamingReasoning.length > 0
     const hasToolCalls = (toolCallsByMessage.get(streamingMessage.id)?.length ?? 0) > 0
     if (!hasContent && !hasReasoning && !hasToolCalls) return filtered
@@ -810,11 +810,11 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         </div>
       )}
 
-      {/* Active project chip — only rendered when this Kin has an activeProjectId */}
-      {kin.activeProjectId && (
+      {/* Active project chip — only rendered when this Agent has an activeProjectId */}
+      {agent.activeProjectId && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-card/40 px-4 py-1">
           <Suspense fallback={null}>
-            <ActiveProjectChip projectId={kin.activeProjectId} />
+            <ActiveProjectChip projectId={agent.activeProjectId} />
           </Suspense>
         </div>
       )}
@@ -822,27 +822,27 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
       {/* Conversation header — minimal in compact (onboarding modal) mode */}
       {compact ? (
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
-          {kin.avatarUrl ? (
-            <img src={kin.avatarUrl} alt={kin.name} className="size-9 rounded-full object-cover" />
+          {agent.avatarUrl ? (
+            <img src={agent.avatarUrl} alt={agent.name} className="size-9 rounded-full object-cover" />
           ) : (
             <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Bot className="size-5" />
             </div>
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{kin.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{kin.role}</p>
+            <p className="truncate text-sm font-semibold">{agent.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{agent.role}</p>
           </div>
           {queueState?.isProcessing && <Loader2 className="ml-auto size-4 animate-spin text-muted-foreground" />}
         </div>
       ) : (
       <ConversationHeader
-        kinId={kin.id}
-        name={kin.name}
-        role={kin.role}
-        model={kin.model}
-        providerId={kin.providerId}
-        avatarUrl={kin.avatarUrl}
+        agentId={agent.id}
+        name={agent.name}
+        role={agent.role}
+        model={agent.model}
+        providerId={agent.providerId}
+        avatarUrl={agent.avatarUrl}
         llmModels={llmModels}
         modelUnavailable={modelUnavailable}
         messageCount={messages.length}
@@ -864,7 +864,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         onToggleToolCalls={toggleToolCalls}
         onForceCompact={handleForceCompact}
         isCompacting={isCompacting}
-        onEdit={onEditKin}
+        onEdit={onEditAgent}
         onStartTask={() => setIsOrphanTaskOpen(true)}
         onQuickSession={handleQuickSession}
         onExportMarkdown={exportAsMarkdown}
@@ -876,7 +876,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         thinkingEnabled={thinkingEnabled}
         thinkingEffort={thinkingEffort}
         onChangeThinking={updateThinking}
-        onViewUsage={onOpenSettings ? () => onOpenSettings('tokenUsage', { kinId: kin.id }) : undefined}
+        onViewUsage={onOpenSettings ? () => onOpenSettings('tokenUsage', { agentId: agent.id }) : undefined}
         leading={<SidebarTrigger className="-ml-1 shrink-0 md:hidden" />}
       />
       )}
@@ -893,14 +893,14 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         </Suspense>
       )}
 
-      {/* Orphan task launcher — standalone task on this Kin (no project/ticket) */}
+      {/* Orphan task launcher — standalone task on this Agent (no project/ticket) */}
       {isOrphanTaskOpen && (
         <Suspense fallback={null}>
           <OrphanTaskDialog
             open={isOrphanTaskOpen}
             onOpenChange={setIsOrphanTaskOpen}
-            kinId={kin.id}
-            kinName={kin.name}
+            agentId={agent.id}
+            agentName={agent.name}
           />
         </Suspense>
       )}
@@ -914,7 +914,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         <div ref={scrollAreaRef} className="relative min-h-0 min-w-0 flex-1 flex flex-col">
         <ScrollArea className="min-h-0 flex-1">
           <SearchHighlightProvider value={searchQuery}>
-          <MentionLookupProvider users={mentionableUsers} kins={mentionableKins}>
+          <MentionLookupProvider users={mentionableUsers} agents={mentionableAgents}>
           <div className="mx-auto min-w-0 max-w-3xl py-4 px-2 md:px-0">
             {/* Sentinel for infinite scroll — triggers loading older messages */}
             {hasMore && <div ref={topSentinelRef} className="h-px" />}
@@ -938,13 +938,13 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
               </div>
             ) : messages.length === 0 && liveTasks.length === 0 && !queueState?.isProcessing && !streamingMessage && !compact ? (
               /* Empty conversation: prompt-suggestion cards — but NOT while the
-                 Kin is already inferring/streaming the first message (show the
+                 Agent is already inferring/streaming the first message (show the
                  typing indicator instead), and never in the distraction-less
                  onboarding modal (compact). */
               <ChatEmptyState
-                kinName={kin.name}
-                kinRole={kin.role}
-                kinAvatarUrl={kin.avatarUrl}
+                agentName={agent.name}
+                agentRole={agent.role}
+                agentAvatarUrl={agent.avatarUrl}
                 onSendMessage={handleSend}
               />
             ) : (
@@ -964,7 +964,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                         result={task.result}
                         error={task.error}
                         createdAt={task.createdAt}
-                        onOpenDetail={() => openTask({ taskId: task.taskId, kinName: task.senderName ?? kin.name, kinAvatarUrl: task.senderAvatarUrl ?? kin.avatarUrl })}
+                        onOpenDetail={() => openTask({ taskId: task.taskId, agentName: task.senderName ?? agent.name, agentAvatarUrl: task.senderAvatarUrl ?? agent.avatarUrl })}
                       />
                     )
                   }
@@ -996,7 +996,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                   }
 
                   const isFromUser = msg.role === 'user' && msg.sourceType === 'user'
-                  const isFromKin = msg.sourceType === 'kin' && msg.role === 'user'
+                  const isFromAgent = msg.sourceType === 'agent' && msg.role === 'user'
                   const isTask = msg.sourceType === 'task'
                   return (
                     <React.Fragment key={`wrap-${msg.id}`}>
@@ -1021,16 +1021,16 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                       avatarUrl={
                         isFromUser
                           ? user?.avatarUrl
-                          : (isFromKin || isTask)
-                            ? msg.sourceAvatarUrl ?? kin.avatarUrl
-                            : kin.avatarUrl
+                          : (isFromAgent || isTask)
+                            ? msg.sourceAvatarUrl ?? agent.avatarUrl
+                            : agent.avatarUrl
                       }
                       senderName={
                         isFromUser
                           ? (user?.pseudonym ?? user?.firstName)
-                          : (isFromKin || isTask)
-                            ? msg.sourceName ?? kin.name
-                            : kin.name
+                          : (isFromAgent || isTask)
+                            ? msg.sourceName ?? agent.name
+                            : agent.name
                       }
                       userInitials={isFromUser ? userInitials : undefined}
                       timestamp={msg.createdAt}
@@ -1044,7 +1044,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                       resolvedTaskId={msg.resolvedTaskId}
                       onOpenTaskDetail={isTask && msg.resolvedTaskId ? ((taskId: string) => {
                         const lt = liveTasks.find((t) => t.taskId === taskId)
-                        openTask({ taskId, kinName: lt?.senderName ?? kin.name, kinAvatarUrl: lt?.senderAvatarUrl ?? kin.avatarUrl })
+                        openTask({ taskId, agentName: lt?.senderName ?? agent.name, agentAvatarUrl: lt?.senderAvatarUrl ?? agent.avatarUrl })
                       }) : undefined}
                       reactions={msg.reactions}
                       currentUserId={user?.id}
@@ -1058,8 +1058,8 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                       channelBrandColor={msg.channelMeta?.brandColor ?? null}
                       channelPlatformOverride={msg.channelMeta?.platform ?? null}
                       systemEvent={msg.systemEvent}
-                      currentKinName={kin.name}
-                      currentKinAvatarUrl={kin.avatarUrl}
+                      currentAgentName={agent.name}
+                      currentAgentAvatarUrl={agent.avatarUrl}
                     />
                     </div>
                     </React.Fragment>
@@ -1085,11 +1085,11 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
                     isResponding={isResponding}
                   />
                 ))}
-                <SecretPromptModal kinId={kin.id} />
+                <SecretPromptModal agentId={agent.id} />
                 {queueState?.isProcessing && !(streamingMessage && streamingMessage.content.length > 0 && !tokenStalled) && (
                   <TypingIndicator
-                    kinName={kin.name}
-                    kinAvatarUrl={kin.avatarUrl}
+                    agentName={agent.name}
+                    agentAvatarUrl={agent.avatarUrl}
                     startedAt={queueState?.processingStartedAt}
                     tokenCount={streamingOutputTokens}
                     toolCallCount={streamingToolCallCount}
@@ -1154,7 +1154,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         </div>
 
         {/* Mini-app / task / ticket side panel is mounted at ChatPage level
-            so it works even when no Kin is selected (an empty Kins page can
+            so it works even when no Agent is selected (an empty Agents page can
             still preview a task or open a mini-app from the sidebar). */}
       </div>
 
@@ -1168,7 +1168,7 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
       />
 
       {/* Model-unavailable banner — visible above the input when this
-          Kin's configured model can't be resolved (provider deleted,
+          Agent's configured model can't be resolved (provider deleted,
           plugin unloaded, family stripped from the row, …). The
           input is already disabled with a tooltip via `disabledReason`,
           but the tooltip requires hover; this banner makes the state
@@ -1178,13 +1178,13 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
           <div className="flex items-center gap-2 min-w-0">
             <AlertTriangle className="size-4 shrink-0 text-destructive" />
             <div className="min-w-0">
-              <p className="text-sm font-medium text-destructive">{t('kin.modelUnavailable')}</p>
-              <p className="text-xs text-muted-foreground truncate">{t('kin.modelUnavailableHint')}</p>
+              <p className="text-sm font-medium text-destructive">{t('agent.modelUnavailable')}</p>
+              <p className="text-xs text-muted-foreground truncate">{t('agent.modelUnavailableHint')}</p>
             </div>
           </div>
           {onOpenSettings && (
             <Button size="sm" variant="outline" className="shrink-0" onClick={() => onOpenSettings('providers')}>
-              {t('kin.modelUnavailableAction')}
+              {t('agent.modelUnavailableAction')}
             </Button>
           )}
         </div>
@@ -1202,19 +1202,19 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
         isStreaming={isStreaming}
         isProcessing={isProcessing}
         disabled={modelUnavailable || isCompacting}
-        disabledReason={isCompacting ? t('chat.compacting.inputDisabled') : modelUnavailable ? t('kin.modelUnavailableInput') : undefined}
+        disabledReason={isCompacting ? t('chat.compacting.inputDisabled') : modelUnavailable ? t('agent.modelUnavailableInput') : undefined}
         pendingFiles={pendingFiles}
         isUploading={isUploading}
         onAddFiles={addFiles}
         onRemoveFile={removeFile}
-        kinId={kin.id}
+        agentId={agent.id}
         mentionableUsers={mentionableUsers}
-        mentionableKins={mentionableKins}
-        activeProjectId={kin.activeProjectId ?? null}
+        mentionableAgents={mentionableAgents}
+        activeProjectId={agent.activeProjectId ?? null}
         activeProjectSlug={activeProject?.slug ?? null}
         llmModels={llmModels}
-        model={kin.model}
-        providerId={kin.providerId}
+        model={agent.model}
+        providerId={agent.providerId}
         onModelChange={onModelChange}
         thinkingEnabled={thinkingEnabled}
         thinkingEffort={thinkingEffort}
@@ -1230,19 +1230,19 @@ export function ChatPanel({ kin, llmModels, modelUnavailable = false, queueState
           {showQuickHistory ? (
             <Suspense fallback={null}>
               <QuickSessionHistory
-                kinId={kin.id}
-                kinName={kin.name}
-                kinAvatarUrl={kin.avatarUrl}
+                agentId={agent.id}
+                agentName={agent.name}
+                agentAvatarUrl={agent.avatarUrl}
                 onBack={() => setShowQuickHistory(false)}
               />
             </Suspense>
           ) : activeSession ? (
             <Suspense fallback={null}>
               <QuickChatPanel
-                kinId={kin.id}
-                kinName={kin.name}
-                kinAvatarUrl={kin.avatarUrl}
-                kinModel={kin.model}
+                agentId={agent.id}
+                agentName={agent.name}
+                agentAvatarUrl={agent.avatarUrl}
+                agentModel={agent.model}
                 llmModels={llmModels}
                 sessionId={activeSession.id}
                 expiresAt={activeSession.expiresAt}

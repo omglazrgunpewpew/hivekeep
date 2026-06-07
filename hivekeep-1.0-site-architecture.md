@@ -7,11 +7,11 @@
 ## 0. Principes directeurs (rappel, ils gouvernent chaque choix)
 
 1. **Bénéfice d'abord, feature ensuite.** Chaque section ouvre sur une promesse (« Ils ne vous oublient jamais ») avant la mécanique (« mémoire hybride sqlite-vec + FTS5 »).
-2. **Substance d'abord, polish tôt.** L'ordre des piliers (1 agents persistants → 2 self-hosted & self-improving → 3 UI belle → 4 Sherpa → 5 omnicanal → + confiance) gouverne le *pitch*. Mais l'ordre de *showcase* de la home diffère : on ouvre avec ce qui se *démontre* le mieux.
+2. **Substance d'abord, polish tôt.** L'ordre des piliers (1 agents persistants → 2 self-hosted & self-improving → 3 UI belle → 4 Queenie → 5 omnicanal → + confiance) gouverne le *pitch*. Mais l'ordre de *showcase* de la home diffère : on ouvre avec ce qui se *démontre* le mieux.
 3. **Toujours une preuve après une promesse** — GIF, capture, chiffre. Chaque section héros a une `demo_idea` issue de §5.
 4. **Catégorie = plateformes d'agents autonomes**, jamais fronts de chat. Le comparatif et le framing l'imposent partout.
 5. **Honnêteté radicale** sur la maturité (~80%) — assumée sur `/roadmap`, cohérente avec l'ADN transparence et la cible homelab.
-6. **« Agents » en surface, « Kins » révélé juste après le hook** — jamais ouvrir le hero avec « Kin ».
+6. **« Agents » en surface, « Agents » révélé juste après le hook** — jamais ouvrir le hero avec « Agent ».
 
 ---
 
@@ -23,15 +23,15 @@ Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres
 /                         Home — hero + 5 sections héros pleine largeur + bande "preuves légères"
                           + comparatif condensé (catégorie agents autonomes) + bande confiance + CTA quickstart
 /features                 Vue d'ensemble des 8 héros + 6 preuves, regroupées par PILIER (les 5 piliers)
-  /features/agents          Pilier 1 — Kins, session continue, mémoire hybride, sous-Kins, inter-Kin, contacts
+  /features/agents          Pilier 1 — Agents, session continue, mémoire hybride, sous-Agents, inter-Agent, contacts
   /features/platform        Pilier 2 — un conteneur/zéro infra + self-improving : custom tools, mini-apps, plugins/SDK, MCP, toolboxes
   /features/interface       Pilier 3 — PWA, 18 palettes, contraste adaptatif, design system, renderers riches, avatars, i18n
   /features/channels        Pilier 5 — omnicanal 6 plateformes, transfert de canal temps réel, livraison causal-chain
   /features/automation      Crons, webhooks, human-in-the-loop, scout, tasks (rattaché au socle runtime)
   /features/security        Pilier + confiance — vault jamais-au-LLM, comptes connectés, transparence tokens, multi-user isolé
 /why-hivekeep               Comparatif détaillé dans l'arène des AGENTS AUTONOMES + gaps de marché + "mauvaise catégorie" (fronts de chat)
-/quickstart               docker run copiable, prérequis, première connexion, passage de relais à Sherpa
-/showcase                 Galerie : mini-apps construites par les Kins, custom tools communautaires, captures UI multi-palettes
+/quickstart               docker run copiable, prérequis, première connexion, passage de relais à Queenie
+/showcase                 Galerie : mini-apps construites par les Agents, custom tools communautaires, captures UI multi-palettes
 /roadmap                  Maturité ~80% assumée par domaine, rough edges honnêtes, priorités post-1.0
 /docs                     → renvoie vers la doc technique (Starlight)
 /community                Discord/Matrix, contribuer, écrire un plugin, code de conduite
@@ -54,8 +54,8 @@ Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres
 
 | Niveau | Libellé | Cible | Où | Intention |
 |---|---|---|---|---|
-| **Primaire** | **▶ Démarrer en 2 min** | `/quickstart` | Hero, nav (sticky), fin de home, fin de chaque page features | On vend la *facilité* (le `docker run` + Sherpa). C'est le seul CTA "achat". |
-| **Secondaire** | **Voir la démo** | ancre vidéo Sherpa / collaboration inter-Kin | Hero, à côté du primaire | Hook visuel sans engagement. |
+| **Primaire** | **▶ Démarrer en 2 min** | `/quickstart` | Hero, nav (sticky), fin de home, fin de chaque page features | On vend la *facilité* (le `docker run` + Queenie). C'est le seul CTA "achat". |
+| **Secondaire** | **Voir la démo** | ancre vidéo Queenie / collaboration inter-Agent | Hero, à côté du primaire | Hook visuel sans engagement. |
 | **Tertiaire (dev)** | **★ Star on GitHub** | repo | Nav, footer, bandeau confiance | Conversion communauté/OSS, langage homelab. |
 | **Contextuel** | **En savoir plus →** | sous-page `/features/*` ou `/docs/*` | Sous chaque section héros de la home | Routage substance pour qui veut creuser. |
 | **Confiance** | **Lire la roadmap honnête →** | `/roadmap` | Bande confiance + footer | Désamorce le risque early-adopter. |
@@ -70,12 +70,12 @@ L'ordre de la home respecte le **pilier order validé pour le pitch**, tout en p
 
 ### Sélection des 5 héros pleine largeur de la HOME
 
-On retient les héros qui (a) portent les piliers #1, #2, #3, #4 et la confiance, et (b) se démontrent le mieux. Substance d'abord, UI/polish présenté tôt, **Sherpa proéminent**.
+On retient les héros qui (a) portent les piliers #1, #2, #3, #4 et la confiance, et (b) se démontrent le mieux. Substance d'abord, UI/polish présenté tôt, **Queenie proéminent**.
 
 | Ordre home | Section héros | Pilier porté | Pourquoi sur la home |
 |---|---|---|---|
-| 1 | **L'équipe de Kins en action** (collaboration + mémoire persistante) | Pilier 1 (substance) | Incarne le différenciateur #1, impossible chez les concurrents. On ouvre par la substance. |
-| 2 | **Sherpa : votre setup en conversation** | Pilier 4 (Sherpa proéminent) | Le plus fort « wow, sans terminal ». Remonté tôt délibérément. |
+| 1 | **L'équipe de Agents en action** (collaboration + mémoire persistante) | Pilier 1 (substance) | Incarne le différenciateur #1, impossible chez les concurrents. On ouvre par la substance. |
+| 2 | **Queenie : votre setup en conversation** | Pilier 4 (Queenie proéminent) | Le plus fort « wow, sans terminal ». Remonté tôt délibérément. |
 | 3 | **Une IA d'agents enfin belle et fluide** (UI/PWA/18 palettes) | Pilier 3 (polish tôt) | Polish présenté tôt comme différenciateur de catégorie. |
 | 4 | **Une plateforme qui s'améliore elle-même** (custom tools + mini-apps) | Pilier 2 (self-improving) | Le message rare : la base grandit de l'intérieur. |
 | 5 | **Vos secrets ne voient jamais le LLM + zéro surprise de coûts** | + Confiance | Réassurance privacy/budget avant le comparatif et le CTA final. |
@@ -88,8 +88,8 @@ On retient les héros qui (a) portent les piliers #1, #2, #3, #4 et la confiance
 [0] NAV (sticky)
 [1] HERO
 [2] PITCH 30 SECONDES (bande de 6 puces)
-[3] HÉROS 1 — L'équipe de Kins en action            (pleine largeur, média à droite)
-[4] HÉROS 2 — Sherpa, setup en conversation          (pleine largeur, média à gauche)
+[3] HÉROS 1 — L'équipe de Agents en action            (pleine largeur, média à droite)
+[4] HÉROS 2 — Queenie, setup en conversation          (pleine largeur, média à gauche)
 [5] HÉROS 3 — UI belle & fluide + palette switcher    (pleine largeur, média immersif)
 [6] HÉROS 4 — Plateforme self-improving               (pleine largeur, média à droite)
 [7] HÉROS 5 — Confiance : vault + transparence tokens (pleine largeur, média à gauche)
@@ -124,15 +124,15 @@ Reprend exactement le bloc hero validé (`messaging.md` §3).
 │   100% open-source (MIT) · self-hosted · zéro infra externe            │
 │                                                                        │
 │   ┌──────────────── média hero ────────────────┐                       │
-│   │  GIF en boucle : chat Hivekeep, sidebar Kins   │  ← un seul GIF qui   │
+│   │  GIF en boucle : chat Hivekeep, sidebar Agents   │  ← un seul GIF qui   │
 │   │  + un transfert/collab visible (avatars)     │     claque           │
 │   └──────────────────────────────────────────────┘                     │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **CTA primaire** « Démarrer en 2 min » → `/quickstart`. **Secondaire** « Voir la démo » → scrolle/ouvre la démo Sherpa ou la collaboration inter-Kin.
+- **CTA primaire** « Démarrer en 2 min » → `/quickstart`. **Secondaire** « Voir la démo » → scrolle/ouvre la démo Queenie ou la collaboration inter-Agent.
 - Sous-ligne de réassurance : licence + self-hosted + zéro infra — adresse le réflexe homelab dès le pli.
-- **Démo/screenshot :** GIF unique le plus fort. Reprend le hook README : **Sherpa onboarding OU collaboration inter-Kin** (un seul, qui claque). Avatars distincts visibles pour signaler « équipe ».
+- **Démo/screenshot :** GIF unique le plus fort. Reprend le hook README : **Queenie onboarding OU collaboration inter-Agent** (un seul, qui claque). Avatars distincts visibles pour signaler « équipe ».
 
 ### [2] PITCH 30 SECONDES
 
@@ -148,14 +148,14 @@ Bande des 6 puces validées (`messaging.md` §4), en grille 3×2 ou 2×3 selon l
 │                                                                        │
 │  📱 Partout            📦 Un seul conteneur   🔒 Vos secrets           │
 │     Telegram, WhatsApp,    zéro PG/Redis/Mongo.    restent à vous       │
-│     Slack, Discord,        docker run, Sherpa       coffre chiffré,     │
+│     Slack, Discord,        docker run, Queenie       coffre chiffré,     │
 │     Signal, Matrix + PWA   s'occupe du reste        jamais au LLM       │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### [3] HÉROS 1 — L'équipe de Kins en action (Pilier 1, substance)
+### [3] HÉROS 1 — L'équipe de Agents en action (Pilier 1, substance)
 
 Headline de section validée : **« Ils ne vous oublient jamais. »**
 
@@ -163,28 +163,28 @@ Headline de section validée : **« Ils ne vous oublient jamais. »**
 ┌──────────────────────────────────────────────────────────────────────┐
 │                                            ┌──────────────────────────┐│
 │  Ils ne vous oublient jamais.              │  GIF collaboration:        ││
-│                                            │  Kin "Recherche" ──request▶││
-│  Une session continue, une mémoire qui     │  Kin "Rédaction" produit   ││
+│                                            │  Agent "Recherche" ──request▶││
+│  Une session continue, une mémoire qui     │  Agent "Rédaction" produit   ││
 │  accumule des mois de contexte, une équipe │  le texte. Badges de queue ││
 │  qui se passe le travail entre agents.     │  visibles, avatars distincts.│
 │                                            │                            ││
 │  • Session continue unique (pas de         │  ── split ──               ││
 │    "nouvelle conversation")                │  Scroll historique 3 mois ;││
 │  • Mémoire hybride sémantique + FTS        │  recall("décision budget") ││
-│  • Sous-Kins await/async                   │  retrouve "600€" (FTS) ET  ││
-│  • Inter-Kin request/reply                 │  "combien pour les courses"││
+│  • Sous-Agents await/async                   │  retrouve "600€" (FTS) ET  ││
+│  • Inter-Agent request/reply                 │  "combien pour les courses"││
 │  • Compacting sans suppression             │  (sémantique). Rien n'est  ││
 │                                            │  supprimé.                 ││
 │  En savoir plus → /features/agents         └──────────────────────────┘│
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Demo idea (catalogue/§5 #1 + #3 fusionnés) :** GIF — un Kin « Recherche » envoie un `request` à un Kin « Rédaction » qui produit le texte sans intervention humaine entre les deux (badges de queue, avatars distincts). Puis split : scroll dans un historique de 3 mois ; `recall("décision budget")` retrouve « 600€ » (FTS exact) **et** « combien pour les courses » (sémantique). Montrer que rien n'est supprimé.
+- **Demo idea (catalogue/§5 #1 + #3 fusionnés) :** GIF — un Agent « Recherche » envoie un `request` à un Agent « Rédaction » qui produit le texte sans intervention humaine entre les deux (badges de queue, avatars distincts). Puis split : scroll dans un historique de 3 mois ; `recall("décision budget")` retrouve « 600€ » (FTS exact) **et** « combien pour les courses » (sémantique). Montrer que rien n'est supprimé.
 - Pourquoi héros : incarne le pilier #1, **impossible à montrer chez les concurrents** ; promesse émotionnelle « il me connaît » + preuve technique.
 
 ---
 
-### [4] HÉROS 2 — Sherpa : votre setup en conversation (Pilier 4, proéminent)
+### [4] HÉROS 2 — Queenie : votre setup en conversation (Pilier 4, proéminent)
 
 Headline de section validée : **« Pas de YAML. Une conversation. »**
 
@@ -193,22 +193,22 @@ Headline de section validée : **« Pas de YAML. Une conversation. »**
 │┌──────────────────────────┐                                            │
 ││  VIDÉO ~30s :              │   Pas de YAML. Une conversation.          │
 ││  fresh install → 3 écrans  │                                            │
-││  (identité, langue, 1      │   Sherpa branche vos providers, sécurise  │
-││  provider) → Sherpa salue  │   vos secrets et crée vos premiers agents │
+││  (identité, langue, 1      │   Queenie branche vos providers, sécurise  │
+││  provider) → Queenie salue  │   vos secrets et crée vos premiers agents │
 ││  → popup sécurisée pour    │   — en discutant.                         │
 ││  une clé (le secret        │                                            │
 ││  N'APPARAÎT JAMAIS dans le │   • Onboarding 3 écrans → puis chat guidé │
 ││  chat) → teste le provider │   • Secure input : secrets → vault,       │
-││  → propose un 1er Kin.     │     jamais au LLM                         │
+││  → propose un 1er Agent.     │     jamais au LLM                         │
 ││                            │   • Une clé OpenAI = N capacités          │
-││  [badge: secret ✓ valide]  │   • Sherpa reste accessible à vie         │
+││  [badge: secret ✓ valide]  │   • Queenie reste accessible à vie         │
 │└──────────────────────────┘                                            │
 │                                          [ ▶ Démarrer en 2 min ]        │
 │                                          En savoir plus → /quickstart   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Demo idea (§5 #2) :** GIF/vidéo ~30s — fresh install → 3 écrans rapides → Sherpa salue, demande une clé via popup sécurisée (le secret n'apparaît **jamais** dans le chat), teste le provider, propose un premier Kin.
+- **Demo idea (§5 #2) :** GIF/vidéo ~30s — fresh install → 3 écrans rapides → Queenie salue, demande une clé via popup sécurisée (le secret n'apparaît **jamais** dans le chat), teste le provider, propose un premier Agent.
 - Pourquoi héros + proéminent : le plus fort effet « wow, je peux faire ça sans terminal » ; différenciateur d'adoption grand public **unique sur le marché self-hosted**. CTA primaire dupliqué ici (la démo donne envie d'installer).
 
 ---
@@ -258,7 +258,7 @@ Headline de section validée : **« Une base qui grandit avec vous. »**
 │    Postgres/Redis/Mongo/S3                  │ create_mini_app dashboard  ││
 │  • Custom tools multi-langage + renderers   │ → 50+ composants rendus →  ││
 │    React themés                             │ "Improve this" en langage  ││
-│  • Mini-apps intégrées (SDK + 50 compos.)   │ naturel → le Kin édite →   ││
+│  • Mini-apps intégrées (SDK + 50 compos.)   │ naturel → le Agent édite →   ││
 │  • Plugins NPM via SDK typé + marketplace   │ reload instantané          ││
 │  • MCP dynamique · toolboxes                │                            ││
 │                                             └──────────────────────────┘│
@@ -266,7 +266,7 @@ Headline de section validée : **« Une base qui grandit avec vous. »**
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Demo idea (§5 #5 + #6 fusionnés) :** créer un tool météo Python en live → ajouter un `renderer.tsx` → résultat en carte themée au lieu de JSON brut (avant/après). Puis `create_mini_app` template dashboard → 50+ composants, dark mode toggle côté parent → re-render instantané ; « Improve this » en langage naturel → le Kin édite → reload.
+- **Demo idea (§5 #5 + #6 fusionnés) :** créer un tool météo Python en live → ajouter un `renderer.tsx` → résultat en carte themée au lieu de JSON brut (avant/après). Puis `create_mini_app` template dashboard → 50+ composants, dark mode toggle côté parent → re-render instantané ; « Improve this » en langage naturel → le Agent édite → reload.
 - Pourquoi héros : le récit rare « la plateforme grandit de l'intérieur » ; le saut au-delà des « artifacts », très visuel ; parle aux devs/tinkerers.
 
 ---
@@ -294,7 +294,7 @@ Headline de section validée : **« Transparent par conception. »**
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Demo idea (§5 #7 + #8 fusionnés) :** inspect Network — le POST du secret va UI→serveur→vault chiffré ; la réponse au LLM ne contient qu'un `valid=true` (schéma vault AES-256-GCM). Puis le **Context Viewer** : barre stacked multicolore (système/mémoires/messages/outils), breakdown par section, panel cache Anthropic (hit rate, TTL), calibration EMA per-Kin.
+- **Demo idea (§5 #7 + #8 fusionnés) :** inspect Network — le POST du secret va UI→serveur→vault chiffré ; la réponse au LLM ne contient qu'un `valid=true` (schéma vault AES-256-GCM). Puis le **Context Viewer** : barre stacked multicolore (système/mémoires/messages/outils), breakdown par section, panel cache Anthropic (hit rate, TTL), calibration EMA per-Agent.
 - Cadrage budget validé : **« vous maîtrisez vos coûts »**, jamais « voici la facture » (cf. risque §9 stratégie).
 - Pourquoi héros : argument de confiance unique, parle aux privacy-conscious et budget-conscious ; personne grand public n'expose ça.
 
@@ -316,14 +316,14 @@ Grille de cartes compactes (1 ligne / 1 visuel mini / 1 lien). Reprend les « se
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘          │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐          │
 │  │📥 Comptes    │ │📲 PWA       │ │🧩 Mini-apps │ │📊 Transpar. │          │
-│  │connectés    │ │installable  │ │par vos Kins │ │tokens live  │          │
+│  │connectés    │ │installable  │ │par vos Agents │ │tokens live  │          │
 │  │mail/cal     │ │             │ │→ /platform  │ │→ /security  │          │
 │  │→ /security  │ │→ /interface │ │             │ │             │          │
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘          │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- Visuels mini : galerie de 6 avatars de Kins ; palette switcher (déjà montré, ici en vignette) ; capture Kanban ; mini-démo transfert de canal (badge qui change).
+- Visuels mini : galerie de 6 avatars de Agents ; palette switcher (déjà montré, ici en vignette) ; capture Kanban ; mini-démo transfert de canal (badge qui change).
 
 ---
 
@@ -345,7 +345,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 │  Session continue unique (pas de "new chat")  ✅        ❌             │
 │  Collaboration inter-agents + sous-agents     ✅        ⚠️ / ❌        │
 │  1 conteneur, zéro infra externe              ✅        ❌ lourd       │
-│  Onboarding conversationnel (zéro YAML)        ✅ Sherpa  ❌            │
+│  Onboarding conversationnel (zéro YAML)        ✅ Queenie  ❌            │
 │  Vault secrets jamais exposé au LLM            ✅        ❌             │
 │  Transparence tokens/contexte fine             ✅        ❌            │
 │                                                                        │
@@ -396,19 +396,19 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
   2. **Agents persistants** (héros : collaboration ; mémoire) → lien `/features/agents`.
   3. **Plateforme self-improving** (héros : custom tools+renderers ; mini-apps) → `/features/platform`.
   4. **Interface** (héros : UI/palettes ; avatars en preuve) → `/features/interface`.
-  5. **Onboarding Sherpa** (héros : Sherpa) → `/quickstart`.
+  5. **Onboarding Queenie** (héros : Queenie) → `/quickstart`.
   6. **Omnicanal** (héros : transfert de canal — section pleine largeur ici) → `/features/channels`.
   7. **Confiance** (héros : vault ; transparence tokens — sections pleine largeur ici) → `/features/security`.
   8. **Automation** (crons/webhooks/HITL/scout) → `/features/automation`.
   9. CTA quickstart.
 
 > **Répartition home vs /features des 8 héros :**
-> - Home (pleine largeur) : 1-Collaboration+Mémoire · 2-Sherpa · 3-UI belle · 4-Self-improving (tools+mini-apps) · 5-Vault+Transparence.
+> - Home (pleine largeur) : 1-Collaboration+Mémoire · 2-Queenie · 3-UI belle · 4-Self-improving (tools+mini-apps) · 5-Vault+Transparence.
 > - `/features` (pleine largeur) : **les 8** — soit les 5 ci-dessus **plus** Omnicanal+transfert de canal, Mini-apps (section dédiée détachée de la fusion home), Transparence tokens (section dédiée détachée du vault). Les sous-pages-piliers reprennent ensuite chaque héros en profondeur.
 
 #### `/features/agents` (Pilier 1)
 - **But :** prouver « équipe persistante qui se souvient ». **Audience :** power-users, privacy, futures équipes.
-- **Sections :** Session continue unique · Mémoire hybride (sqlite-vec KNN + FTS5, RRF, recall/memorize/forget) · Sous-Kins await/async · Inter-Kin request/reply (rate-limited, correlation IDs) · Compacting sans suppression · Registre de contacts partagé · Queue FIFO priorité utilisateur · Browser stateful (14 outils). CTA quickstart.
+- **Sections :** Session continue unique · Mémoire hybride (sqlite-vec KNN + FTS5, RRF, recall/memorize/forget) · Sous-Agents await/async · Inter-Agent request/reply (rate-limited, correlation IDs) · Compacting sans suppression · Registre de contacts partagé · Queue FIFO priorité utilisateur · Browser stateful (14 outils). CTA quickstart.
 - **Wireframe :** non-héros (page texte+capture standard) — réutilise la démo collaboration/mémoire de la home en tête.
 
 #### `/features/platform` (Pilier 2)
@@ -421,7 +421,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 #### `/features/channels` (Pilier 5)
 - **But :** « vos agents partout » + différencier vs OpenClaw (PWA multi-user + transfert temps réel). **Audience :** power-users, mobiles, futures équipes.
-- **Sections :** Grille 6 logos (Telegram/WhatsApp/Slack/Discord/Signal/Matrix) · Transfert de canal temps réel (`transfer_channel`, contexte de handoff) · Envoi inter-Kin (préfixe d'identité) · Chaîne de causalité (`channelOriginId`) · Statuts de livraison · PWA comme 7ᵉ canal.
+- **Sections :** Grille 6 logos (Telegram/WhatsApp/Slack/Discord/Signal/Matrix) · Transfert de canal temps réel (`transfer_channel`, contexte de handoff) · Envoi inter-Agent (préfixe d'identité) · Chaîne de causalité (`channelOriginId`) · Statuts de livraison · PWA comme 7ᵉ canal.
 - **Héros pleine largeur ici** — wireframe :
 
 ```
@@ -438,15 +438,15 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 │  • Chaîne de causalité (livraison auto)     └──────────────────────────┘│
 └──────────────────────────────────────────────────────────────────────┘
 ```
-- **Demo idea (§5 #4) :** user écrit sur Telegram « parle-moi crypto » → le Kin généraliste appelle `transfer_channel` → le badge change en direct, le spécialiste reprend avec le contexte du handoff. Montrer la grille des 6 logos.
+- **Demo idea (§5 #4) :** user écrit sur Telegram « parle-moi crypto » → le Agent généraliste appelle `transfer_channel` → le badge change en direct, le spécialiste reprend avec le contexte du handoff. Montrer la grille des 6 logos.
 
 #### `/features/automation`
 - **But :** orchestration autonome. **Audience :** power-users, devs.
-- **Sections :** Crons (POSIX/ISO8601, one-shot, approbation des crons créés par Kin) · Cron learnings · Webhooks (token SHA256, filtres, templates) · Human-in-the-loop (`prompt_human`) · Scout (délégation read-only modèle cheap) · Tasks (queue globale, snapshots gelés). Renvoi honnête vers `/roadmap` pour l'UI d'approbation des crons (pas finalisée 1.0).
+- **Sections :** Crons (POSIX/ISO8601, one-shot, approbation des crons créés par Agent) · Cron learnings · Webhooks (token SHA256, filtres, templates) · Human-in-the-loop (`prompt_human`) · Scout (délégation read-only modèle cheap) · Tasks (queue globale, snapshots gelés). Renvoi honnête vers `/roadmap` pour l'UI d'approbation des crons (pas finalisée 1.0).
 
 #### `/features/security` (Pilier + confiance)
 - **But :** souveraineté + zéro surprise de coûts. **Audience :** privacy-conscious, budget-conscious.
-- **Sections :** Vault AES-256-GCM jamais au LLM · Secure input UI→vault · Références `$vault:` · Redaction bloquant le compacting · Comptes connectés (OAuth/IMAP/CalDAV, tokens jamais vus par les Kins, mode approbation d'envoi) · Transparence tokens (Context Viewer, double barre, cache live, calibration EMA) · Multi-user isolé.
+- **Sections :** Vault AES-256-GCM jamais au LLM · Secure input UI→vault · Références `$vault:` · Redaction bloquant le compacting · Comptes connectés (OAuth/IMAP/CalDAV, tokens jamais vus par les Agents, mode approbation d'envoi) · Transparence tokens (Context Viewer, double barre, cache live, calibration EMA) · Multi-user isolé.
 - **Héros pleine largeur ici** (vault + transparence, mêmes démos que la home §[7], développées).
 
 ---
@@ -463,10 +463,10 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 ### `/quickstart`
 - **But :** convertir en installation en 2 minutes. **Audience :** homelabbers (cœur de cible).
-- **Sections :** Prérequis (Docker, une clé LLM) · `docker run` copiable (bloc unique, bouton copier) · « ouvrez votre navigateur » · passage de relais à Sherpa (3 écrans → chat, secrets via popup sécurisée) · capture chat+sidebar · variantes (docker-compose, env vars vers `/docs`) · prochaine étape « créez votre premier Kin avec Sherpa ». CTA secondaire vers `/docs`.
+- **Sections :** Prérequis (Docker, une clé LLM) · `docker run` copiable (bloc unique, bouton copier) · « ouvrez votre navigateur » · passage de relais à Queenie (3 écrans → chat, secrets via popup sécurisée) · capture chat+sidebar · variantes (docker-compose, env vars vers `/docs`) · prochaine étape « créez votre premier Agent avec Queenie ». CTA secondaire vers `/docs`.
 
 ### `/showcase`
-- **But :** preuve sociale + inspiration (ce que les Kins construisent). **Audience :** devs, curieux. 
+- **But :** preuve sociale + inspiration (ce que les Agents construisent). **Audience :** devs, curieux. 
 - **Sections :** Galerie mini-apps (dashboards, Kanban, charts — clonables) · Custom tools communautaires avec renderers · Captures UI à travers plusieurs palettes/light-dark · « Construit avec Hivekeep ». Lien `/community` pour contribuer.
 
 ### `/roadmap` — la page qui assume les ~80%
@@ -475,11 +475,11 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 - **Sections :**
   1. **« Où en est Hivekeep : ~80%, et on vous dit où sont les arêtes. »** Promesse d'honnêteté.
   2. **Maturité par domaine** (tableau 3 niveaux, repris du catalogue) :
-     - *Solide / production-ready* : runtime core, compacting, mémoire (cœur), inter-Kin, sous-Kins, prompt builder + cache, custom tools, MCP, UI/design system (1289 tests), mini-apps (cœur), comptes connectés (e2e), vault, transparence tokens, channels, plateforme power-user, toolboxes.
+     - *Solide / production-ready* : runtime core, compacting, mémoire (cœur), inter-Agent, sous-Agents, prompt builder + cache, custom tools, MCP, UI/design system (1289 tests), mini-apps (cœur), comptes connectés (e2e), vault, transparence tokens, channels, plateforme power-user, toolboxes.
      - *Stable mais récent* : scout, hooks lifecycle plugins, enrichment agent.
-     - *Partiel / prompt-dependent* : modale OnboardingChatModal de Sherpa (posture data-driven dépend du prompt-tuning).
-  3. **Rough edges assumés (honnêtes, pas exhaustifs-anxiogènes)** : résolution captcha HITL manuelle ; glass morphism coûteux sur Android mid-range ; SW hand-coded ; `memories_vec` sync manuel ; bloc contacts/notes non borné en tokens ; UI d'approbation des crons Kin non finalisée 1.0 ; channel origins immatures ; pas de sandboxing VM des plugins (trust model npm/git admin-approved) ; Kanban mobile single-column ; emails en polling (pas de push). Chaque item formulé en « connu, documenté, sur la roadmap ».
-  4. **Priorités post-1.0** (reprend les 6 reco du catalogue) : profiler glass morphism Android + fallback transparency · générer le CSS soft-contrast · migrer SW vers Workbox · audit a11y tiers · mémoire (trigger-sync `memories_vec`, borner contacts/notes, setter redactPending) · finaliser UI approbation crons + modale Sherpa.
+     - *Partiel / prompt-dependent* : modale OnboardingChatModal de Queenie (posture data-driven dépend du prompt-tuning).
+  3. **Rough edges assumés (honnêtes, pas exhaustifs-anxiogènes)** : résolution captcha HITL manuelle ; glass morphism coûteux sur Android mid-range ; SW hand-coded ; `memories_vec` sync manuel ; bloc contacts/notes non borné en tokens ; UI d'approbation des crons Agent non finalisée 1.0 ; channel origins immatures ; pas de sandboxing VM des plugins (trust model npm/git admin-approved) ; Kanban mobile single-column ; emails en polling (pas de push). Chaque item formulé en « connu, documenté, sur la roadmap ».
+  4. **Priorités post-1.0** (reprend les 6 reco du catalogue) : profiler glass morphism Android + fallback transparency · générer le CSS soft-contrast · migrer SW vers Workbox · audit a11y tiers · mémoire (trigger-sync `memories_vec`, borner contacts/notes, setter redactPending) · finaliser UI approbation crons + modale Queenie.
   5. **Vision** : familles/petites équipes en expansion post-1.0 (collaboration partagée), marketplace de plugins.
   6. CTA : « Contribuez → `/community` » + « Suivez les releases → `/changelog` ».
 
@@ -498,7 +498,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 - **Nav :** Features · Why Hivekeep · Docs · Roadmap · ★GitHub + CTA primaire. Reste en footer. **Roadmap promu en nav** = signal de confiance.
 - **CTA :** un primaire unique « Démarrer en 2 min » → `/quickstart`, secondaire « Voir la démo », tertiaire « Star on GitHub ». Un seul CTA rempli par pli.
-- **Home :** ordre = pilier order validé, **5 sections héros pleine largeur** (Collaboration+Mémoire · Sherpa · UI · Self-improving · Vault+Transparence), Sherpa **proéminent** (CTA dupliqué), UI/polish **présenté tôt**.
+- **Home :** ordre = pilier order validé, **5 sections héros pleine largeur** (Collaboration+Mémoire · Queenie · UI · Self-improving · Vault+Transparence), Queenie **proéminent** (CTA dupliqué), UI/polish **présenté tôt**.
 - **Les 8 héros :** 5 en pleine largeur sur la home ; **les 8** en pleine largeur sur `/features` (ajout : Omnicanal+transfert, Mini-apps détachée, Transparence tokens détachée). Les 6 « preuves légères » (avatars, palettes, projets/Kanban, crons, comptes connectés, PWA) en bande de cartes + sous-pages.
 - **Comparatif :** framé sur la catégorie **agents autonomes** ; encart explicite « les fronts de chat ne sont pas la bonne comparaison » ; 6 lignes sur la home, tableau complet sur `/why-hivekeep` ; émergents en veille interne.
 - **`/roadmap` :** assume les ~80% par domaine + rough edges honnêtes + priorités post-1.0, cadré « connu et documenté » — cohérent avec le ton honnête et la cible homelab.

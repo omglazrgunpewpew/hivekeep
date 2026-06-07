@@ -16,7 +16,7 @@ export interface EmailAccount {
   capabilities: string[]
   /** Email send mode when the account serves email; null otherwise. */
   sendMode: 'direct' | 'approval' | null
-  allowedKinIds: string[] | null
+  allowedAgentIds: string[] | null
   isValid: boolean
   lastError: string | null
 }

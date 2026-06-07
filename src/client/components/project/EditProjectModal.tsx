@@ -29,7 +29,7 @@ import { getErrorMessage } from '@/client/lib/api'
 import { configToChoice, choiceToConfig, type ThinkingChoice } from '@/client/lib/thinking-choice'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
-import type { Project, KinThinkingConfig } from '@/shared/types'
+import type { Project, AgentThinkingConfig } from '@/shared/types'
 
 interface EditProjectModalProps {
   open: boolean
@@ -45,7 +45,7 @@ interface EditProjectModalProps {
     providerId?: string | null
     scoutModel?: string | null
     scoutProviderId?: string | null
-    thinkingConfig?: KinThinkingConfig | null
+    thinkingConfig?: AgentThinkingConfig | null
     defaultToolboxIds?: string[] | null
   }) => Promise<unknown>
   onDelete: () => Promise<void>
@@ -280,7 +280,7 @@ export function EditProjectModal({ open, onOpenChange, project, onSave, onDelete
         </FormField>
 
         {/* Default scout model for tasks on this project's tickets.
-            Empty = inherit the global scout default, then the Kin's model. */}
+            Empty = inherit the global scout default, then the Agent's model. */}
         <FormField label={t('projects.edit.scoutModelField')} hint={t('projects.edit.scoutModelHint')}>
           <ModelPicker
             models={llmModels}

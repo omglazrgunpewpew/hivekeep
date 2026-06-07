@@ -232,7 +232,7 @@ describe('validateManifest', () => {
       version: '1.0.0',
       description: 'Test',
       main: 'index.ts',
-      permissions: ['http:api.example.com', 'http:*', 'storage', 'cards', 'vault', 'cron', 'kins'],
+      permissions: ['http:api.example.com', 'http:*', 'storage', 'cards', 'vault', 'cron', 'agents'],
     })
     expect(result.valid).toBe(true)
   })
@@ -439,7 +439,7 @@ describe('validatePluginExports', () => {
     const { valid, errors } = validatePluginExports({
       tools: {
         my_tool: {
-          availability: ['main', 'sub-kin'],
+          availability: ['main', 'sub-agent'],
           create: () => ({}),
         },
       },

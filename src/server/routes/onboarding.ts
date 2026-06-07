@@ -197,7 +197,7 @@ onboardingRoutes.post('/profile', async (c) => {
   }, 201)
 })
 
-// POST /api/onboarding/configurator — seed the configurator Kin (Sherpa) bound
+// POST /api/onboarding/configurator — seed the configurator Agent (Queenie) bound
 // to the bootstrap LLM provider. Admin-only, idempotent. Called by the
 // onboarding flow right after the first LLM provider is connected.
 onboardingRoutes.post('/configurator', async (c) => {
@@ -228,15 +228,15 @@ onboardingRoutes.post('/configurator', async (c) => {
   }
 
   try {
-    const { seedConfiguratorKin } = await import('@/server/services/configurator')
-    const kin = await seedConfiguratorKin(session.user.id, providerId)
+    const { seedConfiguratorAgent } = await import('@/server/services/configurator')
+    const agent = await seedConfiguratorAgent(session.user.id, providerId)
     return c.json({
-      kin: kin
-        ? { id: kin.id, slug: kin.slug, name: kin.name, kind: kin.kind }
+      agent: agent
+        ? { id: agent.id, slug: agent.slug, name: agent.name, kind: agent.kind }
         : null,
     }, 201)
   } catch (err) {
-    log.error({ providerId, err }, 'Failed to seed configurator Kin')
+    log.error({ providerId, err }, 'Failed to seed configurator Agent')
     return c.json({ error: { code: 'SEED_FAILED', message: 'Failed to create the configurator assistant' } }, 500)
   }
 })

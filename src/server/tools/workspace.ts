@@ -1,8 +1,8 @@
 /**
  * Workspace resolution for native tools.
  *
- * Today's default: each Kin has a static workspace at
- *   `<config.workspace.baseDir>/<kinId>/`
+ * Today's default: each Agent has a static workspace at
+ *   `<config.workspace.baseDir>/<agentId>/`
  *
  * Sub-tickets 3/4 layer a per-task override on top: when a sub-task runs
  * against a ticket whose project has a ready GitHub clone, the engine
@@ -24,7 +24,7 @@ import type { ToolExecutionContext } from '@/server/tools/types'
 /** Absolute path tools should treat as the cwd / workspace root. */
 export function resolveToolWorkspace(ctx: ToolExecutionContext): string {
   if (ctx.workspaceOverride?.path) return ctx.workspaceOverride.path
-  return resolve(config.workspace.baseDir, ctx.kinId)
+  return resolve(config.workspace.baseDir, ctx.agentId)
 }
 
 /**

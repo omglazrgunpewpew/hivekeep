@@ -1,6 +1,6 @@
 ---
 title: Signal
-description: Connect your Kin to Signal using signal-cli.
+description: Connect your Agent to Signal using signal-cli.
 ---
 
 Signal integration uses the [signal-cli REST API](https://github.com/bbernhard/signal-cli-rest-api) as a bridge between Hivekeep and the Signal protocol.
@@ -34,7 +34,7 @@ You need a running instance of **signal-cli-rest-api** with a registered phone n
 
 ## How It Works
 
-- **Inbound:** Hivekeep receives messages via signal-cli's webhook/polling mechanism. The adapter extracts text, attachments, and sender info, routing them to the Kin.
+- **Inbound:** Hivekeep receives messages via signal-cli's webhook/polling mechanism. The adapter extracts text, attachments, and sender info, routing them to the Agent.
 - **Outbound:** Messages are sent via the signal-cli REST API. Long messages (>2,000 chars) are split. Attachments are uploaded as base64.
 
 ## Features

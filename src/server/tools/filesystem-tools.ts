@@ -79,7 +79,7 @@ export function resolveAndValidate(inputPath: string, workspace: string): string
 // ── read_file ──────────────────────────────────────────────
 
 export const readFileTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   readOnly: true,
   concurrencySafe: true,
   create: (ctx) =>
@@ -123,7 +123,7 @@ export const readFileTool: ToolRegistration = {
                 const selectedLines = allLines.slice(startLine - 1, endLine)
                 const content = selectedLines.join('\n')
 
-                log.info({ kinId: ctx.kinId, path: filePath, totalLines, startLine, endLine, pages: pdf.numpages }, 'PDF text extracted')
+                log.info({ agentId: ctx.agentId, path: filePath, totalLines, startLine, endLine, pages: pdf.numpages }, 'PDF text extracted')
 
                 const dup = noteReadFile(ctx.taskId, filePath, { offset, limit })
                 recordReadPath(ctx.taskId, filePath)
@@ -171,7 +171,7 @@ export const readFileTool: ToolRegistration = {
           const content = selectedLines.join('\n')
           const language = detectLanguage(absPath)
 
-          log.info({ kinId: ctx.kinId, path: filePath, totalLines, startLine, endLine }, 'File read')
+          log.info({ agentId: ctx.agentId, path: filePath, totalLines, startLine, endLine }, 'File read')
 
           const dup = noteReadFile(ctx.taskId, filePath, { offset, limit })
           recordReadPath(ctx.taskId, filePath)
@@ -206,7 +206,7 @@ export const readFileTool: ToolRegistration = {
 // ── write_file ─────────────────────────────────────────────
 
 export const writeFileTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   create: (ctx) =>
     tool({
       description:
@@ -249,7 +249,7 @@ export const writeFileTool: ToolRegistration = {
           const bytes = Buffer.byteLength(content, 'utf-8')
           const language = detectLanguage(absPath)
 
-          log.info({ kinId: ctx.kinId, path: filePath, bytes, created }, 'File written')
+          log.info({ agentId: ctx.agentId, path: filePath, bytes, created }, 'File written')
 
           return {
             success: true,
@@ -270,7 +270,7 @@ export const writeFileTool: ToolRegistration = {
 // ── edit_file ──────────────────────────────────────────────
 
 export const editFileTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   create: (ctx) =>
     tool({
       description:
@@ -334,7 +334,7 @@ export const editFileTool: ToolRegistration = {
           const language = detectLanguage(absPath)
 
           log.info(
-            { kinId: ctx.kinId, path: filePath, replacementCount: replaceAll ? occurrences : 1 },
+            { agentId: ctx.agentId, path: filePath, replacementCount: replaceAll ? occurrences : 1 },
             'File edited',
           )
 
@@ -451,7 +451,7 @@ function listDir(
 }
 
 export const listDirectoryTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   readOnly: true,
   concurrencySafe: true,
   create: (ctx) =>
@@ -492,7 +492,7 @@ export const listDirectoryTool: ToolRegistration = {
             0,
           )
 
-          log.info({ kinId: ctx.kinId, path: dirPath ?? '.', entryCount: entries.length }, 'Directory listed')
+          log.info({ agentId: ctx.agentId, path: dirPath ?? '.', entryCount: entries.length }, 'Directory listed')
 
           return {
             success: true,

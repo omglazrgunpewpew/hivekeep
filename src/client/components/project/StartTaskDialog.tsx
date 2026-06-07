@@ -4,7 +4,7 @@ import { api, getErrorMessage } from '@/client/lib/api'
 import { FormDialog } from '@/client/components/common/FormDialog'
 import { FormField } from '@/client/components/common/FormField'
 import { Textarea } from '@/client/components/ui/textarea'
-import { KinSelector } from '@/client/components/common/KinSelector'
+import { AgentSelector } from '@/client/components/common/AgentSelector'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ThinkingEffortSelect } from '@/client/components/common/ThinkingEffortSelect'
@@ -14,7 +14,7 @@ import { useModels } from '@/client/hooks/useModels'
 import { choiceToConfig, type ThinkingChoice } from '@/client/lib/thinking-choice'
 import { toast } from 'sonner'
 
-interface KinFromApi {
+interface AgentFromApi {
   id: string
   name: string
   role?: string
@@ -36,13 +36,13 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
   const { startTicketTask } = useTickets(projectId)
   const { toolboxes } = useToolboxes()
   const { llmModels, isLoading: modelsLoading } = useModels()
-  const [kins, setKins] = useState<KinFromApi[]>([])
-  const [selectedKinId, setSelectedKinId] = useState<string>('')
+  const [agents, setAgents] = useState<AgentFromApi[]>([])
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('')
   const [runPrompt, setRunPrompt] = useState('')
   const [selectedToolboxIds, setSelectedToolboxIds] = useState<string[]>([])
   // Model + effort overrides. Both default to "inherit" (empty model / 'inherit'
   // choice) so an unset picker changes nothing — resolution falls back to the
-  // project default, then the Kin.
+  // project default, then the Agent.
   const [model, setModel] = useState('')
   const [providerId, setProviderId] = useState('')
   const [thinkingChoice, setThinkingChoice] = useState<ThinkingChoice>('inherit')
@@ -52,13 +52,13 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
     if (!open) return
     let cancelled = false
     api
-      .get<{ kins: KinFromApi[] }>('/kins')
+      .get<{ agents: AgentFromApi[] }>('/agents')
       .then((data) => {
         if (cancelled) return
-        setKins(data.kins)
-        // Pre-select first Kin that has this project as active
-        const match = data.kins.find((k) => k.activeProjectId === projectId)
-        setSelectedKinId(match?.id ?? data.kins[0]?.id ?? '')
+        setAgents(data.agents)
+        // Pre-select first Agent that has this project as active
+        const match = data.agents.find((k) => k.activeProjectId === projectId)
+        setSelectedAgentId(match?.id ?? data.agents[0]?.id ?? '')
       })
       .catch(() => undefined)
     return () => {
@@ -95,7 +95,7 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
   }, [open, toolboxes])
 
   async function handleSubmit() {
-    if (!selectedKinId) return
+    if (!selectedAgentId) return
     setSubmitting(true)
     try {
       // model + providerId are coupled — send only when both are set.
@@ -106,7 +106,7 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
         thinkingChoice === 'inherit' ? undefined : (choiceToConfig(thinkingChoice) ?? undefined)
       await startTicketTask(
         ticketId,
-        selectedKinId,
+        selectedAgentId,
         runPrompt.trim() || undefined,
         selectedToolboxIds.length > 0 ? selectedToolboxIds : undefined,
         modelOverride,
@@ -121,15 +121,15 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
     }
   }
 
-  // Sort kins so the project-active one (if any) appears first
-  const sortedKins = [...kins].sort((a, b) => {
+  // Sort agents so the project-active one (if any) appears first
+  const sortedAgents = [...agents].sort((a, b) => {
     const aActive = a.activeProjectId === projectId ? 1 : 0
     const bActive = b.activeProjectId === projectId ? 1 : 0
     return bActive - aActive
   })
 
-  // KinSelector expects KinOption[] — our API shape is already compatible (id/name/role/avatarUrl)
-  const kinOptions = sortedKins.map((k) => ({
+  // AgentSelector expects AgentOption[] — our API shape is already compatible (id/name/role/avatarUrl)
+  const agentOptions = sortedAgents.map((k) => ({
     id: k.id,
     name: k.activeProjectId === projectId ? `${k.name} · ${t('projects.startTask.activeOnProject')}` : k.name,
     role: k.role,
@@ -148,15 +148,15 @@ export function StartTaskDialog({ open, onOpenChange, ticketId, projectId }: Sta
       size="lg"
       onSubmit={handleSubmit}
       isSubmitting={submitting}
-      submitDisabled={!selectedKinId || runPromptOverLimit}
+      submitDisabled={!selectedAgentId || runPromptOverLimit}
       submitLabel={t('projects.startTask.start')}
     >
-      <FormField label={t('projects.startTask.kinField')}>
-        <KinSelector
-          value={selectedKinId}
-          onValueChange={setSelectedKinId}
-          kins={kinOptions}
-          placeholder={t('projects.startTask.kinPlaceholder')}
+      <FormField label={t('projects.startTask.agentField')}>
+        <AgentSelector
+          value={selectedAgentId}
+          onValueChange={setSelectedAgentId}
+          agents={agentOptions}
+          placeholder={t('projects.startTask.agentPlaceholder')}
         />
       </FormField>
 

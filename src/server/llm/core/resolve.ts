@@ -61,7 +61,7 @@ async function findModelInProvider(
 export async function resolveLLM(opts: ResolveOptions): Promise<ResolvedLLM> {
   const { modelId, providerId } = opts
 
-  // Preferred provider path. Accept UUID or slug — Kins prefer the slug
+  // Preferred provider path. Accept UUID or slug — Agents prefer the slug
   // because it's stable across renames and far easier to express in a tool call.
   if (providerId) {
     const row = db

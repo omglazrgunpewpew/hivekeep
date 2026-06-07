@@ -1,6 +1,6 @@
 # Hivekeep — Email accounts
 
-Connect email accounts so Kins can **read** (list / read / search) and **send**
+Connect email accounts so Agents can **read** (list / read / search) and **send**
 mail. Built-ins ship **Gmail** and **Microsoft / Outlook** (OAuth) plus a generic
 **IMAP / SMTP** provider (host/port/password); email is a first-class, pluggable
 **provider family** — adding Proton or any other provider later is one
@@ -17,7 +17,7 @@ An email account is a row in the `providers` table with capability `email`
 | `name` | label (defaults to the address) |
 | `slug` | stable id used by tools (`gmail-perso`, `gmail-pro`) |
 | `capabilities` | `["email"]` |
-| `config_encrypted` | OAuth: `{ email_address, refresh_token, scopes, … }` · non-OAuth: `{ email_address, credentials, … }` (+ `send_mode`, `allowed_kin_ids`) |
+| `config_encrypted` | OAuth: `{ email_address, refresh_token, scopes, … }` · non-OAuth: `{ email_address, credentials, … }` (+ `send_mode`, `allowed_agent_ids`) |
 
 Multi-account falls out for free: several rows of the same `type`. Credentials
 never leave the encrypted config — the tools resolve an account, inject a fresh
@@ -93,24 +93,24 @@ toolbox:
 
 | Tool | Flags | |
 |---|---|---|
-| `list_email_accounts` | readOnly, concurrencySafe | accounts this Kin may use |
+| `list_email_accounts` | readOnly, concurrencySafe | accounts this Agent may use |
 | `list_emails` | readOnly | folder listing (summaries) |
 | `read_email` | readOnly | full message by id |
 | `search_emails` | readOnly | structured filters or `raw` provider query |
 | `send_email` | destructive | send / reply in-thread, with attachments (workspace paths) |
 | `download_email_attachment` | — | save an attachment to the workspace |
 
-Each calls `resolveEmailProvider({ slug?, kinId })`: explicit slug → default
+Each calls `resolveEmailProvider({ slug?, agentId })`: explicit slug → default
 (`app_settings.default_email_provider_id`) → first valid; enforces the
-per-account allow-list against the calling Kin; injects a fresh access token.
+per-account allow-list against the calling Agent; injects a fresh access token.
 
 ## Per-account settings
 
 - **`send_mode`** (`direct` | `approval`) — `direct` sends immediately;
   `approval` queues the message in `pending_email_sends` + a notification, and the
   user approves (→ actually sends) or rejects it in Settings → Email accounts.
-- **`allowed_kin_ids`** — `null`/empty = global (any Kin with the `email`
-  toolbox); a non-empty list restricts the account to those Kins.
+- **`allowed_agent_ids`** — `null`/empty = global (any Agent with the `email`
+  toolbox); a non-empty list restricts the account to those Agents.
 
 ## UI
 

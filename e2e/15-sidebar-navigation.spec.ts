@@ -7,7 +7,7 @@ import { loginAs, mockProviderModels } from './helpers/auth'
  * Covers:
  * - Sidebar structure (logo, sections, footer)
  * - Tabbed sections (Tasks, Jobs, Apps)
- * - Kins section with create button
+ * - Agents section with create button
  * - Footer elements (version badge, keyboard shortcuts, settings button)
  * - Responsive behavior (mobile viewport)
  */
@@ -18,7 +18,7 @@ test.describe.serial('Sidebar navigation & layout', () => {
     await page.goto('/')
     await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
   test('should display Hivekeep logo in sidebar header', async ({ page }) => {
@@ -30,21 +30,21 @@ test.describe.serial('Sidebar navigation & layout', () => {
     await expect(sidebar.getByText('Hivekeep')).toBeVisible()
   })
 
-  test('should display Kins section with create button', async ({ page }) => {
+  test('should display Agents section with create button', async ({ page }) => {
     const sidebar = page.locator('[data-slot="sidebar"]')
 
-    // Kins group label
-    await expect(sidebar.getByText('Kins', { exact: true })).toBeVisible()
+    // Agents group label
+    await expect(sidebar.getByText('Agents', { exact: true })).toBeVisible()
 
-    // Create Kin button (Plus icon)
+    // Create Agent button (Plus icon)
     const createButton = sidebar.locator('button:has(.lucide-plus)').first()
     await expect(createButton).toBeVisible()
   })
 
-  test('should show Kin created during onboarding', async ({ page }) => {
+  test('should show Agent created during onboarding', async ({ page }) => {
     const sidebar = page.locator('[data-slot="sidebar"]')
 
-    // Onboarding creates a default Kin — "Test Assistant" should appear in the sidebar
+    // Onboarding creates a default Agent — "Test Assistant" should appear in the sidebar
     await expect(sidebar.getByText('Test Assistant')).toBeVisible({ timeout: 5_000 })
   })
 
@@ -150,8 +150,8 @@ test.describe.serial('Sidebar navigation & layout', () => {
     const logoButton = sidebar.locator('button').filter({ hasText: 'Hivekeep' }).first()
     await logoButton.click()
 
-    // Should remain on main page with Kins visible
-    await expect(sidebar.getByText('Kins', { exact: true })).toBeVisible()
+    // Should remain on main page with Agents visible
+    await expect(sidebar.getByText('Agents', { exact: true })).toBeVisible()
   })
 })
 
@@ -175,7 +175,7 @@ test.describe('Sidebar responsive behavior', () => {
 
     // Click trigger to open sidebar
     await sidebarTrigger.click()
-    await expect(sidebar.getByText('Kins', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(sidebar.getByText('Agents', { exact: true })).toBeVisible({ timeout: 5_000 })
   })
 
   test('should show full sidebar on desktop viewport', async ({ page }) => {
@@ -190,7 +190,7 @@ test.describe('Sidebar responsive behavior', () => {
 
     // Wait for app to load — sidebar should be directly visible on desktop
     const sidebar = page.locator('[data-slot="sidebar"]')
-    await expect(sidebar.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(sidebar.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
     await expect(sidebar.getByText('Hivekeep')).toBeVisible()
   })
 })

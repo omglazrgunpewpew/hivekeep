@@ -28,8 +28,8 @@ interface SafeGenerateTextOptions {
   timeoutMs?: number
   /** When set, automatically records token usage with this call site label. */
   callSite?: string
-  /** Kin ID for usage tracking. */
-  kinId?: string | null
+  /** Agent ID for usage tracking. */
+  agentId?: string | null
 }
 
 /**
@@ -40,7 +40,7 @@ interface SafeGenerateTextOptions {
 export async function safeGenerateText(
   options: SafeGenerateTextOptions,
 ): Promise<OneShotResult> {
-  const { resolved, prompt, maxTokens, timeoutMs, callSite, kinId } = options
+  const { resolved, prompt, maxTokens, timeoutMs, callSite, agentId } = options
 
   let timeoutHandle: ReturnType<typeof setTimeout> | null = null
   let signal: AbortSignal | undefined
@@ -74,7 +74,7 @@ export async function safeGenerateText(
         providerType: resolved.providerRow.type,
         providerId: resolved.providerRow.id,
         modelId: resolved.model.id,
-        kinId,
+        agentId,
         usage: {
           inputTokens: result.usage.inputTokens,
           outputTokens: result.usage.outputTokens,

@@ -115,7 +115,7 @@ export async function finalizeTicketSubTaskWorktree(input: FinalizeInput): Promi
   const baseBranch = projectRow.defaultBranch ?? 'main'
 
   // Was a worktree actually created for this task? createWorktree only runs
-  // when cloneStatus was 'ready' at executeSubKin time. Without a worktree
+  // when cloneStatus was 'ready' at executeSubAgent time. Without a worktree
   // there's nothing to finalize.
   if (!(await dirExists(wtPath))) {
     return neutral

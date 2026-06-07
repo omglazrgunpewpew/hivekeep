@@ -19,7 +19,7 @@ if (!apiKey) {
   process.exit(1)
 }
 
-const context = JSON.parse(readFileSync('kin-context.json', 'utf-8'))
+const context = JSON.parse(readFileSync('agent-context.json', 'utf-8'))
 const realSystemPrompt: string = context.system
 const realMessages: Array<{ role: string; content: string }> = context.messages ?? []
 const contextTools: Array<{ name: string; description: string }> = context.tools ?? []

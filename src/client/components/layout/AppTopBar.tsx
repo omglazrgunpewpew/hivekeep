@@ -15,19 +15,19 @@ import { SetupChecklistButton } from '@/client/components/layout/SetupChecklistB
 
 interface AppTopBarProps {
   /** Open a settings section (or the default tab). */
-  onOpenSettings: (section?: string, filters?: { kinId?: string }) => void
+  onOpenSettings: (section?: string, filters?: { agentId?: string }) => void
   /** Open the account dialog. */
   onOpenAccount: () => void
 }
 
 /**
- * Persistent top bar shown across all authenticated pages (Kins, Projets, etc.).
+ * Persistent top bar shown across all authenticated pages (Agents, Projets, etc.).
  *
  * Hosts global actions: brand, SSE indicator, palette/theme toggles, notifications,
  * user menu. Lives at the App.tsx layout level so it doesn't disappear when the
  * user navigates between modes via the ActivityBar.
  *
- * The Kins-specific SidebarTrigger (toggle for the shadcn Sidebar) stays inside
+ * The Agents-specific SidebarTrigger (toggle for the shadcn Sidebar) stays inside
  * ChatPage's local header — it depends on SidebarProvider context which is scoped
  * to that page.
  */
@@ -39,7 +39,7 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
   const { activeTasks } = useTasksContext()
   const activeTaskCount = activeTasks.length
   const hasAwaitingTask = activeTasks.some(
-    (task) => task.status === 'awaiting_human_input' || task.status === 'awaiting_kin_response',
+    (task) => task.status === 'awaiting_human_input' || task.status === 'awaiting_agent_response',
   )
 
   // Mobile mode switch — the left ActivityBar rail is hidden below md, so the
@@ -49,7 +49,7 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
   const sectionPrefixes = ['/projects', '/tasks', '/crons', '/mini-apps']
   const isSection = (prefix: string) => path.startsWith(prefix)
   const modeItems = [
-    { key: 'kins', to: '/', icon: Home, active: !sectionPrefixes.some(isSection), label: t('activityBar.kins'), badge: false },
+    { key: 'agents', to: '/', icon: Home, active: !sectionPrefixes.some(isSection), label: t('activityBar.agents'), badge: false },
     { key: 'projects', to: '/projects', icon: FolderKanban, active: isSection('/projects'), label: t('activityBar.projects'), badge: false },
     { key: 'tasks', to: '/tasks', icon: ListTodo, active: isSection('/tasks'), label: t('activityBar.tasks'), badge: true },
     { key: 'crons', to: '/crons', icon: CalendarClock, active: isSection('/crons'), label: t('activityBar.crons'), badge: false },
@@ -70,11 +70,11 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
         <HivekeepLogo size={28} withWordmark wordmarkClassName="hidden sm:inline" title={null} />
       </button>
 
-      {/* Mobile mode switch (Kins / Projects) — replaces the hidden ActivityBar
+      {/* Mobile mode switch (Agents / Projects) — replaces the hidden ActivityBar
           rail below md. Icon-only segmented control to stay compact. */}
       <nav
         className="flex shrink-0 items-center gap-0.5 rounded-lg bg-muted/60 p-0.5 md:hidden"
-        aria-label={t('activityBar.kins')}
+        aria-label={t('activityBar.agents')}
       >
         {modeItems.map((item) => {
           const Icon = item.icon

@@ -35,7 +35,7 @@ body:
     attributes:
       label: Area
       options:
-        - Kins / Agents
+        - Agents / Agents
         - Memory system
         - Providers
         - Channels (Telegram, Discord, etc.)

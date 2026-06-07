@@ -2,12 +2,12 @@ import { memo, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarImage, AvatarFallback } from '@/client/components/ui/avatar'
 import { cn } from '@/client/lib/utils'
-import type { MentionableUser, MentionableKin } from '@/client/hooks/useMentionables'
+import type { MentionableUser, MentionableAgent } from '@/client/hooks/useMentionables'
 
 export interface MentionItem {
-  type: 'user' | 'kin'
+  type: 'user' | 'agent'
   id: string
-  /** The handle to insert (pseudonym for users, slug for kins) */
+  /** The handle to insert (pseudonym for users, slug for agents) */
   handle: string
   /** Display name */
   name: string
@@ -17,7 +17,7 @@ export interface MentionItem {
 interface MentionPopoverProps {
   query: string
   users: MentionableUser[]
-  kins: MentionableKin[]
+  agents: MentionableAgent[]
   selectedIndex: number
   position: { top: number; left: number }
   onSelect: (item: MentionItem) => void
@@ -26,7 +26,7 @@ interface MentionPopoverProps {
 export const MentionPopover = memo(function MentionPopover({
   query,
   users,
-  kins,
+  agents,
   selectedIndex,
   position,
   onSelect,
@@ -54,15 +54,15 @@ export const MentionPopover = memo(function MentionPopover({
       }
     }
 
-    // Filter and map kins
-    for (const k of kins) {
+    // Filter and map agents
+    for (const k of agents) {
       const slug = k.slug ?? k.name.toLowerCase().replace(/\s+/g, '-')
       if (
         slug.toLowerCase().includes(lowerQuery) ||
         k.name.toLowerCase().includes(lowerQuery)
       ) {
         result.push({
-          type: 'kin',
+          type: 'agent',
           id: k.id,
           handle: slug,
           name: k.name,
@@ -72,7 +72,7 @@ export const MentionPopover = memo(function MentionPopover({
     }
 
     return result.slice(0, 8) // Cap at 8 results
-  }, [users, kins, lowerQuery])
+  }, [users, agents, lowerQuery])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -139,7 +139,7 @@ export const MentionPopover = memo(function MentionPopover({
                   : 'bg-chart-4/20 text-chart-4',
               )}
             >
-              {item.type === 'user' ? t('chat.mention.users') : t('chat.mention.kins')}
+              {item.type === 'user' ? t('chat.mention.users') : t('chat.mention.agents')}
             </span>
           </button>
         ))}
@@ -152,14 +152,14 @@ export const MentionPopover = memo(function MentionPopover({
 export function getMentionItemCount(
   query: string,
   users: MentionableUser[],
-  kins: MentionableKin[],
+  agents: MentionableAgent[],
 ): number {
   const lowerQuery = query.toLowerCase()
   let count = 0
   for (const u of users) {
     if (u.pseudonym.toLowerCase().includes(lowerQuery) || u.firstName.toLowerCase().includes(lowerQuery)) count++
   }
-  for (const k of kins) {
+  for (const k of agents) {
     const slug = k.slug ?? k.name.toLowerCase().replace(/\s+/g, '-')
     if (slug.toLowerCase().includes(lowerQuery) || k.name.toLowerCase().includes(lowerQuery)) count++
   }
@@ -171,7 +171,7 @@ export function getMentionItemAt(
   index: number,
   query: string,
   users: MentionableUser[],
-  kins: MentionableKin[],
+  agents: MentionableAgent[],
 ): MentionItem | null {
   const lowerQuery = query.toLowerCase()
   const items: MentionItem[] = []
@@ -181,10 +181,10 @@ export function getMentionItemAt(
       items.push({ type: 'user', id: u.id, handle: u.pseudonym, name: u.firstName, avatarUrl: u.avatarUrl })
     }
   }
-  for (const k of kins) {
+  for (const k of agents) {
     const slug = k.slug ?? k.name.toLowerCase().replace(/\s+/g, '-')
     if (slug.toLowerCase().includes(lowerQuery) || k.name.toLowerCase().includes(lowerQuery)) {
-      items.push({ type: 'kin', id: k.id, handle: slug, name: k.name, avatarUrl: k.avatarUrl })
+      items.push({ type: 'agent', id: k.id, handle: slug, name: k.name, avatarUrl: k.avatarUrl })
     }
   }
 

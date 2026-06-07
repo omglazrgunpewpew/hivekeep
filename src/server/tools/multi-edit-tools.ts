@@ -33,7 +33,7 @@ function detectLanguage(filePath: string): string | undefined {
 // ── multi_edit ────────────────────────────────────────────
 
 export const multiEditTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   create: (ctx) =>
     tool({
       description:
@@ -107,7 +107,7 @@ export const multiEditTool: ToolRegistration = {
           const language = detectLanguage(absPath)
 
           log.info(
-            { kinId: ctx.kinId, path: filePath, editsApplied: edits.length },
+            { agentId: ctx.agentId, path: filePath, editsApplied: edits.length },
             'Multi-edit applied',
           )
 

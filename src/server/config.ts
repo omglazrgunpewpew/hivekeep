@@ -187,7 +187,7 @@ export const config = {
     thresholdPercent: Number(process.env.COMPACTING_THRESHOLD_PERCENT ?? 75),
     /** Keep the most recent messages fitting within this % of the context window as raw context. */
     // Lowered from 40 → 25: with 40% on a 1M context, the keep-window was
-    // 400k tokens — and on tool-heavy Kins (kubectl/browser/file ops), that
+    // 400k tokens — and on tool-heavy Agents (kubectl/browser/file ops), that
     // budget was easily filled by 2-4 huge tool-result messages, leaving
     // compacting unable to reduce the post-summary total below ~600-900k
     // even after force-compacting. 25% gives a 250k keep-window which fits
@@ -199,7 +199,7 @@ export const config = {
     /** Max number of active summaries in context before forcing merge. */
     maxSummaries: Number(process.env.COMPACTING_MAX_SUMMARIES ?? 10),
     /** Max summaries to retain in DB (old archived summaries beyond this are deleted). */
-    maxSummariesPerKin: Number(process.env.COMPACTING_MAX_SUMMARIES_PER_KIN ?? 50),
+    maxSummariesPerAgent: Number(process.env.COMPACTING_MAX_SUMMARIES_PER_KIN ?? 50),
     // ── Absolute token ceilings (model-agnostic) ──────────────────────────────
     // The percentage knobs above scale with the context window, so on a 1M-token
     // model even a "small" 25% keep-window is 250k tokens. These absolute caps
@@ -364,8 +364,8 @@ export const config = {
 
   contacts: {
     /** Bounds for the per-turn "Current speaker" profile block (contact notes
-     *  injected into EVERY Kin's prompt). Without these, a long-lived contact —
-     *  one global note per authoring Kin, plus each note growing as the model
+     *  injected into EVERY Agent's prompt). Without these, a long-lived contact —
+     *  one global note per authoring Agent, plus each note growing as the model
      *  rewrites it — would inflate every prompt unbounded. We keep the most
      *  recently-updated notes per scope and truncate each one. */
     speakerMaxNotesPerScope: Number(process.env.CONTACTS_SPEAKER_MAX_NOTES_PER_SCOPE ?? 12), // 0 = unlimited
@@ -380,17 +380,17 @@ export const config = {
      *  and get_project_knowledge(id). */
     pinCap: Number(process.env.PROJECT_KNOWLEDGE_PIN_CAP ?? 10),
     /** Max titles shipped in the prompt's project-knowledge index. Above
-     *  this, the index renders an "... and N more" footer and the Kin must
+     *  this, the index renders an "... and N more" footer and the Agent must
      *  use search_project_knowledge to surface the rest. */
     maxIndexEntries: Number(process.env.PROJECT_KNOWLEDGE_MAX_INDEX_ENTRIES ?? 100),
     /** Max results returned by search_project_knowledge (used both for the
-     *  Kin tool and the REST endpoint). */
+     *  Agent tool and the REST endpoint). */
     maxSearchResults: Number(process.env.PROJECT_KNOWLEDGE_MAX_SEARCH_RESULTS ?? 10),
   },
 
   queue: {
     userPriority: 100,
-    kinPriority: 50,
+    agentPriority: 50,
     taskPriority: 50,
     pollIntervalMs: Number(process.env.QUEUE_POLL_INTERVAL ?? 500),
   },
@@ -398,8 +398,8 @@ export const config = {
   tasks: {
     maxDepth: Number(process.env.TASKS_MAX_DEPTH ?? 3),
     maxRequestInput: Number(process.env.TASKS_MAX_REQUEST_INPUT ?? 3),
-    maxInterKinRequests: Number(process.env.TASKS_MAX_INTER_KIN_REQUESTS ?? 3),
-    interKinResponseTimeoutMs: Number(process.env.TASKS_INTER_KIN_RESPONSE_TIMEOUT_MS ?? 300000), // 5min
+    maxInterAgentRequests: Number(process.env.TASKS_MAX_INTER_KIN_REQUESTS ?? 3),
+    interAgentResponseTimeoutMs: Number(process.env.TASKS_INTER_KIN_RESPONSE_TIMEOUT_MS ?? 300000), // 5min
     maxConcurrent: Number(process.env.TASKS_MAX_CONCURRENT ?? 10),
   },
 
@@ -444,7 +444,7 @@ export const config = {
     ),
   },
 
-  // Native run_shell tool. The per-call `timeout` arg lets a Kin extend a slow
+  // Native run_shell tool. The per-call `timeout` arg lets a Agent extend a slow
   // command (long test suites, builds, migrations) up to maxTimeoutMs; omitted
   // → defaultTimeoutMs. Raise maxTimeoutMs via env when tasks legitimately need
   // commands longer than the 10-minute default ceiling.
@@ -460,10 +460,10 @@ export const config = {
   },
 
   humanPrompts: {
-    maxPendingPerKin: Number(process.env.HUMAN_PROMPTS_MAX_PENDING ?? 5),
+    maxPendingPerAgent: Number(process.env.HUMAN_PROMPTS_MAX_PENDING ?? 5),
   },
 
-  interKin: {
+  interAgent: {
     maxChainDepth: Number(process.env.INTER_KIN_MAX_CHAIN_DEPTH ?? 5),
     rateLimitPerMinute: Number(process.env.INTER_KIN_RATE_LIMIT ?? 20),
   },
@@ -518,7 +518,7 @@ export const config = {
   },
 
   webhooks: {
-    maxPerKin: Number(process.env.WEBHOOKS_MAX_PER_KIN ?? 20),
+    maxPerAgent: Number(process.env.WEBHOOKS_MAX_PER_KIN ?? 20),
     maxPayloadBytes: Number(process.env.WEBHOOKS_MAX_PAYLOAD_BYTES ?? 1_048_576), // 1MB
     logRetentionDays: Number(process.env.WEBHOOKS_LOG_RETENTION_DAYS ?? 30),
     maxLogsPerWebhook: Number(process.env.WEBHOOKS_MAX_LOGS_PER_WEBHOOK ?? 500),
@@ -526,14 +526,14 @@ export const config = {
   },
 
   channels: {
-    maxPerKin: Number(process.env.CHANNELS_MAX_PER_KIN ?? 5),
+    maxPerAgent: Number(process.env.CHANNELS_MAX_PER_KIN ?? 5),
     telegramWebhookPath: '/api/channels/telegram',
     pendingOriginTtlMs: Number(process.env.CHANNEL_PENDING_ORIGIN_TTL ?? 300_000),
   },
 
   quickSessions: {
     defaultExpirationHours: Number(process.env.QUICK_SESSION_EXPIRATION_HOURS ?? 24),
-    maxActivePerUserPerKin: Number(process.env.QUICK_SESSION_MAX_PER_USER_KIN ?? 1),
+    maxActivePerUserPerAgent: Number(process.env.QUICK_SESSION_MAX_PER_USER_KIN ?? 1),
     retentionDays: Number(process.env.QUICK_SESSION_RETENTION_DAYS ?? 7),
     cleanupIntervalMinutes: Number(process.env.QUICK_SESSION_CLEANUP_INTERVAL ?? 60),
   },
@@ -562,7 +562,7 @@ export const config = {
 
   // Tier 3: stateful, multi-turn browser sessions (browser_open_session etc.)
   // Default: enabled. The browser_* tools are defaultDisabled, so they only
-  // reach a Kin when a granted toolbox lists them by name — sessions cannot be
+  // reach a Agent when a granted toolbox lists them by name — sessions cannot be
   // used by accident. Set BROWSER_SESSIONS_ENABLED=false to disable globally.
   browserSessions: {
     enabled: process.env.BROWSER_SESSIONS_ENABLED !== 'false',
@@ -570,21 +570,21 @@ export const config = {
     ttlMs: Number(process.env.BROWSER_SESSION_TTL_MS ?? 3_600_000),
     /** Auto-close after N ms without any tool call on the session. */
     idleTimeoutMs: Number(process.env.BROWSER_SESSION_IDLE_TIMEOUT_MS ?? 600_000),
-    /** Global cap on concurrent sessions across all Kins. */
+    /** Global cap on concurrent sessions across all Agents. */
     maxTotal: Number(process.env.BROWSER_MAX_TOTAL_SESSIONS ?? 5),
-    /** Cap on concurrent sessions per Kin. */
-    maxPerKin: Number(process.env.BROWSER_MAX_SESSIONS_PER_KIN ?? 1),
+    /** Cap on concurrent sessions per Agent. */
+    maxPerAgent: Number(process.env.BROWSER_MAX_SESSIONS_PER_KIN ?? 1),
     defaultViewport: {
       width: Number(process.env.BROWSER_DEFAULT_VIEWPORT_WIDTH ?? 1280),
       height: Number(process.env.BROWSER_DEFAULT_VIEWPORT_HEIGHT ?? 720),
     },
     /** Directory where saved browser states live (cookies + localStorage). One
-     *  subdir per Kin, one JSON file per named state. Stored OUTSIDE the
-     *  workspace so the Kin's filesystem tools can't accidentally read or leak
+     *  subdir per Agent, one JSON file per named state. Stored OUTSIDE the
+     *  workspace so the Agent's filesystem tools can't accidentally read or leak
      *  auth tokens — access goes exclusively through browser_*_state tools. */
     statesDir: process.env.BROWSER_STATES_DIR ?? `${dataDir}/browser-states`,
-    /** Cap on number of saved states per Kin. */
-    maxStatesPerKin: Number(process.env.BROWSER_MAX_STATES_PER_KIN ?? 20),
+    /** Cap on number of saved states per Agent. */
+    maxStatesPerAgent: Number(process.env.BROWSER_MAX_STATES_PER_KIN ?? 20),
     /** Max size (bytes) of a single saved state file. localStorage from heavy
      *  SPAs can balloon — this prevents disk fills. */
     maxStateSizeBytes: Number(process.env.BROWSER_MAX_STATE_SIZE_BYTES ?? 5 * 1024 * 1024),
@@ -606,20 +606,20 @@ export const config = {
   },
 
   wakeups: {
-    maxPendingPerKin: Number(process.env.WAKEUPS_MAX_PENDING_PER_KIN ?? 20),
+    maxPendingPerAgent: Number(process.env.WAKEUPS_MAX_PENDING_PER_KIN ?? 20),
     minDelaySeconds: 10,
     maxDelaySeconds: 2_592_000, // 30 days
   },
 
   miniApps: {
     dir: process.env.MINI_APPS_DIR ?? `${dataDir}/mini-apps`,
-    maxAppsPerKin: Number(process.env.MINI_APPS_MAX_PER_KIN ?? 20),
+    maxAppsPerAgent: Number(process.env.MINI_APPS_MAX_PER_KIN ?? 20),
     maxFileSizeMb: Number(process.env.MINI_APPS_MAX_FILE_SIZE ?? 5),
     maxTotalSizeMbPerApp: Number(process.env.MINI_APPS_MAX_TOTAL_SIZE ?? 50),
     backendEnabled: process.env.MINI_APPS_BACKEND_ENABLED !== 'false', // default: true
   },
 
-  // Global custom tools: user/Kin-authored scripts (any language + own deps)
+  // Global custom tools: user/Agent-authored scripts (any language + own deps)
   // executed by the host. Each tool is a managed directory under `baseDir/<slug>/`
   // holding its entrypoint + deps; the DB holds metadata only. The legacy
   // HIVEKEEP_CUSTOM_TOOL_TIMEOUT / _MAX_TIMEOUT env vars are kept for back-compat.

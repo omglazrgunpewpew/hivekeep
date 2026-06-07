@@ -7,7 +7,7 @@
  * grouping by project, mapping ref → resolution) without spinning up sqlite.
  */
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
-import { fullMockSchema, fullMockDrizzleOrm } from '../../test-helpers'
+import { fullMockSchema, fullMockDrizzleOrm, fullMockConfig } from '../../test-helpers'
 
 // ─── Mocks (must be declared before importing the module under test) ────────
 
@@ -26,7 +26,9 @@ mock.module('@/server/sse/index', () => ({
   sseManager: { broadcast: () => {} },
 }))
 
-mock.module('@/server/config', () => ({ config: {} }))
+// Use the complete shared config: bun's mock.module is global, so an empty
+// config here would leak and break other test files that read config fields.
+mock.module('@/server/config', () => ({ config: { ...fullMockConfig } }))
 
 mock.module('@/server/services/tasks', () => ({
   spawnTask: async () => ({ id: 'stub' }),
@@ -68,7 +70,7 @@ mock.module('@/server/db/schema', () => ({
   ticketTags: { __name: 'ticketTags' as const },
   projectTags: { __name: 'projectTags' as const },
   tasks: { __name: 'tasks' as const },
-  kins: { __name: 'kins' as const },
+  agents: { __name: 'agents' as const },
   user: { __name: 'user' as const },
   userProfiles: { __name: 'userProfiles' as const },
 }))

@@ -92,7 +92,7 @@ import {
 } from '@/server/tools/vault-tools'
 import {
   spawnSelfTool,
-  spawnKinTool,
+  spawnAgentTool,
   respondToTaskTool,
   cancelTaskTool,
   listTasksTool,
@@ -111,8 +111,8 @@ import { notifyTool } from '@/server/tools/notify-tool'
 import {
   sendMessageTool,
   replyTool,
-  listKinsTool,
-} from '@/server/tools/inter-kin-tools'
+  listAgentsTool,
+} from '@/server/tools/inter-agent-tools'
 import {
   createCronTool,
   updateCronTool,
@@ -216,11 +216,11 @@ import {
   downloadStoredFileTool,
 } from '@/server/tools/file-storage-tools'
 import {
-  createKinTool,
-  updateKinTool,
-  deleteKinTool,
-  getKinDetailsTool,
-} from '@/server/tools/kin-management-tools'
+  createAgentTool,
+  updateAgentTool,
+  deleteAgentTool,
+  getAgentDetailsTool,
+} from '@/server/tools/agent-management-tools'
 import {
   listToolsTool,
   listToolboxesTool,
@@ -314,7 +314,7 @@ const log = createLogger('tools')
  * Register all native tools in the tool registry.
  * Called once at server startup.
  *
- * Tools from later phases (tasks, inter-kin, etc.) will be
+ * Tools from later phases (tasks, inter-agent, etc.) will be
  * registered here as they are implemented.
  */
 export function registerAllTools(): void {
@@ -419,7 +419,7 @@ export function registerAllTools(): void {
 
   // Phase 15: Task tools (parent — main only)
   toolRegistry.register('spawn_self', spawnSelfTool, 'tasks')
-  toolRegistry.register('spawn_kin', spawnKinTool, 'tasks')
+  toolRegistry.register('spawn_agent', spawnAgentTool, 'tasks')
   toolRegistry.register('respond_to_task', respondToTaskTool, 'tasks')
   toolRegistry.register('cancel_task', cancelTaskTool, 'tasks')
   toolRegistry.register('list_tasks', listTasksTool, 'tasks')
@@ -427,28 +427,28 @@ export function registerAllTools(): void {
   toolRegistry.register('get_task_detail', getTaskDetailTool, 'tasks')
   toolRegistry.register('get_task_messages', getTaskMessagesTool, 'tasks')
 
-  // Scout: cheap read-only delegation (main + sub-kin). Spawns an await child
+  // Scout: cheap read-only delegation (main + sub-agent). Spawns an await child
   // on the scout model with the read-only 'scout' toolbox and blocks for its
   // digest. The 'scout' toolbox excludes scout/spawn tools → scouts are leaves.
   toolRegistry.register('scout', scoutTool, 'tasks')
 
-  // Phase 15: Sub-Kin tools (sub-kin only)
+  // Phase 15: Sub-Agent tools (sub-agent only)
   toolRegistry.register('report_to_parent', reportToParentTool, 'tasks')
   toolRegistry.register('update_task_status', updateTaskStatusTool, 'tasks')
   toolRegistry.register('request_input', requestInputTool, 'tasks')
 
-  // Cron learning tools (sub-kin only, active during cron tasks)
+  // Cron learning tools (sub-agent only, active during cron tasks)
   toolRegistry.register('save_run_learning', saveRunLearningTool, 'tasks')
   toolRegistry.register('delete_run_learning', deleteRunLearningTool, 'tasks')
 
-  // Human-in-the-loop (main + sub-kin)
+  // Human-in-the-loop (main + sub-agent)
   toolRegistry.register('prompt_human', promptHumanTool, 'tasks')
   toolRegistry.register('notify', notifyTool, 'tasks')
 
-  // Phase 16: Inter-Kin tools (main only)
-  toolRegistry.register('send_message', sendMessageTool, 'inter-kin')
-  toolRegistry.register('reply', replyTool, 'inter-kin')
-  toolRegistry.register('list_kins', listKinsTool, 'inter-kin')
+  // Phase 16: Inter-Agent tools (main only)
+  toolRegistry.register('send_message', sendMessageTool, 'inter-agent')
+  toolRegistry.register('reply', replyTool, 'inter-agent')
+  toolRegistry.register('list_kins', listAgentsTool, 'inter-agent')
 
   // Phase 17: Cron tools (main only)
   toolRegistry.register('create_cron', createCronTool, 'crons')
@@ -459,7 +459,7 @@ export function registerAllTools(): void {
   toolRegistry.register('trigger_cron', triggerCronTool, 'crons')
 
   // Phase 26: Project & ticket tools
-  // Main agents get the full set ; sub-Kins only get read/update tools when their task has ticket_id set (cf. project-tools.ts).
+  // Main agents get the full set ; sub-Agents only get read/update tools when their task has ticket_id set (cf. project-tools.ts).
   toolRegistry.register('list_projects', listProjectsTool, 'projects')
   toolRegistry.register('get_project', getProjectTool, 'projects')
   toolRegistry.register('create_project', createProjectTool, 'projects')
@@ -492,7 +492,7 @@ export function registerAllTools(): void {
   toolRegistry.register('delete_ticket_attachment', deleteTicketAttachmentTool, 'projects')
 
   // Project knowledge: curated facts/decisions/gotchas per project, available
-  // to main Kins (active project) and ticket-bound sub-Kins (ticket's project).
+  // to main Agents (active project) and ticket-bound sub-Agents (ticket's project).
   // Every entry's title lands in the system-prompt index. Pinned entries
   // (max config.projectKnowledge.pinCap) ALSO inline their markdown body in
   // the prompt — unpinned ones are fetched on demand via get_project_knowledge.
@@ -524,11 +524,11 @@ export function registerAllTools(): void {
   toolRegistry.register('list_image_models', listImageModelsTool, 'images')
   toolRegistry.register('describe_image_model', describeImageModelTool, 'images')
 
-  // Provider & model discovery tools (main + sub-kin)
+  // Provider & model discovery tools (main + sub-agent)
   toolRegistry.register('list_providers', listProvidersTool, 'system')
   toolRegistry.register('list_models', listModelsTool, 'system')
 
-  // Platform configuration tools (configurator Kin / admin) — provider config
+  // Platform configuration tools (configurator Agent / admin) — provider config
   // discovery + capability/default management + global prompt. Mutations are
   // admin-only (enforced inside each tool).
   toolRegistry.register('describe_provider_config', describeProviderConfigTool, 'system')
@@ -549,7 +549,7 @@ export function registerAllTools(): void {
   toolRegistry.register('reset_avatar_base', resetAvatarBaseTool, 'system')
   toolRegistry.register('test_channel', testChannelTool, 'system')
 
-  // Secure-input tools (configurator Kin) — request a secret via UI popup; the
+  // Secure-input tools (configurator Agent) — request a secret via UI popup; the
   // value goes straight to the vault / encrypted provider config, never to the LLM.
   toolRegistry.register('request_provider_setup', requestProviderSetupTool, 'system')
   toolRegistry.register('request_channel_setup', requestChannelSetupTool, 'system')
@@ -561,7 +561,7 @@ export function registerAllTools(): void {
   toolRegistry.register('remove_mcp_server', removeMcpServerTool, 'mcp')
   toolRegistry.register('list_mcp_servers', listMcpServersTool, 'mcp')
 
-  // Shell execution (main + sub-kin)
+  // Shell execution (main + sub-agent)
   toolRegistry.register('run_shell', runShellTool, 'shell')
 
   // File storage tools (main only)
@@ -573,16 +573,16 @@ export function registerAllTools(): void {
   toolRegistry.register('update_stored_file', updateStoredFileTool, 'file-storage')
   toolRegistry.register('delete_stored_file', deleteStoredFileTool, 'file-storage')
 
-  // Kin management tools (main only, opt-in required)
-  toolRegistry.register('create_kin', createKinTool, 'kin-management')
-  toolRegistry.register('update_kin', updateKinTool, 'kin-management')
-  toolRegistry.register('delete_kin', deleteKinTool, 'kin-management')
-  toolRegistry.register('get_kin_details', getKinDetailsTool, 'kin-management')
-  toolRegistry.register('list_toolboxes', listToolboxesTool, 'kin-management')
-  toolRegistry.register('list_tools', listToolsTool, 'kin-management')
-  toolRegistry.register('create_toolbox', createToolboxTool, 'kin-management')
-  toolRegistry.register('update_toolbox', updateToolboxTool, 'kin-management')
-  toolRegistry.register('delete_toolbox', deleteToolboxTool, 'kin-management')
+  // Agent management tools (main only, opt-in required)
+  toolRegistry.register('create_agent', createAgentTool, 'agent-management')
+  toolRegistry.register('update_agent', updateAgentTool, 'agent-management')
+  toolRegistry.register('delete_agent', deleteAgentTool, 'agent-management')
+  toolRegistry.register('get_agent_details', getAgentDetailsTool, 'agent-management')
+  toolRegistry.register('list_toolboxes', listToolboxesTool, 'agent-management')
+  toolRegistry.register('list_tools', listToolsTool, 'agent-management')
+  toolRegistry.register('create_toolbox', createToolboxTool, 'agent-management')
+  toolRegistry.register('update_toolbox', updateToolboxTool, 'agent-management')
+  toolRegistry.register('delete_toolbox', deleteToolboxTool, 'agent-management')
 
   // Webhook tools (main only)
   toolRegistry.register('create_webhook', createWebhookTool, 'webhooks')
@@ -654,7 +654,7 @@ export function registerAllTools(): void {
   toolRegistry.register('multi_edit_mini_app_file', multiEditMiniAppFileTool, 'mini-apps')
   toolRegistry.register('set_mini_app_maintainer', setMiniAppMaintainerTool, 'mini-apps')
 
-  // Filesystem tools (main + sub-kin)
+  // Filesystem tools (main + sub-agent)
   toolRegistry.register('read_file', readFileTool, 'filesystem')
   toolRegistry.register('write_file', writeFileTool, 'filesystem')
   toolRegistry.register('edit_file', editFileTool, 'filesystem')
@@ -665,7 +665,7 @@ export function registerAllTools(): void {
   // Reasoning aid: free-form thought logger, no side effects.
   toolRegistry.register('think', thinkTool, 'tasks')
 
-  // Sub-Kin structured planning (TodoWrite-equivalent).
+  // Sub-Agent structured planning (TodoWrite-equivalent).
   toolRegistry.register('task_todos', taskTodosTool, 'tasks')
 
   // Knowledge base tools (main only)

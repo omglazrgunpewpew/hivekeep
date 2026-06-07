@@ -4,7 +4,7 @@
  * Theme (light/dark) and palette are synced from the parent via MutationObserver.
  *
  * Usage: This stylesheet is automatically injected by the /serve endpoint.
- * Kins can use these CSS variables and utility classes to match Hivekeep's design.
+ * Agents can use these CSS variables and utility classes to match Hivekeep's design.
  */
 
 /* ═══════════════════════════════════════════════════════
@@ -170,7 +170,7 @@
    comfortable extended viewing. Base rules below are for Aurora
    (default palette); per-palette overrides follow after these.
    Shell-only tokens (--color-sidebar, --color-sidebar-border,
-   --color-bubble-kin, --color-surface-header-bg) are intentionally
+   --color-bubble-agent, --color-surface-header-bg) are intentionally
    omitted: the mini-app SDK does not expose them.
    ═══════════════════════════════════════════════════════ */
 

@@ -29,39 +29,39 @@
   - Cloudflare Turnstile is integrated (visible in page source, though may not block headless browsers)
 
 ### Next run
-- Area 2: Kin management (need to login as Nicolas or create a proper test user through onboarding)
+- Area 2: Agent management (need to login as Nicolas or create a proper test user through onboarding)
 - Note: To test authenticated pages, either need Nicolas's password or a way to create users through the onboarding flow
 
 ## 2026-03-04 00:40 UTC
-### Area tested: Kin Management (Create, Edit, Delete)
-- **Pages visited:** Main dashboard (`/`), New Kin dialog, Edit Kin dialog (General, Tools, Memory tabs), Delete confirmation dialog, Kin chat view (`/kin/test-qa-kin`)
+### Area tested: Agent Management (Create, Edit, Delete)
+- **Pages visited:** Main dashboard (`/`), New Agent dialog, Edit Agent dialog (General, Tools, Memory tabs), Delete confirmation dialog, Agent chat view (`/agent/test-qa-agent`)
 - **Browser:** `openclaw` profile (headless Chromium), logged in as existing user
 - **Login:** Credentials from `e2e/helpers/auth.ts` (test@hivekeep.local)
 - **Bugs found:** 1 (issue created: #30)
-  - **#30 (bug):** Import button in "New Kin" dialog does nothing when clicked. No file picker, no UI change, no error. Either the feature is broken or unimplemented without any user feedback.
+  - **#30 (bug):** Import button in "New Agent" dialog does nothing when clicked. No file picker, no UI change, no error. Either the feature is broken or unimplemented without any user feedback.
 - **UX suggestions:** 2 (issues created: #29, #31)
   - **#29 (enhancement):** Model selector shows ALL models from providers including non-chat models (audio, realtime, transcribe, TTS, image-only). The list is enormous and overwhelming. Should filter to chat-compatible models only.
-  - **#31 (enhancement):** Slug field is only available in Edit mode, not during Kin creation. Minor QoL improvement to allow setting it upfront.
+  - **#31 (enhancement):** Slug field is only available in Edit mode, not during Agent creation. Minor QoL improvement to allow setting it upfront.
 - **All clear:**
-  - Create flow works well: "Describe your Kin" dialog with Generate/Create manually/Import options
+  - Create flow works well: "Describe your Agent" dialog with Generate/Create manually/Import options
   - Generate button correctly disabled until text is entered
   - Manual creation form has proper required field validation (Name, Role, Model all required, Create button disabled until filled)
-  - Avatar auto-generates initials from name (e.g. "TE" for "Test QA Kin")
+  - Avatar auto-generates initials from name (e.g. "TE" for "Test QA Agent")
   - Model selector has provider filter buttons (All, Claude, OpenAI) that work correctly
   - Token count updates in real-time for Character and Expertise sections
   - Default Character and Expertise templates are helpful
   - Edit dialog has all creation fields plus Slug, and full Tools/Memory tabs
   - Tools tab shows all native tool categories with toggle switches and count (e.g. "Search 1/1", "Web Browse 3/3")
   - Tool categories are expandable to show individual tools
-  - Opt-in tools (Kin Management, System, Database) are correctly off by default
+  - Opt-in tools (Agent Management, System, Database) are correctly off by default
   - Memory tab in edit shows search, category filter, empty state, and "Add memory" button
   - Add memory form has Content, Category dropdown (default: Fact), Subject (optional)
   - Memory save button correctly disabled until content is filled
   - Delete flow has proper confirmation dialog ("Are you sure? This will permanently delete...")
-  - Delete works correctly, Kin removed from sidebar immediately
-  - Chat view loads properly when selecting a Kin, with conversation starters and rich text editor
-  - Kin card ordering in sidebar can be changed (drag handles present)
-  - Slug auto-generated from name correctly (e.g. "test-qa-kin")
+  - Delete works correctly, Agent removed from sidebar immediately
+  - Chat view loads properly when selecting a Agent, with conversation starters and rich text editor
+  - Agent card ordering in sidebar can be changed (drag handles present)
+  - Slug auto-generated from name correctly (e.g. "test-qa-agent")
 
 ### Next run
 - Area 3: Conversations (send messages, check chat UI, scroll behavior, empty states)
@@ -83,7 +83,7 @@
   - **Search:** Brave Search configured, default provider dropdown, add button
   - **MCP Servers:** Clean empty state with description and add button
   - **Vault:** Category filter tabs (All, Favorites, Secret, Credential, Card, Note, Identity), "Manage types" button, clean empty state
-  - **Memories:** Model Configuration section (Extraction Model, Embedding Model dropdowns), "Re-embed all memories" button, search bar with category and Kin filters, 5 memories shown with rich metadata (category, subject, source Kin, auto/manual, score), edit/delete per memory, "Add memory" button
+  - **Memories:** Model Configuration section (Extraction Model, Embedding Model dropdowns), "Re-embed all memories" button, search bar with category and Agent filters, 5 memories shown with rich metadata (category, subject, source Agent, auto/manual, score), edit/delete per memory, "Add memory" button
   - **Files:** Clean empty state with upload button
   - **Channels:** Clean empty state with descriptive text
   - **Webhooks:** Clean empty state
@@ -93,10 +93,10 @@
   - Footer shows version (v0.9.0), uptime, and summary counts consistently across all tabs
   - "What is this?" expandable help section present on most tabs
   - Every empty state has clear description text and a call-to-action button
-- **Note:** Kin pages (`/kin/dev`, `/kin/dispatcher`) consistently cause the headless browser to timeout/hang, likely due to WebSocket connections or heavy React rendering. This blocked testing Area 3 (Conversations). May be specific to headless Chromium rather than a real user-facing issue.
+- **Note:** Agent pages (`/agent/dev`, `/agent/dispatcher`) consistently cause the headless browser to timeout/hang, likely due to WebSocket connections or heavy React rendering. This blocked testing Area 3 (Conversations). May be specific to headless Chromium rather than a real user-facing issue.
 
 ### Next run
-- Area 4: Tasks/Crons (create, edit, enable/disable, delete tasks - can test from sidebar without entering a Kin page)
+- Area 4: Tasks/Crons (create, edit, enable/disable, delete tasks - can test from sidebar without entering a Agent page)
 - Or Area 3: Conversations (if browser stability improves)
 
 ## 2026-03-04 08:40 UTC
@@ -107,7 +107,7 @@
 - **Bugs found:** 0
 - **UX suggestions:** 3 (issues created: #38, #39, #40)
   - **#38 (enhancement):** Schedule field shows no validation feedback for invalid cron expressions. The human-readable description disappears silently, no error message or red border.
-  - **#39 (enhancement):** Task instructions are not required to create a scheduled job. A job with empty instructions can be created and will fire with nothing for the Kin to do.
+  - **#39 (enhancement):** Task instructions are not required to create a scheduled job. A job with empty instructions can be created and will fire with nothing for the Agent to do.
   - **#40 (enhancement):** Schedule display ("At 09:00") shows no timezone information. Users don't know if this is UTC, server time, or their local timezone.
 - **All clear:**
   - Scheduled Jobs section has clean empty state with description and CTA button
@@ -115,12 +115,12 @@
   - Cron preset buttons (Every 5 min, Hourly, Daily 9am, etc.) work correctly and fill the schedule field
   - Human-readable cron description ("At 09:00") appears correctly for valid expressions
   - "Minute Hour Day Month Weekday" helper text below schedule field is helpful
-  - Owner Kin dropdown shows all Kins with avatars, names, and descriptions
-  - Target Kin and Model fields are optional with good default messaging
-  - Form validation enables Create button when Name + Owner Kin + Schedule are filled
+  - Owner Agent dropdown shows all Agents with avatars, names, and descriptions
+  - Target Agent and Model fields are optional with good default messaging
+  - Form validation enables Create button when Name + Owner Agent + Schedule are filled
   - Created jobs appear immediately in sidebar with name, schedule description, and next-run countdown
   - Toggle switch to enable/disable jobs works correctly - paused jobs lose countdown timer
-  - Job detail dialog shows all info: name, owner Kin, status, schedule, instructions, model, execution history
+  - Job detail dialog shows all info: name, owner Agent, status, schedule, instructions, model, execution history
   - Edit dialog pre-fills all fields correctly
   - Edit has "Delete job" and "Save changes" buttons
   - Delete has proper confirmation dialog with clear warning text
@@ -128,10 +128,10 @@
   - Task search in sidebar works (filters tasks by name, shows "No tasks found" empty state)
   - Collapsible sidebar sections (Tasks, Scheduled Jobs, Mini-Apps) toggle correctly
   - Jobs search bar appears when jobs exist
-- **Note:** Browser automation continues to be challenging with Hivekeep. The `type` action does not reliably fill React controlled inputs (Name field). CodeMirror editor (Task instructions) requires `document.execCommand` to properly update state. Kin pages still cause browser timeouts. Auth required resetting the QA user password via DB because the test@hivekeep.local user from E2E helpers doesn't exist in the live instance.
+- **Note:** Browser automation continues to be challenging with Hivekeep. The `type` action does not reliably fill React controlled inputs (Name field). CodeMirror editor (Task instructions) requires `document.execCommand` to properly update state. Agent pages still cause browser timeouts. Auth required resetting the QA user password via DB because the test@hivekeep.local user from E2E helpers doesn't exist in the live instance.
 
 ### Next run
-- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires navigating to a Kin page which causes browser hangs
+- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires navigating to a Agent page which causes browser hangs
 - Area 11: Contacts (add, approve, edit, delete) - testable from Settings
 - Area 12: Webhooks (create, edit, test, delete) - testable from Settings
 - Area 5: Provider settings - testable from Settings
@@ -147,13 +147,13 @@
 - **UX suggestions:** 0
 - **All clear:**
   - Contact list shows existing contacts with type badge (Human), name, and identifiers
-  - "Add contact" form: Name (required), Type dropdown (Human, Kin), Link to system user (None, existing users), Identifiers section
+  - "Add contact" form: Name (required), Type dropdown (Human, Agent), Link to system user (None, existing users), Identifiers section
   - Identifiers: "Add identifier" creates inline row with type combobox (email, phone, mobile, twitter, instagram, linkedin, github, slack, website + searchable) and value textbox
   - Button correctly disabled until Name is filled
   - Contact creation shows "Contact added" toast, appears immediately in list
   - Edit form pre-populates all fields correctly (name, type, identifiers)
   - "Link to system user" dropdown shows registered users with display name + username
-  - "Add note" feature: inline note form with Kin selector, scope (Global/Private), and note textbox
+  - "Add note" feature: inline note form with Agent selector, scope (Global/Private), and note textbox
   - Delete has proper confirmation dialog ("This will permanently delete this contact and all associated identifiers and notes")
   - Delete shows "Contact deleted" toast, contact removed immediately
   - CRUD flow is complete and works correctly
@@ -163,9 +163,9 @@
 - **UX suggestions:** 0
 - **All clear:**
   - Clean empty state with description and CTA
-  - "Add webhook" form: Target Kin (required, shows Kin list with descriptions), Name (required), Description (optional)
+  - "Add webhook" form: Target Agent (required, shows Agent list with descriptions), Name (required), Description (optional)
   - Creation shows "Webhook created" dialog with URL and masked token, warning "Save this token now - it will not be shown again" (good security)
-  - Webhook list shows: name, target Kin, trigger count, last triggered, enable/disable toggle
+  - Webhook list shows: name, target Agent, trigger count, last triggered, enable/disable toggle
   - Actions: View logs, Copy URL, Regenerate token, Edit, Delete
   - Toggle works correctly with "Webhook updated" toast
   - View logs shows clean empty state ("No triggers yet")
@@ -175,7 +175,7 @@
 #### Channels (Area 6 - partial)
 - **All clear:**
   - Clean empty state with clear description
-  - "Add channel" form: Name, Kin (required), Platform dropdown, platform-specific fields
+  - "Add channel" form: Name, Agent (required), Platform dropdown, platform-specific fields
   - Platform options: Telegram, Discord, Slack, WhatsApp, Signal, Matrix
   - Telegram selected by default, shows Bot token field with password toggle and "How to get your bot token" link
   - Token stored encrypted in vault (noted in UI)
@@ -183,7 +183,7 @@
 - **Note:** Both Contacts and Webhooks areas are very polished. CRUD flows work end-to-end, confirmation dialogs are present for destructive actions, toasts provide good feedback, empty states are clear. No bugs found in these areas.
 
 ### Next run
-- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires entering Kin page
+- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires entering Agent page
 - Area 13: MCP Servers (add, configure, remove) - testable from Settings
 - Area 7: Memory (browse, search, delete) - testable from Settings
 
@@ -206,7 +206,7 @@
   - Server card shows: name, status (Active), command, env var keys (values hidden)
   - Edit button opens "Edit MCP server" dialog with all fields pre-populated
   - Env var value correctly masked in edit form
-  - Delete has proper confirmation dialog: "This will permanently remove this MCP server and disconnect it from all Kins"
+  - Delete has proper confirmation dialog: "This will permanently remove this MCP server and disconnect it from all Agents"
   - Delete shows "MCP server deleted" toast, returns to empty state
   - Full CRUD cycle works end-to-end
 
@@ -217,7 +217,7 @@
 
 #### Settings sweep (other pages)
 - **Vault:** Works. Filter tabs (All, Favorites, Secret, Credential, Card, Note, Identity), "Manage types" button, clean empty state
-- **Memories:** Works. Model configuration (extraction + embedding models), re-embed button, search with category/Kin filters, 5 memories displayed with edit/delete buttons
+- **Memories:** Works. Model configuration (extraction + embedding models), re-embed button, search with category/Agent filters, 5 memories displayed with edit/delete buttons
 - **Files:** Works. Clean empty state with upload CTA
 - **Search:** Works. Shows existing Brave Search provider, default provider dropdown
 - **Users:** Works. Shows user info (Nicolas VARROT), invitation section
@@ -230,7 +230,7 @@
 
 ## 2026-03-04 20:40 UTC
 ### Area tested: Conversations (Area 3)
-- **Pages visited:** / (home), /kin/dispatcher (Dispatcher conversation)
+- **Pages visited:** / (home), /agent/dispatcher (Dispatcher conversation)
 - **Browser:** `openclaw` profile (headless Chromium), host target
 - **Login:** Existing session (qa@hivekeep.local)
 
@@ -246,7 +246,7 @@
 - Appears to be related to Memorize tool call results being rendered inline as message content
 
 **Enhancement: Unlabeled buttons in conversation header (#48)**
-- Multiple icon-only buttons in the nav bar and Kin header have no aria-label or tooltip
+- Multiple icon-only buttons in the nav bar and Agent header have no aria-label or tooltip
 - Impossible to know their function without clicking them
 
 **Bug: Model selector still shows non-chat models (#49)**
@@ -273,7 +273,7 @@
 
 ### Next run
 - Area 14: Account (profile, password, language settings)
-- Area 3 continued: Test actually sending a message, editing a message, using reactions (was blocked by browser timeouts on Dispatcher page - try with Dev Kin which has less history)
+- Area 3 continued: Test actually sending a message, editing a message, using reactions (was blocked by browser timeouts on Dispatcher page - try with Dev Agent which has less history)
 - Area 15: Quick chat / Ephemeral sessions
 
 ## 2026-03-05 00:40 UTC
@@ -328,9 +328,9 @@
 - Contact creation saves identifiers (email tested) properly
 - Edit dialog loads saved data correctly (unlike profile - see #54)
 - Delete has a proper confirmation dialog with clear warning text
-- "Add note" feature works: shows Kin selector, scope (Global), and note text field
+- "Add note" feature works: shows Agent selector, scope (Global), and note text field
 - Identifier type dropdown comprehensive: email, phone, mobile, twitter, instagram, linkedin, github, slack, website
-- Type selector: Human/Kin options available
+- Type selector: Human/Agent options available
 - "Link to system user" combobox present
 
 **Webhooks:**
@@ -339,7 +339,7 @@
 - Webhook list shows: toggle (enable/disable), View logs, Copy URL, Regenerate token, Edit, Delete
 - Trigger log dialog shows (empty state with illustration)
 - Delete confirmation dialog with clear "External services will receive 404 errors" warning
-- Kin selector dropdown works in creation flow
+- Agent selector dropdown works in creation flow
 
 **MCP Servers:**
 - Empty state with clear description
@@ -353,7 +353,7 @@
 - Clean empty state
 
 **Performance note:**
-- Conversation pages (/kin/dev, /kin/dispatcher) consistently cause browser snapshot timeouts (>20s)
+- Conversation pages (/agent/dev, /agent/dispatcher) consistently cause browser snapshot timeouts (>20s)
 - Settings dialog pages load and respond quickly
 - This is a recurring issue noted in previous sessions
 
@@ -398,8 +398,8 @@
 - Delete, edit buttons present
 
 **Memories tab:**
-- Shows 5 memories with proper metadata (category, scope, Kin, source, relevance score)
-- Search bar, category filter, Kin filter all present
+- Shows 5 memories with proper metadata (category, scope, Agent, source, relevance score)
+- Search bar, category filter, Agent filter all present
 - Model Configuration section: Extraction Model and Embedding Model dropdowns
 - "Re-embed all memories" button available
 - "Add memory" button at bottom
@@ -419,13 +419,13 @@
 - Clean layout
 
 **Notifications tab:**
-- Comprehensive toggle list: Notification sound, Input needed, User pending approval, Cron pending approval, MCP pending approval, Kin error, Kin alert, Mention
+- Comprehensive toggle list: Notification sound, Input needed, User pending approval, Cron pending approval, MCP pending approval, Agent error, Agent alert, Mention
 - All toggles checked by default
 - External delivery section with "Add delivery channel" button
 - Clean descriptions for each notification type
 
 **Footer bar (all tabs):**
-- Shows version (v0.9.0), uptime (1d 12h), and stats (2 Kins, 3 providers, 5 memories, 1 channel(?), 2 users(?))
+- Shows version (v0.9.0), uptime (1d 12h), and stats (2 Agents, 3 providers, 5 memories, 1 channel(?), 2 users(?))
 
 - **Bugs found:** 2 (issues #61, #62)
 - **UX suggestions:** 0
@@ -445,14 +445,14 @@
 **Bug: Mini-Apps sidebar not updated after cloning from App Gallery - Issue #63**
 - Clone an app via App Gallery, success toast appears, but sidebar still shows "No apps yet"
 - Even after full page refresh, cloned app doesn't appear in sidebar
-- Root cause: `useMiniApps` hook filters by `selectedKinId`, which is null on home page
-- The SSE event `miniapp:created` is filtered by kinId match, so it's silently dropped
+- Root cause: `useMiniApps` hook filters by `selectedAgentId`, which is null on home page
+- The SSE event `miniapp:created` is filtered by agentId match, so it's silently dropped
 
 #### UX suggestions
 
-**Enhancement: Misleading empty state when no Kin selected - Issue #64**
-- Sidebar shows "No apps yet - Ask a Kin to create one" even when apps exist on other Kins
-- Should show "Select a Kin to see its apps" or show all apps across Kins
+**Enhancement: Misleading empty state when no Agent selected - Issue #64**
+- Sidebar shows "No apps yet - Ask a Agent to create one" even when apps exist on other Agents
+- Should show "Select a Agent to see its apps" or show all apps across Agents
 
 **Enhancement: Clone button doesn't update after cloning, allows duplicates - Issue #65**
 - After cloning, the Clone button stays active (not "Owned"/"Cloned")
@@ -495,7 +495,7 @@
 
 #### UX suggestions
 
-**Enhancement: Model picker in quick chat changes Kin model globally - Issue #71**
+**Enhancement: Model picker in quick chat changes Agent model globally - Issue #71**
 - Changing model in quick chat affects main conversation too
 - Should be session-scoped or removed from quick chat
 
@@ -504,7 +504,7 @@
 - Users can't review past quick conversations
 
 #### Other observations (no issues filed)
-- SSE event handling is well-implemented with proper kinId+sessionId filtering
+- SSE event handling is well-implemented with proper agentId+sessionId filtering
 - Optimistic message updates work correctly
 - Stop streaming functionality is properly wired
 - File upload in quick chat reuses the main chat infrastructure (good)
@@ -539,7 +539,7 @@
 **Bug: Inconsistent max-width between assistant message bubbles - Issue #79**
 - Messages with tool calls: max-w-[80%]
 - Messages without tool calls: max-w-[75%]
-- Same Kin's messages have different widths depending on tool usage
+- Same Agent's messages have different widths depending on tool usage
 
 **Bug: ConversationSearch Escape handler conflicts with modal Escape - Issue #80**
 - Global window keydown listener fires even when modals are focused
@@ -563,7 +563,7 @@
 
 #### Other observations (no issues filed)
 - Chat system is well-architected: SSE streaming with batched token updates (50ms), optimistic message sends, infinite scroll with position restoration
-- Keyboard shortcuts are comprehensive: Ctrl+F search, Escape refocus, Up/Down input history, Ctrl+1-9 kin switching
+- Keyboard shortcuts are comprehensive: Ctrl+F search, Escape refocus, Up/Down input history, Ctrl+1-9 agent switching
 - Message grouping (2-min window) works well for visual clarity
 - Date separators are sticky with backdrop blur, nice UX
 - DateNavigator with jump-to-date is a solid feature
@@ -595,9 +595,9 @@
 
 #### Bugs found: 3
 
-1. **No Kin selector for "kin" type contacts** - Issue #84
-   - ContactFormDialog shows user selector for "human" but no Kin selector for "kin" type
-   - linkedKinId always null from UI, breaking prompt builder resolution
+1. **No Agent selector for "agent" type contacts** - Issue #84
+   - ContactFormDialog shows user selector for "human" but no Agent selector for "agent" type
+   - linkedAgentId always null from UI, breaking prompt builder resolution
 
 2. **Server accepts whitespace-only and empty contact names** - Issue #85
    - POST checks `!name` (truthy for `"   "`), PATCH has no name validation at all
@@ -620,7 +620,7 @@
 #### All clear:
 - Contact CRUD flow (create/edit/delete) works correctly via UI
 - Identifier management (add/remove/edit with LabelCombo) is well-built
-- Notes system with per-Kin scoping (global/private) is solid
+- Notes system with per-Agent scoping (global/private) is solid
 - SSE real-time updates for contact changes
 - Approval dialog for channel users (create new or link existing)
 - FK cascade on delete properly configured for identifiers, notes, platform IDs
@@ -640,7 +640,7 @@
 - **Bugs found:** 3 (issues #89, #92, #94)
   - #89: Server accepts whitespace-only webhook names (no trim/validation)
   - #92: WebhookFormDialog swallows API errors silently (try/finally, no catch)
-  - #94: Webhook creation does not validate kinId exists (FK error leaks to user)
+  - #94: Webhook creation does not validate agentId exists (FK error leaks to user)
 
 - **UX suggestions:** 3 (issues #90, #91, #93)
   - #90: Webhook logs grow unbounded with no retention/cleanup
@@ -655,9 +655,9 @@
   - Copy URL button on each card
   - Regenerate token with confirmation dialog
   - ConfirmDeleteButton for safe deletion
-  - Max webhooks per Kin limit (configurable, default 20)
+  - Max webhooks per Agent limit (configurable, default 20)
   - Max payload size limit (1MB) on incoming endpoint
-  - Webhook tools for Kins (create/update/delete/list) with ownership verification
+  - Webhook tools for Agents (create/update/delete/list) with ownership verification
   - E2E test coverage is comprehensive (create, edit, toggle, delete, token reveal, empty state)
   - Log payload truncation to 10KB in DB
   - Help panel with documentation bullets
@@ -669,7 +669,7 @@
 
 ## 2026-03-06 20:40 UTC
 ### Area tested: MCP Servers (Area 13)
-- **Pages visited:** Code review of McpServersSettings.tsx, McpServerFormDialog.tsx, McpServerCard.tsx, mcp-servers.ts (routes), mcp.ts (service), mcp-tools.ts (Kin tools), mcp.test.ts (unit tests), schema.ts, 14-mcp-servers.spec.ts (E2E)
+- **Pages visited:** Code review of McpServersSettings.tsx, McpServerFormDialog.tsx, McpServerCard.tsx, mcp-servers.ts (routes), mcp.ts (service), mcp-tools.ts (Agent tools), mcp.test.ts (unit tests), schema.ts, 14-mcp-servers.spec.ts (E2E)
 - **Note:** Browser unavailable (sandbox disabled, Chrome extension relay not attached), testing done via thorough code review
 
 #### Bugs found: 3
@@ -702,17 +702,17 @@
 - Form validation on client side (name + command required)
 - SSE real-time updates for server CRUD events
 - ConfirmDeleteButton for safe deletion
-- Approval workflow for Kin-created servers (pending_approval status)
+- Approval workflow for Agent-created servers (pending_approval status)
 - Auto-disconnect on config change (command/args/env)
 - PATH augmentation for child processes (NVM detection)
 - JSON Schema to Zod conversion is well-tested
-- Tool access control per Kin (mcpAccess allowlist + auto-enabled for creator)
+- Tool access control per Agent (mcpAccess allowlist + auto-enabled for creator)
 - Lazy connection pooling (connect on first use)
 - Empty state with call to action
 - Loading skeleton while fetching
 - Help panel with documentation
 - Env var key/value UI with PasswordInput for values
-- Delete cascade removes kin_mcp_servers junction entries
+- Delete cascade removes agent_mcp_servers junction entries
 
 ### Next run
 - Area 14: Account (profile, password, language settings)
@@ -775,10 +775,10 @@
 
 5. **quick_sessions.created_by FK missing onDelete cascade** - Issue #117
    - User deletion orphans quick sessions
-   - kinId has cascade, createdBy does not
+   - agentId has cascade, createdBy does not
 
 #### All clear:
-- Quick session creation flow with max active limit (1 per user per kin) works correctly
+- Quick session creation flow with max active limit (1 per user per agent) works correctly
 - Session ownership verification (loadSession helper) is solid
 - Idempotent close (already-closed returns ok) is good
 - Expiration/cleanup system with configurable intervals works
@@ -817,7 +817,7 @@
   - SettingsFooter with version, uptime, and entity stats with tooltips is polished
   - GeneralSettings has proper error state with retry button (post-#122 fix)
   - Global prompt has character counter, token estimate, and over-limit warning
-  - Hub Kin selector with immediate save + toast feedback
+  - Hub Agent selector with immediate save + toast feedback
   - Server-side validation for global prompt (type check, length limit, trimming)
   - Admin guard on all settings routes
   - SearchProviders: default provider selector with "Automatic" option
@@ -847,41 +847,41 @@
 - **Bugs found:** 4 (issues created: #131, #132, #133, #134)
   - #131: Contact identifier label/value have no length limit or whitespace-only validation
   - #132: Webhook name and description have no server-side length limits
-  - #133: Contact note content has no max length validation (risk: injected into Kin prompts)
+  - #133: Contact note content has no max length validation (risk: injected into Agent prompts)
   - #134: fetchContacts/fetchWebhooks silently swallow errors (same pattern as #115, #127)
 
 - **UX suggestions:** 3 (issues created: #135, #136, #137)
   - #135: No UI to manually add platform IDs to a contact (API exists but no form)
   - #136: No search/filter on contacts list (backend search exists but no UI)
-  - #137: No search/filter on webhooks list, no Kin filter dropdown
+  - #137: No search/filter on webhooks list, no Agent filter dropdown
 
 #### All clear:
 - Contact CRUD with proper SSE real-time updates
-- Contact form dialog: clean layout, type selector (human/kin), linked user/kin selector, identifier management with LabelCombo
+- Contact form dialog: clean layout, type selector (human/agent), linked user/agent selector, identifier management with LabelCombo
 - Contact name validation: trim + empty check + 200 char max (server-side)
-- Contact type validation: only "human" or "kin" accepted
+- Contact type validation: only "human" or "agent" accepted
 - Duplicate user-contact link prevention (409 with helpful message)
 - Contact card: nice layout with icon, badges for type/linked user, identifier badges
 - Contact delete: confirmation dialog with cascade warning for platform IDs
-- Contact notes: inline editing with cancel/save, scope selector (global/private), Kin selector
-- Contact notes: proper visibility rules (admin sees all, Kin sees global + own private)
+- Contact notes: inline editing with cancel/save, scope selector (global/private), Agent selector
+- Contact notes: proper visibility rules (admin sees all, Agent sees global + own private)
 - Platform IDs: display with platform icons, hover-to-reveal revoke button
 - Webhook CRUD with SSE real-time updates
 - Webhook creation: token reveal dialog with show/hide toggle and copy buttons
 - Webhook token regeneration: confirmation dialog before regenerating
-- Webhook card: clean layout with Kin badge, trigger count, last triggered date, active/inactive state
+- Webhook card: clean layout with Agent badge, trigger count, last triggered date, active/inactive state
 - Webhook active/inactive toggle with visual dimming
 - Webhook URL copy button
 - Webhook trigger logs dialog with expandable payloads, source IP badges, empty state
 - Webhook incoming route: proper rate limiting (sliding window per webhook), token validation (timing-safe), payload size limit, inactive check
 - Webhook log pruning: retention period + per-webhook cap, runs every 6 hours
-- Max webhooks per Kin limit enforced
+- Max webhooks per Agent limit enforced
 - Contact identifiers: batch creation during contact create
 - Contact identifier update: proper diff logic (detect added/changed/removed identifiers)
 - searchContacts: searches across names, identifiers, and notes with deduplication
 - ensureUserContactsExist: auto-creates contacts for all users (backfill)
-- deleteNotesByKin: cleanup when a Kin is deleted
-- listContactsForPrompt: efficient summary with linked kin slug and identifier summary
+- deleteNotesByAgent: cleanup when a Agent is deleted
+- listContactsForPrompt: efficient summary with linked agent slug and identifier summary
 
 ### Next run
 - Area 13: MCP servers (add, configure, remove MCP servers)
@@ -906,13 +906,13 @@
 - MCP server form: clean layout with name, command, args (textarea, one per line), and env vars (key/value pairs with password input)
 - MCP env var masking: backend never exposes env values to frontend (only keys with empty strings)
 - MCP env var merge logic on update: empty values preserve existing secrets
-- MCP server card: clean layout with connection status dot, tool count badge, error tooltip, Kin badge
-- MCP server approval flow for Kin-created servers (pending_approval status)
+- MCP server card: clean layout with connection status dot, tool count badge, error tooltip, Agent badge
+- MCP server approval flow for Agent-created servers (pending_approval status)
 - MCP server delete: confirmation dialog, disconnects running server
 - MCP connection pool with auto-reconnect on tool call failure
 - MCP connection timeout (30s) to avoid hanging on unresponsive servers
 - MCP PATH augmentation for child processes (detects NVM, common system paths)
-- MCP tool resolution with per-Kin access control (mcpAccess allowlist or auto-enable for Kin-created servers)
+- MCP tool resolution with per-Agent access control (mcpAccess allowlist or auto-enable for Agent-created servers)
 - MCP JSON Schema to Zod conversion for tool input validation
 - MCP tool name sanitization with Unicode/accent handling and hash fallback
 - Account dialog: polished hero header with gradient, avatar crop (react-easy-crop), member since date
@@ -953,7 +953,7 @@
 - Stop streaming with abort support
 - Quick session cleanup job: closes expired sessions, deletes stale closed sessions after retention period
 - SSE notifications for session closure (UI auto-updates)
-- Quick chat panel: clean header with Kin avatar, history button, end session button, hide button
+- Quick chat panel: clean header with Agent avatar, history button, end session button, hide button
 - Empty state with icon and message
 - Optimistic user message rendering with rollback on error
 - Draft message persistence per session (useDraftMessage with quick- prefix)
@@ -965,7 +965,7 @@
 
 ### Next run
 - Area 1 (revisit): Onboarding / First run (rotate back to beginning)
-- Area 2 (revisit): Kin management
+- Area 2 (revisit): Agent management
 
 ## 2026-03-08 04:40 UTC
 ### Area tested: Onboarding / First Run (Area 1 - revisit)
@@ -997,33 +997,33 @@
 - Decorative aurora orbs for visual polish
 
 ### Next run
-- Area 2 (revisit): Kin management
+- Area 2 (revisit): Agent management
 - Area 3 (revisit): Conversations
 
 ## 2026-03-08 08:40 UTC
-### Area tested: Kin Management (Area 2 - revisit)
-- **Pages visited:** Code review of KinFormModal.tsx, KinCard.tsx, KinToolsTab.tsx, KinList.tsx, SortableKinCard.tsx, useKins.ts, useKinTools.ts, kins.ts (routes), kins.ts (services), slug.ts, db/schema.ts (kins table)
+### Area tested: Agent Management (Area 2 - revisit)
+- **Pages visited:** Code review of AgentFormModal.tsx, AgentCard.tsx, AgentToolsTab.tsx, AgentList.tsx, SortableAgentCard.tsx, useAgents.ts, useAgentTools.ts, agents.ts (routes), agents.ts (services), slug.ts, db/schema.ts (agents table)
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 4 (issues created: #157, #158, #161, #162)
-  - #157: No server-side validation on Kin create/update fields (name, role, character, expertise, model) - accepts empty strings, unlimited length
-  - #158: Kin PATCH allows setting providerId to non-existent provider, resulting in 500 instead of 400
-  - #161: Kin form wizard-generated character/expertise don't call markDirty(), unsaved changes guard doesn't fire
-  - #162: Kin delete cascade doesn't clean up quick sessions referencing deleted Kin
+  - #157: No server-side validation on Agent create/update fields (name, role, character, expertise, model) - accepts empty strings, unlimited length
+  - #158: Agent PATCH allows setting providerId to non-existent provider, resulting in 500 instead of 400
+  - #161: Agent form wizard-generated character/expertise don't call markDirty(), unsaved changes guard doesn't fire
+  - #162: Agent delete cascade doesn't clean up quick sessions referencing deleted Agent
 
 - **UX suggestions:** 2 (issues created: #159, #160)
-  - #159: Kin export leaks MCP server env var key names
-  - #160: Kin import doesn't verify model ID exists, no warning or suggestion
+  - #159: Agent export leaks MCP server env var key names
+  - #160: Agent import doesn't verify model ID exists, no warning or suggestion
 
 #### All clear:
-- Kin CRUD with proper SSE real-time updates across clients
-- Kin list with drag-and-drop reorder (dnd-kit), order persisted per user
-- Hub Kin pinned at top of sidebar, outside drag zone
-- Kin card: clean layout with avatar, name, role, model name, processing state, queue size badge
-- Kin card context menu: edit, export, set as hub, delete (with confirmation dialog)
-- Keyboard shortcuts (Cmd/Ctrl+1-9) for quick Kin selection
-- Kin search filter in sidebar (appears when >= 5 Kins)
-- Kin form: tabbed layout (General, Tools, Memory) with left sidebar navigation
+- Agent CRUD with proper SSE real-time updates across clients
+- Agent list with drag-and-drop reorder (dnd-kit), order persisted per user
+- Hub Agent pinned at top of sidebar, outside drag zone
+- Agent card: clean layout with avatar, name, role, model name, processing state, queue size badge
+- Agent card context menu: edit, export, set as hub, delete (with confirmation dialog)
+- Keyboard shortcuts (Cmd/Ctrl+1-9) for quick Agent selection
+- Agent search filter in sidebar (appears when >= 5 Agents)
+- Agent form: tabbed layout (General, Tools, Memory) with left sidebar navigation
 - AI wizard: describe -> generate -> refine flow, clean UX
 - Wizard: Import from .hivekeep.json file with proper error handling
 - Avatar picker: upload with crop, AI generation (auto/prompt), per-provider image model selection
@@ -1033,11 +1033,11 @@
 - Tool config: dual model (deny-list for standard tools, opt-in allow-list for admin tools)
 - Tool domains: collapsible groups with bulk toggle and per-tool switches
 - MCP tool access: per-server granular control with wildcard support
-- Search provider override per Kin
+- Search provider override per Agent
 - Memory tab: embedded MemoryList component for edit mode
 - Unsaved changes guard with confirmation dialog
 - Model unavailable warning with visual indicators (dimmed card, alert icon)
-- Kin deletion: comprehensive cascade delete with SSE notifications for all affected entities
+- Agent deletion: comprehensive cascade delete with SSE notifications for all affected entities
 - Export: full .hivekeep.json with version metadata, downloadable
 
 ### Next run
@@ -1052,7 +1052,7 @@
 - **Bugs found:** 3 (issues created: #164, #165, #167)
   - #164: Redacted messages have no visual indicator in chat UI - isRedacted flag tracked but never rendered
   - #165: Reaction toggle lacks optimistic update and error handling - bare await with no try/catch
-  - #167: Streaming message promoted with hardcoded sourceType "kin", loses real source metadata until fetchMessages
+  - #167: Streaming message promoted with hardcoded sourceType "agent", loses real source metadata until fetchMessages
 
 - **UX suggestions:** 1 (issues created: #166)
   - #166: Clear conversation orphans uploaded files on disk - files nullified but not deleted
@@ -1066,7 +1066,7 @@
 - Character count with progressive color warning (50%/75%/100% of 32k limit)
 - Input history navigation (Up/Down arrows at cursor position 0)
 - Optimistic user message rendering with rollback on API error
-- Draft message persistence per Kin (survives navigation, cleared on send)
+- Draft message persistence per Agent (survives navigation, cleared on send)
 - Message streaming with 50ms batched UI updates for smooth rendering
 - Streaming message promoted in-place (same React key) to avoid re-mount animation flash
 - Stop streaming button with server-side abort support
@@ -1079,7 +1079,7 @@
 - Time gap indicator between non-consecutive messages
 - Message context menu: copy, quote reply, edit & resend (user), read aloud (assistant), regenerate
 - Conversation search (Ctrl+F) with highlight navigation and match scrolling
-- Empty state with Kin avatar, greeting, suggestion chips, hint text
+- Empty state with Agent avatar, greeting, suggestion chips, hint text
 - Conversation header: model picker, context usage bar (tokens/window), tool calls toggle, quick session, search, date navigator, stats
 - Clear conversation with confirmation dialog and comprehensive cascade cleanup
 - Export as Markdown or JSON
@@ -1100,9 +1100,9 @@
 - Platform icon for channel messages (telegram, discord, etc.)
 - Connection banner for SSE disconnection
 - Onboarding progress banner when setup incomplete
-- Keyboard shortcuts: Cmd+1-9 kin switch, Cmd+Shift+N create kin, Cmd+, settings, Escape refocus input
+- Keyboard shortcuts: Cmd+1-9 agent switch, Cmd+Shift+N create agent, Cmd+, settings, Escape refocus input
 - Unread count in browser tab title + favicon badge
-- Lazy loading of modals (KinFormModal, SettingsModal, AccountDialog, TaskDetailModal, QuickChatPanel, QuickSessionHistory, ConversationSearch, MiniAppViewer)
+- Lazy loading of modals (AgentFormModal, SettingsModal, AccountDialog, TaskDetailModal, QuickChatPanel, QuickSessionHistory, ConversationSearch, MiniAppViewer)
 
 ### Next run
 - Area 4 (revisit): Tasks/Crons
@@ -1110,12 +1110,12 @@
 
 ## 2026-03-08 16:40 UTC
 ### Area tested: Tasks/Crons (Area 4 - revisit)
-- **Pages visited:** Code review of CronList.tsx, CronFormModal.tsx, CronDetailModal.tsx, TaskList.tsx, TaskDetailModal.tsx, useCrons.ts, cron-next.ts, cron-tools.ts, crons.ts (service), crons.ts (routes), tasks.ts (routes), tasks.ts (service), wakeup-scheduler.ts, kins.ts (cascade delete)
+- **Pages visited:** Code review of CronList.tsx, CronFormModal.tsx, CronDetailModal.tsx, TaskList.tsx, TaskDetailModal.tsx, useCrons.ts, cron-next.ts, cron-tools.ts, crons.ts (service), crons.ts (routes), tasks.ts (routes), tasks.ts (service), wakeup-scheduler.ts, agents.ts (cascade delete)
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 3 (issues created: #168, #169, #170)
-  - #168: Kin cascade delete does not stop in-memory cron scheduler jobs (leaks croner timers)
-  - #169: Unused variable `targetKinId` in `triggerCron()` function (dead code)
+  - #168: Agent cascade delete does not stop in-memory cron scheduler jobs (leaks croner timers)
+  - #169: Unused variable `targetAgentId` in `triggerCron()` function (dead code)
   - #170: `scheduleJob()` casts Date to string with unsafe `as string` type assertion
 
 - **UX suggestions:** 1 (issues created: #171)
@@ -1127,12 +1127,12 @@
 - Cron presets: 9 preset buttons for common schedules (5m, 15m, 30m, hourly, daily, weekly, monthly)
 - Schedule validation: real-time human-readable translation + next 3 runs preview
 - Invalid schedule feedback: red border, error message, submit button disabled
-- Cron detail modal: schedule info, description, target kin, model, execution history with task drill-down
+- Cron detail modal: schedule info, description, target agent, model, execution history with task drill-down
 - Manual trigger: "Run Now" button in detail modal with proper API call and history refresh
-- Approval flow: Kin-created crons require user approval, pending badge, approve button, notification
+- Approval flow: Agent-created crons require user approval, pending badge, approve button, notification
 - Active toggle: switch on cron cards and in detail modal, with proper scheduler start/stop
 - Drag-and-drop reorder: dnd-kit with user-persisted order via /me endpoint
-- Search filter: filter by name, kin name, or schedule expression
+- Search filter: filter by name, agent name, or schedule expression
 - Duplicate cron: one-click duplicate from detail modal with "(copy)" suffix
 - One-shot crons: backend supports `runOnce` flag with auto-deactivation after first fire
 - ISO datetime schedules: backend parses and schedules one-time future dates
@@ -1143,9 +1143,9 @@
 - Task cancel: proper API with status check (409 if already finished)
 - Stale task recovery on server restart (marks pending/in_progress as failed)
 - SSE events: cron:created, cron:updated, cron:deleted, cron:triggered all properly emitted and consumed
-- Kin delete cascade: properly cleans up crons from DB and nullifies targetKinId references
+- Agent delete cascade: properly cleans up crons from DB and nullifies targetAgentId references
 - Unsaved changes guard on cron form with confirmation dialog
-- Cron tools: create, update, delete, list, trigger, journal (get history) - comprehensive tooling for Kins
+- Cron tools: create, update, delete, list, trigger, journal (get history) - comprehensive tooling for Agents
 
 ### Next run
 - Area 11: Contacts
@@ -1158,7 +1158,7 @@
 
 - **Bugs found:** 2 (issues created: #174, #175)
   - #174: Identifier, note, and platform-id sub-resource routes ignore parent contactId URL parameter (can update/delete resources across contacts)
-  - #175: update_contact Kin tool allows duplicate identifiers (no uniqueness check before insert)
+  - #175: update_contact Agent tool allows duplicate identifiers (no uniqueness check before insert)
 
 - **UX suggestions:** 2 (issues created: #176, #177)
   - #176: Platform ID revoke button has no confirmation dialog, risks accidental access loss
@@ -1166,29 +1166,29 @@
 
 #### All clear:
 - Contact CRUD: clean create/edit/delete flow with proper validation
-- Contact form: name, type selector (human/kin), linked user/kin selector, identifier management with label combo (suggestions + custom), proper empty/edit state handling
+- Contact form: name, type selector (human/agent), linked user/agent selector, identifier management with label combo (suggestions + custom), proper empty/edit state handling
 - Contact card: clean layout with type badge, linked user badge, identifier badges, notes section, platform IDs section
 - Search filter: works on name and identifier label/value
 - Empty state: proper icon, description, and CTA button
 - SSE real-time updates: contact:created, contact:updated, contact:deleted events properly handled
 - Delete cascade: FK cascade on identifiers, notes, and platform IDs with proper confirmation dialog
 - Delete warning: shows platform count and names in confirmation when platform IDs exist
-- Notes: inline create/edit/delete with Kin selector, scope selector (global/private), textarea
-- Notes visibility: admin view shows all notes, Kin view shows global + own private
+- Notes: inline create/edit/delete with Agent selector, scope selector (global/private), textarea
+- Notes visibility: admin view shows all notes, Agent view shows global + own private
 - Platform IDs: inline add with platform picker (8 platforms) and ID input, revoke with X button
 - Identifier suggestions: predefined labels (email, phone, etc.) with custom entry support via LabelCombo
 - Input validation: name required and max 200 chars, identifier labels max 100, values max 500, note content max 10000
 - Duplicate user-contact link prevention (409 response)
-- Contact tools (Kin-side): get, search, create, update, delete, set_note, find_by_identifier - comprehensive tooling
+- Contact tools (Agent-side): get, search, create, update, delete, set_note, find_by_identifier - comprehensive tooling
 - User contact backfill: ensureUserContactsExist() auto-creates contacts for all users on startup
-- Prompt helpers: listContactsForPrompt() provides summary with linked kin slugs and identifier labels
+- Prompt helpers: listContactsForPrompt() provides summary with linked agent slugs and identifier labels
 
 ### Next run
 - Area 12: Webhooks
 
 ## 2026-03-09 00:40 UTC
 ### Area tested: Webhooks (Area 12)
-- **Pages visited:** Code review of webhooks.ts (routes), webhooks-incoming.ts (routes), webhooks.ts (service), webhooks.test.ts, webhook-tools.ts, webhook-tools.test.ts, WebhooksSettings.tsx, WebhookFormDialog.tsx, WebhookCard.tsx, WebhookLogDialog.tsx, 09-webhook-management.spec.ts, schema.ts (webhooks/webhookLogs tables), config.ts (webhook settings), app.ts (route mounting), auth/middleware.ts (auth bypass), kins.ts (cascade delete)
+- **Pages visited:** Code review of webhooks.ts (routes), webhooks-incoming.ts (routes), webhooks.ts (service), webhooks.test.ts, webhook-tools.ts, webhook-tools.test.ts, WebhooksSettings.tsx, WebhookFormDialog.tsx, WebhookCard.tsx, WebhookLogDialog.tsx, 09-webhook-management.spec.ts, schema.ts (webhooks/webhookLogs tables), config.ts (webhook settings), app.ts (route mounting), auth/middleware.ts (auth bypass), agents.ts (cascade delete)
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 2 (issues created: #180, #181)
@@ -1196,7 +1196,7 @@
   - #181: pruneWebhookLogs per-webhook cap fails when multiple logs share the same timestamp (uses strict lt instead of proper subquery)
 
 - **UX suggestions:** 2 (issues created: #182, #183)
-  - #182: Webhook list API has N+1 query problem for Kin info (same pattern as contacts #177)
+  - #182: Webhook list API has N+1 query problem for Agent info (same pattern as contacts #177)
   - #183: Webhook incoming route returns 404 instead of 405 for non-POST methods
 
 #### All clear:
@@ -1208,18 +1208,18 @@
 - Payload size limit: configurable max (default 1MB), proper 413 response
 - Auth bypass: incoming webhook route properly excluded from session auth middleware
 - Incoming webhook flow: token via Bearer header or query param, active check (409 if inactive), proper HTTP status codes
-- Webhook trigger: increments counter, logs payload (truncated to 10KB), enqueues message to target Kin, SSE event
+- Webhook trigger: increments counter, logs payload (truncated to 10KB), enqueues message to target Agent, SSE event
 - Log viewer: expandable payloads, source IP badges, timestamp display, empty state, scroll area
 - Log cleanup: periodic pruning every 6h with configurable retention (default 30 days) and per-webhook cap (default 500)
-- Cascade delete: Kin deletion properly deletes webhooks and emits SSE events; webhook logs cascade via FK
+- Cascade delete: Agent deletion properly deletes webhooks and emits SSE events; webhook logs cascade via FK
 - SSE real-time updates: webhook:created, webhook:updated, webhook:deleted, webhook:triggered all properly emitted and consumed
-- Search and filter: text search on name/description/kinName, Kin selector filter
+- Search and filter: text search on name/description/agentName, Agent selector filter
 - Empty state: proper icon, description, and CTA button
-- Max webhooks per Kin: configurable limit (default 20) enforced at creation
-- Kin tools: create, update, delete, list webhooks with proper ownership verification (kinId check)
+- Max webhooks per Agent: configurable limit (default 20) enforced at creation
+- Agent tools: create, update, delete, list webhooks with proper ownership verification (agentId check)
 - E2E tests: comprehensive Playwright tests covering CRUD, token reveal, toggle, confirmation dialogs
 - Unit tests: validateToken edge cases, buildWebhookUrl construction
-- Config: all limits configurable via env vars (rate limit, payload size, retention, max per kin, max logs)
+- Config: all limits configurable via env vars (rate limit, payload size, retention, max per agent, max logs)
 
 ### Next run
 - Area 13: MCP servers
@@ -1227,12 +1227,12 @@
 
 ## 2026-03-09 04:40 UTC
 ### Area tested: MCP Servers (Area 13)
-- **Pages visited:** Code review of mcp-servers.ts (routes), mcp.ts (service), mcp.test.ts, mcp-tools.ts (Kin tools), McpServersSettings.tsx, McpServerCard.tsx, McpServerFormDialog.tsx, 14-mcp-servers.spec.ts, schema.ts (mcpServers/kinMcpServers tables), kins.ts (cascade/links)
+- **Pages visited:** Code review of mcp-servers.ts (routes), mcp.ts (service), mcp.test.ts, mcp-tools.ts (Agent tools), McpServersSettings.tsx, McpServerCard.tsx, McpServerFormDialog.tsx, 14-mcp-servers.spec.ts, schema.ts (mcpServers/agentMcpServers tables), agents.ts (cascade/links)
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 2 (issues created: #193, #194)
   - #193: Unit test sanitizeName is stale copy, diverges from real implementation (misses NFD normalization and hash fallback)
-  - #194: update_mcp_server Kin tool replaces all env vars instead of merging (unlike HTTP PATCH route which merges secrets)
+  - #194: update_mcp_server Agent tool replaces all env vars instead of merging (unlike HTTP PATCH route which merges secrets)
 
 - **UX suggestions:** 1 (issues created: #195)
   - #195: MCP form silently drops new env vars with empty values, no validation feedback
@@ -1243,19 +1243,19 @@
 - Connection management: lazy connect with 30s timeout, auto-reconnect on tool call failure, proper disconnect on config change or deletion
 - Connection status UI: green/red dot indicator, tool count badge, error tooltip, manual test button with loading spinner
 - Approval flow: pending_approval status, approve button, notification creation, config flag (mcp.requireApproval)
-- Kin auto-assignment: servers created by Kins auto-linked via kinMcpServers junction table
-- Tool resolution: per-Kin mcpAccess config with wildcard ('*') support, auto-enabled for self-created servers
+- Agent auto-assignment: servers created by Agents auto-linked via agentMcpServers junction table
+- Tool resolution: per-Agent mcpAccess config with wildcard ('*') support, auto-enabled for self-created servers
 - Tool naming: sanitizeName with NFD normalization and hash fallback for non-Latin characters, prefixed mcp_{server}_{tool}
 - JSON Schema to Zod: comprehensive conversion supporting string/number/integer/boolean/array/object/enum/nested with descriptions
 - PATH augmentation: auto-detects NVM and common system paths for child processes (handles Snap sandboxing)
-- Cascade delete: Kin deletion sets createdByKinId to null, kinMcpServers cascade via FK, disconnects active connections and emits SSE events
+- Cascade delete: Agent deletion sets createdByAgentId to null, agentMcpServers cascade via FK, disconnects active connections and emits SSE events
 - SSE real-time updates: mcp-server:created/updated/deleted all properly emitted and consumed
 - Empty state: proper icon, description, and CTA button
 - Help panel: collapsible with 4 bullet points explaining MCP usage
 - E2E tests: comprehensive Playwright tests covering full CRUD lifecycle, env vars, edit, delete confirmation, empty state
 - Unit tests: sanitizeName edge cases and jsonSchemaToZod with complex nested schemas (though sanitizeName tests need sync with source)
-- Kin tools: add, update, remove, list MCP servers with proper ownership and SSE events
-- Config for tools tab: getMCPToolsForConfig shows all servers with per-tool enabled/disabled state for Kin configuration UI
+- Agent tools: add, update, remove, list MCP servers with proper ownership and SSE events
+- Config for tools tab: getMCPToolsForConfig shows all servers with per-tool enabled/disabled state for Agent configuration UI
 
 ### Next run
 - Area 14: Account settings
@@ -1267,7 +1267,7 @@
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 2 (issues created: #196, #198)
-  - #196: PATCH /api/me accepts arbitrary kinOrder and cronOrder values without validation (can store non-JSON, non-array values)
+  - #196: PATCH /api/me accepts arbitrary agentOrder and cronOrder values without validation (can store non-JSON, non-array values)
   - #198: Password change has no server-side minimum length enforcement (only client-side 8-char check, Better Auth accepts any length)
 
 - **UX suggestions:** 1 (issues created: #197)
@@ -1311,7 +1311,7 @@
 #### All clear:
 - Quick session CRUD: clean create/close flow with proper validation (title max 200 chars)
 - Session ownership: loadSession helper verifies user ownership, returns 403 for unauthorized access
-- Max active sessions: configurable limit per user per kin (default 1), 409 on exceeded
+- Max active sessions: configurable limit per user per agent (default 1), 409 on exceeded
 - Message sending: proper validation (content or files required, content max 100K chars, fileIds max 10 with UUID validation)
 - Streaming: SSE-based token streaming with batched UI updates (50ms), stop generation support
 - Close dialog: confirmation with save-as-memory option, checkbox + textarea, proper state reset on cancel
@@ -1319,7 +1319,7 @@
 - Session history: paginated list of closed sessions with message counts, load-more support
 - Session detail view: back navigation, loading state, message bubbles with proper avatars
 - Cleanup service: periodic expiry (closes active sessions past expiresAt) and retention (deletes closed sessions past retentionDays), SSE notifications
-- Cascade delete: Kin deletion cascades to quick sessions via FK, messages cascade via session FK
+- Cascade delete: Agent deletion cascades to quick sessions via FK, messages cascade via session FK
 - SSE real-time: quick-session:closed event properly emitted and consumed
 - Optimistic UI: user messages appear immediately, reverted on send failure
 - Draft persistence: per-session draft via useDraftMessage hook
@@ -1329,7 +1329,7 @@
 - Lazy loading: QuickChatPanel and QuickSessionHistory loaded via React.lazy/Suspense
 - Sheet panel: proper side panel with close/hide distinction, history toggle
 - Empty state: proper icon + description when no messages
-- Config: all limits configurable via env vars (expiration hours, max per user/kin, retention days, cleanup interval)
+- Config: all limits configurable via env vars (expiration hours, max per user/agent, retention days, cleanup interval)
 
 ### Next run
 - Area 1: Onboarding / First run (re-test)
@@ -1337,7 +1337,7 @@
 
 ## 2026-03-11 22:10 UTC
 ### Area tested: Navigation & Layout (Area 10)
-- **Pages visited:** Code review of AppSidebar.tsx, SidebarFooterContent.tsx, SystemHealthBar.tsx, KinList.tsx, ChatPage.tsx, ConversationHeader.tsx, CommandPalette.tsx, KeyboardShortcutsDialog.tsx, ThemeToggle.tsx, PaletteToggle.tsx, PaletteSwitcher.tsx, theme-provider.tsx, SSEStatusIndicator.tsx, ConnectionBanner.tsx, GettingStartedChecklist.tsx, UserMenu.tsx, StatusNotifications.tsx, sidebar.tsx (UI), MessageInput.tsx (shortcut conflict)
+- **Pages visited:** Code review of AppSidebar.tsx, SidebarFooterContent.tsx, SystemHealthBar.tsx, AgentList.tsx, ChatPage.tsx, ConversationHeader.tsx, CommandPalette.tsx, KeyboardShortcutsDialog.tsx, ThemeToggle.tsx, PaletteToggle.tsx, PaletteSwitcher.tsx, theme-provider.tsx, SSEStatusIndicator.tsx, ConnectionBanner.tsx, GettingStartedChecklist.tsx, UserMenu.tsx, StatusNotifications.tsx, sidebar.tsx (UI), MessageInput.tsx (shortcut conflict)
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 2 (issues created: #202, #203)
@@ -1350,10 +1350,10 @@
 #### All clear:
 - Sidebar structure: clean SidebarHeader/Content/Footer layout with proper overflow management
 - Sidebar tabs: Tasks/Jobs/Apps with tab persistence via localStorage, badge counts for active tasks, pulse animation for awaiting human input
-- KinList: drag-and-drop reorder via @dnd-kit, search when >=5 kins, hub kin pinned at top outside DnD, export functionality
+- AgentList: drag-and-drop reorder via @dnd-kit, search when >=5 agents, hub agent pinned at top outside DnD, export functionality
 - SystemHealthBar: real-time provider/channel health indicators via SSE, clickable to open relevant settings
 - SidebarFooterContent: version badge with changelog dialog, Cmd+K and ? shortcut hints, settings button
-- CommandPalette: Cmd+K with kin search, settings sections, theme toggle, proper keyboard navigation
+- CommandPalette: Cmd+K with agent search, settings sections, theme toggle, proper keyboard navigation
 - KeyboardShortcutsDialog: '?' trigger with proper input detection (skips when typing), Mac/Windows key detection
 - ThemeToggle: light/dark/system with reduce contrast option, proper tooltips
 - PaletteToggle: 8 color palettes with visual preview dots
@@ -1366,11 +1366,11 @@
 - StatusNotifications: toast notifications for provider/channel status changes, version update available alerts
 - GettingStartedChecklist: 4-step onboarding (providers -> hub -> specialist -> channels) with progress indicators
 - ConversationHeader: responsive design with 8 mobile-hidden elements, mobile popover for model picker and context, date navigator, conversation stats, more actions dropdown, clear conversation with confirmation dialog
-- Keyboard shortcuts: Cmd+1-9 for kin switching, Cmd+Shift+N for new kin, Cmd+, for settings, Escape for focus input (context-aware)
-- Lazy loading: modals (KinFormModal, SettingsModal, AccountDialog) loaded via React.lazy/Suspense
-- Dynamic document title: shows kin name + processing state + unread count
+- Keyboard shortcuts: Cmd+1-9 for agent switching, Cmd+Shift+N for new agent, Cmd+, for settings, Escape for focus input (context-aware)
+- Lazy loading: modals (AgentFormModal, SettingsModal, AccountDialog) loaded via React.lazy/Suspense
+- Dynamic document title: shows agent name + processing state + unread count
 - Favicon badge: unread message indicator
-- Unread per-kin tracking with clear on select
+- Unread per-agent tracking with clear on select
 
 ### Next run
 - Area 1: Onboarding / First run (re-test)
@@ -1395,7 +1395,7 @@
 - Message rendering: well-structured MessageBubble with memo, proper grouping (2-min window), date separators, time gap indicators (30-min threshold)
 - Streaming: SSE-based token streaming with 50ms batched UI updates, streaming message promoted to messages array on done (prevents remount/animation replay), MutationObserver for auto-scroll
 - Auto-scroll: pin/unpin toggle with localStorage persistence, ResizeObserver to compensate viewport height changes, new message counter when scrolled up
-- Message input: controlled value, input history (Up/Down arrows), formatting toolbar (bold/italic/strikethrough/code/codeBlock), character count with color thresholds, @mention autocomplete, file drag-and-drop + paste + button, draft persistence per kin
+- Message input: controlled value, input history (Up/Down arrows), formatting toolbar (bold/italic/strikethrough/code/codeBlock), character count with color thresholds, @mention autocomplete, file drag-and-drop + paste + button, draft persistence per agent
 - Markdown rendering: lazy-loaded rehype-highlight and remark-math/rehype-katex, plain text fast path, code blocks with copy/download/wrap/line numbers/language label
 - File handling: image thumbnails with lightbox, non-image download chips, optimistic file display on send
 - Reactions: preset emoji picker with toggle, optimistic-like display grouped by emoji, SSE sync for added/removed reactions
@@ -1405,13 +1405,13 @@
 - Queue preview: pending messages shown above input with remove button, proper empty state
 - Tool calls: interleaved text + tool call parts using content offsets, deduplication of trailing repeated text
 - Injected memories: collapsible indicator with category badges
-- Empty state: greeting with kin avatar, suggestion chips from i18n, keyboard shortcut hints
+- Empty state: greeting with agent avatar, suggestion chips from i18n, keyboard shortcut hints
 - Compacting: live card during compacting, input disabled with reason tooltip, force compact from header
 - Human prompts: card UI for pending approvals with respond action
 - Export: markdown and JSON export from header menu
 - Optimistic updates: user messages appear immediately, reverted on send failure
 - Loading states: skeleton placeholders during initial load, spinner during infinite scroll
-- Server routes: proper validation (content/files required, max length, fileIds max 10 with UUID), paginated with hasMore, file and reaction maps built efficiently, kin source info resolved for inter-kin messages
+- Server routes: proper validation (content/files required, max length, fileIds max 10 with UUID), paginated with hasMore, file and reaction maps built efficiently, agent source info resolved for inter-agent messages
 
 ### Next run
 - Area 11: Contacts
@@ -1423,7 +1423,7 @@
 - **Note:** Browser unavailable (sandbox disabled), testing done via thorough code review
 
 - **Bugs found:** 3 (issues created: #299, #300, #301)
-  - #299: Contact note "add" silently overwrites existing note for same kin+scope (setContactNote upserts without UI warning)
+  - #299: Contact note "add" silently overwrites existing note for same agent+scope (setContactNote upserts without UI warning)
   - #300: Contact identifier edits are non-atomic, sequential API calls can leave partial state on failure
   - #301: Platform ID creation returns misleading 409 DUPLICATE_PLATFORM_ID when contact doesn't exist (FK error caught generically)
 
@@ -1433,8 +1433,8 @@
 #### All clear:
 - ContactsSettings: proper loading skeleton, empty state with action, search bar appears when contacts exist, SSE real-time updates for create/update/delete
 - ContactCard: clean layout with icon (User/Bot), type badge, linked user badge, identifiers as badges, edit/delete with confirmation, cascade warning on delete mentioning platform IDs
-- ContactFormDialog: proper form reset on open/close, name validation (required, max 200), type selector (human/kin), conditional linked user/kin selectors, identifier CRUD with combobox label picker (suggestions + custom), proper error display
-- ContactNotes: per-kin notes with avatar, scope icons (global/private), inline edit with textarea, add note flow with kin selector + scope selector, proper empty states
+- ContactFormDialog: proper form reset on open/close, name validation (required, max 200), type selector (human/agent), conditional linked user/agent selectors, identifier CRUD with combobox label picker (suggestions + custom), proper error display
+- ContactNotes: per-agent notes with avatar, scope icons (global/private), inline edit with textarea, add note flow with agent selector + scope selector, proper empty states
 - ContactPlatformIds: platform selector with extra platforms (IRC, webchat), inline add form with Enter/Escape support, revoke with confirmation dialog explaining consequences
 - Server routes: solid input validation (name trim, max lengths, type enum check, required fields), proper 404/409 error codes, user-link uniqueness check
 - Server services: batch-fetched listContactsWithDetails (efficient), search across names/identifiers/notes, FK cascade on delete, SSE broadcasts on all mutations, duplicate identifier prevention

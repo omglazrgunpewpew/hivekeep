@@ -23,7 +23,7 @@ const OnboardingPage = lazy(() => import('@/client/pages/onboarding/OnboardingPa
 const DesignSystemPage = lazy(() => import('@/client/pages/design-system/DesignSystemPage').then(m => ({ default: m.DesignSystemPage })))
 const InvitePage = lazy(() => import('@/client/pages/invite/InvitePage').then(m => ({ default: m.InvitePage })))
 
-// Global modals rendered at App root so they survive navigation between Kins / Projets.
+// Global modals rendered at App root so they survive navigation between Agents / Projets.
 const SettingsModal = lazy(() => import('@/client/pages/settings/SettingsPage').then(m => ({ default: m.SettingsModal })))
 const AccountDialog = lazy(() => import('@/client/pages/account/AccountPage').then(m => ({ default: m.AccountDialog })))
 
@@ -150,7 +150,7 @@ function AppRoot() {
 // ─── Authenticated shell ────────────────────────────────────────────────────
 //
 // Top-level layout when the user is authenticated. Owns:
-//  - The persistent top bar (visible across Kins / Projets / future modes)
+//  - The persistent top bar (visible across Agents / Projets / future modes)
 //  - The activity bar (left, 48px)
 //  - The global SettingsModal and AccountDialog
 //
@@ -164,10 +164,10 @@ function AppRoot() {
 function AuthenticatedShell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsInitialSection, setSettingsInitialSection] = useState<string | undefined>()
-  const [settingsFilters, setSettingsFilters] = useState<{ kinId?: string } | undefined>()
+  const [settingsFilters, setSettingsFilters] = useState<{ agentId?: string } | undefined>()
   const [accountOpen, setAccountOpen] = useState(false)
 
-  const handleOpenSettings = useCallback((section?: string, filters?: { kinId?: string }) => {
+  const handleOpenSettings = useCallback((section?: string, filters?: { agentId?: string }) => {
     setSettingsInitialSection(section)
     setSettingsFilters(filters)
     setSettingsOpen(true)

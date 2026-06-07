@@ -31,7 +31,7 @@ Trois mots-clés portent tout : **équipe d'agents persistants** (pas un chatbot
 | **« Des agents qui se souviennent, collaborent, et ne quittent jamais votre serveur. »** | Audience tech/privacy, Hacker News, /why-hivekeep | Technique, dense |
 | **« Une équipe d'IA qui grandit avec vous. »** | Angle self-improving, blog | Émotionnel, évolutif |
 
-> **Note nom « Kin » :** en surface marketing on parle d'« agents » (compris immédiatement) ; « Kin » est révélé juste après le hook comme terme propriétaire (effet de marque sans friction). Ne pas ouvrir le hero avec « Kin ».
+> **Note nom « Agent » :** en surface marketing on parle d'« agents » (compris immédiatement) ; « Agent » est révélé juste après le hook comme terme propriétaire (effet de marque sans friction). Ne pas ouvrir le hero avec « Agent ».
 
 ---
 
@@ -51,7 +51,7 @@ Sous-ligne   100% open-source (MIT) · self-hosted · zéro infra externe
 ```
 
 - **CTA primaire :** orienté action immédiate (« Démarrer en 2 min » → /quickstart). On vend la facilité.
-- **CTA secondaire :** « Voir la démo » → GIF/vidéo Sherpa ou collaboration inter-Kin.
+- **CTA secondaire :** « Voir la démo » → GIF/vidéo Queenie ou collaboration inter-Agent.
 - **Sous-ligne de réassurance :** licence + self-hosted + zéro infra. Adresse les réflexes de la cible homelab dès le pli.
 
 ---
@@ -62,7 +62,7 @@ Sous-ligne   100% open-source (MIT) · self-hosted · zéro infra externe
 - 🤝 **Une équipe, pas un chatbot** — vos agents collaborent et délèguent à des sous-agents.
 - 🛠️ **Une plateforme qui s'améliore elle-même** — vos agents créent leurs outils, mini-apps et plugins.
 - 📱 **Partout** — Telegram, WhatsApp, Slack, Discord, Signal, Matrix + une PWA soignée.
-- 📦 **Un seul conteneur** — zéro Postgres/Redis/Mongo. `docker run`, et Sherpa s'occupe du reste.
+- 📦 **Un seul conteneur** — zéro Postgres/Redis/Mongo. `docker run`, et Queenie s'occupe du reste.
 - 🔒 **Vos secrets restent à vous** — coffre chiffré jamais exposé au LLM.
 
 ---
@@ -74,7 +74,7 @@ Sous-ligne   100% open-source (MIT) · self-hosted · zéro infra externe
 | 1. Agents persistants | **Ils ne vous oublient jamais.** | Une session continue, une mémoire qui accumule des mois de contexte, une équipe qui se passe le travail. |
 | 2. Self-hosted & self-improving | **Une base qui grandit avec vous.** | Un `docker run`, zéro infra externe — et des agents qui créent leurs propres outils, mini-apps et plugins. |
 | 3. UI d'agents belle & fluide | **Enfin une IA d'agents agréable à utiliser.** | Tout depuis une PWA soignée : 18 thèmes, responsive, des outils au rendu riche dans le fil. |
-| 4. Onboarding Sherpa | **Pas de YAML. Une conversation.** | Sherpa branche vos providers, sécurise vos secrets et crée vos premiers agents — en discutant. |
+| 4. Onboarding Queenie | **Pas de YAML. Une conversation.** | Queenie branche vos providers, sécurise vos secrets et crée vos premiers agents — en discutant. |
 | 5. Omnicanal | **Vos agents, partout.** | 6 messageries natives, et un agent peut passer le canal à un spécialiste en temps réel. |
 | + Confiance | **Transparent par conception.** | Vos secrets ne voient jamais le LLM ; vous voyez chaque token consommé. |
 
@@ -86,7 +86,7 @@ Sous-ligne   100% open-source (MIT) · self-hosted · zéro infra externe
 
 **Mots qu'on utilise :** équipe, agents, se souviennent, chez vous, en un conteneur, grandit avec vous, partout, vos données, vos clés, en clair, sans surprise.
 
-**Mots qu'on évite :** « révolutionnaire », « propulsé par l'IA », « next-gen », jargon interne non expliqué (Kin/sous-Kin avant introduction), promesses vagues (« productivité décuplée »), survente (« le meilleur », « ultime»).
+**Mots qu'on évite :** « révolutionnaire », « propulsé par l'IA », « next-gen », jargon interne non expliqué (Agent/sous-Agent avant introduction), promesses vagues (« productivité décuplée »), survente (« le meilleur », « ultime»).
 
 **Règles :**
 - Toujours montrer une preuve (GIF, capture, chiffre) après une promesse.

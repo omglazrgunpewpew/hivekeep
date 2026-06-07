@@ -15,16 +15,16 @@ import { Label } from '@/client/components/ui/label'
 import { useSecretPrompts } from '@/client/hooks/useSecretPrompts'
 
 /**
- * Secure-input modal — appears when the configurator Kin requests a secret
+ * Secure-input modal — appears when the configurator Agent requests a secret
  * (API key, token) via request_provider_setup / prompt_secret. The value is
  * POSTed straight to the server (→ vault); it never goes through the LLM.
  *
- * Self-contained: pass the active Kin id; it subscribes to that Kin's pending
+ * Self-contained: pass the active Agent id; it subscribes to that Agent's pending
  * secret prompts and renders one at a time.
  */
-export function SecretPromptModal({ kinId }: { kinId: string | null }) {
+export function SecretPromptModal({ agentId }: { agentId: string | null }) {
   const { t } = useTranslation()
-  const { prompts, respond, isResponding } = useSecretPrompts(kinId)
+  const { prompts, respond, isResponding } = useSecretPrompts(agentId)
   const [values, setValues] = useState<Record<string, string>>({})
   const [dismissed, setDismissed] = useState<string | null>(null)
 

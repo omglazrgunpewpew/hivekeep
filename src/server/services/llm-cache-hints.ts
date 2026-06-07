@@ -173,7 +173,7 @@ function prependVolatileToUserMessage(
  *   - No user message in history (degenerate): treat the last entry as the
  *     "new" message and skip BP3.
  *   - The natural BP3 anchor is an empty-text-only message (e.g. a
- *     sub-Kin row created during `request_input` resume): walk back to a
+ *     sub-Agent row created during `request_input` resume): walk back to a
  *     prior message that has carriable content. Same safety for BP4.
  */
 export function buildSegmentedMessages(

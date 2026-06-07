@@ -17,8 +17,8 @@
    • ICONS: lucide (= lucide-react). Channel/brand logos = simple-icons (= react-icons/si).
      Provider logos in prod = @lobehub/icons (color), see ProviderIcon.tsx.
    • Sims faithful to real code (SRC: tags). Screenshots = labelled placeholders + feather (.shot).
-   • Avatars: header picks at random from kins.json (name+domain shown in header AND marquee);
-     Sherpa appears first, others pop around it (onboarding flow). Marquee = raw images, no card/gap.
+   • Avatars: header picks at random from agents.json (name+domain shown in header AND marquee);
+     Queenie appears first, others pop around it (onboarding flow). Marquee = raw images, no card/gap.
   NB preview: lucide via CDN, logos via cdn.simpleicons.org; in prod = React components.
   ════════════════════════════════════════════════════════════════════════
 -->
@@ -96,16 +96,16 @@ nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px) saturate(1.3);ba
 .reassure .it{display:inline-flex;align-items:center;gap:6px;}
 .reassure .it [data-lucide]{color:oklch(0.78 0.15 150);width:1.05em;height:1.05em;}
 
-.kins{position:relative;height:440px;}
-.kin{position:absolute;opacity:0;animation:popIn .55s cubic-bezier(.2,.85,.25,1) both;}
-.kin-inner{animation:float 6s ease-in-out infinite;}
+.agents{position:relative;height:440px;}
+.agent{position:absolute;opacity:0;animation:popIn .55s cubic-bezier(.2,.85,.25,1) both;}
+.agent-inner{animation:float 6s ease-in-out infinite;}
 @keyframes popIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-.kin .card{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--line-strong);border-radius:18px;padding:12px 15px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:11px;}
-.kin .name{font-weight:700;font-size:.9rem;line-height:1.1;}
-.kin .role{font-size:.73rem;color:var(--ink-soft);font-weight:500;}
-.kin-av{flex:0 0 auto;display:inline-flex;border-radius:11px;overflow:hidden;}
-.kin-av img{width:100%;height:100%;object-fit:cover;display:block;}
+.agent .card{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--line-strong);border-radius:18px;padding:12px 15px;box-shadow:var(--shadow-card);display:flex;align-items:center;gap:11px;}
+.agent .name{font-weight:700;font-size:.9rem;line-height:1.1;}
+.agent .role{font-size:.73rem;color:var(--ink-soft);font-weight:500;}
+.agent-av{flex:0 0 auto;display:inline-flex;border-radius:11px;overflow:hidden;}
+.agent-av img{width:100%;height:100%;object-fit:cover;display:block;}
 .s-center{top:152px;left:96px;z-index:3;}
 .s-center .card{border-color:oklch(0.74 0.16 45/.45);box-shadow:0 0 26px oklch(0.80 0.14 50/.28),var(--shadow-card);}
 .s-tr{top:46px;right:0;}
@@ -226,7 +226,7 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
 .foot-in{display:flex;justify-content:space-between;align-items:center;padding:28px 0;color:var(--ink-soft);font-size:.9rem;flex-wrap:wrap;gap:14px;}
 
 @media(max-width:860px){
-  .hero-grid{grid-template-columns:1fr;} .kins{height:340px;margin-top:10px;}
+  .hero-grid{grid-template-columns:1fr;} .agents{height:340px;margin-top:10px;}
   .split,.split.wide-left,.split.wide-right{grid-template-columns:1fr;gap:30px;} .bento{grid-template-columns:1fr;} .bcard.span2{grid-column:auto;}
   .nav-links{display:none;}
 }
@@ -269,8 +269,8 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
       <div class="hero-cta"><a class="btn btn-primary" href="#"><i data-lucide="rocket"></i> Start in 2 minutes</a><a class="btn btn-ghost" href="#"><i data-lucide="play"></i> Watch the demo</a></div>
       <div class="reassure"><span class="it"><i data-lucide="check"></i> Open-source (MIT)</span><span class="it"><i data-lucide="server"></i> Self-hosted</span><span class="it"><i data-lucide="box"></i> Zero external infra</span></div>
     </div>
-    <!-- Sherpa appears first, then the others pop in around it (onboarding flow). Names from kins.json. -->
-    <div class="kins" id="hero-kins"></div>
+    <!-- Queenie appears first, then the others pop in around it (onboarding flow). Names from agents.json. -->
+    <div class="agents" id="hero-agents"></div>
   </div>
 </header>
 
@@ -294,14 +294,14 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
       <h2 class="display">They never forget you.</h2>
       <p>Not a chatbot that starts over every time. One continuous session and a hybrid memory that builds context over months, with a team that hands work off to each other.</p>
       <div class="feats">
-        <div class="feat"><div class="ic"><i data-lucide="infinity"></i></div><div><h4>One continuous session</h4><p>No "new conversation". Your Kin always knows where you left off.</p></div></div>
+        <div class="feat"><div class="ic"><i data-lucide="infinity"></i></div><div><h4>One continuous session</h4><p>No "new conversation". Your Agent always knows where you left off.</p></div></div>
         <div class="feat"><div class="ic"><i data-lucide="search"></i></div><div><h4>Hybrid memory</h4><p>Semantic and keyword search, fused. Nothing is ever deleted.</p></div></div>
-        <div class="feat"><div class="ic"><i data-lucide="users"></i></div><div><h4>Agents that collaborate</h4><p>A Kin delegates to another, or spawns sub-agents to move faster.</p></div></div>
+        <div class="feat"><div class="ic"><i data-lucide="users"></i></div><div><h4>Agents that collaborate</h4><p>A Agent delegates to another, or spawns sub-agents to move faster.</p></div></div>
       </div>
     </div>
     <div class="chatcard">
       <div class="bub me"><div class="txt">What's our grocery budget this month?</div></div>
-      <div class="bub"><span class="av kin-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Back in March you set <b>$600 / month</b> and wanted to cut the extras. Keep that as the baseline?</div></div>
+      <div class="bub"><span class="av agent-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Back in March you set <b>$600 / month</b> and wanted to cut the extras. Keep that as the baseline?</div></div>
       <div class="recall">
         <span class="tag"><i data-lucide="brain"></i> recall("grocery budget")</span>
         <div class="hit"><i data-lucide="target" style="color:oklch(0.78 0.15 150)"></i> <span><span class="cat dec">decision</span><b>$600 / month</b> — groceries · Mar 12 <span class="kw">exact match (FTS5)</span></span></div>
@@ -329,7 +329,7 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
     <div class="sec-head">
       <span class="kicker">Tools &amp; mini-apps</span>
       <h2 class="display">Your tools get a real UI.</h2>
-      <p>Kins write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a themed card instead of raw JSON. The same goes for fully integrated mini-apps: dashboards and control panels built by your agents.</p>
+      <p>Agents write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a themed card instead of raw JSON. The same goes for fully integrated mini-apps: dashboards and control panels built by your agents.</p>
       <div class="taglist">
         <span class="t"><i data-lucide="palette"></i> Themed React renderers</span>
         <span class="t"><i data-lucide="layout-dashboard"></i> Mini-apps &amp; dashboards</span>
@@ -353,20 +353,20 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
       <div class="bcard span2"><span class="gradline"></span>
         <h3><i data-lucide="package"></i> A single <span class="mono">docker run</span></h3>
         <p>No Postgres, Redis, Mongo, or message broker. Bun + SQLite, one binary, your data stays home.</p>
-        <div class="term mono"><div><span class="c">$</span> docker run -d -p 3000:3000 \</div><div>&nbsp;&nbsp;-v hivekeep-data:/app/data <span class="p2">ghcr.io/.../hivekeep</span></div><div class="cmt"># then open your browser — Sherpa takes it from there</div></div>
+        <div class="term mono"><div><span class="c">$</span> docker run -d -p 3000:3000 \</div><div>&nbsp;&nbsp;-v hivekeep-data:/app/data <span class="p2">ghcr.io/.../hivekeep</span></div><div class="cmt"># then open your browser — Queenie takes it from there</div></div>
       </div>
       <div class="bcard"><span class="gradline warm"></span>
         <h3><i data-lucide="wrench"></i> Self-improving</h3>
-        <p>Your Kins write their own tools, build mini-apps, and ship plugins.</p>
+        <p>Your Agents write their own tools, build mini-apps, and ship plugins.</p>
         <div class="chips"><span class="chip on">custom tools</span><span class="chip">mini-apps</span><span class="chip">NPM plugins</span><span class="chip">MCP</span></div>
       </div>
       <div class="bcard span2"><span class="gradline"></span>
         <h3><i data-lucide="lock"></i> Your secrets never reach the LLM</h3>
-        <p>AES-256-GCM encrypted vault. Kins reference a vault key, never read its value.</p>
+        <p>AES-256-GCM encrypted vault. Agents reference a vault key, never read its value.</p>
       </div>
       <div class="bcard"><span class="gradline warm"></span>
         <h3><i data-lucide="gauge"></i> No cost surprises</h3>
-        <p>Every token accounted for, per Kin and per model.</p>
+        <p>Every token accounted for, per Agent and per model.</p>
         <div class="tokbar"><i style="width:38%;background:oklch(0.64 0.23 305)"></i><i style="width:18%;background:oklch(0.72 0.22 342)"></i><i style="width:30%;background:oklch(0.83 0.14 52)"></i><i style="width:14%;background:oklch(0.78 0.15 150)"></i></div>
         <div class="tlegend"><span><span class="sw" style="background:oklch(0.64 0.23 305)"></span>System</span><span><span class="sw" style="background:oklch(0.72 0.22 342)"></span>Memories</span><span><span class="sw" style="background:oklch(0.83 0.14 52)"></span>Messages</span><span><span class="sw" style="background:oklch(0.78 0.15 150)"></span>Tools</span></div>
         <div class="cacheline">Anthropic cache · <b>72% hit</b> on the last turn</div>
@@ -375,14 +375,14 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
   </div>
 </section>
 
-<!-- ===================== SHERPA (chips + provider logos, no icon triplet) ===================== -->
+<!-- ===================== QUEENIE (chips + provider logos, no icon triplet) ===================== -->
 <!-- SRC: onboarding sim faithful → src/server/services/configurator.ts + secure-input-tools.ts (secret → vault, never to LLM); providers via @lobehub/icons (ProviderIcon.tsx) -->
-<section class="block alt sherpa">
+<section class="block alt queenie">
   <div class="wrap"><div class="split wide-left">
     <div class="sec-head">
       <span class="kicker">Conversational onboarding</span>
       <h2 class="display">No YAML. Just a conversation.</h2>
-      <p>Sherpa, your setup agent, connects your providers, secures your secrets, and creates your first Kins by chatting with you. And it stays around for good, ready to help whenever you add a Kin or a provider.</p>
+      <p>Queenie, your setup agent, connects your providers, secures your secrets, and creates your first Agents by chatting with you. And it stays around for good, ready to help whenever you add a Agent or a provider.</p>
       <!-- PROD: these provider logos = @lobehub/icons (color), see ProviderIcon.tsx. Here simple-icons (mono) placeholder. -->
       <div class="providers"><span class="lbl">Works with</span>
         <img src="https://cdn.simpleicons.org/openai/b9b3c8" alt="OpenAI"/>
@@ -394,20 +394,20 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
       </div>
     </div>
     <div class="chatcard">
-      <div class="bub"><span class="av kin-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Welcome! Let's set up your platform together. Do you have an OpenAI key?</div></div>
+      <div class="bub"><span class="av agent-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Welcome! Let's set up your platform together. Do you have an OpenAI key?</div></div>
       <div class="bub me"><div class="txt">Yes, should I paste it?</div></div>
-      <div class="bub"><span class="av kin-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Drop it in the secure field. It goes straight to the vault, <b>never into the chat</b>.</div></div>
+      <div class="bub"><span class="av agent-av" data-av style="width:34px;height:34px;border-radius:10px"></span><div class="txt">Drop it in the secure field. It goes straight to the vault, <b>never into the chat</b>.</div></div>
       <div class="recall"><span class="tag"><i data-lucide="shield-check"></i> secure input → vault</span><div class="hit"><i data-lucide="check" style="color:oklch(0.78 0.15 150)"></i> <span>Provider <b>verified</b> · 4 capabilities detected (llm, embedding, image, tts)</span></div></div>
     </div>
   </div></div>
 </section>
 
-<!-- ===================== AVATARS (marquee = raw images, names from kins.json) ===================== -->
+<!-- ===================== AVATARS (marquee = raw images, names from agents.json) ===================== -->
 <section class="block" style="padding-bottom:84px">
   <div class="wrap" style="text-align:center;max-width:58ch;margin:0 auto">
     <span class="kicker" style="justify-content:center">Avatars that fit them</span>
     <h2 class="display" style="font-size:clamp(2rem,3.7vw,3.05rem);line-height:1.07;margin:.7rem 0 1rem">A team you recognize at a glance.</h2>
-    <p class="muted" style="font-size:1.12rem;margin:0">Every Kin gets an auto-generated avatar in the style you choose, matched to its personality and domain.</p>
+    <p class="muted" style="font-size:1.12rem;margin:0">Every Agent gets an auto-generated avatar in the style you choose, matched to its personality and domain.</p>
   </div>
 </section>
 <div class="marquee-sec"><div class="marquee"><div class="track" id="avatar-track"></div></div></div>
@@ -426,10 +426,10 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
 <footer><div class="wrap foot-in"><div class="brand" style="font-size:1rem"><span class="dot"><i data-lucide="bot"></i></span>Hivekeep</div><div>© 2026 Hivekeep · MIT · Built with Bun</div></div></footer>
 
 <script>
-/* Avatars. In prod: const KINS = await (await fetch('kins.json')).json();
-   Mirror of kins.json below so the static preview works offline. */
+/* Avatars. In prod: const KINS = await (await fetch('agents.json')).json();
+   Mirror of agents.json below so the static preview works offline. */
 const KINS = [
-  {name:"Sherpa",domain:"Setup & config",avatar:null},
+  {name:"Queenie",domain:"Setup & config",avatar:null},
   {name:"Atlas",domain:"Research & monitoring",avatar:null},
   {name:"Quill",domain:"Writing",avatar:null},
   {name:"Ledger",domain:"Finance & crypto",avatar:null},
@@ -462,12 +462,12 @@ function makeAvatar(px){ const hue=HUES[rnd(HUES.length)];
 /* chat bubble avatars (no name) */
 document.querySelectorAll('[data-av]').forEach(el=>{const px=parseInt(getComputedStyle(el).width)||34;el.innerHTML=makeAvatar(px);});
 
-/* HERO: Sherpa first, others pop around it. Variable sizes. Names from KINS. */
+/* HERO: Queenie first, others pop around it. Variable sizes. Names from KINS. */
 (function buildHero(){
-  const wrap=document.getElementById('hero-kins'); if(!wrap)return;
-  const sherpa=KINS.find(k=>k.name==='Sherpa')||KINS[0];
-  const rest=shuffle(KINS.filter(k=>k!==sherpa)).slice(0,4);
-  const chosen=[sherpa,...rest];
+  const wrap=document.getElementById('hero-agents'); if(!wrap)return;
+  const queenie=KINS.find(k=>k.name==='Queenie')||KINS[0];
+  const rest=shuffle(KINS.filter(k=>k!==queenie)).slice(0,4);
+  const chosen=[queenie,...rest];
   const slots=[
     {cls:'s-center',av:56,pop:0,fl:0},
     {cls:'s-tr',av:48,pop:.7,fl:-.6},
@@ -482,9 +482,9 @@ document.querySelectorAll('[data-av]').forEach(el=>{const px=parseInt(getCompute
     +'<path d="M150 182 C 100 250, 70 300, 56 326" stroke="oklch(0.70 0.20 305/.36)" stroke-width="2" stroke-dasharray="5 6"/>'
     +'</svg>');
   slots.forEach((s,i)=>{const k=chosen[i];if(!k)return;
-    const av='<span class="kin-av" style="width:'+s.av+'px;height:'+s.av+'px">'+avatarInner(k,i,s.av)+'</span>';
-    wrap.insertAdjacentHTML('beforeend','<div class="kin '+s.cls+'" style="animation-delay:'+s.pop+'s">'
-      +'<div class="kin-inner" style="animation-delay:'+s.fl+'s">'
+    const av='<span class="agent-av" style="width:'+s.av+'px;height:'+s.av+'px">'+avatarInner(k,i,s.av)+'</span>';
+    wrap.insertAdjacentHTML('beforeend','<div class="agent '+s.cls+'" style="animation-delay:'+s.pop+'s">'
+      +'<div class="agent-inner" style="animation-delay:'+s.fl+'s">'
       +'<div class="card">'+av+'<div><div class="name">'+k.name+'</div><div class="role">'+k.domain+'</div></div></div>'
       +'</div></div>');
   });

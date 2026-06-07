@@ -24,7 +24,7 @@
 ### Cumulative progress (since journal start)
 - **Initial state:** Single 2,881 KB chunk (825 KB gzip)
 - **Current ChatPage:** 405 KB (from 590 KB)
-- **Lazy chunks created:** KinFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
+- **Lazy chunks created:** AgentFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
 - **React.memo effectiveness:** 17 memoized components now have stable props (inline closure elimination)
 
 ### Next run priorities
@@ -76,7 +76,7 @@
 
 ### Code audit findings
 - **Issue:** ChatPage chunk is 590 KB (134 KB gzip) - heaviest app chunk
-- **Root cause:** KinFormModal (933 lines), SettingsPage (307 lines, imports 11 settings tabs), AccountDialog eagerly imported despite being modals only shown on user action
+- **Root cause:** AgentFormModal (933 lines), SettingsPage (307 lines, imports 11 settings tabs), AccountDialog eagerly imported despite being modals only shown on user action
 - **Build analysis:**
   - ChatPage: 590 KB (gzip 134 KB)
   - vendor-codemirror: 641 KB (gzip 218 KB) - CodeMirror core + languages
@@ -85,11 +85,11 @@
   - DesignSystemPage: 120 KB (already lazy-loaded, fine)
 
 ### Fix applied
-- **What:** Lazy-load KinFormModal, SettingsModal, AccountDialog from ChatPage using React.lazy + Suspense
+- **What:** Lazy-load AgentFormModal, SettingsModal, AccountDialog from ChatPage using React.lazy + Suspense
 - **Files changed:** src/client/pages/chat/ChatPage.tsx
 - **Impact:**
   - ChatPage: 590 KB → 441 KB (-25%, -149 KB)
-  - New on-demand chunks: KinFormModal (30 KB), SettingsPage (109 KB), AccountPage (4.5 KB)
+  - New on-demand chunks: AgentFormModal (30 KB), SettingsPage (109 KB), AccountPage (4.5 KB)
   - Modals wrapped in conditional rendering (`{open && <Modal />}`) so chunks only load when modal is opened
 
 ### Next run priorities
@@ -123,11 +123,11 @@
 
 ### Next run priorities
 1. **Browser audit** — still needed when sandbox browser becomes available
-2. **useModels hook at 264 KB** — imported via useKins, loads on every page; could defer model metadata
+2. **useModels hook at 264 KB** — imported via useAgents, loads on every page; could defer model metadata
 3. **ChatPage still 432 KB** — could further split ChatPanel (765 lines), ConversationHeader (407 lines)
 4. **React.memo audit** — MessageInput (500 lines, forwardRef but no memo), ChatPanel candidates
 5. **vendor-markdown at 612 KB** — used in chat messages so harder to defer, but katex/highlight could be lazy
-6. **Fix pre-existing test failures** (schema exports: files, kins)
+6. **Fix pre-existing test failures** (schema exports: files, agents)
 
 ---
 
@@ -181,7 +181,7 @@
 
 ### Next run priorities
 1. **Browser audit** — still needed when sandbox browser becomes available
-2. **useModels hook at 263 KB** — imported via useKins, loads on every page; could defer model metadata
+2. **useModels hook at 263 KB** — imported via useAgents, loads on every page; could defer model metadata
 3. **ChatPage still 420 KB** — could further split ChatPanel (774 lines) or ConversationSearch
 4. **vendor-markdown at 612 KB** — katex/highlight could be lazy-loaded for messages that don't need them
 5. **Fix pre-existing test failures** (3 tests: schema exports in files.test.ts, search.test.ts)
@@ -227,16 +227,16 @@
 - CI was failing: E2E test `should revoke an invitation with confirmation` — selector `.lucide-x-circle` wrong (lucide-react v0.575 renamed XCircle to CircleX, class is `lucide-circle-x`). Uncommitted fix found in working tree, committed and pushed.
 
 ### Code audit findings
-- **Issue:** All 6 sidebar components (KinList, TaskList, CronList, MiniAppList, SystemHealthBar, SidebarFooterContent) lacked React.memo, causing unnecessary re-renders on every parent state change
-- **Root cause:** AppSidebar re-renders when kin selection, queue state, or any prop changes — all children re-render even when their specific props haven't changed
-- **Additional issue:** `kins.map(...)` in AppSidebar created new array references on every render for MiniAppList and CronList props, which would defeat memo even if added
+- **Issue:** All 6 sidebar components (AgentList, TaskList, CronList, MiniAppList, SystemHealthBar, SidebarFooterContent) lacked React.memo, causing unnecessary re-renders on every parent state change
+- **Root cause:** AppSidebar re-renders when agent selection, queue state, or any prop changes — all children re-render even when their specific props haven't changed
+- **Additional issue:** `agents.map(...)` in AppSidebar created new array references on every render for MiniAppList and CronList props, which would defeat memo even if added
 
 ### Fix applied
 - **What:** 
   1. Wrapped all 6 sidebar components in `React.memo()`
-  2. Added `useMemo` in AppSidebar for derived `miniAppKins` and `cronKins` arrays
-- **Files changed:** AppSidebar.tsx, KinList.tsx, TaskList.tsx, CronList.tsx, MiniAppList.tsx, SystemHealthBar.tsx, SidebarFooterContent.tsx
-- **Impact:** Sidebar sections no longer re-render when unrelated state changes. Most noticeable when selecting different kins (TaskList/CronList/SystemHealthBar/Footer stay stable) or when queue state updates (only KinList re-renders).
+  2. Added `useMemo` in AppSidebar for derived `miniAppAgents` and `cronAgents` arrays
+- **Files changed:** AppSidebar.tsx, AgentList.tsx, TaskList.tsx, CronList.tsx, MiniAppList.tsx, SystemHealthBar.tsx, SidebarFooterContent.tsx
+- **Impact:** Sidebar sections no longer re-render when unrelated state changes. Most noticeable when selecting different agents (TaskList/CronList/SystemHealthBar/Footer stay stable) or when queue state updates (only AgentList re-renders).
 
 ### Next run priorities
 1. **Browser audit** — still needed when sandbox browser becomes available
@@ -269,7 +269,7 @@
 - **Initial state:** Single 2,881 KB chunk (825 KB gzip)
 - **Current main entry:** 304 KB (app shell)
 - **ChatPage:** 407 KB (from 590 KB at start)
-- **Lazy chunks created:** KinFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
+- **Lazy chunks created:** AgentFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
 - **React.memo added:** 14 components (7 chat + 6 sidebar + ProviderIcon)
 
 ### Next run priorities
@@ -304,7 +304,7 @@
 ### Cumulative progress (since journal start)
 - **Initial state:** Single 2,881 KB chunk (825 KB gzip)
 - **Current ChatPage:** 405 KB (from 590 KB)
-- **Lazy chunks created:** KinFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
+- **Lazy chunks created:** AgentFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch, ProviderIcon icons, rehype-highlight, remark-math, rehype-katex
 - **React.memo added:** 17 components (9 chat + 6 sidebar + ProviderIcon + ToolCallsViewer)
 
 ### Next run priorities
@@ -322,13 +322,13 @@
 ### Code audit findings
 - **Comprehensive review** of remaining optimization opportunities:
   - All chat components (MessageBubble, TypingIndicator, TaskResultCard, HumanPromptCard, CompactingCard, DateSeparator, TimeGapIndicator, InlineToolCall, ToolCallItem, ChatEmptyState, ConversationHeader, ConversationStats, ConversationSearch, ToolCallsViewer) are wrapped in `React.memo`
-  - All sidebar components (KinList, TaskList, CronList, MiniAppList, SystemHealthBar, SidebarFooterContent) are wrapped in `React.memo`
+  - All sidebar components (AgentList, TaskList, CronList, MiniAppList, SystemHealthBar, SidebarFooterContent) are wrapped in `React.memo`
   - ChatPanel uses `useMemo` for `displayMessages`, `processedMessages`, and derived data
   - `useChat` hook batches streaming tokens at 50ms intervals
   - `useToolCalls` returns memoized `toolCallsByMessage` Map
   - MarkdownContent lazy-loads rehype-highlight and remark-math/rehype-katex on demand
   - ProviderIcon dynamically imports @lobehub/icons per provider type with caching
-  - All modals (KinFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch) are lazy-loaded
+  - All modals (AgentFormModal, SettingsPage, AccountDialog, CronFormModal, CronDetailModal, TaskDetailModal, MiniAppViewer, QuickChatPanel, ConversationSearch) are lazy-loaded
   - Remaining inline closures in `liveTasks.map` are negligible (0-2 items typically)
   - `TypingIndicator` not memoized but has internal timer state, so memo wouldn't help
   - No remaining heavy static imports in the initial bundle path

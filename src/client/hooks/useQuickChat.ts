@@ -7,7 +7,7 @@ import { useChatStreaming } from '@/client/hooks/useChatStreaming'
 import type { ChatMessage } from '@/client/hooks/useChat'
 import type { MessageFile } from '@/shared/types'
 
-export function useQuickChat(sessionId: string | null, kinId: string | null) {
+export function useQuickChat(sessionId: string | null, agentId: string | null) {
   const { t } = useTranslation()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -45,7 +45,7 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
   // SSE handlers — filtered by sessionId
   useSSE({
     'chat:token': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       if (data.sessionId !== sessionId) return
 
       handleToken({
@@ -55,7 +55,7 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
     },
 
     'chat:done': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       if (data.sessionId !== sessionId) return
 
       const promoted = handleDone({
@@ -73,7 +73,7 @@ export function useQuickChat(sessionId: string | null, kinId: string | null) {
     },
 
     'chat:message': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       if (data.sessionId !== sessionId) return
 
       const message: ChatMessage = {

@@ -3,7 +3,7 @@
 Hivekeep ships an internal project tracker. A project is a long-lived workspace
 (repo, mission, product line) holding a kanban board of tickets and a palette
 of tags. Tickets are independent units of work that can be addressed by humans
-in chat, by tools, and by sub-Kin tasks spawned from a card.
+in chat, by tools, and by sub-Agent tasks spawned from a card.
 
 Schema highlights:
 - `projects` — has a stable internal UUID **and** a `slug` (unique, human-typeable)
@@ -58,7 +58,7 @@ structured codes instead of thrown exceptions:
 | `INVALID_TICKET_REF`| Input cannot be parsed as any of the three formats          |
 | `PROJECT_NOT_FOUND` | Slug does not match any project (qualified form)            |
 | `TICKET_NOT_FOUND`  | Project exists but has no ticket with that number, or the UUID does not exist |
-| `NO_ACTIVE_PROJECT` | Bare form used with no active project on the calling Kin    |
+| `NO_ACTIVE_PROJECT` | Bare form used with no active project on the calling Agent    |
 
 Pure parsing lives in `src/server/utils/ticket-ref.ts` (`parseTicketRef` +
 `ticketResolutionMessage`) and is unit-tested without touching the DB.
@@ -81,7 +81,7 @@ All ticket-scoped tools resolve their `ticket_id` argument through the resolver:
 `create_ticket(...)` is unchanged: it takes a `project_id` and returns the
 freshly-allocated `number` on the ticket payload.
 
-The active project (per Kin) is the one set by `set_active_project()`. When
+The active project (per Agent) is the one set by `set_active_project()`. When
 present, bare references like `#42` resolve against it.
 
 ## UI surface
@@ -95,7 +95,7 @@ present, bare references like `#42` resolve against it.
 
 Tickets accept arbitrary file attachments (PDF, CSV, images, archives, source
 code, etc.). They are first-class on the ticket: a deletion cascades to the
-files, and Kins working on the ticket can list/read/add/rename/delete them.
+files, and Agents working on the ticket can list/read/add/rename/delete them.
 
 - **DB**: `ticket_attachments` table with a `ticket_id` FK cascading on delete
 - **Disk**: files live under `${UPLOAD_DIR}/tickets/<projectId>/<ticketId>/<id>.<ext>`
@@ -114,14 +114,14 @@ files, and Kins working on the ticket can list/read/add/rename/delete them.
   side-panel refresh `attachmentCount` in real time.
 - **Size cap**: `TICKET_ATTACHMENT_MAX_SIZE` (MB), defaulting to
   `UPLOAD_MAX_FILE_SIZE` (50 MB). Empty files are rejected.
-- **Kin access**: `read_ticket_attachment` decodes text-like content inline
+- **Agent access**: `read_ticket_attachment` decodes text-like content inline
   (capped at ~200 KB by default; `max_bytes` to raise/lower). For binaries,
-  the tool returns the absolute `stored_path` so the Kin can run `read_file`
+  the tool returns the absolute `stored_path` so the Agent can run `read_file`
   on it directly or open it externally (e.g. PDF extraction tools).
 
 ## Prompt block injection
 
 The system prompt's *Ticket assignment* block exposes both the slug and the
-number to sub-Kins, so a sub-task working on `hivekeep#42` can refer to it in
+number to sub-Agents, so a sub-task working on `hivekeep#42` can refer to it in
 its replies and tool calls without ever seeing the UUID. The *Active project*
 block similarly lists `slug#N` for open tickets.

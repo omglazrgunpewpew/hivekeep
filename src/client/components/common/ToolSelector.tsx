@@ -71,7 +71,7 @@ interface SourceBucket {
  * a per-tool toggle, a per-domain "toggle the whole category" switch, and a
  * per-source "toggle the whole source" switch. Fully controlled: the parent
  * owns the selected `Set<string>` of tool names and is notified through
- * `onChange`. Used by the toolbox editor (and adapted by the Kin tools tab).
+ * `onChange`. Used by the toolbox editor (and adapted by the Agent tools tab).
  *
  * A catalog that contains only native tools (no plugin/MCP/custom entries)
  * renders exactly one source group, so existing single-source callers keep
@@ -171,7 +171,7 @@ export function ToolSelector({
                       tool.source === 'mcp'
                         ? tool.mcpServerName ?? undefined
                         : tool.source === 'custom'
-                          ? tool.customKinName ?? undefined
+                          ? tool.customAgentName ?? undefined
                           : undefined
                     return (
                       <ToolRow
@@ -252,7 +252,7 @@ function SourceGroup({
                 {t(`toolboxes.sources.${source}`)}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {t('kin.tools.countEnabled', { count: enabledCount, total: totalCount })}
+                {t('agent.tools.countEnabled', { count: enabledCount, total: totalCount })}
               </span>
             </button>
           </CollapsibleTrigger>
@@ -309,7 +309,7 @@ function DomainGroup({
               </span>
               <span className="text-sm font-medium">{meta.labelKey ? t(meta.labelKey) : (meta.label ?? domain)}</span>
               <span className="text-xs text-muted-foreground">
-                {t('kin.tools.countEnabled', { count: enabledCount, total: totalCount })}
+                {t('agent.tools.countEnabled', { count: enabledCount, total: totalCount })}
               </span>
             </button>
           </CollapsibleTrigger>
@@ -339,7 +339,7 @@ function ToolRow({
 }: {
   label: string
   toolKey?: string
-  /** Secondary provenance line, e.g. the MCP server or owning Kin. */
+  /** Secondary provenance line, e.g. the MCP server or owning Agent. */
   subLabel?: string
   enabled: boolean
   readOnly?: boolean

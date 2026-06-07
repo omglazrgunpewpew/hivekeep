@@ -1,8 +1,8 @@
 # Hivekeep — System prompt construction
 
-This document specifies how context is assembled before each LLM call for a Kin (main agent or sub-Kin).
+This document specifies how context is assembled before each LLM call for a Agent (main agent or sub-Agent).
 
-> **Language convention**: All prompt templates are written in English as the base language. The Kin adapts its response language based on the `[7] Language` block injected dynamically.
+> **Language convention**: All prompt templates are written in English as the base language. The Agent adapts its response language based on the `[7] Language` block injected dynamically.
 
 ---
 
@@ -47,7 +47,7 @@ The context sent to the LLM is composed of **two parts**:
 
 ### [1] Identity
 
-Basic Kin information.
+Basic Agent information.
 
 ```
 You are {name}, {role}.
@@ -60,7 +60,7 @@ You are Aria, an expert in nutrition and healthy eating.
 
 ### [1.5] Core principles
 
-Universal baseline behaviors injected for all Kins. Defines foundational principles: genuine helpfulness, resourcefulness, privacy respect, response calibration.
+Universal baseline behaviors injected for all Agents. Defines foundational principles: genuine helpfulness, resourcefulness, privacy respect, response calibration.
 
 ```
 ## Core principles
@@ -75,7 +75,7 @@ Universal baseline behaviors injected for all Kins. Defines foundational princip
 
 ### [1.6] Tool calling discipline
 
-Strong rule against pre-narration / hallucinated results. Injected for all Kins (main and sub-Kin). Modeled on Claude Code's `IMPORTANT:` pattern with explicit examples of forbidden phrases — necessary because personality blocks (block 2) often encourage warm/conversational tones that conflict with terse tool discipline.
+Strong rule against pre-narration / hallucinated results. Injected for all Agents (main and sub-Agent). Modeled on Claude Code's `IMPORTANT:` pattern with explicit examples of forbidden phrases — necessary because personality blocks (block 2) often encourage warm/conversational tones that conflict with terse tool discipline.
 
 ```
 ## Tool calling discipline
@@ -97,11 +97,11 @@ When a tool call depends on the result of a previous one, you MUST call them one
 When a tool returns an image URL (screenshot, generated image, or any fileUrl with image/* mime type), embed it inline using markdown image syntax: `![short description](url)`. The chat renderer displays these inline with click-to-zoom. Do NOT use plain link syntax `[text](url)` for images — that produces a clickable text link instead of the image itself. Plain links remain correct for non-image URLs.
 ```
 
-> **Rationale**: this is a verbatim port of the strategy used by Claude Code (Anthropic's official CLI) in [`claude-code-sourcemap/src/constants/prompts.ts`](claude-code-sourcemap/src/constants/prompts.ts). Claude Code does not use any UI-level filtering or special streaming logic — it relies entirely on aggressive `IMPORTANT:` markers and explicit forbidden-phrase examples. The same approach works in Hivekeep. The "Embedding images" sub-block was added when [MarkdownContent.tsx](src/client/components/chat/MarkdownContent.tsx) gained inline `<img>` rendering with click-to-zoom — the chat now renders `![]()` markdown so Kins should prefer that syntax for any image they want the user to see.
+> **Rationale**: this is a verbatim port of the strategy used by Claude Code (Anthropic's official CLI) in [`claude-code-sourcemap/src/constants/prompts.ts`](claude-code-sourcemap/src/constants/prompts.ts). Claude Code does not use any UI-level filtering or special streaming logic — it relies entirely on aggressive `IMPORTANT:` markers and explicit forbidden-phrase examples. The same approach works in Hivekeep. The "Embedding images" sub-block was added when [MarkdownContent.tsx](src/client/components/chat/MarkdownContent.tsx) gained inline `<img>` rendering with click-to-zoom — the chat now renders `![]()` markdown so Agents should prefer that syntax for any image they want the user to see.
 
 ### [2] Character
 
-The Kin's `character` field, injected as-is. Defines personality, tone, communication style.
+The Agent's `character` field, injected as-is. Defines personality, tone, communication style.
 
 ```
 ## Personality
@@ -109,11 +109,11 @@ The Kin's `character` field, injected as-is. Defines personality, tone, communic
 {character}
 ```
 
-> **Note**: The `character` field is written by the user in their preferred language when creating the Kin. It is injected as-is — no translation is applied.
+> **Note**: The `character` field is written by the user in their preferred language when creating the Agent. It is injected as-is — no translation is applied.
 
 ### [3] Expertise
 
-The Kin's `expertise` field, injected as-is. Defines knowledge and goals.
+The Agent's `expertise` field, injected as-is. Defines knowledge and goals.
 
 ```
 ## Expertise
@@ -125,12 +125,12 @@ The Kin's `expertise` field, injected as-is. Defines knowledge and goals.
 
 ### [4] Contacts (compact summary)
 
-Compact list of known contacts, without details. Allows the Kin to recognize names without overloading context.
+Compact list of known contacts, without details. Allows the Agent to recognize names without overloading context.
 
 ```
 ## Known contacts
 
-You know the following people and Kins. Use the get_contact(id) tool to
+You know the following people and Agents. Use the get_contact(id) tool to
 retrieve a contact's details when relevant.
 
 - {contact_name} (id: {contact_id}, {type})
@@ -142,15 +142,15 @@ retrieve a contact's details when relevant.
 ```
 ## Known contacts
 
-You know the following people and Kins. Use the get_contact(id) tool to
+You know the following people and Agents. Use the get_contact(id) tool to
 retrieve a contact's details when relevant.
 
 - Nicolas (id: c_abc123, human)
 - Marie (id: c_def456, human)
-- Atlas (id: c_ghi789, kin)
+- Atlas (id: c_ghi789, agent)
 ```
 
-> If the Kin has no contacts, this block is omitted.
+> If the Agent has no contacts, this block is omitted.
 
 ### [5] Relevant memories
 
@@ -181,7 +181,7 @@ Relevant information from your past interactions:
 
 ### [6] Hidden system instructions
 
-Internal instructions the Kin must not repeat to the user. They drive automatic behaviors.
+Internal instructions the Agent must not repeat to the user. They drive automatic behaviors.
 
 ```
 ## Internal instructions (do not share with the user)
@@ -226,9 +226,9 @@ Internal instructions the Kin must not repeat to the user. They drive automatic 
 
 ### Reusable custom tools
 - When you build/automate something reusable (an API call, transform, scrape,
-  calculation, formatter) that could help OTHER Kins or your future self, turn it
+  calculation, formatter) that could help OTHER Agents or your future self, turn it
   into a GLOBAL custom tool via create_custom_tool — it is then grantable to any
-  Kin via toolboxes (like MCP). Skip this for true one-shot tasks.
+  Agent via toolboxes (like MCP). Skip this for true one-shot tasks.
 - ALWAYS provide human `translations` (UI display name, description, and a
   label + description per parameter) for at least en and fr (es/de welcome).
   This is UI-only — it never changes the tool definition the LLM sees — but
@@ -282,11 +282,11 @@ Notes from your contact records:
 - {global note 2}
 ```
 
-> If the user has no linked contact or no global notes, the notes section is omitted. If `sourceType` is not `user` (e.g., inter-Kin message), this block is omitted entirely.
+> If the user has no linked contact or no global notes, the notes section is omitted. If `sourceType` is not `user` (e.g., inter-Agent message), this block is omitted entirely.
 
 ### [7] Language
 
-The Kin adapts its response language based on the **last user who sent a message**. This block is injected dynamically.
+The Agent adapts its response language based on the **last user who sent a message**. This block is injected dynamically.
 
 ```
 ## Language
@@ -314,13 +314,13 @@ The current speaker's preferred language is English.
 Always respond in this language unless the user explicitly asks you to switch.
 ```
 
-> **How it works**: when building the prompt, the system looks up the `language` field from `user_profiles` for the user who sent the incoming message. This ensures that if Nicolas (fr) and John (en) both talk to the same Kin, the Kin responds in French to Nicolas and in English to John.
+> **How it works**: when building the prompt, the system looks up the `language` field from `user_profiles` for the user who sent the incoming message. This ensures that if Nicolas (fr) and John (en) both talk to the same Agent, the Agent responds in French to Nicolas and in English to John.
 
-> **Inter-Kin messages**: when the incoming message is from another Kin (not a user), the language block defaults to the platform's default language or the last human user's language.
+> **Inter-Agent messages**: when the incoming message is from another Agent (not a user), the language block defaults to the platform's default language or the last human user's language.
 
 ### [7.7] Workspace
 
-Gives the Kin spatial awareness of its dedicated workspace directory. Includes the absolute path and a depth-limited file tree so the Kin knows what files already exist and where to create new ones.
+Gives the Agent spatial awareness of its dedicated workspace directory. Includes the absolute path and a depth-limited file tree so the Agent knows what files already exist and where to create new ones.
 
 ```
 ## Workspace
@@ -349,13 +349,13 @@ Contents:
 - At max depth, collapsed directories show total file count: `src/ (42 files)`
 - Target: ~200-500 tokens
 
-> This block is included for main Kins, sub-Kins (tasks), and quick sessions.
+> This block is included for main Agents, sub-Agents (tasks), and quick sessions.
 
 ### [7.8] Active project
 
-Injected when the Kin has a non-null `active_project_id` (or when the current turn is a task-completion turn with `projectOverride` set — see `projects.md` § 4). Gives the Kin awareness of the project it is currently working on, alongside its open tickets and tags.
+Injected when the Agent has a non-null `active_project_id` (or when the current turn is a task-completion turn with `projectOverride` set — see `projects.md` § 4). Gives the Agent awareness of the project it is currently working on, alongside its open tickets and tags.
 
-**This block lives in the volatile segment** (alongside [4], [5], [6.75], [7], [7.7], [8]), after the cache breakpoint. Switching `active_project_id` only invalidates the volatile part of the prompt cache — the stable prefix (identity, character, expertise, hidden instructions, kin directory, MCP) stays cached.
+**This block lives in the volatile segment** (alongside [4], [5], [6.75], [7], [7.7], [8]), after the cache breakpoint. Switching `active_project_id` only invalidates the volatile part of the prompt cache — the stable prefix (identity, character, expertise, hidden instructions, agent directory, MCP) stays cached.
 
 ```
 ## Active project
@@ -400,7 +400,7 @@ Platform: Hivekeep
 
 ### [8.5] Final reminder (tool calling discipline, repeated)
 
-A condensed restatement of [1.6], placed at the **very end** of the volatile segment. The position is intentional: Anthropic's recency bias makes the last lines of the prompt the most influential on the next-token generation. This block exists because the [2] Personality block of many Kins (e.g. Router with "warm and approachable", "explain transparently") actively fights the [1.6] discipline rule, and the model needs a final tie-breaker.
+A condensed restatement of [1.6], placed at the **very end** of the volatile segment. The position is intentional: Anthropic's recency bias makes the last lines of the prompt the most influential on the next-token generation. This block exists because the [2] Personality block of many Agents (e.g. Router with "warm and approachable", "explain transparently") actively fights the [1.6] discipline rule, and the model needs a final tie-breaker.
 
 ```
 ## Final reminder (most important rule of this turn)
@@ -443,7 +443,7 @@ Messages from other sources are also prefixed:
 | Source | Prefix |
 |---|---|
 | User | `[{pseudonym}]` |
-| Other Kin | `[Kin: {kin_name}]` (+ type request/inform/reply + request_id if applicable) |
+| Other Agent | `[Agent: {agent_name}]` (+ type request/inform/reply + request_id if applicable) |
 | Task result | `[Task: {task_description}] Result:` |
 | Task result — ticket-linked | `[Task: {task_description}] Result: {result}\n\n---\nLinked ticket: #{id_short} "{title}" (project: {project_title}, current status: {ticket_status}). Review the result above and update the ticket via update_ticket() if needed — status, description, tags. The kanban does not move automatically.` |
 | Cron result | `[Cron: {cron_name}] Result:` |
@@ -459,24 +459,24 @@ Tools are passed via the `tools` parameter of the LLM call (Vercel AI SDK format
 
 Available tools depend on the **context**:
 
-#### Main agent (Kin)
+#### Main agent (Agent)
 
 | Category | Tools |
 |---|---|
 | **Memory** | `recall`, `memorize`, `update_memory`, `forget`, `list_memories` |
 | **Contacts** | `get_contact`, `search_contacts`, `create_contact`, `update_contact` |
 | **History** | `search_history` |
-| **Inter-Kins** | `send_message`, `reply`, `list_kins` |
-| **Tasks** | `spawn_self`, `spawn_kin`, `respond_to_task`, `cancel_task`, `list_tasks` |
+| **Inter-Agents** | `send_message`, `reply`, `list_kins` |
+| **Tasks** | `spawn_self`, `spawn_agent`, `respond_to_task`, `cancel_task`, `list_tasks` |
 | **Crons** | `create_cron`, `update_cron`, `delete_cron`, `list_crons` |
 | **Projects** | `list_projects`, `get_project`, `create_project`, `update_project`, `update_project_description`, `append_project_description`, `patch_project_description`, `delete_project`, `set_active_project`, `create_tag`, `update_tag`, `delete_tag`, `list_tickets`, `get_ticket`, `create_ticket`, `update_ticket`, `add_ticket_tag`, `remove_ticket_tag`, `delete_ticket`, `start_ticket_task` (see `projects.md`) |
 | **Vault** | `get_secret`, `redact_message` |
 | **Custom tools (authoring)** | `create_custom_tool`, `write_custom_tool_file`, `run_custom_tool_setup`, `test_custom_tool`, `update_custom_tool`, `delete_custom_tool`, `list_custom_tools`, `create_tool_domain`, `list_tool_domains`, `update_tool_domain`, `delete_tool_domain` (main only) |
 | **Custom tools (the tools themselves)** | Global, exposed as `custom_<slug>`, granted via toolboxes like MCP (resolved separately, not in the registry). Carry UI-only localized `translations` (name/description/param labels) that NEVER change the LLM tool definition — see the *Reusable custom tools* guidance below. |
 | **Image** | `generate_image` (if image provider configured) |
-| **MCP** | Tools exposed by MCP servers assigned to the Kin |
+| **MCP** | Tools exposed by MCP servers assigned to the Agent |
 
-#### Sub-Kin (task)
+#### Sub-Agent (task)
 
 | Category | Tools |
 |---|---|
@@ -484,22 +484,22 @@ Available tools depend on the **context**:
 | **Memory** | `recall` (read-only — no memorize/forget) |
 | **History** | `search_history` |
 | **Vault** | `get_secret` |
-| **Tasks** | `spawn_self`, `spawn_kin` (if max depth not reached) |
+| **Tasks** | `spawn_self`, `spawn_agent` (if max depth not reached) |
 | **Projects** (only if `task.ticket_id !== null`) | `get_project`, `list_tickets`, `get_ticket`, `update_ticket`, `add_ticket_tag`, `remove_ticket_tag`, `update_project_description`, `append_project_description`, `patch_project_description` |
-| **MCP** | MCP tools inherited from parent Kin |
+| **MCP** | MCP tools inherited from parent Agent |
 
-> Sub-Kins do **not** have access to contacts, crons, custom tools, inter-Kin messaging, or memory write tools. They are focused on their task.
+> Sub-Agents do **not** have access to contacts, crons, custom tools, inter-Agent messaging, or memory write tools. They are focused on their task.
 
-> The **Projects** category for sub-Kins is conditional: only injected when the task is linked to a ticket (`task.ticket_id !== null`). It excludes `delete_project`, `delete_ticket`, `create_project`, `create_ticket`, and `set_active_project` — sub-Kins read and update the assigned ticket and its project, but cannot create/destroy entities or change their context.
+> The **Projects** category for sub-Agents is conditional: only injected when the task is linked to a ticket (`task.ticket_id !== null`). It excludes `delete_project`, `delete_ticket`, `create_project`, `create_ticket`, and `set_active_project` — sub-Agents read and update the assigned ticket and its project, but cannot create/destroy entities or change their context.
 
 ---
 
-## Sub-Kin prompt structure
+## Sub-Agent prompt structure
 
-The `prompt-builder.ts` service builds a **different prompt** for sub-Kins (tasks):
+The `prompt-builder.ts` service builds a **different prompt** for sub-Agents (tasks):
 
 ```
-You are {parent_kin_name}, a specialized AI agent on Hivekeep, executing a delegated task.
+You are {parent_agent_name}, a specialized AI agent on Hivekeep, executing a delegated task.
 
 ## Your mission
 {task_description}
@@ -529,9 +529,9 @@ You MUST call update_task_status() before you finish. There is no auto-completio
 If you do not call update_task_status(), the task will be marked as failed automatically.
 ```
 
-### Sub-Kin ticket assignment block
+### Sub-Agent ticket assignment block
 
-When `task.ticket_id !== null`, an additional block is injected in the stable segment of the sub-Kin's prompt, right after `## Your mission`. The ticket and its project are looked up at prompt-build time (always the current version, never a frozen snapshot from spawn time).
+When `task.ticket_id !== null`, an additional block is injected in the stable segment of the sub-Agent's prompt, right after `## Your mission`. The ticket and its project are looked up at prompt-build time (always the current version, never a frozen snapshot from spawn time).
 
 ```
 ## Ticket assignment
@@ -557,14 +557,14 @@ Description:
 
 ### Ticket task history (most recent first)
 
-- Task {task.id}{if current} (current task){/if}: {task.status}, kind: {task.kind}, Kin: {parent_kin_name}, created {relative_time}, updated {relative_time}
+- Task {task.id}{if current} (current task){/if}: {task.status}, kind: {task.kind}, Agent: {parent_agent_name}, created {relative_time}, updated {relative_time}
   Title: {task.title}
   {if result}Result summary: {task.result}{/if}
   {if error}Error summary: {task.error}{/if}
   {if no_result_or_error}No result or error summary is stored. Use get_task_detail(task_id: "{task.id}") or get_task_messages(task_id: "{task.id}", offset: -20) if you need to inspect where this task stopped.{/if}
 
 > Use update_ticket() to update the ticket as you progress (status, description, tags).
-> Report back to the parent Kin with report_to_parent() / update_task_status() as usual.
+> Report back to the parent Agent with report_to_parent() / update_task_status() as usual.
 ```
 
 > If `tickets.project_id` points to a deleted project (cas where the project was nuked while the task was running), this block is replaced by a degraded note: `"## Note: the project this ticket belonged to has been deleted."`. The task continues to run and report normally.
@@ -577,10 +577,10 @@ The `prompt-builder.ts` service assembles the system prompt by concatenating blo
 
 ```typescript
 async function buildSystemPrompt(params: {
-  kin: Kin
+  agent: Agent
   contacts: ContactSummary[]
   relevantMemories: Memory[]
-  isSubKin: boolean
+  isSubAgent: boolean
   taskDescription?: string
   userLanguage: 'fr' | 'en'     // language of the last user who sent a message
 }): Promise<string>

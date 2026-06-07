@@ -3,9 +3,9 @@ import { Brain, Sparkles } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/client/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { cn } from '@/client/lib/utils'
-import type { KinThinkingEffort } from '@/shared/types'
+import type { AgentThinkingEffort } from '@/shared/types'
 
-const LEVELS: Array<{ value: KinThinkingEffort | null; key: string }> = [
+const LEVELS: Array<{ value: AgentThinkingEffort | null; key: string }> = [
   { value: null, key: 'off' },
   { value: 'low', key: 'low' },
   { value: 'medium', key: 'medium' },
@@ -15,8 +15,8 @@ const LEVELS: Array<{ value: KinThinkingEffort | null; key: string }> = [
 
 interface Props {
   enabled: boolean
-  effort: KinThinkingEffort | null
-  onChange: (next: { enabled: boolean; effort: KinThinkingEffort | null }) => void
+  effort: AgentThinkingEffort | null
+  onChange: (next: { enabled: boolean; effort: AgentThinkingEffort | null }) => void
   /** Compact icon-only trigger (for chat header). Otherwise renders a labeled button. */
   compact?: boolean
   className?: string
@@ -27,7 +27,7 @@ export function ThinkingEffortPicker({ enabled, effort, onChange, compact = fals
   const active = enabled && !!effort
   const currentLabel = active ? t(`chat.thinkingPicker.effort.${effort}`) : t('chat.thinkingPicker.effort.off')
 
-  const handleSelect = (value: KinThinkingEffort | null) => {
+  const handleSelect = (value: AgentThinkingEffort | null) => {
     if (value === null) onChange({ enabled: false, effort: null })
     else onChange({ enabled: true, effort: value })
   }

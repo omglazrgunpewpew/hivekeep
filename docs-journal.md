@@ -7,7 +7,7 @@
 - Custom CSS with oklch purple→pink palette, gradient headings, dark mode defaults
 - SVG logo placeholders (purple→pink gradient circle with K)
 - Created 26 stub pages across all sidebar sections
-- Splash landing page with CardGrid (Kins, Plugins, Mini-Apps, Multi-Channel)
+- Splash landing page with CardGrid (Agents, Plugins, Mini-Apps, Multi-Channel)
 - Build passes: 28 pages, search index built
 - Commit: `3937bdc` — pushed to main
 - **Note:** Pre-commit hook OOM'd on vite build, used `--no-verify`. Build itself passes fine.
@@ -17,7 +17,7 @@
 - Migrated **Getting Started** section (3 pages):
   - `installation.md` — Docker, one-liner, Compose, manual install
   - `configuration.md` — env vars, data directory, advanced options
-  - `first-kin.md` — what's a Kin, creating one, key concepts, next steps
+  - `first-agent.md` — what's a Agent, creating one, key concepts, next steps
 - Updated `.github/workflows/pages.yml`:
   - Renamed to "Deploy Sites"
   - Triggers on `site/**` and `docs-site/**` changes
@@ -47,14 +47,14 @@
 - Build passes: 28 pages, search index built
 - Commit: `5261367` — pushed to main (--no-verify, pre-commit OOM on tsc)
 
-## 2026-03-06 — Phase 2: Kins section ✅
+## 2026-03-06 — Phase 2: Agents section ✅
 
-- Migrated **Kins** section (4 pages, all were empty stubs):
-  - `overview.md` — What Kins are, anatomy, how they work, Hub concept, shared Kins
-  - `system-prompts.md` — Prompt architecture (10 blocks), writing characters/expertise, global prompt, sub-Kin prompts
+- Migrated **Agents** section (4 pages, all were empty stubs):
+  - `overview.md` — What Agents are, anatomy, how they work, Hub concept, shared Agents
+  - `system-prompts.md` — Prompt architecture (10 blocks), writing characters/expertise, global prompt, sub-Agent prompts
   - `tools.md` — 100+ built-in tools by category, tool config (deny/allow lists, MCP access), MCP servers, custom tools, availability contexts
   - `memory.md` — Dual-channel memory (auto extraction + explicit), categories, importance, hybrid search retrieval, compacting, privacy
-- Source: README features, db schema, kin-engine.ts, prompt-builder.ts, memory-tools.ts, inter-kin-tools.ts, subtask-tools.ts
+- Source: README features, db schema, agent-engine.ts, prompt-builder.ts, memory-tools.ts, inter-agent-tools.ts, subtask-tools.ts
 - Build passes: 28 pages
 - Commit: `65be651` — pushed to main (--no-verify)
 
@@ -82,14 +82,14 @@
   - `supported.md` — Full 23-provider table with capabilities and API key links
   - `custom.md` — Plugin providers, OpenAI-compatible endpoints, Ollama
 - Migrated **API Reference** section (2 pages):
-  - `rest.md` — All REST endpoints by resource (Kins, Messages, Channels, Mini-Apps, Plugins, etc.)
+  - `rest.md` — All REST endpoints by resource (Agents, Messages, Channels, Mini-Apps, Plugins, etc.)
   - `sse.md` — SSE event types, delivery scope, client usage
 - Build passes: 34 pages
 - Commits: `7fd147b` (Channels), `f915c3e` (Memory+Providers+API) — pushed to main (--no-verify)
 
 ### Content migration status:
 - ✅ Getting Started (3 pages)
-- ✅ Kins (4 pages)
+- ✅ Agents (4 pages)
 - ✅ Plugins (4 pages — done during scaffold)
 - ✅ Mini-Apps (8 pages)
 - ✅ Channels (7 pages)
@@ -168,7 +168,7 @@
 ### Next run priorities:
 1. Accuracy review: Providers section
 2. Accuracy review: API Reference section
-3. Accuracy review: Kins section (tools page especially)
+3. Accuracy review: Agents section (tools page especially)
 
 ## 2026-03-07 — Accuracy review: Providers section ✅
 
@@ -180,43 +180,43 @@
 
 ### Next run priorities:
 1. Accuracy review: API Reference section
-2. Accuracy review: Kins section (especially tools page)
+2. Accuracy review: Agents section (especially tools page)
 3. Accuracy review: Getting Started section
 
 ## 2026-03-07 — Accuracy review: API Reference section ✅
 
 - Full rewrite of both API docs (`rest.md`, `sse.md`) against actual source code (all route files + SSE emitters)
 - **rest.md**: Expanded from ~15 sections with ~65 endpoints to **23 sections with ~150+ endpoints**:
-  - Fixed wrong route prefixes: Channels, Crons, Mini-Apps, Webhooks are global (not Kin-scoped)
+  - Fixed wrong route prefixes: Channels, Crons, Mini-Apps, Webhooks are global (not Agent-scoped)
   - Added 12 entirely missing resource sections: Knowledge, Quick Sessions, Tasks, Vault (with entries/attachments/types), File Storage, Files, Notifications, Prompts, Users, Invitations, Shared Links
   - Expanded existing sections: Channels (activate/deactivate/test/user-mappings/pending-count), Mini-Apps (files/storage/snapshots/backend/serving/SDK), Contacts (identifiers/platform-ids/notes), Webhooks (logs/regenerate-token), Crons (trigger/approve), Settings (6 specific endpoints instead of generic GET/PATCH)
   - Added Authentication section explaining both API key and session cookie
-  - Added Kin export/import, channel webhooks section, incoming webhooks
+  - Added Agent export/import, channel webhooks section, incoming webhooks
 - **sse.md**: Complete rewrite with accurate event types from source:
   - Replaced incorrect events: `message:created/chunk/complete` → `chat:message/token/done`; `mcp:connected/disconnected/error/tools-changed` → `mcp-server:created/updated/deleted`; removed phantom `session:created`
-  - Added missing events: `chat:tool-call-start`, `chat:tool-call`, `chat:tool-result`, `chat:cleared`, `memory:created`, `memory:updated`, `compacting:start`, `compacting:done`, `kin:updated`, `provider:created`, `provider:deleted`, `contact:updated`, `cron:updated`, `cron:deleted`, `quick-session:closed`, `task:deleted`, `webhook:deleted`, `settings:hub-changed`
+  - Added missing events: `chat:tool-call-start`, `chat:tool-call`, `chat:tool-result`, `chat:cleared`, `memory:created`, `memory:updated`, `compacting:start`, `compacting:done`, `agent:updated`, `provider:created`, `provider:deleted`, `contact:updated`, `cron:updated`, `cron:deleted`, `quick-session:closed`, `task:deleted`, `webhook:deleted`, `settings:hub-changed`
   - Added connection lifecycle docs, accurate scope labels, improved client example
 - Build passes: 34 pages
 - Commit: `e0a368d` — pushed to main (--no-verify)
 
 ### Next run priorities:
-1. Accuracy review: Kins section (especially tools page)
+1. Accuracy review: Agents section (especially tools page)
 2. Accuracy review: Getting Started section
 3. Accuracy review: Mini-Apps section
 
-## 2026-03-07 — Accuracy review: Kins section (tools + system-prompts) ✅
+## 2026-03-07 — Accuracy review: Agents section (tools + system-prompts) ✅
 
 - **tools.md**: Complete rewrite against `register.ts` source (the single source of truth for all tool registrations):
   - Expanded from ~30 tools in 11 categories to **all 100+ tools in 17 categories** with individual descriptions
-  - Added 6 missing categories: Knowledge, Webhooks, Kin Management, Plugin Management, User Management, MCP Server Management
-  - Fixed Multi-Agent section: split into Tasks (parent/sub-kin tools) and Inter-Kin Communication (send_message/reply/list_kins)
+  - Added 6 missing categories: Knowledge, Webhooks, Agent Management, Plugin Management, User Management, MCP Server Management
+  - Fixed Multi-Agent section: split into Tasks (parent/sub-agent tools) and Inter-Agent Communication (send_message/reply/list_kins)
   - Added missing tools in existing categories: Vault (+4: vault entries/types/attachments), Files (+3: list/update/delete), Contacts (+set_contact_note), Cron (+get_cron_journal), Memory (+review_memories), Wakeups (+list_wakeups), Mini-Apps (+5: templates/docs/gallery/icon)
   - Added opt-in tools section explaining defaultDisabled tools
-  - Fixed tool availability table: removed incorrect "Quick session" context (not a real ToolAvailability), documented accurate main/sub-kin availability
+  - Fixed tool availability table: removed incorrect "Quick session" context (not a real ToolAvailability), documented accurate main/sub-agent availability
   - Added MCP pending_approval status detail
 - **system-prompts.md**: Fixed prompt architecture list:
   - Added missing block 9: "Relevant knowledge" (knowledge base excerpts)
-  - Expanded Hub Kin directory description
+  - Expanded Hub Agent directory description
   - Expanded internal instructions description
   - Block count: 11 → 12
 - Build passes: 34 pages
@@ -231,7 +231,7 @@
 
 - Reviewed all 3 Getting Started docs against source code (`config.ts`, `.env.example`, `install.sh`, `docker-compose.yml`, `Dockerfile`)
 - **installation.md**: Added note clarifying port difference: Docker/install.sh default to 3000, manual install defaults to 3333 (from `.env.example`/`config.ts`)
-- **first-kin.md**: Fixed hardcoded `localhost:3000` to mention both ports depending on install method
+- **first-agent.md**: Fixed hardcoded `localhost:3000` to mention both ports depending on install method
 - **configuration.md**: 
   - Fixed `PUBLIC_URL` default (was hardcoded `localhost:3333`, now dynamic `localhost:<PORT>`)
   - Added `PORT` note about Docker defaulting to 3000
@@ -242,7 +242,7 @@
 
 ### Next run priorities:
 1. Accuracy review: Mini-Apps section (hooks/components against actual SDK)
-2. Accuracy review: Kins overview page
+2. Accuracy review: Agents overview page
 
 ## 2026-03-08 — Accuracy review: Mini-Apps hooks section ✅
 
@@ -259,13 +259,13 @@
 ### Next run priorities:
 1. Accuracy review: Mini-Apps SDK reference page (sdk-reference.md against hivekeep-sdk.d.ts)
 2. Accuracy review: Mini-Apps backend page (backend.md)
-3. Accuracy review: Kins overview page
+3. Accuracy review: Agents overview page
 
 ## 2026-03-08 — Accuracy review: Mini-Apps SDK reference ✅
 
 - Reviewed `sdk-reference.md` against `hivekeep-sdk.d.ts` (v1.16.0) and `hivekeep-sdk.js`
 - **Hivekeep.ready**: Fixed from boolean property to `ready()` method call
-- **Hivekeep.app**: Fixed shape from `{ id, name, slug, description, icon, version }` to actual `HivekeepAppMeta` (`{ id, name, slug, kinId, kinName, kinAvatarUrl, isFullPage, locale, user }`)
+- **Hivekeep.app**: Fixed shape from `{ id, name, slug, description, icon, version }` to actual `HivekeepAppMeta` (`{ id, name, slug, agentId, agentName, agentAvatarUrl, isFullPage, locale, user }`)
 - **Events**: Fixed event names — was `"ready"`, `"theme"`, corrected to `"theme-changed"`, `"app-meta"`, `"locale-changed"`, `"fullpage-changed"`, `"shared-data"`
 - **Hivekeep.on/emit**: Added `emit()` method (was missing from doc)
 - **storage.list()**: Fixed — was `list(prefix?) → string[]`, corrected to `list() → [{ key, size }]`
@@ -279,7 +279,7 @@
 ### Next run priorities:
 1. Accuracy review: Mini-Apps backend page (backend.md against _server.js handling)
 2. Accuracy review: Mini-Apps getting-started page
-3. Accuracy review: Kins overview page
+3. Accuracy review: Agents overview page
 
 ## 2026-03-09 — Accuracy review: Mini-Apps backend page ✅
 
@@ -296,7 +296,7 @@
 
 ### Next run priorities:
 1. Accuracy review: Mini-Apps getting-started page
-2. Accuracy review: Kins overview page
+2. Accuracy review: Agents overview page
 3. Accuracy review: Mini-Apps examples page (verify examples still match corrected APIs)
 
 ## 2026-03-09 — Accuracy review: Mini-Apps getting-started page ✅
@@ -313,7 +313,7 @@
 
 ### Next run priorities:
 1. Accuracy review: Mini-Apps examples page (verify examples match corrected APIs)
-2. Accuracy review: Kins overview page
+2. Accuracy review: Agents overview page
 3. **Type definition sync**: The `.d.ts` files are out of sync with JS — consider flagging as a code issue
 
 ## 2026-03-09 — Accuracy review: Mini-Apps examples page ✅
@@ -326,17 +326,17 @@
 - Commit: `9da7ca7` — pushed to main (--no-verify)
 
 ### Next run priorities:
-1. Accuracy review: Kins overview page
+1. Accuracy review: Agents overview page
 2. **Type definition sync**: The `.d.ts` files are out of sync with JS — consider flagging as a code issue
 3. Add docs link in README
 
-## 2026-03-09 — Accuracy review: Kins overview page ✅
+## 2026-03-09 — Accuracy review: Agents overview page ✅
 
-- Reviewed `overview.md` against `kins.ts`, `kin-engine.ts`, `queue.ts`, `compacting.ts`
+- Reviewed `overview.md` against `agents.ts`, `agent-engine.ts`, `queue.ts`, `compacting.ts`
 - **Message queue**: Fixed "FIFO queue" → "priority queue" (user messages get higher priority than automated ones, ordered by priority DESC then creation time ASC)
 - **Session compacting**: Removed "rollback-able" claim (no rollback mechanism exists). Clarified that original messages are preserved in DB, no data is lost.
-- **Anatomy table**: Added missing "Provider" field (maps to `providerId` in `CreateKinInput`)
-- **Other claims verified accurate**: Hub concept, shared Kins, memory injection, system prompt building, tool execution
+- **Anatomy table**: Added missing "Provider" field (maps to `providerId` in `CreateAgentInput`)
+- **Other claims verified accurate**: Hub concept, shared Agents, memory injection, system prompt building, tool execution
 - Build passes: 34 pages
 - Commit: `a75bdc1` — pushed to main (--no-verify)
 
@@ -356,7 +356,7 @@
 ### Content status: COMPLETE ✅
 All sections migrated and accuracy-reviewed:
 - ✅ Getting Started (3 pages)
-- ✅ Kins (4 pages)
+- ✅ Agents (4 pages)
 - ✅ Plugins (4 pages)
 - ✅ Mini-Apps (8 pages)
 - ✅ Channels (7 pages)
@@ -524,9 +524,9 @@ All sections migrated and accuracy-reviewed:
 - Four new feature commits since last run:
   - `ea03888` — Core principles block, current speaker profile, memory recency boost
   - `ac49216` — Discovery prompt for users with no contact notes
-  - `00de107` — Per-Kin private notes + channel contact resolution in speaker profile
+  - `00de107` — Per-Agent private notes + channel contact resolution in speaker profile
   - `5a903f5` — Self-update system (version check + update endpoint)
-- **system-prompts.md**: Updated prompt architecture list from 12 to 14 blocks. Added [3] Core principles (universal baseline behaviors for main Kins) and [12] Current speaker profile (name, role, global + private notes, channel contact resolution, discovery nudge)
+- **system-prompts.md**: Updated prompt architecture list from 12 to 14 blocks. Added [3] Core principles (universal baseline behaviors for main Agents) and [12] Current speaker profile (name, role, global + private notes, channel contact resolution, discovery nudge)
 - **memory/how-it-works.md**: Added recency boost (×1.5 today, ×1.25 week, ×1.1 month) and category boost to score weighting section
 - **memory/configuration.md**: Added `MEMORY_RECENCY_BOOST` env var
 - **api/rest.md**: Added Version Check section with 3 endpoints (GET cached info, POST force check, POST self-update)
@@ -539,7 +539,7 @@ All sections migrated and accuracy-reviewed:
 
 - New commit `b5392a2` trimmed tool descriptions and Zod `.describe()` across 35 tool files + prompt-builder to reduce token overhead
 - No tool names or parameters changed — pure description trimming
-- **system-prompts.md**: Updated block [11] (Internal instructions) to note that mini-app instructions now direct Kins to `get_mini_app_docs` instead of inline SDK reference, and MCP sections show server-level summaries only
+- **system-prompts.md**: Updated block [11] (Internal instructions) to note that mini-app instructions now direct Agents to `get_mini_app_docs` instead of inline SDK reference, and MCP sections show server-level summaries only
 - Other tool files: descriptions only shortened, no behavioral changes — docs tool tables unaffected
 - Build passes: 34 pages
 - Commit: `3314c9b` — pushed to main (--no-verify)
@@ -552,7 +552,7 @@ All sections migrated and accuracy-reviewed:
   - `fc6f068` + `91bc959` — Platform self-awareness tools (4 tools)
   - `3570400` + `804be5e` — Channel management tools (5 tools)
   - `737c565` — Dynamic channel platforms for plugin extensibility
-- **kins/tools.md**: 
+- **agents/tools.md**: 
   - Added 5 new channel management tools: `create_channel`, `update_channel`, `delete_channel`, `activate_channel`, `deactivate_channel`
   - Added 3 new platform tools: `get_platform_config`, `update_platform_config`, `restart_platform`
   - Updated opt-in tools table with `update_platform_config` and `restart_platform`
@@ -563,11 +563,11 @@ All sections migrated and accuracy-reviewed:
 
 ### Status: docs fully caught up with latest source changes
 
-## 2026-03-16 — Inter-Kin communication from sub-Kin tasks ✅
+## 2026-03-16 — Inter-Agent communication from sub-Agent tasks ✅
 
-- New feature `8209d80` (#250): sub-Kins can now use `send_message` and `list_kins` during tasks
-- **kins/tools.md**: Updated tool availability section — sub-kins now have inter-Kin communication access. Added details on `request` vs `inform` behavior, `awaiting_kin_response` task status, timeout (5min default), and `maxInterKinRequests` limit (3)
-- **kins/system-prompts.md**: Added bullet about inter-Kin communication and Kin directory in sub-Kin prompts
+- New feature `8209d80` (#250): sub-Agents can now use `send_message` and `list_kins` during tasks
+- **agents/tools.md**: Updated tool availability section — sub-agents now have inter-Agent communication access. Added details on `request` vs `inform` behavior, `awaiting_agent_response` task status, timeout (5min default), and `maxInterAgentRequests` limit (3)
+- **agents/system-prompts.md**: Added bullet about inter-Agent communication and Agent directory in sub-Agent prompts
 - Other commits since last run: test fixes (`4e0decc`), build step fix (`c997e50`), memory test (`d8fd3ee`), lockfile fix (`b483917`) — no docs impact
 - Build passes: 34 pages
 - Commit: `3158c85` — pushed to main (--no-verify)
@@ -583,15 +583,15 @@ All sections migrated and accuracy-reviewed:
 ## 2026-03-17 — Maintenance check: no changes needed (run 2)
 
 - Checked source commits: `c4eb28b` (shell-tools tests), `d9767c5` (v0.23.0 release) — no documentation impact
-- v0.23.0 bundles features already documented (channel management tools, inter-Kin communication, platform tools)
+- v0.23.0 bundles features already documented (channel management tools, inter-Agent communication, platform tools)
 - All 34 pages remain accurate and complete
 - **Status: docs fully caught up with source code**
 
 ## 2026-03-18 — Causal chain delivery (channelOriginId) docs ✅
 
-- New v0.24.0 feature: `channelOriginId` propagates through queue items, messages, tasks, inter-Kin requests to auto-deliver follow-up responses back to originating external channels
-- **channels/overview.md**: Added "Causal Chain Delivery" section explaining the mechanism, auto-delivered message types (`kin_reply`, `task_result`, `wakeup`), and `CHANNEL_PENDING_ORIGIN_TTL` env var
-- **kins/system-prompts.md**: Added block [13] "Channel origin context" to prompt architecture list (total now 15 blocks)
+- New v0.24.0 feature: `channelOriginId` propagates through queue items, messages, tasks, inter-Agent requests to auto-deliver follow-up responses back to originating external channels
+- **channels/overview.md**: Added "Causal Chain Delivery" section explaining the mechanism, auto-delivered message types (`agent_reply`, `task_result`, `wakeup`), and `CHANNEL_PENDING_ORIGIN_TTL` env var
+- **agents/system-prompts.md**: Added block [13] "Channel origin context" to prompt architecture list (total now 15 blocks)
 - **getting-started/configuration.md**: Added `CHANNEL_PENDING_ORIGIN_TTL` to advanced options
 - Other v0.24.0 changes: PDF text extraction in read_file, inline non-image attachments, custom provider model fix — no docs impact (behavioral fixes, not API changes)
 - Build passes: 34 pages
@@ -603,12 +603,12 @@ All sections migrated and accuracy-reviewed:
 
 - New features since last run (v0.24.0+):
   - `2e38a66` — `grep` tool, `multi_edit` tool, `replaceAll` flag on `edit_file`, LLM tool selection guidance in prompt
-  - `19fed12` + `a9ddc9f` — Webhook payload filtering (simple/advanced modes) with filter params exposed in Kin tools
-- **kins/tools.md**: 
+  - `19fed12` + `a9ddc9f` — Webhook payload filtering (simple/advanced modes) with filter params exposed in Agent tools
+- **agents/tools.md**: 
   - Added new "Filesystem & Code" section with 6 tools: `read_file`, `write_file`, `edit_file` (with `replaceAll`), `multi_edit`, `list_directory`, `grep`
   - Added tip box explaining the tool selection guidance table
   - Updated Webhooks section: expanded tool descriptions, added payload filtering documentation (simple/advanced modes, filter parameters)
-- **kins/system-prompts.md**: Updated block [11] to mention file & code tool selection table and `attach_file()` guidance for channel responses
+- **agents/system-prompts.md**: Updated block [11] to mention file & code tool selection table and `attach_file()` guidance for channel responses
 - Build passes: 34 pages
 - Commit: `1810c0a` — pushed to main (--no-verify)
 
@@ -616,14 +616,14 @@ All sections migrated and accuracy-reviewed:
 
 ## 2026-03-19 — Shared memories documentation ✅
 
-- New feature `1d59ce6` (#275): cross-Kin shared memory scope
+- New feature `1d59ce6` (#275): cross-Agent shared memory scope
 - **memory/how-it-works.md**: Added "Shared Memories" section documenting scope parameter, when to share vs keep private, search across scopes, author attribution. Updated memory tools table with scope-aware descriptions.
-- **kins/memory.md**: Added "Shared memories" section, updated tools table (added `review_memories`, scope info), fixed stale "rollback-able" claim about compacting, updated privacy section for shared scope
+- **agents/memory.md**: Added "Shared memories" section, updated tools table (added `review_memories`, scope info), fixed stale "rollback-able" claim about compacting, updated privacy section for shared scope
 - Build passes: 34 pages
 - Commit: `a9f71cd` — pushed to main (--no-verify)
 
 ### Still pending from recent commits:
-1. Task concurrency groups (#274) + concurrency in Kin tools
+1. Task concurrency groups (#274) + concurrency in Agent tools
 2. Progressive context compaction pipeline (#276) + incremental compacting + message-count triggers (#281)
 3. These are large features — one per future run
 
@@ -646,7 +646,7 @@ All sections migrated and accuracy-reviewed:
 - CI green again after 2 days of failures (type errors in tests)
 - Reviewed all source changes since Mar 19: ~30 commits including v0.26.0 and v0.27.1
 - Two automated docs commits (`0b86afc`, `db460cb`) already covered most features: incremental compacting, spill, concurrency groups, webhook dispatch modes, tool output spill env vars
-- **system-prompts.md**: Added block [12] "Workspace" — Kin workspace path + file tree injection. Updated total from 15 to 16 blocks.
+- **system-prompts.md**: Added block [12] "Workspace" — Agent workspace path + file tree injection. Updated total from 15 to 16 blocks.
 - Other changes verified as already documented by automated commits: task concurrency, webhook dispatch modes, spill threshold config, model references refactor (minor API addition of `providerId` to cron endpoints)
 - Build passes: 34 pages
 - Commit: `c7445a5` — pushed to main (--no-verify)
@@ -680,13 +680,13 @@ All sections migrated and accuracy-reviewed:
 
 ## 2026-03-23 — Maintenance check: no changes needed (run 2)
 
-- Checked source commits since last journal entry: `dc8906d` (webhook filter tests), `b0824ed` (kin-engine tests), `518c484` (automated docs update already pushed) — all tests, no documentation impact
+- Checked source commits since last journal entry: `dc8906d` (webhook filter tests), `b0824ed` (agent-engine tests), `518c484` (automated docs update already pushed) — all tests, no documentation impact
 - All 34 pages remain accurate and complete
 - **Status: docs fully caught up with source code**
 
 ## 2026-03-23 — Maintenance check: no changes needed (run 3)
 
-- Checked source commits since last journal entry: `dc8906d` (webhook filter tests), `b0824ed` (kin-engine tests) — all tests, no documentation impact
+- Checked source commits since last journal entry: `dc8906d` (webhook filter tests), `b0824ed` (agent-engine tests) — all tests, no documentation impact
 - All 34 pages remain accurate and complete
 - **Status: docs fully caught up with source code**
 
@@ -695,7 +695,7 @@ All sections migrated and accuracy-reviewed:
 - New feature `cb588e2`: unified default models & services configuration
   - 2 new agent tools: `list_providers` (list configured providers with capabilities) and `list_models` (list available models, filter by capability)
   - 5 new API endpoints: `GET /api/settings/default-models`, `PUT /api/settings/default-llm`, `PUT /api/settings/default-image`, `PUT /api/settings/default-compacting`, legacy `GET /models` annotated
-- **kins/tools.md**: Added `list_providers` and `list_models` to System & Advanced section
+- **agents/tools.md**: Added `list_providers` and `list_models` to System & Advanced section
 - **api/rest.md**: Added 4 new default-models endpoints, annotated legacy `/models` endpoint
 - Other commits since last run: shadcn Select refactor (UI), unit-converter tests, v0.27.3 release — no docs impact
 - Build passes: 34 pages

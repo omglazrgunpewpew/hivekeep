@@ -143,9 +143,9 @@ export function MiniAppViewer() {
         slug: app.slug,
         description: app.description,
         icon: app.icon,
-        kinId: app.maintainerKinId,
-        kinName: app.maintainerKinName,
-        kinAvatarUrl: app.maintainerKinAvatarUrl,
+        agentId: app.maintainerAgentId,
+        agentName: app.maintainerAgentName,
+        agentAvatarUrl: app.maintainerAgentAvatarUrl,
         version: app.version,
         isFullPage,
         locale: i18n.language,
@@ -203,7 +203,7 @@ export function MiniAppViewer() {
             if (entry.level === 'error') {
               setErrorCount((c) => c + 1)
             }
-            // Forward to server for Kin tool access
+            // Forward to server for Agent tool access
             fetch(`/api/mini-apps/${activeAppId}/console`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -336,9 +336,9 @@ export function MiniAppViewer() {
         }
         case 'open-app': {
           const slug = String(msg.slug || '')
-          if (!slug || !app?.maintainerKinId) break
+          if (!slug || !app?.maintainerAgentId) break
           // Resolve slug to appId via API, then open
-          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerKinId}/${encodeURIComponent(slug)}`)
+          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerAgentId}/${encodeURIComponent(slug)}`)
             .then((data) => {
               if (data.app?.id) {
                 openApp(data.app.id)
@@ -353,10 +353,10 @@ export function MiniAppViewer() {
         }
         case 'share': {
           const targetSlug = String(msg.targetSlug || '')
-          if (!targetSlug || !app?.maintainerKinId) break
+          if (!targetSlug || !app?.maintainerAgentId) break
           const sharePayload = msg.shareData
           // Resolve target app, open it, and forward shared data once it's ready
-          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerKinId}/${encodeURIComponent(targetSlug)}`)
+          api.get<{ app: MiniAppSummary }>(`/mini-apps/by-slug/${app.maintainerAgentId}/${encodeURIComponent(targetSlug)}`)
             .then((data) => {
               if (data.app?.id) {
                 pendingShareData.current = sharePayload
@@ -457,7 +457,7 @@ export function MiniAppViewer() {
           const text = String(msg.text || '').trim()
           const silent = Boolean(msg.silent)
 
-          if (!text || !app?.maintainerKinId) {
+          if (!text || !app?.maintainerAgentId) {
             sendDialogResult(callbackId, false)
             break
           }
@@ -478,7 +478,7 @@ export function MiniAppViewer() {
           // Prefix message with app context
           const prefixed = `[${app.icon || '📦'} ${app.name}] ${text}`
 
-          api.post<{ messageId: string }>(`/kins/${app.maintainerKinId}/messages`, { content: prefixed })
+          api.post<{ messageId: string }>(`/agents/${app.maintainerAgentId}/messages`, { content: prefixed })
             .then(() => {
               if (!silent) toast.success(t('miniApps.sendMessage.sent'))
               sendDialogResult(callbackId, true)
@@ -521,7 +521,7 @@ export function MiniAppViewer() {
     </div>
   ) : null
 
-  // ─── "Improve this app" → message the maintainer Kin ────────────────────────
+  // ─── "Improve this app" → message the maintainer Agent ────────────────────────
   const [improveOpen, setImproveOpen] = useState(false)
   const [improveText, setImproveText] = useState('')
   const [improveSubmitting, setImproveSubmitting] = useState(false)
@@ -531,11 +531,11 @@ export function MiniAppViewer() {
     if (!app || !description) return
     setImproveSubmitting(true)
     try {
-      const res = await api.post<{ maintainerKinId: string; maintainerKinName: string }>(
+      const res = await api.post<{ maintainerAgentId: string; maintainerAgentName: string }>(
         `/mini-apps/${app.id}/improve`,
         { description },
       )
-      toast.success(t('miniApps.improve.sent', { kin: res.maintainerKinName }))
+      toast.success(t('miniApps.improve.sent', { agent: res.maintainerAgentName }))
       setImproveText('')
       setImproveOpen(false)
     } catch (err) {
@@ -564,7 +564,7 @@ export function MiniAppViewer() {
         <AlertDialogHeader>
           <AlertDialogTitle>{t('miniApps.improve.modalTitle', { name: app?.name ?? '' })}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('miniApps.improve.modalDescription', { kin: app?.maintainerKinName ?? '' })}
+            {t('miniApps.improve.modalDescription', { agent: app?.maintainerAgentName ?? '' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Textarea
@@ -885,8 +885,8 @@ export function MiniAppViewer() {
             <Suspense fallback={<div className="flex items-center justify-center py-8"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>}>
               <TaskPanelContent
                 taskId={activeTask.taskId}
-                kinName={activeTask.kinName}
-                kinAvatarUrl={activeTask.kinAvatarUrl}
+                agentName={activeTask.agentName}
+                agentAvatarUrl={activeTask.agentAvatarUrl}
               />
             </Suspense>
           </>

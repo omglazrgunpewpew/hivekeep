@@ -97,7 +97,7 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         id: messageId,
         role: 'assistant',
         content: token,
-        sourceType: 'kin',
+        sourceType: 'agent',
         sourceId: null,
         sourceName: sourceName ?? null,
         sourceAvatarUrl: sourceAvatarUrl ?? null,
@@ -147,7 +147,7 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         id: messageId,
         role: 'assistant',
         content: '',
-        sourceType: 'kin',
+        sourceType: 'agent',
         sourceId: null,
         sourceName: null,
         sourceAvatarUrl: null,
@@ -224,7 +224,7 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
         id: streamingMessageIdRef.current,
         role: 'assistant' as const,
         content: (data?.content as string) ?? streamingContentRef.current,
-        sourceType: (data?.sourceType as string) ?? 'kin',
+        sourceType: (data?.sourceType as string) ?? 'agent',
         sourceId: (data?.sourceId as string) ?? null,
         sourceName: (data?.sourceName as string) ?? null,
         sourceAvatarUrl: (data?.sourceAvatarUrl as string) ?? null,
@@ -308,7 +308,7 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
       id: snapshot.messageId,
       role: 'assistant',
       content,
-      sourceType: 'kin',
+      sourceType: 'agent',
       sourceId: null,
       sourceName: snapshot.sourceName ?? null,
       sourceAvatarUrl: snapshot.sourceAvatarUrl ?? null,
@@ -331,7 +331,7 @@ export function useChatStreaming(options?: UseChatStreamingOptions) {
   }, [trackTokenStall])
 
   /**
-   * Reset all streaming state. Call when the context changes (e.g. kinId switch).
+   * Reset all streaming state. Call when the context changes (e.g. agentId switch).
    */
   const resetStreaming = useCallback(() => {
     if (batchTimerRef.current) {

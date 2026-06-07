@@ -245,7 +245,7 @@ const NAME_PATTERN = /^[a-z0-9-]+$/
  * outside this set is rejected at manifest-validation time so plugin
  * authors get immediate feedback instead of a silent runtime gate.
  */
-const PERMISSION_PATTERN = /^(http:[^\s]+|storage|cards|vault|cron|kins)$/
+const PERMISSION_PATTERN = /^(http:[^\s]+|storage|cards|vault|cron|agents)$/
 
 /**
  * Allowed `type` enum on a channel adapter's config field. Matches
@@ -351,7 +351,7 @@ export function validateManifest(data: unknown): { valid: boolean; errors: strin
         }
         if (!PERMISSION_PATTERN.test(p)) {
           errors.push(
-            `permission "${p}" is invalid — must be either an http permission ("http:<host>" or "http:*") or one of: storage, cards, vault, cron, kins`,
+            `permission "${p}" is invalid — must be either an http permission ("http:<host>" or "http:*") or one of: storage, cards, vault, cron, agents`,
           )
         }
       }
@@ -533,7 +533,7 @@ export function validatePluginExports(
         if (!Array.isArray(reg.availability)) {
           warnings.push(`tools.${toolName}: missing or invalid "availability" array`)
         } else {
-          const validAvail = ['main', 'sub-kin']
+          const validAvail = ['main', 'sub-agent']
           for (const a of reg.availability) {
             if (!validAvail.includes(a as string)) {
               warnings.push(`tools.${toolName}: unknown availability "${a}" (expected: ${validAvail.join(', ')})`)
@@ -1274,7 +1274,7 @@ class PluginManager {
 
     const cards: PluginCardsAPI = {
       emit: (params) => emitPluginCard({
-        kinId: params.kinId,
+        agentId: params.agentId,
         pluginId: manifest.name,
         cardType: params.cardType,
         layout: params.layout,
@@ -1539,7 +1539,7 @@ class PluginManager {
   /**
    * Tools registered by each loaded plugin, grouped by plugin name. Returns
    * one entry per plugin that currently has at least one registered tool.
-   * Used by the Kin Tools route to render plugin tools as their own UI
+   * Used by the Agent Tools route to render plugin tools as their own UI
    * groups (the bucket builder splits plugin tools off from native ones
    * regardless of their registry domain).
    *

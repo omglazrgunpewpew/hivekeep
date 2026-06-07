@@ -23,9 +23,9 @@ Hivekeep.ready()  // Signal that the app has finished loading
 
 ```javascript
 Hivekeep.app
-// { id, name, slug, kinId, kinName, kinAvatarUrl, isFullPage, locale, user }
+// { id, name, slug, agentId, agentName, agentAvatarUrl, isFullPage, locale, user }
 
-Hivekeep.kin       // { id, name, avatarUrl }
+Hivekeep.agent       // { id, name, avatarUrl }
 Hivekeep.user      // { id, name, pseudonym, locale, timezone, avatarUrl }
 Hivekeep.locale    // string — current UI language code (e.g. 'en', 'fr')
 Hivekeep.version   // string — SDK version
@@ -82,14 +82,14 @@ Hivekeep.fullpage(bool)          // Toggle full-page or side-panel mode
 Hivekeep.setTitle(title)         // Dynamically update the panel header title
 Hivekeep.setBadge(value)         // Set sidebar badge (number, string, or null to clear)
 Hivekeep.resize(width?, height?) // Request panel resize (320-1200px width, 200-2000px height)
-Hivekeep.openApp(slug)           // Open another mini-app from the same Kin by slug
+Hivekeep.openApp(slug)           // Open another mini-app from the same Agent by slug
 ```
 
 ## Messaging
 
 ```javascript
 await Hivekeep.sendMessage(text, options?)
-// Send a message to the Kin's conversation
+// Send a message to the Agent's conversation
 // options: { silent?: boolean }
 // Rate limited: 5 per 30s
 
@@ -105,7 +105,7 @@ await Hivekeep.conversation.send(text, options?)
 
 ```javascript
 await Hivekeep.memory.search(query, limit?)
-// Semantic search Kin memories (default 20, max 50)
+// Semantic search Agent memories (default 20, max 50)
 // Returns: [{ id, content, category, subject, score, updatedAt }]
 
 await Hivekeep.memory.store(content, { category?, subject? })
@@ -184,7 +184,7 @@ Hivekeep.share(targetSlug, data)
 Hivekeep.on("shared-data", ({ from, fromName, data, ts }) => { ... })
 // Receive shared data from another app
 
-await Hivekeep.apps.list()     // List all mini-apps from the same Kin
+await Hivekeep.apps.list()     // List all mini-apps from the same Agent
 await Hivekeep.apps.get(appId) // Get details of a specific app
 // Returns: { id, name, slug, description, icon, version }
 ```

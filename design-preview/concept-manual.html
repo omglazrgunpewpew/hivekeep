@@ -154,7 +154,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
 <div class="wrap">
 
   <div class="masthead">
-    <div class="logo">Kin<b>Bot</b></div>
+    <div class="logo">Agent<b>Bot</b></div>
     <nav><a href="#">Manual</a><a href="#">The household</a><a href="#">Why self-host</a><a href="#">Docs</a><a href="#">GitHub ↗</a></nav>
   </div>
   <hr class="rule">
@@ -165,7 +165,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
     <div class="title-grid">
       <h1 class="serif">A self-hosted team of AI agents that <em>remember</em>, <span class="mark">collaborate</span>, and grow with you.</h1>
       <div>
-        <p class="lede">Your Kins live on <b>your</b> server. They keep their memory, build their own tools, and reach you on any channel. Not a chatbot — a household of specialists.</p>
+        <p class="lede">Your Agents live on <b>your</b> server. They keep their memory, build their own tools, and reach you on any channel. Not a chatbot — a household of specialists.</p>
         <dl class="colophon">
           <div class="row"><span class="k">Runs on</span><span class="v">one container</span></div>
           <div class="row"><span class="k">External infra</span><span class="v"><span class="amb">none</span></span></div>
@@ -193,7 +193,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
       <div class="split2">
         <div>
           <p>No "new conversation". One continuous session, and a hybrid memory that builds context over months. Nothing is ever deleted — old turns are summarized, never thrown away.</p>
-          <p>A Kin can hand work to another, or spawn sub-agents to move faster. The team shares one address book and one history.</p>
+          <p>A Agent can hand work to another, or spawn sub-agents to move faster. The team shares one address book and one history.</p>
         </div>
         <div class="figure">
           <div class="cap"><span>Fig. 1 — recall over months</span><span class="amb">memory</span></div>
@@ -217,21 +217,21 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
       <div class="split2">
         <div>
           <p>No Postgres, Redis, Mongo, or message broker. Bun and SQLite in a single binary. Your data, your keys, your machine.</p>
-          <p>And the platform <b>extends itself</b>: your Kins write their own tools, build mini-apps, and ship plugins. Secrets go to an encrypted vault and <b>never reach the LLM</b>.</p>
-          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br><span class="cmt"># then open your browser. Sherpa does the rest.</span></div>
+          <p>And the platform <b>extends itself</b>: your Agents write their own tools, build mini-apps, and ship plugins. Secrets go to an encrypted vault and <b>never reach the LLM</b>.</p>
+          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br><span class="cmt"># then open your browser. Queenie does the rest.</span></div>
         </div>
         <dl class="specs">
           <div class="r"><dt>Footprint</dt><dd>1 process · 1 SQLite file</dd></div>
           <div class="r"><dt>Extends via</dt><dd>custom tools · mini-apps · NPM plugins · MCP</dd></div>
           <div class="r"><dt>Secrets</dt><dd>AES-256-GCM vault, by reference only</dd></div>
-          <div class="r"><dt>Token cost</dt><dd>accounted per Kin &amp; model · 72% cache hit</dd></div>
+          <div class="r"><dt>Token cost</dt><dd>accounted per Agent &amp; model · 72% cache hit</dd></div>
         </dl>
       </div>
     </div>
   </section>
   <hr class="rule">
 
-  <!-- 03 — SHERPA + real screenshot slot -->
+  <!-- 03 — QUEENIE + real screenshot slot -->
   <!-- SRC: configurator.ts + secure-input-tools.ts -->
   <section class="section">
     <div class="num serif">03<small>Setup</small></div>
@@ -239,7 +239,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
       <h2 class="serif">Setup is a conversation, not a YAML file.</h2>
       <div class="split2">
         <div>
-          <p>Sherpa, your setup agent, connects your providers, secures your secrets, and creates your first Kins — by chatting with you. It stays around for good.</p>
+          <p>Queenie, your setup agent, connects your providers, secures your secrets, and creates your first Agents — by chatting with you. It stays around for good.</p>
           <p>Tools render as real, themed UI in the thread — a weather card, not raw JSON. Mini-apps become dashboards inside Hivekeep.</p>
         </div>
         <div class="shot">
@@ -271,7 +271,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
 
   <footer class="footer">
     <div class="top">
-      <div class="logo serif">Kin<b>Bot</b></div>
+      <div class="logo serif">Agent<b>Bot</b></div>
       <span class="meta">Open-source · MIT · Built with Bun · © 2026</span>
     </div>
   </footer>
@@ -280,7 +280,7 @@ hr.rule{border:0;border-top:1px solid var(--rule);margin:0;}
 
 <script>
 const KINS = [
-  {name:"Sherpa",domain:"Setup & config"},{name:"Atlas",domain:"Research"},{name:"Quill",domain:"Writing"},
+  {name:"Queenie",domain:"Setup & config"},{name:"Atlas",domain:"Research"},{name:"Quill",domain:"Writing"},
   {name:"Ledger",domain:"Finance"},{name:"Pixel",domain:"Design"},{name:"Forge",domain:"Dev & DevOps"},
   {name:"Sol",domain:"Home automation"},{name:"Cumulus",domain:"Weather"},{name:"Sentry",domain:"Security"},
   {name:"Tempo",domain:"Calendar"},{name:"Lyra",domain:"Music"},{name:"Chef",domain:"Cooking"},

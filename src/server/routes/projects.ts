@@ -36,7 +36,7 @@ import { config } from '@/server/config'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 import { TICKET_STATUSES, GITHUB_REPO_REGEX, isValidGitBranch } from '@/shared/constants'
-import type { TicketStatus, KinThinkingConfig, KinThinkingEffort } from '@/shared/types'
+import type { TicketStatus, AgentThinkingConfig, AgentThinkingEffort } from '@/shared/types'
 
 const log = createLogger('routes:projects')
 
@@ -147,12 +147,12 @@ projectRoutes.post('/', async (c) => {
     scoutModel = body.scoutModel
     scoutProviderId = body.scoutProviderId
   }
-  let thinkingConfig: KinThinkingConfig | null | undefined
+  let thinkingConfig: AgentThinkingConfig | null | undefined
   if (body.thinkingConfig && typeof body.thinkingConfig === 'object') {
     const cfg = body.thinkingConfig as Record<string, unknown>
     const enabled = cfg.enabled === true
     const effort = typeof cfg.effort === 'string' && (VALID_EFFORTS as readonly string[]).includes(cfg.effort)
-      ? (cfg.effort as KinThinkingEffort)
+      ? (cfg.effort as AgentThinkingEffort)
       : null
     thinkingConfig = { enabled, ...(effort !== null ? { effort } : {}) }
   }
@@ -202,7 +202,7 @@ projectRoutes.post('/', async (c) => {
   }
 })
 
-const VALID_EFFORTS: readonly KinThinkingEffort[] = ['low', 'medium', 'high', 'max']
+const VALID_EFFORTS: readonly AgentThinkingEffort[] = ['low', 'medium', 'high', 'max']
 
 projectRoutes.patch('/:id', async (c) => {
   const id = c.req.param('id')
@@ -218,7 +218,7 @@ projectRoutes.patch('/:id', async (c) => {
     providerId?: string | null
     scoutModel?: string | null
     scoutProviderId?: string | null
-    thinkingConfig?: KinThinkingConfig | null
+    thinkingConfig?: AgentThinkingConfig | null
     defaultToolboxIds?: string[] | null
   } = {}
   if (typeof body.title === 'string') update.title = body.title
@@ -263,14 +263,14 @@ projectRoutes.patch('/:id', async (c) => {
     update.scoutModel = body.scoutModel
     update.scoutProviderId = body.scoutProviderId
   }
-  // thinkingConfig: null clears (inherit from Kin); object validates shape.
+  // thinkingConfig: null clears (inherit from Agent); object validates shape.
   if (body.thinkingConfig === null) {
     update.thinkingConfig = null
   } else if (body.thinkingConfig && typeof body.thinkingConfig === 'object') {
     const cfg = body.thinkingConfig as Record<string, unknown>
     const enabled = cfg.enabled === true
     const effort = typeof cfg.effort === 'string' && (VALID_EFFORTS as readonly string[]).includes(cfg.effort)
-      ? (cfg.effort as KinThinkingEffort)
+      ? (cfg.effort as AgentThinkingEffort)
       : null
     update.thinkingConfig = { enabled, ...(effort !== null ? { effort } : {}) }
   }
@@ -425,8 +425,8 @@ projectRoutes.post('/:projectId/tickets', async (c) => {
 
 // ─── Project knowledge ────────────────────────────────────────────────────────
 //
-// Entries created here have `authorKinId = null`, marking them as user-authored
-// (vs. entries created by Kin tool calls). UI/prompt rendering shows `by user`
+// Entries created here have `authorAgentId = null`, marking them as user-authored
+// (vs. entries created by Agent tool calls). UI/prompt rendering shows `by user`
 // for these.
 
 projectRoutes.get('/:projectId/knowledge', async (c) => {
@@ -487,7 +487,7 @@ projectRoutes.post('/:projectId/knowledge', async (c) => {
   const pinned = body.pinned === true
 
   try {
-    const entry = await createProjectKnowledge({ projectId, title, content, category, pinned, authorKinId: null })
+    const entry = await createProjectKnowledge({ projectId, title, content, category, pinned, authorAgentId: null })
     return c.json({ entry }, 201)
   } catch (err) {
     if (err instanceof PinCapExceededError) {

@@ -24,7 +24,7 @@ hivekeep/
 │   │   ├── src/index.ts               # Surface publique (tools, channels, providers,
 │   │   │                              #  hooks, cards, plugin context)
 │   │   ├── README.md
-│   │   └── examples/hello-kin/        # Plugin minimal de référence
+│   │   └── examples/hello-agent/        # Plugin minimal de référence
 │   └── create-hivekeep-plugin/          # Scaffolder `bunx create-hivekeep-plugin`
 │
 ├── plugins/                           # Plugins maintenus dans le repo
@@ -41,16 +41,16 @@ hivekeep/
 │   │   ├── logger.ts                  # Logger (pino)
 │   │   │
 │   │   ├── routes/                    # Routes API REST
-│   │   │   ├── auth.ts, me.ts, kins.ts, messages.ts, …
+│   │   │   ├── auth.ts, me.ts, agents.ts, messages.ts, …
 │   │   │   ├── providers.ts           # CRUD providers + /:id/test + /:id/models
 │   │   │   ├── plugins.ts             # CRUD plugins, manifest, permissions
 │   │   │   ├── channel-*.ts           # Webhooks built-in (telegram, slack, signal, …)
 │   │   │   └── sse.ts                 # GET /api/sse (connexion SSE globale)
 │   │   │
 │   │   ├── services/                  # Logique métier
-│   │   │   ├── kin-engine.ts          # Orchestration LLM (contexte, appels, streaming)
+│   │   │   ├── agent-engine.ts          # Orchestration LLM (contexte, appels, streaming)
 │   │   │   ├── prompt-builder.ts      # Construction du prompt système
-│   │   │   ├── queue.ts               # Queue FIFO par Kin
+│   │   │   ├── queue.ts               # Queue FIFO par Agent
 │   │   │   ├── compacting.ts          # Compacting des sessions
 │   │   │   ├── memory.ts              # Mémoire long terme (extraction, recall, search)
 │   │   │   ├── consolidation.ts       # Fusion automatique des memories proches
@@ -87,10 +87,10 @@ hivekeep/
 │   │   │   │                          #  describeImageModel, testProviderConnection
 │   │   │   └── ADDING_PROVIDERS.md
 │   │   │
-│   │   ├── tools/                     # Outils natifs exposés aux Kins
+│   │   ├── tools/                     # Outils natifs exposés aux Agents
 │   │   │   ├── index.ts, register.ts, types.ts
 │   │   │   ├── memory-tools.ts, contact-tools.ts, history-tools.ts
-│   │   │   ├── inter-kin-tools.ts, task-tools.ts, subtask-tools.ts
+│   │   │   ├── inter-agent-tools.ts, task-tools.ts, subtask-tools.ts
 │   │   │   ├── cron-tools.ts, webhook-tools.ts, vault-tools.ts
 │   │   │   ├── filesystem-tools.ts, grep-tools.ts, multi-edit-tools.ts
 │   │   │   ├── shell-tools.ts, custom-tool-tools.ts
@@ -106,14 +106,14 @@ hivekeep/
 │   │   ├── auth/                      # Better Auth
 │   │   ├── sse/                       # Server-Sent Events
 │   │   ├── hooks/                     # Event bus + hook system
-│   │   ├── mini-app-sdk/              # SDK consommé par les mini-apps des Kins
+│   │   ├── mini-app-sdk/              # SDK consommé par les mini-apps des Agents
 │   │   ├── utils/                     # Helpers transverses
 │   │   └── assets/                    # Assets statiques (base avatar, etc.)
 │   │
 │   ├── client/                        # Frontend (React + Vite)
 │   │   ├── main.tsx, App.tsx
 │   │   ├── pages/                     # Pages (dashboard, settings, design-system, …)
-│   │   ├── components/                # Composants (ui/, sidebar/, chat/, kin/, …)
+│   │   ├── components/                # Composants (ui/, sidebar/, chat/, agent/, …)
 │   │   ├── hooks/                     # Hooks React custom
 │   │   ├── contexts/                  # Contexts (theme, palette, …)
 │   │   ├── lib/                       # Utilitaires client (api, i18n, …)
@@ -134,7 +134,7 @@ hivekeep/
 └── data/                              # Données persistantes (gitignored)
     ├── hivekeep.db (+ -shm / -wal)
     ├── uploads/                       # Pièces jointes utilisateur
-    ├── workspaces/                    # Workspaces des Kins (filesystem isolé)
+    ├── workspaces/                    # Workspaces des Agents (filesystem isolé)
     ├── mini-apps/                     # Fichiers des mini-apps
     ├── storage/                       # File storage partagé
     ├── browser-states/                # Profils navigateur du tool browser

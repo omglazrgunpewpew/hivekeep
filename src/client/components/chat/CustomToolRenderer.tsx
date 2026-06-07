@@ -30,7 +30,7 @@ import i18n from '@/client/lib/i18n'
  * change.
  *
  * Threat model: host-context renderers run with full host privileges (no
- * isolation) — acceptable because custom tools are trusted (user/Kin-authored,
+ * isolation) — acceptable because custom tools are trusted (user/Agent-authored,
  * self-hosted) and this is for result DISPLAY only.
  */
 

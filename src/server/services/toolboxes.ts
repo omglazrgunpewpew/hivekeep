@@ -180,7 +180,7 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
   {
     name: 'configurator',
     description:
-      "Platform configuration set for the onboarding guide (Sherpa): connect/test AI providers (secure popup), set defaults, configure channels, customize the avatar style, edit the global prompt, manage contacts/memory, and create the user's first Kins.",
+      "Platform configuration set for the onboarding guide (Queenie): connect/test AI providers (secure popup), set defaults, configure channels, customize the avatar style, edit the global prompt, manage contacts/memory, and create the user's first Agents.",
     toolNames: [
       // Provider discovery + secure setup + defaults.
       'describe_provider_config',
@@ -203,13 +203,13 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'set_avatar_base_enabled',
       'generate_avatar_base',
       'reset_avatar_base',
-      // Kin creation + discovery.
-      'create_kin',
-      'update_kin',
-      'get_kin_details',
+      // Agent creation + discovery.
+      'create_agent',
+      'update_agent',
+      'get_agent_details',
       'list_kins',
       // Toolbox composition: discover tools, then build/edit minimal toolboxes
-      // so a new Kin gets exactly what it needs (not the broad "all").
+      // so a new Agent gets exactly what it needs (not the broad "all").
       'list_tools',
       'list_toolboxes',
       'create_toolbox',
@@ -236,7 +236,7 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
       'request_channel_setup',
       'test_channel',
       // Connected accounts (read-only discovery). Connecting is OAuth/UI-driven —
-      // Sherpa can SEE what's linked and guide the user to the Settings UI, but
+      // Queenie can SEE what's linked and guide the user to the Settings UI, but
       // there is no "connect account" tool.
       'list_email_accounts',
       'list_calendar_accounts',
@@ -389,7 +389,7 @@ export function deleteToolbox(id: string): void {
  * A toolbox may list any grantable tool name across all four sources: native,
  * plugin (`plugin_*`), MCP (`mcp_*`), and custom (`custom_*`). Those explicit
  * names are returned verbatim — the unified resolver intersects them with the
- * Kin/task universe, so a name absent from the universe is silently dropped
+ * Agent/task universe, so a name absent from the universe is silently dropped
  * there.
  *
  * The single special value "*" expands to every registered NATIVE tool name

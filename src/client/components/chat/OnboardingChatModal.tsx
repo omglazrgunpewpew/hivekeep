@@ -12,14 +12,14 @@ type ChatPanelProps = React.ComponentProps<typeof ChatPanel>
 
 /**
  * Distraction-less onboarding modal — a Dialog wrapping the real ChatPanel
- * (compact variant) pointed at the configurator Kin's MAIN thread, so the
- * conversation is the same one the user finds later in their Kin list. Closing
+ * (compact variant) pointed at the configurator Agent's MAIN thread, so the
+ * conversation is the same one the user finds later in their Agent list. Closing
  * it asks for confirmation and dismisses; the thread is never lost.
  */
 interface OnboardingChatModalProps {
   open: boolean
   onDismiss: () => void
-  kin: ChatPanelProps['kin']
+  agent: ChatPanelProps['agent']
   llmModels: ChatPanelProps['llmModels']
   queueState?: ChatPanelProps['queueState']
   onModelChange: ChatPanelProps['onModelChange']
@@ -29,7 +29,7 @@ interface OnboardingChatModalProps {
 export function OnboardingChatModal({
   open,
   onDismiss,
-  kin,
+  agent,
   llmModels,
   queueState,
   onModelChange,
@@ -41,15 +41,15 @@ export function OnboardingChatModal({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setConfirming(true) }}>
       <DialogContent className="flex h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
-        <DialogTitle className="sr-only">{kin.name}</DialogTitle>
+        <DialogTitle className="sr-only">{agent.name}</DialogTitle>
 
         <div className="flex min-h-0 flex-1 flex-col">
           <ChatPanel
-            kin={kin}
+            agent={agent}
             llmModels={llmModels}
             queueState={queueState}
             onModelChange={onModelChange}
-            onEditKin={() => {}}
+            onEditAgent={() => {}}
             onOpenSettings={onOpenSettings}
             compact
             hideThinking
@@ -65,7 +65,7 @@ export function OnboardingChatModal({
               <p className="text-sm text-muted-foreground">
                 {t(
                   'onboarding.modal.stopBody',
-                  'You can pick up any time by chatting with Sherpa in your Kin list — your conversation is saved.',
+                  'You can pick up any time by chatting with Queenie in your Agent list — your conversation is saved.',
                 )}
               </p>
               <div className="flex justify-center gap-2">

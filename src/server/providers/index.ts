@@ -6,7 +6,7 @@
  * knows or cares about the difference.
  *
  * Callers (routes/providers, tools/provider-tools, image-tools,
- * model-info-cache, image-generation, routes/kins, llm/core/resolve) get a
+ * model-info-cache, image-generation, routes/agents, llm/core/resolve) get a
  * uniform `ProviderModel` shape regardless of which family answers, which
  * keeps the per-model UI generic.
  *

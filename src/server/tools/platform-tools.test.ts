@@ -49,7 +49,7 @@ const {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const CTX = { kinId: 'test-kin-platform' } as any
+const CTX = { agentId: 'test-agent-platform' } as any
 
 function createTool(registration: ToolRegistration) {
   return registration.create(CTX)

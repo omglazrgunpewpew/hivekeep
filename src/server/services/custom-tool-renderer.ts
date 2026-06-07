@@ -25,7 +25,7 @@
  *     would otherwise fail with "Failed to resolve module specifier 'react'").
  *
  * THREAT MODEL: host-context renderers run with full host privileges (no
- * isolation). This is acceptable because custom tools are trusted (user/Kin-
+ * isolation). This is acceptable because custom tools are trusted (user/Agent-
  * authored on a self-hosted instance) and the renderer is for RESULT DISPLAY
  * only.
  *
@@ -234,7 +234,7 @@ async function bundleRenderer(slug: string, entryPath: string, globals: Renderer
   }).catch((err: unknown) => {
     // Bun.build rejects (rather than returning success:false) for some failures.
     // Syntax errors reject with an AggregateError whose `.errors` carry the
-    // detailed per-message diagnostics — surface those so the Kin sees the actual
+    // detailed per-message diagnostics — surface those so the Agent sees the actual
     // cause (e.g. "Unexpected end of file") instead of the bare "Bundle failed".
     let message = err instanceof Error ? err.message : String(err)
     if (err instanceof AggregateError && Array.isArray(err.errors) && err.errors.length > 0) {
@@ -317,7 +317,7 @@ export interface RendererValidation {
 }
 
 /**
- * Validate a custom tool's renderer SERVER-SIDE so a Kin can discover a broken
+ * Validate a custom tool's renderer SERVER-SIDE so a Agent can discover a broken
  * renderer without opening a browser. Two steps:
  *   1. BUILD — bundle `renderer.tsx` via {@link buildCustomToolRendererForSSR}.
  *      A syntax error / unresolved import surfaces here as `phase:'build'`.
@@ -370,7 +370,7 @@ export async function validateCustomToolRenderer(
     return { ok: true }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    // Append a short stack tail to help the Kin locate the failing line.
+    // Append a short stack tail to help the Agent locate the failing line.
     const stackTail =
       err instanceof Error && err.stack
         ? '\n' + err.stack.split('\n').slice(1, 4).join('\n')

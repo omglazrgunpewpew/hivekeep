@@ -19,7 +19,7 @@ export interface SystemContext {
 
 let cached: SystemContext | null = null
 
-// CLIs commonly needed by sub-Kins for builds, tests, version control and
+// CLIs commonly needed by sub-Agents for builds, tests, version control and
 // language tooling. Probed once per server lifetime. We deliberately probe
 // through several PATH augmentation passes so non-login-shell deployments
 // (systemd user services, Docker, supervisord …) still pick up the runtimes

@@ -4,7 +4,7 @@ import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { app } from '@/server/app'
 import { db, initVirtualTables } from '@/server/db/index'
-import { startQueueWorker } from '@/server/services/kin-engine'
+import { startQueueWorker } from '@/server/services/agent-engine'
 import { registerAllTools } from '@/server/tools/register'
 import { seedBuiltinToolboxes } from '@/server/services/toolboxes'
 import { seedBuiltinToolDomains } from '@/server/services/tool-domains'
@@ -80,7 +80,7 @@ log.info('Initializing virtual tables (FTS5, sqlite-vec)...')
 initVirtualTables()
 log.info('Virtual tables initialized')
 
-// One-time migration: backfill missing providerIds on kins/tasks/crons
+// One-time migration: backfill missing providerIds on agents/tasks/crons
 import { migrateModelProviders } from '@/server/services/migrate-model-providers'
 await migrateModelProviders()
 
@@ -103,11 +103,11 @@ registerAllTools()
 log.info('Seeding built-in toolboxes...')
 seedBuiltinToolboxes()
 
-// One-time: make existing null-toolbox Kins explicit ['all'] now that the
+// One-time: make existing null-toolbox Agents explicit ['all'] now that the
 // resolver default changed to "no toolbox → CORE floor only" (runs after the
 // built-in toolboxes are seeded so the 'all' box exists).
-import { migrateNullKinToolboxesToAll } from '@/server/services/migrate-kin-toolboxes'
-await migrateNullKinToolboxesToAll()
+import { migrateNullAgentToolboxesToAll } from '@/server/services/migrate-agent-toolboxes'
+await migrateNullAgentToolboxesToAll()
 
 // Seed built-in tool domains (idempotent). Runs after migrations so the
 // tool_domains table exists; custom_tools.domain_slug FKs into it.

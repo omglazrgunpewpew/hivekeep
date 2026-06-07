@@ -23,7 +23,7 @@ export interface ProviderModel {
 
 /**
  * Shared hook to fetch all available provider models.
- * Replaces inline fetches in GeneralSettings, StepProviders, and useKins.
+ * Replaces inline fetches in GeneralSettings, StepProviders, and useAgents.
  */
 export function useModels() {
   const [models, setModels] = useState<ProviderModel[]>([])

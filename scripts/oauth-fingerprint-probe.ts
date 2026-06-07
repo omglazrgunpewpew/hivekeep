@@ -68,8 +68,8 @@ async function main() {
       body.tools = [
         { name: 'recall', description: 'Search long-term memory', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
         { name: 'memorize', description: 'Save a fact to long-term memory', input_schema: { type: 'object', properties: { content: { type: 'string' }, category: { type: 'string' } }, required: ['content'] } },
-        { name: 'send_message', description: 'Send a message to another Kin', input_schema: { type: 'object', properties: { slug: { type: 'string' }, message: { type: 'string' } }, required: ['slug', 'message'] } },
-        { name: 'spawn_kin', description: 'Spawn a sub-Kin for a delegated task', input_schema: { type: 'object', properties: { slug: { type: 'string' }, task: { type: 'string' } }, required: ['slug', 'task'] } },
+        { name: 'send_message', description: 'Send a message to another Agent', input_schema: { type: 'object', properties: { slug: { type: 'string' }, message: { type: 'string' } }, required: ['slug', 'message'] } },
+        { name: 'spawn_agent', description: 'Spawn a sub-Agent for a delegated task', input_schema: { type: 'object', properties: { slug: { type: 'string' }, task: { type: 'string' } }, required: ['slug', 'task'] } },
       ]
     } else {
       body.tools = [

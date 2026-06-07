@@ -38,17 +38,17 @@ export function NotificationBell({ onOpenSettings }: NotificationBellProps) {
 
     switch (notification.type) {
       case 'prompt:pending':
-      case 'kin:error':
-        if (notification.kinSlug) {
-          navigate(`/kin/${notification.kinSlug}`)
+      case 'agent:error':
+        if (notification.agentSlug) {
+          navigate(`/agent/${notification.agentSlug}`)
         }
         break
       case 'channel:user-pending':
         onOpenSettings?.('channels')
         break
       case 'cron:pending-approval':
-        if (notification.kinSlug) {
-          navigate(`/kin/${notification.kinSlug}`)
+        if (notification.agentSlug) {
+          navigate(`/agent/${notification.agentSlug}`)
         }
         break
       case 'mcp:pending-approval':

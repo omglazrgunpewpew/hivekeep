@@ -23,7 +23,7 @@ import { useDraftMessage } from '@/client/hooks/useDraftMessage'
 import { useFileUpload } from '@/client/hooks/useFileUpload'
 import { useAuth } from '@/client/hooks/useAuth'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/client/components/ui/tooltip'
-// ModelPicker removed from quick chat to avoid changing Kin model globally (#71)
+// ModelPicker removed from quick chat to avoid changing Agent model globally (#71)
 import { X, Zap, MessageSquare, LogOut, History, Pin, PinOff } from 'lucide-react'
 import { useAutoScroll } from '@/client/hooks/useAutoScroll'
 import { cn } from '@/client/lib/utils'
@@ -40,10 +40,10 @@ interface LLMModel {
 }
 
 interface QuickChatPanelProps {
-  kinId: string
-  kinName: string
-  kinAvatarUrl: string | null
-  kinModel?: string
+  agentId: string
+  agentName: string
+  agentAvatarUrl: string | null
+  agentModel?: string
   llmModels?: LLMModel[]
   sessionId: string
   expiresAt?: number | null
@@ -53,13 +53,13 @@ interface QuickChatPanelProps {
   onShowHistory?: () => void
 }
 
-export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expiresAt, onHide, onEnd, onShowHistory }: QuickChatPanelProps) {
+export function QuickChatPanel({ agentId, agentName, agentAvatarUrl, sessionId, expiresAt, onHide, onEnd, onShowHistory }: QuickChatPanelProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { messages, streamingMessage, isProcessing, isStreaming, sendMessage, stopStreaming } = useQuickChat(sessionId, kinId)
-  const { toolCallsByMessage } = useToolCalls(kinId, messages)
+  const { messages, streamingMessage, isProcessing, isStreaming, sendMessage, stopStreaming } = useQuickChat(sessionId, agentId)
+  const { toolCallsByMessage } = useToolCalls(agentId, messages)
   const { content: draftContent, setContent: setDraftContent, clearDraft } = useDraftMessage(`quick-${sessionId}`)
-  const { pendingFiles, addFiles, removeFile, clearFiles, isUploading } = useFileUpload(kinId)
+  const { pendingFiles, addFiles, removeFile, clearFiles, isUploading } = useFileUpload(agentId)
   const [showCloseDialog, setShowCloseDialog] = useState(false)
   const [saveAsMemory, setSaveAsMemory] = useState(false)
   const [memorySummary, setMemorySummary] = useState('')
@@ -72,7 +72,7 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
     apiContextTokens?: number
   } | null>(null)
   useEffect(() => {
-    fetch(`/api/kins/${kinId}/context-preview?sessionId=${sessionId}`)
+    fetch(`/api/agents/${agentId}/context-preview?sessionId=${sessionId}`)
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data?.tokenEstimate) {
@@ -84,7 +84,7 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
         }
       })
       .catch(() => {})
-  }, [kinId, sessionId])
+  }, [agentId, sessionId])
 
   // Update remaining time display
   useEffect(() => {
@@ -147,8 +147,8 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2.5">
           <ChatAvatar
-            avatarUrl={kinAvatarUrl}
-            name={kinName}
+            avatarUrl={agentAvatarUrl}
+            name={agentName}
             className="size-8"
             fallbackClassName="bg-primary/10 text-primary text-xs"
             fallbackIcon={<Zap className="size-3.5" />}
@@ -156,13 +156,13 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-tight">{t('quickChat.title')}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {kinName}
+              {agentName}
               {timeLeft && <span className="ml-1.5 opacity-60">· {timeLeft}</span>}
             </p>
           </div>
           {contextData && (
             <ContextBar
-              kinId={kinId}
+              agentId={agentId}
               sessionId={sessionId}
               estimatedTokens={contextData.tokenEstimate.total}
               maxTokens={contextData.contextWindow}
@@ -220,8 +220,8 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
                     content={msg.content}
                     sourceType={msg.sourceType}
                     files={msg.files}
-                    avatarUrl={isFromUser ? user?.avatarUrl : kinAvatarUrl}
-                    senderName={isFromUser ? (user?.pseudonym ?? user?.firstName) : kinName}
+                    avatarUrl={isFromUser ? user?.avatarUrl : agentAvatarUrl}
+                    senderName={isFromUser ? (user?.pseudonym ?? user?.firstName) : agentName}
                     timestamp={msg.createdAt}
                     toolCalls={toolCallsByMessage.get(msg.id)}
                     injectedMemories={msg.injectedMemories}
@@ -237,13 +237,13 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
                   role={streamingMessage.role}
                   content={streamingMessage.content}
                   sourceType={streamingMessage.sourceType}
-                  avatarUrl={kinAvatarUrl}
-                  senderName={kinName}
+                  avatarUrl={agentAvatarUrl}
+                  senderName={agentName}
                   timestamp={streamingMessage.createdAt}
                   toolCalls={toolCallsByMessage.get(streamingMessage.id)}
                 />
               )}
-              {(isProcessing || isStreaming) && !streamingMessage && <TypingIndicator kinName={kinName} kinAvatarUrl={kinAvatarUrl} />}
+              {(isProcessing || isStreaming) && !streamingMessage && <TypingIndicator agentName={agentName} agentAvatarUrl={agentAvatarUrl} />}
             </div>
           )}
           <div ref={bottomRef} />
@@ -274,7 +274,7 @@ export function QuickChatPanel({ kinId, kinName, kinAvatarUrl, sessionId, expire
         isUploading={isUploading}
         onAddFiles={addFiles}
         onRemoveFile={removeFile}
-        kinId={kinId}
+        agentId={agentId}
       />
 
       {/* Close confirmation dialog */}

@@ -56,8 +56,8 @@ e2e-journal.md
 memory-research.md
 memory-experiments/
 channel-files-journal.md
-kin-context-journal.md
-kin-context.json
+agent-context-journal.md
+agent-context.json
 
 # External tooling clones living in the working dir (not part of this repo)
 opencode/

@@ -28,7 +28,7 @@ export const fullMockConfig = {
     keepPercent: 40,
     summaryBudgetPercent: 20,
     maxSummaries: 10,
-    maxSummariesPerKin: 50,
+    maxSummariesPerAgent: 50,
   },
 
   historyTokenBudget: 0,
@@ -64,7 +64,7 @@ export const fullMockConfig = {
 
   queue: {
     userPriority: 100,
-    kinPriority: 50,
+    agentPriority: 50,
     taskPriority: 50,
     pollIntervalMs: 500,
   },
@@ -73,8 +73,8 @@ export const fullMockConfig = {
   crons: { maxActive: 50, maxConcurrentExecutions: 5 },
   tools: { maxSteps: 0 },
   shell: { defaultTimeoutMs: 30_000, maxTimeoutMs: 600_000 },
-  humanPrompts: { maxPendingPerKin: 5 },
-  interKin: { maxChainDepth: 5, rateLimitPerMinute: 20 },
+  humanPrompts: { maxPendingPerAgent: 5 },
+  interAgent: { maxChainDepth: 5, rateLimitPerMinute: 20 },
   mcp: { requireApproval: true },
 
   vault: {
@@ -100,7 +100,7 @@ export const fullMockConfig = {
   },
 
   webhooks: {
-    maxPerKin: 20,
+    maxPerAgent: 20,
     maxPayloadBytes: 1_048_576,
     logRetentionDays: 30,
     maxLogsPerWebhook: 500,
@@ -108,13 +108,13 @@ export const fullMockConfig = {
   },
 
   channels: {
-    maxPerKin: 5,
+    maxPerAgent: 5,
     telegramWebhookPath: '/api/channels/telegram',
   },
 
   quickSessions: {
     defaultExpirationHours: 24,
-    maxActivePerUserPerKin: 1,
+    maxActivePerUserPerAgent: 1,
     retentionDays: 7,
     cleanupIntervalMinutes: 60,
   },
@@ -147,14 +147,14 @@ export const fullMockConfig = {
   },
 
   wakeups: {
-    maxPendingPerKin: 20,
+    maxPendingPerAgent: 20,
     minDelaySeconds: 10,
     maxDelaySeconds: 2_592_000,
   },
 
   miniApps: {
     dir: '/tmp/hivekeep-test/mini-apps',
-    maxAppsPerKin: 20,
+    maxAppsPerAgent: 20,
     maxFileSizeMb: 5,
     maxTotalSizeMbPerApp: 50,
     backendEnabled: true,
@@ -206,9 +206,9 @@ export const fullMockSchema = {
   verification: {},
   userProfiles: {},
   providers: {},
-  kins: {},
+  agents: {},
   mcpServers: {},
-  kinMcpServers: {},
+  agentMcpServers: {},
   messages: {},
   compactingSnapshots: {},
   compactingSummaries: {},

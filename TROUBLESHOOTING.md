@@ -94,7 +94,7 @@ Vector search (semantic memory) requires the `sqlite-vec` extension. If you see 
 
 ### Memory not being recalled
 
-If your Kin seems to forget things:
+If your Agent seems to forget things:
 
 1. Check that an **embedding provider** is configured (e.g., OpenAI with `text-embedding-3-small`)
 2. Verify the provider has the `embedding` capability in Settings > Providers

@@ -27,7 +27,7 @@ Each event is a JSON object with a `type` field and contextual fields:
 ```json
 {
   "type": "event-type",
-  "kinId": "optional-kin-id",
+  "agentId": "optional-agent-id",
   "data": { ... }
 }
 ```
@@ -40,20 +40,20 @@ Real-time message streaming and conversation events.
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `chat:message` | New message created (user or AI) | Per-Kin |
-| `chat:token` | Streaming token chunk during AI response | Per-Kin |
-| `chat:tool-call-start` | Tool call started | Per-Kin |
-| `chat:tool-call` | Tool call completed | Per-Kin |
-| `chat:tool-result` | Tool result received | Per-Kin |
-| `chat:done` | AI response finished | Per-Kin |
-| `chat:cleared` | Conversation history cleared | Per-Kin |
+| `chat:message` | New message created (user or AI) | Per-Agent |
+| `chat:token` | Streaming token chunk during AI response | Per-Agent |
+| `chat:tool-call-start` | Tool call started | Per-Agent |
+| `chat:tool-call` | Tool call completed | Per-Agent |
+| `chat:tool-result` | Tool result received | Per-Agent |
+| `chat:done` | AI response finished | Per-Agent |
+| `chat:cleared` | Conversation history cleared | Per-Agent |
 
 ### Reactions
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `reaction:added` | Reaction added to a message | Per-Kin |
-| `reaction:removed` | Reaction removed from a message | Per-Kin |
+| `reaction:added` | Reaction added to a message | Per-Agent |
+| `reaction:removed` | Reaction removed from a message | Per-Agent |
 
 ### Tasks
 
@@ -77,26 +77,26 @@ Real-time message streaming and conversation events.
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `memory:created` | Memory created | Per-Kin |
-| `memory:updated` | Memory updated | Per-Kin |
-| `memory:deleted` | Memory deleted | Per-Kin |
+| `memory:created` | Memory created | Per-Agent |
+| `memory:updated` | Memory updated | Per-Agent |
+| `memory:deleted` | Memory deleted | Per-Agent |
 
 ### Compacting
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `compacting:start` | Compaction started | Per-Kin |
-| `compacting:done` | Compaction completed (includes summary and memories extracted) | Per-Kin |
-| `compacting:error` | Compaction failed (prevents infinite spinner in the UI) | Per-Kin |
+| `compacting:start` | Compaction started | Per-Agent |
+| `compacting:done` | Compaction completed (includes summary and memories extracted) | Per-Agent |
+| `compacting:error` | Compaction failed (prevents infinite spinner in the UI) | Per-Agent |
 
-### Kins
+### Agents
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `kin:error` | Kin processing error | Per-Kin |
-| `kin:created` | New Kin created | Broadcast |
-| `kin:updated` | Kin metadata changed (avatar, provider, etc.) | Broadcast |
-| `kin:deleted` | Kin deleted | Broadcast |
+| `agent:error` | Agent processing error | Per-Agent |
+| `agent:created` | New Agent created | Broadcast |
+| `agent:updated` | Agent metadata changed (avatar, provider, etc.) | Broadcast |
+| `agent:deleted` | Agent deleted | Broadcast |
 
 ### Providers
 
@@ -138,7 +138,7 @@ Real-time message streaming and conversation events.
 | `webhook:created` | Webhook created | Broadcast |
 | `webhook:updated` | Webhook updated | Broadcast |
 | `webhook:deleted` | Webhook deleted | Broadcast |
-| `webhook:triggered` | Webhook received a payload | Per-Kin |
+| `webhook:triggered` | Webhook received a payload | Per-Agent |
 
 ### Channels
 
@@ -147,8 +147,8 @@ Real-time message streaming and conversation events.
 | `channel:created` | Channel created | Broadcast |
 | `channel:updated` | Channel updated | Broadcast |
 | `channel:deleted` | Channel deleted | Broadcast |
-| `channel:message-received` | Message received from external platform | Per-Kin |
-| `channel:message-sent` | Message sent to external platform | Per-Kin |
+| `channel:message-received` | Message received from external platform | Per-Agent |
+| `channel:message-sent` | Message sent to external platform | Per-Agent |
 | `channel:user-pending` | New user pending approval | Broadcast |
 | `channel:user-approved` | User approved | Broadcast |
 
@@ -156,8 +156,8 @@ Real-time message streaming and conversation events.
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `prompt:pending` | New prompt awaiting human response | Per-Kin |
-| `prompt:answered` | Human responded to a prompt | Per-Kin |
+| `prompt:pending` | New prompt awaiting human response | Per-Agent |
+| `prompt:answered` | Human responded to a prompt | Per-Agent |
 
 ### Notifications
 
@@ -171,15 +171,15 @@ Real-time message streaming and conversation events.
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `quick-session:closed` | Quick session closed | Per-Kin |
+| `quick-session:closed` | Quick session closed | Per-Agent |
 
 ### Knowledge
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `knowledge:source-created` | Knowledge source added | Per-Kin |
-| `knowledge:source-updated` | Knowledge source updated | Per-Kin |
-| `knowledge:source-deleted` | Knowledge source deleted | Per-Kin |
+| `knowledge:source-created` | Knowledge source added | Per-Agent |
+| `knowledge:source-updated` | Knowledge source updated | Per-Agent |
+| `knowledge:source-deleted` | Knowledge source deleted | Per-Agent |
 
 ### Plugins
 
@@ -216,7 +216,7 @@ Real-time message streaming and conversation events.
 Events are delivered based on scope:
 
 - **Broadcast** — Sent to all connected clients (provider changes, MCP updates, settings)
-- **Per-Kin** — Sent to clients viewing a specific Kin (chat, memories, compacting, reactions)
+- **Per-Agent** — Sent to clients viewing a specific Agent (chat, memories, compacting, reactions)
 - **Per-User** — Sent to a specific user's connections (notifications)
 
 ## Client Usage

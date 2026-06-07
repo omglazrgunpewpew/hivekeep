@@ -23,23 +23,23 @@
  *   Hivekeep.prompt(message, options) — show a prompt dialog in the parent UI (returns Promise<string|null>)
  *   Hivekeep.setTitle(title) — dynamically update the panel header title
  *   Hivekeep.setBadge(value) — show a badge on the app in the sidebar (number, string, or null to clear)
- *   Hivekeep.openApp(slug) — open another mini-app from the same Kin by its slug
+ *   Hivekeep.openApp(slug) — open another mini-app from the same Agent by its slug
  *   Hivekeep.clipboard.write(text) — copy text to system clipboard (bypasses iframe restrictions)
  *   Hivekeep.clipboard.read() — read text from system clipboard (may require permission)
  *   Hivekeep.http(url, options) — fetch external URLs through server proxy (bypasses CORS)
  *     .json(url, headers?) — shorthand: GET and parse JSON
  *     .post(url, data, headers?) — shorthand: POST JSON and parse response
- *   Hivekeep.sendMessage(text, options?) — send a message to the Kin's conversation (returns Promise<boolean>)
- *   Hivekeep.kin — info about the parent Kin (id, name, avatarUrl)
+ *   Hivekeep.sendMessage(text, options?) — send a message to the Agent's conversation (returns Promise<boolean>)
+ *   Hivekeep.agent — info about the parent Agent (id, name, avatarUrl)
  *   Hivekeep.user — info about the current user (id, name, pseudonym, locale, timezone, avatarUrl)
  *   Hivekeep.resize(width?, height?) — request the parent panel to resize
  *   Hivekeep.notification(title, body?) — show a browser notification via the parent (returns Promise<boolean>)
- *   Hivekeep.apps.list() — list all mini-apps from the same Kin
+ *   Hivekeep.apps.list() — list all mini-apps from the same Agent
  *   Hivekeep.apps.get(appId) — get details of a specific mini-app
- *   Hivekeep.memory.search(query, limit?) — semantic search the Kin's memories
- *   Hivekeep.memory.store(content, options?) — store a new memory for the Kin
+ *   Hivekeep.memory.search(query, limit?) — semantic search the Agent's memories
+ *   Hivekeep.memory.store(content, options?) — store a new memory for the Agent
  *   Hivekeep.conversation.history(limit?) — get recent conversation messages
- *   Hivekeep.conversation.send(text, options?) — send a message to the Kin's conversation
+ *   Hivekeep.conversation.send(text, options?) — send a message to the Agent's conversation
  *   Hivekeep.share(targetSlug, data) — share data with another mini-app and open it
  *   Hivekeep.locale — current UI language code (e.g. 'en', 'fr')
  *   Hivekeep.on('locale-changed', cb) — listen for language changes (cb receives {locale})
@@ -201,7 +201,7 @@
 
   /**
    * Navigate the parent Hivekeep app to a path.
-   * @param {string} path — e.g. '/kins' or '/settings'
+   * @param {string} path — e.g. '/agents' or '/settings'
    */
   function navigate(path) {
     try {
@@ -277,12 +277,12 @@
       _appMeta = msg.data || null
       if (_appMeta && _appMeta.isFullPage !== undefined) _isFullPage = _appMeta.isFullPage
       if (_appMeta && _appMeta.locale) _locale = _appMeta.locale
-      // Extract kin info
+      // Extract agent info
       if (_appMeta) {
         _kinInfo = {
-          id: _appMeta.kinId || null,
-          name: _appMeta.kinName || null,
-          avatarUrl: _appMeta.kinAvatarUrl || null,
+          id: _appMeta.agentId || null,
+          name: _appMeta.agentName || null,
+          avatarUrl: _appMeta.agentAvatarUrl || null,
         }
       }
       // Extract user info
@@ -590,7 +590,7 @@
   // ─── Open App ───────────────────────────────────────────────────────────
 
   /**
-   * Open another mini-app from the same Kin by its slug.
+   * Open another mini-app from the same Agent by its slug.
    * @param {string} slug — the slug of the app to open (e.g. "todo-tracker")
    */
   function openApp(slug) {
@@ -838,11 +838,11 @@
     })
   }
 
-  // ─── Send Message to Kin ──────────────────────────────────────────────────
+  // ─── Send Message to Agent ──────────────────────────────────────────────────
 
   /**
-   * Send a message to the Kin that owns this app.
-   * The message appears in the Kin's conversation as if sent by the current user,
+   * Send a message to the Agent that owns this app.
+   * The message appears in the Agent's conversation as if sent by the current user,
    * prefixed with the app name for context.
    *
    * @param {string} text — message content (max 2000 chars)
@@ -1015,12 +1015,12 @@
 
   var apps = {
     /**
-     * List all mini-apps from the same Kin.
+     * List all mini-apps from the same Agent.
      * @returns {Promise<Array<{id: string, name: string, slug: string, description: string, icon: string, version: number}>>}
      */
     list: function () {
       if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
-      return fetch('/api/mini-apps?kinId=' + encodeURIComponent(_kinInfo.id))
+      return fetch('/api/mini-apps?agentId=' + encodeURIComponent(_kinInfo.id))
         .then(function (r) {
           if (!r.ok) return r.json().then(function (d) { throw new Error(d.error?.message || 'Failed to list apps') })
           return r.json()
@@ -1051,7 +1051,7 @@
 
   var memory = {
     /**
-     * Search the Kin's memories using semantic + full-text hybrid search.
+     * Search the Agent's memories using semantic + full-text hybrid search.
      * @param {string} query — search query
      * @param {number} [limit=20] — max results (1-50)
      * @returns {Promise<Array<{id: string, content: string, category: string, subject: string|null, score: number, updatedAt: string}>>}
@@ -1069,7 +1069,7 @@
     },
 
     /**
-     * Store a new memory for the Kin.
+     * Store a new memory for the Agent.
      * @param {string} content — memory text (max 2000 chars)
      * @param {{category?: 'fact'|'preference'|'decision'|'knowledge', subject?: string}} [options]
      * @returns {Promise<{id: string, content: string, category: string, subject: string|null, createdAt: string}>}
@@ -1097,14 +1097,14 @@
 
   var conversation = {
     /**
-     * Get recent conversation messages for the parent Kin.
+     * Get recent conversation messages for the parent Agent.
      * @param {number} [limit=20] — number of messages to fetch (max 100)
      * @returns {Promise<Array<{id: string, role: string, content: string, createdAt: string, sourceType: string}>>}
      */
     history: function (limit) {
       if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       var n = Math.min(Math.max(1, limit || 20), 100)
-      return fetch('/api/kins/' + encodeURIComponent(_kinInfo.id) + '/messages?limit=' + n)
+      return fetch('/api/agents/' + encodeURIComponent(_kinInfo.id) + '/messages?limit=' + n)
         .then(function (r) {
           if (!r.ok) return r.json().then(function (d) { throw new Error(d.error?.message || 'Failed to fetch history') })
           return r.json()
@@ -1123,7 +1123,7 @@
     },
 
     /**
-     * Send a message to the Kin's conversation.
+     * Send a message to the Agent's conversation.
      * Uses postMessage to the parent (which handles rate limiting and prefixing).
      * @param {string} text — message content (max 2000 chars)
      * @param {object} [options]
@@ -1169,7 +1169,7 @@
   window.Hivekeep = {
     get theme() { return getTheme() },
     get app() { return _appMeta },
-    get kin() { return _kinInfo },
+    get agent() { return _kinInfo },
     get user() { return _userInfo },
     get isFullPage() { return _isFullPage },
     get locale() { return _locale },

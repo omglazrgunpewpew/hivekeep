@@ -13,8 +13,8 @@
 - `url` (optional) — direct download URL when available
 
 **Observations:**
-- The existing files pipeline (webchat) uses `uploadFile()` in `src/server/services/files.ts` → stores to `data/uploads/messages/<kinId>/` → saves to `files` DB table → linked to messages via `linkFilesToMessage()`
-- `kin-engine.ts` (~line 1038) reads files by messageId and converts images to multimodal `{ type: 'image', image: Uint8Array }` parts, non-images become text mentions
+- The existing files pipeline (webchat) uses `uploadFile()` in `src/server/services/files.ts` → stores to `data/uploads/messages/<agentId>/` → saves to `files` DB table → linked to messages via `linkFilesToMessage()`
+- `agent-engine.ts` (~line 1038) reads files by messageId and converts images to multimodal `{ type: 'image', image: Uint8Array }` parts, non-images become text mentions
 - Queue already supports `fileIds` sideband (`src/server/services/queue.ts`)
 - `handleIncomingChannelMessage()` in channels.ts needs to: download attachments → store via files service → pass fileIds to `enqueueMessage()`
 - 2 pre-existing test failures (unrelated to this change), blocked pre-commit hook → used HUSKY=0
@@ -119,18 +119,18 @@ All adapters are backward-compatible — text-only messages use the existing cod
 
 **Pre-existing issues:** 3 test failures (schema export), E2E flake in file-storage spec — all unrelated.
 
-**Next step:** Step 12 — Give Kins a tool to attach files to their responses.
+**Next step:** Step 12 — Give Agents a tool to attach files to their responses.
 
-## 2026-03-02 — Run 6: Step 12 — Give Kins a tool to attach files to their responses
+## 2026-03-02 — Run 6: Step 12 — Give Agents a tool to attach files to their responses
 
 **Commit:** 566236c
 
 **What was done:**
 
 Created `src/server/tools/attach-file-tool.ts` with:
-- `attach_file` tool: Kins call this during their turn to stage files for delivery
+- `attach_file` tool: Agents call this during their turn to stage files for delivery
 - Supports 3 source types: internal API paths (`/api/uploads/...`, `/api/file-storage/...`), workspace files, and external URLs
-- In-memory staging store (`pendingAttachments` Map keyed by kinId)
+- In-memory staging store (`pendingAttachments` Map keyed by agentId)
 - `stageAttachment()`, `popStagedAttachments()`, `clearStagedAttachments()` exports
 - Built-in MIME type detection from file extension (no external dependency)
 
@@ -141,7 +141,7 @@ Updated `src/server/services/channels.ts`:
 - `deliverChannelResponse()` accepts optional `OutboundAttachment[]` parameter
 - Passes attachments through to `adapter.sendMessage()`
 
-Updated `src/server/services/kin-engine.ts`:
+Updated `src/server/services/agent-engine.ts`:
 - After LLM turn completes, pops staged attachments and passes to `deliverChannelResponse`
 - Cleanup on abort, non-channel sources, or missing channel meta
 
@@ -170,7 +170,7 @@ Registered in `src/server/tools/register.ts`.
 **Status:** All 15 steps complete. Channel file support is fully implemented:
 - ✅ Phase 1: Core infrastructure (attachment interface, download/storage, pipeline integration)
 - ✅ Phase 2: All 7 inbound adapters (Telegram, Discord, WhatsApp, Slack, Signal, Matrix, Webchat)
-- ✅ Phase 3: Outbound files (all adapters + Kin tool)
+- ✅ Phase 3: Outbound files (all adapters + Agent tool)
 - ✅ Phase 4: UI display, size limits, auto-cleanup
 
 **Feature is COMPLETE.**

@@ -23,7 +23,7 @@ export interface ChannelMeta {
 
 /**
  * Structured payload attached to system messages whose metadata.systemEvent
- * is set. The server resolves the OTHER Kin's name/slug/avatar and the
+ * is set. The server resolves the OTHER Agent's name/slug/avatar and the
  * channel's current platform meta so the UI can render the dedicated
  * transfer cards without an extra round trip. Pre-existing system messages
  * (sourceType==='system' with no systemEvent discriminator) keep
@@ -35,7 +35,7 @@ export interface ChannelTransferSystemEvent {
   channelName: string | null
   channelPlatform: string | null
   channelBrandColor: string | null
-  otherKin: {
+  otherAgent: {
     id: string | null
     slug: string | null
     name: string
@@ -96,7 +96,7 @@ export interface LiveTask {
   error: string | null
   createdAt: string
   /** Id of the assistant message that triggered this task (spawn_self /
-   *  spawn_kin fired mid-turn). Set from the `task:status` SSE payload. Lets
+   *  spawn_agent fired mid-turn). Set from the `task:status` SSE payload. Lets
    *  the timeline anchor the card directly under its spawning message instead
    *  of sorting it by createdAt (which lands before the message, since the
    *  assistant row is only persisted at end-of-turn). Null for tasks spawned
@@ -106,7 +106,7 @@ export interface LiveTask {
 
 /** Live compacting card rendered in the conversation while compacting is active */
 export interface LiveCompacting {
-  kinId: string
+  agentId: string
   status: 'running' | 'done' | 'error'
   summary: string | null
   memoriesExtracted: number | null
@@ -118,8 +118,8 @@ export interface LiveCompacting {
   error?: string
 }
 
-/** Snapshot of an in-flight assistant message returned by GET /api/kins/:id/messages
- *  when the kin is still streaming. Used to rehydrate the streaming bubble on
+/** Snapshot of an in-flight assistant message returned by GET /api/agents/:id/messages
+ *  when the agent is still streaming. Used to rehydrate the streaming bubble on
  *  remount (navigate-away then back, or full page reload). The shape mirrors
  *  `streamingMessageId` / overlay in the tasks route, but here the streaming row
  *  is NOT yet in `messages` because the DB row is only inserted at the end of
@@ -141,7 +141,7 @@ interface MessagesResponse {
   streamingMessage: MessagesStreamingSnapshot | null
 }
 
-export function useChat(kinId: string | null) {
+export function useChat(agentId: string | null) {
   const { t } = useTranslation()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [liveTasks, setLiveTasks] = useState<LiveTask[]>([])
@@ -171,14 +171,14 @@ export function useChat(kinId: string | null) {
 
   // Fetch message history
   const fetchMessages = useCallback(async () => {
-    if (!kinId) {
+    if (!agentId) {
       setMessages([])
       return
     }
 
     setIsLoading(true)
     try {
-      const data = await api.get<MessagesResponse>(`/kins/${kinId}/messages`)
+      const data = await api.get<MessagesResponse>(`/agents/${agentId}/messages`)
 
       // Enrich task result messages that are missing resolvedTaskId.
       // The ref is populated from task:status SSE events and covers cases where
@@ -266,17 +266,17 @@ export function useChat(kinId: string | null) {
     } finally {
       setIsLoading(false)
     }
-  }, [kinId, seedStreaming])
+  }, [agentId, seedStreaming])
 
-  // Fetch active tasks for this kin to restore live task cards after navigation
+  // Fetch active tasks for this agent to restore live task cards after navigation
   const fetchActiveTasks = useCallback(async () => {
-    if (!kinId) return
+    if (!agentId) return
     try {
-      const activeStatuses: TaskStatus[] = ['in_progress', 'pending', 'awaiting_human_input', 'awaiting_kin_response', 'awaiting_subtask']
+      const activeStatuses: TaskStatus[] = ['in_progress', 'pending', 'awaiting_human_input', 'awaiting_agent_response', 'awaiting_subtask']
       const results = await Promise.all(
         activeStatuses.map((s) =>
-          api.get<{ tasks: Array<{ id: string; status: TaskStatus; title: string; description: string; sourceKinName: string | null; sourceKinAvatarUrl: string | null; createdAt: string; parentKinName: string; parentKinAvatarUrl: string | null }> }>(
-            `/tasks?kinId=${kinId}&status=${s}&limit=20`,
+          api.get<{ tasks: Array<{ id: string; status: TaskStatus; title: string; description: string; sourceAgentName: string | null; sourceAgentAvatarUrl: string | null; createdAt: string; parentAgentName: string; parentAgentAvatarUrl: string | null }> }>(
+            `/tasks?agentId=${agentId}&status=${s}&limit=20`,
           ),
         ),
       )
@@ -290,8 +290,8 @@ export function useChat(kinId: string | null) {
               taskId: t.id,
               status: t.status,
               title: t.title ?? t.description,
-              senderName: t.sourceKinName ?? t.parentKinName,
-              senderAvatarUrl: t.sourceKinAvatarUrl ?? t.parentKinAvatarUrl,
+              senderName: t.sourceAgentName ?? t.parentAgentName,
+              senderAvatarUrl: t.sourceAgentAvatarUrl ?? t.parentAgentAvatarUrl,
               result: null,
               error: null,
               createdAt: t.createdAt,
@@ -305,11 +305,11 @@ export function useChat(kinId: string | null) {
     } catch {
       // Silently fail — tasks list is non-critical
     }
-  }, [kinId])
+  }, [agentId])
 
   useEffect(() => {
     // Reset first (synchronous), then fetch. fetchMessages() may call
-    // seedStreaming() once the response comes back if the Kin is still
+    // seedStreaming() once the response comes back if the Agent is still
     // streaming — that seed must NOT be wiped by this reset.
     resetStreaming()
     setLiveTasks([])
@@ -325,10 +325,10 @@ export function useChat(kinId: string | null) {
     // Restore live task cards for active tasks after clearing
     fetchActiveTasks()
     // Restore compacting state if a compaction is in progress
-    api.get<{ isCompacting?: boolean }>(`/kins/${kinId}`).then((kin) => {
-      if (kin.isCompacting) {
+    api.get<{ isCompacting?: boolean }>(`/agents/${agentId}`).then((agent) => {
+      if (agent.isCompacting) {
         setLiveCompacting({
-          kinId: kinId!,
+          agentId: agentId!,
           status: 'running',
           summary: null,
           memoriesExtracted: null,
@@ -353,14 +353,14 @@ export function useChat(kinId: string | null) {
   // which would cause the IntersectionObserver in ChatPanel to reconnect and
   // potentially trigger an infinite fetch loop.
   const fetchOlderMessages = useCallback(async () => {
-    if (!kinId || !hasMore || isLoadingMore) return
+    if (!agentId || !hasMore || isLoadingMore) return
     const firstMsg = messagesRef.current[0]
     if (!firstMsg) return
 
     setIsLoadingMore(true)
     try {
       const data = await api.get<MessagesResponse>(
-        `/kins/${kinId}/messages?before=${firstMsg.id}&limit=50`,
+        `/agents/${agentId}/messages?before=${firstMsg.id}&limit=50`,
       )
 
       // Enrich task result messages
@@ -382,13 +382,13 @@ export function useChat(kinId: string | null) {
     } finally {
       setIsLoadingMore(false)
     }
-  }, [kinId, hasMore, isLoadingMore])
+  }, [agentId, hasMore, isLoadingMore])
 
   // SSE handlers
   useSSE({
     'chat:token': (data) => {
-      if (data.kinId !== kinId) return
-      if (data.taskId) return // Ignore tokens from sub-Kin tasks
+      if (data.agentId !== agentId) return
+      if (data.taskId) return // Ignore tokens from sub-Agent tasks
       if (data.sessionId) return // Ignore tokens from quick sessions
 
       handleToken({
@@ -400,7 +400,7 @@ export function useChat(kinId: string | null) {
     },
 
     'chat:reasoning-token': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       if (data.taskId) return
       if (data.sessionId) return
 
@@ -411,15 +411,15 @@ export function useChat(kinId: string | null) {
     },
 
     'chat:token-usage': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       if (data.taskId) return
       if (data.sessionId) return
       handleTokenUsage(data.outputTokens as number)
     },
 
     'chat:done': (data) => {
-      if (data.kinId !== kinId) return
-      if (data.taskId) return // Ignore done events from sub-Kin tasks
+      if (data.agentId !== agentId) return
+      if (data.taskId) return // Ignore done events from sub-Agent tasks
       if (data.sessionId) return // Ignore done events from quick sessions
 
       // Promote the streaming message into the messages array before clearing
@@ -447,8 +447,8 @@ export function useChat(kinId: string | null) {
     },
 
     'chat:message': (data) => {
-      if (data.kinId !== kinId) return
-      if (data.taskId) return // Ignore messages from sub-Kin tasks
+      if (data.agentId !== agentId) return
+      if (data.taskId) return // Ignore messages from sub-Agent tasks
       if (data.sessionId) return // Ignore messages from quick sessions
 
       // Resolve taskId: prefer SSE data, fallback to title-based ref lookup
@@ -500,7 +500,7 @@ export function useChat(kinId: string | null) {
     },
 
     'task:status': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       const taskId = data.taskId as string
       const status = data.status as TaskStatus
       const title = (data.title as string) ?? ''
@@ -534,7 +534,7 @@ export function useChat(kinId: string | null) {
     },
 
     'task:done': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       const taskId = data.taskId as string
       const title = (data.title as string) ?? ''
 
@@ -551,7 +551,7 @@ export function useChat(kinId: string | null) {
     },
 
     'compacting:start': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       // A new catch-up cycle started — cancel any pending settle-clear from the
       // previous cycle's done event so the card stays continuous.
       if (compactingClearTimerRef.current) {
@@ -559,7 +559,7 @@ export function useChat(kinId: string | null) {
         compactingClearTimerRef.current = null
       }
       setLiveCompacting({
-        kinId: data.kinId as string,
+        agentId: data.agentId as string,
         status: 'running',
         summary: null,
         memoriesExtracted: null,
@@ -570,7 +570,7 @@ export function useChat(kinId: string | null) {
     },
 
     'compacting:done': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       setLiveCompacting((prev) => {
         if (!prev) return null
         return {
@@ -592,7 +592,7 @@ export function useChat(kinId: string | null) {
     },
 
     'compacting:error': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       const rawError = data.error as string
       const errorMessage = rawError === 'NOTHING_TO_COMPACT'
         ? t('chat.compacting.nothingToCompact')
@@ -608,25 +608,25 @@ export function useChat(kinId: string | null) {
     },
 
     'chat:cleared': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       setMessages([])
       resetStreaming()
     },
 
     'channel:transferred': (data) => {
-      // A channel was re-bound. If the current Kin is either side of the
+      // A channel was re-bound. If the current Agent is either side of the
       // transfer (source or target), refetch the conversation so the new
       // audit-trail row appears inline immediately. Skip when the current
-      // Kin is unrelated to avoid pointless work.
-      if (!kinId) return
-      if (data.fromKinId === kinId || data.toKinId === kinId) {
+      // Agent is unrelated to avoid pointless work.
+      if (!agentId) return
+      if (data.fromAgentId === agentId || data.toAgentId === agentId) {
         fetchMessages()
       }
     },
 
     'channel:message-sent': (data) => {
-      if (data.kinId !== kinId) return
-      // The kin response has just been delivered to the external platform; the
+      if (data.agentId !== agentId) return
+      // The agent response has just been delivered to the external platform; the
       // adapter may have produced a `contextLine` describing how (TTS/text,
       // voice, target channel). Merge it into the existing message so the UI
       // shows the hint without waiting for the next history fetch.
@@ -649,7 +649,7 @@ export function useChat(kinId: string | null) {
     },
 
     'reaction:added': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       const { messageId, userId, userName, emoji, reactionId } = data as {
         messageId: string; userId: string; userName: string; emoji: string; reactionId: string
       }
@@ -667,7 +667,7 @@ export function useChat(kinId: string | null) {
     },
 
     'reaction:removed': (data) => {
-      if (data.kinId !== kinId) return
+      if (data.agentId !== agentId) return
       const { messageId, reactionId } = data as { messageId: string; reactionId: string }
       setMessages((prev) =>
         prev.map((m) => {
@@ -677,9 +677,9 @@ export function useChat(kinId: string | null) {
       )
     },
 
-    'kin:error': (data) => {
-      if (data.kinId !== kinId) return
-      const errorMessage = (data.error as string | undefined) ?? t('errors.kinErrorGeneric')
+    'agent:error': (data) => {
+      if (data.agentId !== agentId) return
+      const errorMessage = (data.error as string | undefined) ?? t('errors.agentErrorGeneric')
       toast.error(errorMessage)
     },
   })
@@ -688,7 +688,7 @@ export function useChat(kinId: string | null) {
   const sendMessage = useCallback(
     async (content: string, fileIds?: string[], optimisticFiles?: MessageFile[]): Promise<boolean> => {
       const hasFiles = fileIds && fileIds.length > 0
-      if (!kinId || (!content.trim() && !hasFiles)) return false
+      if (!agentId || (!content.trim() && !hasFiles)) return false
 
       // Optimistic update — add user message immediately (with file previews).
       // The optimistic id doubles as a reconciliation token: the server echoes
@@ -726,7 +726,7 @@ export function useChat(kinId: string | null) {
       setMessages((prev) => [...prev, userMessage])
 
       try {
-        await api.post(`/kins/${kinId}/messages`, { content, fileIds, clientMessageId })
+        await api.post(`/agents/${agentId}/messages`, { content, fileIds, clientMessageId })
         return true
       } catch {
         // Remove optimistic message on error
@@ -734,32 +734,32 @@ export function useChat(kinId: string | null) {
         return false
       }
     },
-    [kinId],
+    [agentId],
   )
 
   // Stop an active LLM generation
   const stopStreaming = useCallback(async () => {
-    if (!kinId) return
+    if (!agentId) return
     try {
-      await api.post(`/kins/${kinId}/messages/stop`, {})
+      await api.post(`/agents/${agentId}/messages/stop`, {})
     } catch {
       // Ignore — the server will emit chat:done regardless
     }
-  }, [kinId])
+  }, [agentId])
 
   // Cleanup timers on unmount
   useEffect(() => cleanup, [])
 
   const clearConversation = useCallback(async () => {
-    if (!kinId) return
+    if (!agentId) return
     try {
-      await api.delete(`/kins/${kinId}/messages`)
+      await api.delete(`/agents/${agentId}/messages`)
       setMessages([])
       toast.success(t('chat.clear.success'))
     } catch {
       toast.error(t('chat.clear.error'))
     }
-  }, [kinId, t])
+  }, [agentId, t])
 
   return {
     messages,

@@ -205,7 +205,7 @@ export function generateIndex(opts: ScaffoldOptions): string {
   if (opts.types.includes('tools')) {
     lines.push(`    tools: {`)
     lines.push(`      hello: {`)
-    lines.push(`        availability: ['main', 'sub-kin'],`)
+    lines.push(`        availability: ['main', 'sub-agent'],`)
     lines.push(`        readOnly: true,`)
     lines.push(`        concurrencySafe: true,`)
     lines.push(`        create: () =>`)
@@ -237,7 +237,7 @@ export function generateIndex(opts: ScaffoldOptions): string {
     lines.push(`      // Each hook handler receives the typed payload for its hook name —`)
     lines.push(`      // see HookPayloadMap in @hivekeep-developer/sdk.`)
     lines.push(`      afterChat: (h) => {`)
-    lines.push(`        ctx.log.info({ kinId: h.kinId, responseLen: h.response.length }, 'afterChat')`)
+    lines.push(`        ctx.log.info({ agentId: h.agentId, responseLen: h.response.length }, 'afterChat')`)
     lines.push(`      },`)
     lines.push(`    },`)
   }

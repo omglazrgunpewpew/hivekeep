@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
-import { providers, kins } from '@/server/db/schema'
+import { providers, agents } from '@/server/db/schema'
 import { encrypt, decrypt } from '@/server/services/encryption'
 import {
   getCapabilitiesForType,
@@ -329,9 +329,9 @@ providerRoutes.delete('/:id', async (c) => {
     }
   }
 
-  // Find kins referencing this provider before deletion (DB will SET NULL via cascade)
-  const affectedKins = db.select({ id: kins.id, slug: kins.slug, name: kins.name, role: kins.role, avatarPath: kins.avatarPath, updatedAt: kins.updatedAt })
-    .from(kins).where(eq(kins.providerId, id)).all()
+  // Find agents referencing this provider before deletion (DB will SET NULL via cascade)
+  const affectedAgents = db.select({ id: agents.id, slug: agents.slug, name: agents.name, role: agents.role, avatarPath: agents.avatarPath, updatedAt: agents.updatedAt })
+    .from(agents).where(eq(agents.providerId, id)).all()
 
   // Remove the provider's vault-backed secrets so they don't dangle.
   await deleteProviderVaultSecrets(existing)
@@ -344,12 +344,12 @@ providerRoutes.delete('/:id', async (c) => {
     data: { providerId: id },
   })
 
-  // Notify clients that affected kins had their providerId nullified by DB cascade
-  for (const kin of affectedKins) {
+  // Notify clients that affected agents had their providerId nullified by DB cascade
+  for (const agent of affectedAgents) {
     sseManager.broadcast({
-      type: 'kin:updated',
-      kinId: kin.id,
-      data: { kinId: kin.id, slug: kin.slug, name: kin.name, role: kin.role, providerId: null },
+      type: 'agent:updated',
+      agentId: agent.id,
+      data: { agentId: agent.id, slug: agent.slug, name: agent.name, role: agent.role, providerId: null },
     })
   }
 

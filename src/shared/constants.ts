@@ -65,11 +65,11 @@ export const REQUIRED_CAPABILITIES = ['llm', 'embedding'] as const
 
 /** Preference order (case-insensitive substring match against model ids) used
  *  to pick a balanced, tool-use-reliable model when seeding the configurator
- *  Kin (Sherpa) on a freshly added native LLM provider. resolveConfiguratorModel()
+ *  Agent (Queenie) on a freshly added native LLM provider. resolveConfiguratorModel()
  *  returns the first listed model whose id matches the earliest preference; if
  *  none match it falls back to the provider's first listed model. Keyed by
  *  provider `type`. Drift-proof (always validated against the live model list).
- *  See sherpa.md §4.2. */
+ *  See queenie.md §4.2. */
 export const CONFIGURATOR_MODEL_PREFERENCES: Record<string, readonly string[]> = {
   anthropic: ['sonnet', 'opus', 'haiku'],
   'anthropic-oauth': ['sonnet', 'opus', 'haiku'],
@@ -83,8 +83,8 @@ export const CONFIGURATOR_MODEL_PREFERENCES: Record<string, readonly string[]> =
 /** Avatar appearance is two independent global axes the prompt-writer agent is
  *  guided by: the art STYLE (how it's drawn) and the SUBJECT/type (what it
  *  depicts). Presets are UI/onboarding shortcuts; both axes accept free text
- *  ("Other"). The agent writes the per-Kin character (axis C) guided by A+B.
- *  See sherpa.md §9. */
+ *  ("Other"). The agent writes the per-Agent character (axis C) guided by A+B.
+ *  See queenie.md §9. */
 export interface AvatarPreset {
   id: string
   /** Short label shown in the UI / proposed by the configurator. */
@@ -119,7 +119,7 @@ export const MEMORY_CATEGORIES = ['fact', 'preference', 'decision', 'knowledge']
 
 export const MEMORY_SCOPES = ['private', 'shared'] as const
 
-export const MESSAGE_SOURCES = ['user', 'kin', 'task', 'cron', 'system', 'webhook', 'channel'] as const
+export const MESSAGE_SOURCES = ['user', 'agent', 'task', 'cron', 'system', 'webhook', 'channel'] as const
 
 export const KNOWN_CHANNEL_PLATFORMS = ['telegram', 'discord', 'slack', 'whatsapp', 'signal', 'matrix'] as const
 
@@ -133,7 +133,7 @@ export const TASK_STATUSES = ['pending', 'in_progress', 'awaiting_human_input', 
  * Crucially this includes the SUSPENDED-BUT-ALIVE states a task enters while it
  * delegates work downward or waits on something:
  *   - `paused`               — manually paused, still owns the slot
- *   - `awaiting_kin_response`— blocked on an inter-Kin request it sent
+ *   - `awaiting_agent_response`— blocked on an inter-Agent request it sent
  *   - `awaiting_subtask`     — blocked on a child it spawned (e.g. the `scout`
  *                              tool) via suspendTaskForChild
  *
@@ -148,7 +148,7 @@ export const TICKET_RUNNING_TASK_STATUSES = [
   'pending',
   'in_progress',
   'paused',
-  'awaiting_kin_response',
+  'awaiting_agent_response',
   'awaiting_subtask',
 ] as const
 
@@ -158,8 +158,8 @@ export const NOTIFICATION_TYPES = [
   'cron:pending-approval',
   'mcp:pending-approval',
   'email:pending-send-approval',
-  'kin:error',
-  'kin:alert',
+  'agent:error',
+  'agent:alert',
   'mention',
 ] as const
 
@@ -221,7 +221,7 @@ export const TOOL_DOMAIN_META: Record<BuiltinToolDomain, ToolDomainMeta> = {
   memory:     { icon: 'Brain',        bg: 'bg-chart-2/40',   text: 'text-chart-2',          border: 'border-chart-2/40',           labelKey: 'tools.domains.memory' },
   vault:      { icon: 'ShieldCheck',  bg: 'bg-warning/40',   text: 'text-warning',          border: 'border-warning/40',           labelKey: 'tools.domains.vault' },
   tasks:      { icon: 'ListTodo',     bg: 'bg-chart-1/40',   text: 'text-chart-1',          border: 'border-chart-1/40',           labelKey: 'tools.domains.tasks' },
-  'inter-kin':{ icon: 'MessageCircle',bg: 'bg-chart-4/40',   text: 'text-chart-4',          border: 'border-chart-4/40',           labelKey: 'tools.domains.inter-kin' },
+  'inter-agent':{ icon: 'MessageCircle',bg: 'bg-chart-4/40',   text: 'text-chart-4',          border: 'border-chart-4/40',           labelKey: 'tools.domains.inter-agent' },
   crons:      { icon: 'Clock',        bg: 'bg-chart-5/40',   text: 'text-chart-5',          border: 'border-chart-5/40',           labelKey: 'tools.domains.crons' },
   custom:     { icon: 'Puzzle',       bg: 'bg-chart-3/40',   text: 'text-chart-3',          border: 'border-chart-3/40',           labelKey: 'tools.domains.custom' },
   images:     { icon: 'Image',        bg: 'bg-primary/40',   text: 'text-primary',          border: 'border-primary/40',           labelKey: 'tools.domains.images' },
@@ -229,7 +229,7 @@ export const TOOL_DOMAIN_META: Record<BuiltinToolDomain, ToolDomainMeta> = {
   filesystem:      { icon: 'FileCode',    bg: 'bg-chart-1/40',   text: 'text-chart-1',          border: 'border-chart-1/40',           labelKey: 'tools.domains.filesystem' },
   'file-storage':  { icon: 'HardDrive',   bg: 'bg-accent/40',   text: 'text-accent-foreground',border: 'border-accent/40',            labelKey: 'tools.domains.file-storage' },
   mcp:             { icon: 'Plug',         bg: 'bg-muted',        text: 'text-muted-foreground', border: 'border-muted-foreground/40',  labelKey: 'tools.domains.mcp' },
-  'kin-management':{ icon: 'Crown',       bg: 'bg-chart-3/40',   text: 'text-chart-3',          border: 'border-chart-3/40',           labelKey: 'tools.domains.kin-management' },
+  'agent-management':{ icon: 'Crown',       bg: 'bg-chart-3/40',   text: 'text-chart-3',          border: 'border-chart-3/40',           labelKey: 'tools.domains.agent-management' },
   webhooks:        { icon: 'Webhook',     bg: 'bg-info/40',      text: 'text-info',             border: 'border-info/40',              labelKey: 'tools.domains.webhooks' },
   channels:        { icon: 'Radio',       bg: 'bg-chart-4/40',   text: 'text-chart-4',          border: 'border-chart-4/40',           labelKey: 'tools.domains.channels' },
   system:          { icon: 'ScrollText',  bg: 'bg-chart-5/40',   text: 'text-chart-5',          border: 'border-chart-5/40',           labelKey: 'tools.domains.system' },
@@ -418,7 +418,7 @@ export function isValidGitBranch(name: string): boolean {
  *  sync. */
 export const CLONE_STATUSES = ['none', 'cloning', 'ready', 'error'] as const
 
-/** Tags applied to every newly created project. Editable by user/Kin afterward. */
+/** Tags applied to every newly created project. Editable by user/Agent afterward. */
 export const DEFAULT_PROJECT_TAGS: ReadonlyArray<{ label: string; color: string }> = [
   { label: 'bug', color: '#ef4444' },
   { label: 'feature', color: '#3b82f6' },
@@ -427,12 +427,12 @@ export const DEFAULT_PROJECT_TAGS: ReadonlyArray<{ label: string; color: string 
 ]
 
 /**
- * Mandatory tool floor present in EVERY resolved toolset (main Kins and tasks)
+ * Mandatory tool floor present in EVERY resolved toolset (main Agents and tasks)
  * regardless of toolbox selection, because the system protocol assumes them.
  * The toolbox resolver unions this with the selected toolboxes' listed tools.
  *
  * This is the single source of truth, shared between the server resolver and
- * the client (Kin tools preview). `@/server/services/tool-presets` re-exports
+ * the client (Agent tools preview). `@/server/services/tool-presets` re-exports
  * it so existing server imports keep working.
  */
 export const CORE_TOOLS: readonly string[] = [
@@ -448,7 +448,7 @@ export const CORE_TOOLS: readonly string[] = [
   // Shell (with the wrapper-refusal gate already in place).
   'run_shell',
 
-  // Sub-Kin protocol — strictly required by the runner.
+  // Sub-Agent protocol — strictly required by the runner.
   'update_task_status',
   'request_input',
   'report_to_parent',
@@ -457,22 +457,22 @@ export const CORE_TOOLS: readonly string[] = [
   'prompt_human',
   'notify',
   // Secure secret entry (popup → vault; the value never reaches the LLM). The
-  // secure analog of prompt_human, so any Kin can acquire a credential it needs
+  // secure analog of prompt_human, so any Agent can acquire a credential it needs
   // instead of asking the user to paste it into the chat. Main-only in practice
-  // (availability 'main' keeps it out of sub-Kins) and admin-gated at runtime.
+  // (availability 'main' keeps it out of sub-Agents) and admin-gated at runtime.
   'prompt_secret',
 
-  // File attachments (sub-Kins often need to surface screenshots / files
+  // File attachments (sub-Agents often need to surface screenshots / files
   // back to the user without going through write_file + a separate channel
   // call).
   'attach_file',
 
   // Reasoning aid (no-op tool that logs a thought). Cheap, no side effects,
-  // available to every sub-Kin regardless of preset so it can be leaned on
+  // available to every sub-Agent regardless of preset so it can be leaned on
   // for planning before committing to concrete tool calls.
   'think',
 
-  // Structured planning (TodoWrite-equivalent). Sub-Kins use it to lay out
+  // Structured planning (TodoWrite-equivalent). Sub-Agents use it to lay out
   // a plan up-front on multi-step work and surface progress to the user.
   'task_todos',
 ]

@@ -15,7 +15,7 @@ import { GithubRepoPicker } from '@/client/components/project/GithubRepoPicker'
 import { getErrorMessage } from '@/client/lib/api'
 import { choiceToConfig, type ThinkingChoice } from '@/client/lib/thinking-choice'
 import { toast } from 'sonner'
-import type { KinThinkingConfig } from '@/shared/types'
+import type { AgentThinkingConfig } from '@/shared/types'
 
 interface CreateProjectInputSubset {
   title: string
@@ -27,7 +27,7 @@ interface CreateProjectInputSubset {
   providerId?: string | null
   scoutModel?: string | null
   scoutProviderId?: string | null
-  thinkingConfig?: KinThinkingConfig | null
+  thinkingConfig?: AgentThinkingConfig | null
   defaultToolboxIds?: string[] | null
 }
 
@@ -140,7 +140,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
         />
       </FormField>
 
-      {/* Sub-Kin defaults: model + thinking effort. Pre-setting them at
+      {/* Sub-Agent defaults: model + thinking effort. Pre-setting them at
           creation time mirrors the edit modal so the user doesn't have
           to reopen the project to wire them up before spawning tasks. */}
       <FormField label={t('projects.edit.modelField')} hint={t('projects.edit.modelHint')}>
@@ -157,7 +157,7 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
       </FormField>
 
       {/* Default scout model for tasks on this project's tickets.
-          Empty = inherit the global scout default, then the Kin's model. */}
+          Empty = inherit the global scout default, then the Agent's model. */}
       <FormField label={t('projects.edit.scoutModelField')} hint={t('projects.edit.scoutModelHint')}>
         <ModelPicker
           models={llmModels}

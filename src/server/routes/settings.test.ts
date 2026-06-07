@@ -38,7 +38,7 @@ mock.module('@/server/db/index', () => ({
 mock.module('@/server/db/schema', () => ({
   ...fullMockSchema,
   userProfiles: { userId: 'userId', role: 'role' },
-  kins: { id: 'id', name: 'name', slug: 'slug' },
+  agents: { id: 'id', name: 'name', slug: 'slug' },
 }))
 
 mock.module('@/server/services/app-settings', () => ({

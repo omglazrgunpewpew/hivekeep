@@ -14,7 +14,7 @@ const log = createLogger('tools:providers')
  * Does NOT expose API keys or encrypted config.
  */
 export const listProvidersTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   readOnly: true,
   concurrencySafe: true,
   create: (_ctx) =>
@@ -49,7 +49,7 @@ export const listProvidersTool: ToolRegistration = {
  * Returns provider+model combo for each model.
  */
 export const listModelsTool: ToolRegistration = {
-  availability: ['main', 'sub-kin'],
+  availability: ['main', 'sub-agent'],
   readOnly: true,
   concurrencySafe: true,
   create: (_ctx) =>
@@ -57,7 +57,7 @@ export const listModelsTool: ToolRegistration = {
       description:
         'List all available models across all providers. Optionally filter by capability (llm, image, embedding, search, rerank). ' +
         'Each model entry includes `providerId` (UUID), `providerSlug` (human-readable, stable, preferred for tool calls like spawn_self), ' +
-        'and `providerName` (display name). When calling spawn_self/spawn_kin or any other tool needing a `provider_id`, pass the `providerSlug`.',
+        'and `providerName` (display name). When calling spawn_self/spawn_agent or any other tool needing a `provider_id`, pass the `providerSlug`.',
       inputSchema: z.object({
         capability: z
           .enum(['llm', 'image', 'embedding', 'search', 'rerank'])

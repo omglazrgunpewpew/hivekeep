@@ -3,10 +3,10 @@ title: How Memory Works
 description: Understanding Hivekeep's memory system — extraction, retrieval, and the advanced search pipeline.
 ---
 
-Hivekeep gives each Kin persistent memory across conversations. The system uses two complementary channels: **automatic extraction** and **explicit remembering**, backed by a sophisticated hybrid search pipeline. Memories can be **private** (default, only the owning Kin can access them) or **shared** (visible and searchable by all Kins).
+Hivekeep gives each Agent persistent memory across conversations. The system uses two complementary channels: **automatic extraction** and **explicit remembering**, backed by a sophisticated hybrid search pipeline. Memories can be **private** (default, only the owning Agent can access them) or **shared** (visible and searchable by all Agents).
 
 :::note
-For Kin-specific memory features (importance, categories, retrieval), see [Kin Memory](/hivekeep/docs/kins/memory/).
+For Agent-specific memory features (importance, categories, retrieval), see [Agent Memory](/hivekeep/docs/agents/memory/).
 :::
 
 ## Dual-Channel Architecture
@@ -24,27 +24,27 @@ The extraction uses a dedicated model (configurable via `MEMORY_EXTRACTION_MODEL
 
 ### Explicit Remembering
 
-Kins have a `memorize` tool that lets them (or users) explicitly store information. This is useful for direct instructions like "Remember that I prefer dark mode" or important context the extraction pipeline might miss.
+Agents have a `memorize` tool that lets them (or users) explicitly store information. This is useful for direct instructions like "Remember that I prefer dark mode" or important context the extraction pipeline might miss.
 
 ## Shared Memories
 
-By default, memories are **private** to the Kin that created them. However, Kins can mark memories as **shared** to make them searchable by all other Kins in the instance.
+By default, memories are **private** to the Agent that created them. However, Agents can mark memories as **shared** to make them searchable by all other Agents in the instance.
 
 ### When to share
 
-Shared memories are for information that genuinely helps other Kins: cross-domain facts (infrastructure details, user-wide preferences, project decisions affecting everyone), organizational changes, or user availability. Kins should **not** share internal reasoning, task-specific details, or domain-specific knowledge that other Kins would never need.
+Shared memories are for information that genuinely helps other Agents: cross-domain facts (infrastructure details, user-wide preferences, project decisions affecting everyone), organizational changes, or user availability. Agents should **not** share internal reasoning, task-specific details, or domain-specific knowledge that other Agents would never need.
 
 ### How it works
 
 - The `memorize` and `update_memory` tools accept an optional `scope` parameter: `"private"` (default) or `"shared"`
-- `recall` automatically searches both private and shared memories, with shared results attributed to their author Kin (e.g. *[shared by Assistant]*)
-- `list_memories` can filter by scope; `"shared"` lists shared memories from all Kins
+- `recall` automatically searches both private and shared memories, with shared results attributed to their author Agent (e.g. *[shared by Assistant]*)
+- `list_memories` can filter by scope; `"shared"` lists shared memories from all Agents
 - Deduplication checks span both scopes to prevent redundant entries
-- The prompt builder adds `*[shared by Kin Name]*` attribution to shared memories injected in context
+- The prompt builder adds `*[shared by Agent Name]*` attribution to shared memories injected in context
 
 ## Memory Tools
 
-Kins have six memory tools available (main agent only):
+Agents have six memory tools available (main agent only):
 
 | Tool | Description |
 |------|-------------|
@@ -55,7 +55,7 @@ Kins have six memory tools available (main agent only):
 | `list_memories` | List memories, filtered by subject, category, or scope |
 | `review_memories` | LLM-powered audit that detects contradictions, duplicates, stale entries, and clutter |
 
-Both `recall` and `list_memories` include conversational provenance: when a memory has a `sourceContext` (the context in which it was learned), it's included in the result. Shared memories also include `authorKinName` attribution.
+Both `recall` and `list_memories` include conversational provenance: when a memory has a `sourceContext` (the context in which it was learned), it's included in the result. Shared memories also include `authorAgentName` attribution.
 
 ## Storage
 
@@ -66,7 +66,7 @@ Memories are stored as vector embeddings using an embedding provider (OpenAI, Vo
 
 ## Retrieval Pipeline
 
-When a Kin needs relevant memories (either via the `recall` tool or automatic injection at conversation start), Hivekeep runs a multi-stage pipeline:
+When a Agent needs relevant memories (either via the `recall` tool or automatic injection at conversation start), Hivekeep runs a multi-stage pipeline:
 
 ### 1. Contextual Query Rewriting
 
@@ -128,7 +128,7 @@ This ensures only genuinely relevant memories are injected, avoiding noise. Enab
 
 ## Retrieval Tracking
 
-Every time memories are injected into a Kin's context, their retrieval count and timestamp are updated. This data feeds into:
+Every time memories are injected into a Agent's context, their retrieval count and timestamp are updated. This data feeds into:
 
 - **Retrieval frequency boost** during search scoring
 - **Importance recalibration** — a periodic process that nudges importance scores based on retrieval patterns (frequently retrieved = bump up, never retrieved after 30+ days = slight decrease)
@@ -171,7 +171,7 @@ Before compacting runs, a **progressive context pipeline** reduces in-memory con
 - **Observation zone** — Middle-aged tool results truncated
 - **Collapsed zone** — Oldest tool results collapsed to one-line summaries
 
-Users can **force compact** from the UI at any time. All compaction results and errors are persisted in the conversation history, with real-time progress via SSE events. Compacting is fully configurable **per-Kin** (threshold, keep window, summary budget, max summaries, model).
+Users can **force compact** from the UI at any time. All compaction results and errors are persisted in the conversation history, with real-time progress via SSE events. Compacting is fully configurable **per-Agent** (threshold, keep window, summary budget, max summaries, model).
 
 ## Data Flow
 
@@ -181,7 +181,7 @@ User message
   → Multi-query expansion (if enabled)
   → Hybrid search (vector + FTS) per query
   → RRF fusion → score weighting → re-rank → adaptive K
-  → Relevant memories injected into Kin context with prioritization guidance
+  → Relevant memories injected into Agent context with prioritization guidance
   → LLM processes and responds
   → Extraction pipeline analyzes the turn
   → New memories stored as embeddings

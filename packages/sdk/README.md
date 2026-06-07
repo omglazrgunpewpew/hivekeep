@@ -38,7 +38,7 @@ export default function (ctx: PluginContext<MyConfig>): PluginExports {
   return {
     tools: {
       greet: {
-        availability: ['main', 'sub-kin'],
+        availability: ['main', 'sub-agent'],
         readOnly: true,
         concurrencySafe: true,
         create: () => tool({
@@ -82,7 +82,7 @@ Reference the published schema from your `plugin.json` and any JSON-aware editor
 
 ## Reference example
 
-[`examples/hello-kin/`](./examples/hello-kin/) — a single-file plugin demonstrating every extension point (tool, channel, native LLM provider, hooks with typed payloads, card emission, lifecycle). Used by the SDK's own test suite to guarantee the public surface stays loadable.
+[`examples/hello-agent/`](./examples/hello-agent/) — a single-file plugin demonstrating every extension point (tool, channel, native LLM provider, hooks with typed payloads, card emission, lifecycle). Used by the SDK's own test suite to guarantee the public surface stays loadable.
 
 ## Documentation
 

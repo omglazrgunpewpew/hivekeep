@@ -48,7 +48,7 @@ export default defineConfig({
 					label: 'Getting Started',
 					items: [
 						{ label: 'Installation', slug: 'getting-started/installation' },
-						{ label: 'Your First Kin', slug: 'getting-started/first-kin' },
+						{ label: 'Your First Agent', slug: 'getting-started/first-agent' },
 						{ label: 'Configuration', slug: 'getting-started/configuration' },
 					],
 				},
@@ -67,12 +67,12 @@ export default defineConfig({
 					],
 				},
 				{
-					label: 'Kins',
+					label: 'Agents',
 					items: [
-						{ label: 'Overview', slug: 'kins/overview' },
-						{ label: 'System Prompts', slug: 'kins/system-prompts' },
-						{ label: 'Tools', slug: 'kins/tools' },
-						{ label: 'Memory', slug: 'kins/memory' },
+						{ label: 'Overview', slug: 'agents/overview' },
+						{ label: 'System Prompts', slug: 'agents/system-prompts' },
+						{ label: 'Tools', slug: 'agents/tools' },
+						{ label: 'Memory', slug: 'agents/memory' },
 					],
 				},
 				{

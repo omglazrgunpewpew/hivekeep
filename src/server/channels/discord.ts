@@ -619,13 +619,13 @@ export class DiscordAdapter implements ChannelAdapter {
   async onIdentityChange(
     _channelId: string,
     cfg: Record<string, unknown>,
-    newIdentity: { kinSlug: string; kinName: string; avatarUrl?: string },
+    newIdentity: { agentSlug: string; agentName: string; avatarUrl?: string },
   ): Promise<void> {
     const token = await resolveToken(cfg)
     // Discord usernames are capped at 32 chars and must avoid certain
     // characters; truncate defensively. Slugs are always ASCII so this
-    // mostly affects long Kin display names.
-    const username = newIdentity.kinName.slice(0, 32).trim() || newIdentity.kinSlug
+    // mostly affects long Agent display names.
+    const username = newIdentity.agentName.slice(0, 32).trim() || newIdentity.agentSlug
     const body: Record<string, unknown> = { username }
 
     // Avatar is optional: PATCH /users/@me accepts a data: URI in the

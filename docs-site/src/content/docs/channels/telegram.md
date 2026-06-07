@@ -1,6 +1,6 @@
 ---
 title: Telegram
-description: Connect your Kin to Telegram using a bot.
+description: Connect your Agent to Telegram using a bot.
 ---
 
 Telegram integration uses the [Bot API](https://core.telegram.org/bots/api) with automatic transport selection: **webhooks** when a public HTTPS URL is available, or **long polling** for local/development setups.
@@ -9,7 +9,7 @@ Telegram integration uses the [Bot API](https://core.telegram.org/bots/api) with
 
 1. **Create a bot** with [@BotFather](https://t.me/BotFather) on Telegram
 2. Copy the bot token
-3. In Hivekeep, go to your Kin's **Channels** tab
+3. In Hivekeep, go to your Agent's **Channels** tab
 4. Click **Add Channel**, select **Telegram**
 5. Paste your bot token — it will be encrypted in Hivekeep's vault
 6. Optionally, restrict to specific chat IDs with the allowlist
@@ -50,7 +50,7 @@ Long polling mode is selected automatically — no manual configuration needed. 
 
 ## How It Works
 
-- **Inbound:** Messages are received via webhook or polling. The adapter parses text and attachments (photos, documents, audio, video) and routes them to the Kin.
+- **Inbound:** Messages are received via webhook or polling. The adapter parses text and attachments (photos, documents, audio, video) and routes them to the Agent.
 - **Outbound:** Messages are sent via the Bot API. Long messages (>4,096 chars) are automatically split. File attachments are uploaded as multipart form data.
 
 ## Features

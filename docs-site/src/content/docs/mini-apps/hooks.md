@@ -22,7 +22,7 @@ const { hivekeep, app, theme, ready } = useHivekeep();
 | Property | Type | Description |
 |----------|------|-------------|
 | `hivekeep` | `Hivekeep` | The full SDK instance (access `.api`, `.storage`, `.locale`, etc.) |
-| `app` | `HivekeepAppMeta \| null` | Reactive app metadata (id, name, slug, kinId, locale, user) |
+| `app` | `HivekeepAppMeta \| null` | Reactive app metadata (id, name, slug, agentId, locale, user) |
 | `theme` | `{ mode, palette }` | Reactive theme (light/dark) |
 | `ready` | `() => void` | Call this to signal your app has finished loading |
 
@@ -51,13 +51,13 @@ const { mode, palette } = useTheme();
 // mode: "light" | "dark"
 ```
 
-### useKin()
+### useAgent()
 
-Access parent Kin information.
+Access parent Agent information.
 
 ```jsx
-const { kin, loading } = useKin();
-// kin: { id, name, avatarUrl }
+const { agent, loading } = useAgent();
+// agent: { id, name, avatarUrl }
 ```
 
 ### useUser()
@@ -154,7 +154,7 @@ Options: `source`, `pageSize`, `pageParam`, `limitParam`, `getItems`, `getTotal`
 
 ### useMemory()
 
-Search and store Kin memories from a mini-app.
+Search and store Agent memories from a mini-app.
 
 ```jsx
 const { search, store, results, loading } = useMemory();
@@ -165,7 +165,7 @@ await store("User prefers dark mode", { category: "preference" });
 
 ### useConversation()
 
-Interact with the Kin's conversation.
+Interact with the Agent's conversation.
 
 ```jsx
 const { history, send, messages, loading } = useConversation();
@@ -286,7 +286,7 @@ await download("report.csv", csvString, "text/csv");
 
 ### useApps()
 
-List other mini-apps from the same Kin.
+List other mini-apps from the same Agent.
 
 ```jsx
 const { apps, loading, refresh } = useApps();

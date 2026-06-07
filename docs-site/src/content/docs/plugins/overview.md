@@ -11,7 +11,7 @@ A single plugin can contribute one or more of these:
 
 | Type | Description |
 |------|-------------|
-| **Tools** | New AI-callable functions for Kins (weather, SMS, RSS...) |
+| **Tools** | New AI-callable functions for Agents (weather, SMS, RSS...) |
 | **Providers** | Custom LLM, embedding, image, or search providers |
 | **Channels** | New messaging platforms |
 | **Hooks** | Intercept lifecycle events (before/after chat, tool calls...) |
@@ -21,14 +21,14 @@ A single plugin can contribute one or more of these:
 1. **Low barrier to entry** — A plugin is a folder with a manifest and a TypeScript file
 2. **TypeScript-first** — Compiled by Bun at load time, no separate build step
 3. **Safe by default** — Plugins declare permissions; users approve before activation
-4. **Kin-scoped** — Enable plugins globally or per-Kin
+4. **Agent-scoped** — Enable plugins globally or per-Agent
 5. **Compatible** — Built-in tools remain unchanged; plugins use the same patterns
 
 ## Managing Plugins
 
 Plugins are admin-only and managed exclusively from the UI: **Settings → Plugins** lets an admin browse the npm marketplace, install, enable/disable, configure, and uninstall plugins. The UI auto-generates settings forms from the plugin's `configSchema`.
 
-Kins cannot install or manage plugins themselves — that capability was intentionally removed to keep the attack surface admin-gated.
+Agents cannot install or manage plugins themselves — that capability was intentionally removed to keep the attack surface admin-gated.
 
 ## Plugin Lifecycle
 
@@ -38,7 +38,7 @@ Server Start
   → Validate each plugin.json
   → Register discovered plugins (not yet activated)
   → Activate globally-enabled plugins
-  → For each Kin, activate Kin-specific plugins
+  → For each Agent, activate Agent-specific plugins
 ```
 
 ### Enable/Disable Levels
@@ -46,7 +46,7 @@ Server Start
 Plugins have two levels of enablement:
 
 - **Global** — Plugin is active at the platform level. Its providers, channels, and hooks are registered.
-- **Per-Kin** — Plugin's tools are available to specific Kins. Configured in each Kin's settings.
+- **Per-Agent** — Plugin's tools are available to specific Agents. Configured in each Agent's settings.
 
 ### Hot Reload
 

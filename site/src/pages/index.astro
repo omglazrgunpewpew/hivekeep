@@ -3,11 +3,11 @@ import Base from '../layouts/Base.astro';
 import Avatar from '../components/Avatar.astro';
 import Providers from '../components/Providers.astro';
 import { Icon } from 'astro-icon/components';
-import kins from '../kins.json';
+import agents from '../agents.json';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const HUES = [305, 40, 20, 330, 265, 210, 150, 55, 15, 235, 290, 30, 170, 95, 260, 50, 200, 120];
-const panelKins = kins.slice(0, 5);
+const panelAgents = agents.slice(0, 5);
 const channels = [
   ['telegram', 'Telegram'], ['whatsapp', 'WhatsApp'], ['slack', 'Slack'],
   ['discord', 'Discord'], ['signal', 'Signal'], ['matrix', 'Matrix'],
@@ -66,11 +66,11 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
           </div>
         </div>
 
-        <!-- product-like Kins panel -->
+        <!-- product-like Agents panel -->
         <div class="panel glass">
-          <div class="ph-head"><span class="t">// your kins</span><span class="c">{kins.length} active</span></div>
+          <div class="ph-head"><span class="t">// your agents</span><span class="c">{agents.length} active</span></div>
           <div>
-            {panelKins.map((k, i) => {
+            {panelAgents.map((k, i) => {
               const st = k.status === 'working' ? 'work' : k.status === 'idle' ? 'idle' : '';
               const label = k.status === 'working' ? 'working' : k.status === 'idle' ? 'idle' : 'online';
               return (
@@ -99,7 +99,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="sec-head" style="text-align:center;max-width:60ch;margin:0 auto 30px">
       <span class="kicker" style="justify-content:center">Watch it install</span>
       <h2 class="display">From zero to your own team in one command.</h2>
-      <p style="margin:0 auto">One container. Then Sherpa takes over: no config files, no terminal gymnastics.</p>
+      <p style="margin:0 auto">One container. Then Queenie takes over: no config files, no terminal gymnastics.</p>
     </div>
     <div class="videoframe">
       <!-- Replace with the real install video:
@@ -122,7 +122,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <div class="split2">
         <div>
           <p>No "new conversation". One continuous session, and a hybrid memory that builds context over months. Nothing is deleted: old turns are summarized, never thrown away.</p>
-          <p>A Kin hands work to another, or spawns a swarm of sub-agents to move faster. The colony shares one history and one address book.</p>
+          <p>A Agent hands work to another, or spawns a swarm of sub-agents to move faster. The colony shares one history and one address book.</p>
           <div class="taglist"><span class="t"><Icon name="lucide:infinity" /> continuous session</span><span class="t"><Icon name="lucide:users" /> inter-agent handoff</span></div>
         </div>
         <div class="figure glass">
@@ -166,8 +166,8 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <div class="split2">
         <div>
           <p>No Postgres, Redis, Mongo, or message broker. Bun and SQLite in a single binary. Your data, your keys, your machine.</p>
-          <p>Secrets live in an encrypted vault. Kins reference a vault key to reach a service; they <b>never read the value</b>, so it <b>never reaches the LLM</b>.</p>
-          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br /><span class="cmt"># then open your browser. Sherpa does the rest.</span></div>
+          <p>Secrets live in an encrypted vault. Agents reference a vault key to reach a service; they <b>never read the value</b>, so it <b>never reaches the LLM</b>.</p>
+          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br /><span class="cmt"># then open your browser. Queenie does the rest.</span></div>
         </div>
         <dl class="specs">
           <div class="r"><dt>Footprint</dt><dd>1 process · 1 SQLite file</dd></div>
@@ -195,8 +195,8 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
           </div>
         </div>
         <div>
-          <p>Kins write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a <b>themed card, not raw JSON</b>. They build full mini-apps (dashboards, control panels) right inside Hivekeep, and can ship NPM plugins.</p>
-          <p>Scope each Kin with <b>toolboxes</b> so a focused agent only sees the tools it needs, which keeps it sharp and lets lighter models do the job.</p>
+          <p>Agents write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a <b>themed card, not raw JSON</b>. They build full mini-apps (dashboards, control panels) right inside Hivekeep, and can ship NPM plugins.</p>
+          <p>Scope each Agent with <b>toolboxes</b> so a focused agent only sees the tools it needs, which keeps it sharp and lets lighter models do the job.</p>
           <div class="taglist">
             <span class="t"><Icon name="lucide:wrench" /> custom tools</span>
             <span class="t"><Icon name="lucide:layout-dashboard" /> mini-apps</span>
@@ -217,7 +217,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <h2 class="display">One inbox for your whole team.</h2>
       <div class="split2">
         <div>
-          <p>Talk to every Kin from the messaging apps you already use. Ask for a specialist by name and the Kin on the line <b>hands the channel over</b> in real time. No commands, no switching apps.</p>
+          <p>Talk to every Agent from the messaging apps you already use. Ask for a specialist by name and the Agent on the line <b>hands the channel over</b> in real time. No commands, no switching apps.</p>
           <div class="taglist">
             {channels.map(([slug, label]) => (
               <span class="t"><Icon name={`simple-icons:${slug}`} /> {label}</span>
@@ -243,8 +243,8 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <h2 class="display">No black box. No cost surprises.</h2>
       <div class="split2">
         <div>
-          <p>See exactly what goes to the model: the system prompt broken down block by block, token cost <b>per Kin and per model</b>, and the prompt-cache read / write / fresh split with its hit rate. Hivekeep is unusually honest about what it sends and what it spends, across any provider.</p>
-          <div class="taglist"><span class="t"><Icon name="lucide:gauge" /> per-Kin token cost</span><span class="t"><Icon name="lucide:layers" /> context preview</span></div>
+          <p>See exactly what goes to the model: the system prompt broken down block by block, token cost <b>per Agent and per model</b>, and the prompt-cache read / write / fresh split with its hit rate. Hivekeep is unusually honest about what it sends and what it spends, across any provider.</p>
+          <div class="taglist"><span class="t"><Icon name="lucide:gauge" /> per-Agent token cost</span><span class="t"><Icon name="lucide:layers" /> context preview</span></div>
         </div>
         <div class="figure glass">
           <div class="cap"><span>Fig. 4 · context viewer</span><span class="amb">tokens</span></div>
@@ -275,21 +275,21 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   </section></div>
   <hr class="rule" />
 
-  <!-- ===== 06 setup / sherpa ===== -->
+  <!-- ===== 06 setup / queenie ===== -->
   <div class="wrap" id="setup"><section class="section">
     <div class="num display">06<small>Setup</small></div>
     <div class="body">
       <h2 class="display">Setup is a conversation, not a YAML file.</h2>
       <div class="split2">
         <div>
-          <p>Sherpa, your setup agent, connects your providers, secures your secrets, and creates your first Kins by chatting with you. It stays around for good, ready to add a Kin or wire up a new provider any time.</p>
-          <div class="taglist"><span class="t"><Icon name="lucide:shield-check" /> secure input → vault</span><span class="t"><Icon name="lucide:wand-sparkles" /> generates Kins for you</span></div>
+          <p>Queenie, your setup agent, connects your providers, secures your secrets, and creates your first Agents by chatting with you. It stays around for good, ready to add a Agent or wire up a new provider any time.</p>
+          <div class="taglist"><span class="t"><Icon name="lucide:shield-check" /> secure input → vault</span><span class="t"><Icon name="lucide:wand-sparkles" /> generates Agents for you</span></div>
         </div>
         <div class="shot">
-          <span class="cap">Fig. 5 · Sherpa onboarding</span>
+          <span class="cap">Fig. 5 · Queenie onboarding</span>
           <div class="shot-inner">
-            <!-- Drop the real capture at public/screens/sherpa-onboarding.png -->
-            <div class="ph"><div><Icon name="lucide:messages-square" /><div class="lbl">Sherpa connects a provider via secure input</div><span class="pt">screenshot to add</span></div></div>
+            <!-- Drop the real capture at public/screens/queenie-onboarding.png -->
+            <div class="ph"><div><Icon name="lucide:messages-square" /><div class="lbl">Queenie connects a provider via secure input</div><span class="pt">screenshot to add</span></div></div>
           </div>
         </div>
       </div>
@@ -302,11 +302,11 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="num display">07<small>Examples</small></div>
     <div class="body">
       <h2 class="display">Build a household for your life.</h2>
-      <p>Hivekeep ships with one Kin: <b>Sherpa</b>, your setup guide. You create the rest, or just ask Sherpa to build them for you. Each one gets its own name, domain, memory, tools, and an auto-generated avatar.</p>
+      <p>Hivekeep ships with one Agent: <b>Queenie</b>, your setup guide. You create the rest, or just ask Queenie to build them for you. Each one gets its own name, domain, memory, tools, and an auto-generated avatar.</p>
       <p class="examples-note mono">A few examples of what people build →</p>
       <div class="directory">
-        {kins.map((k, i) => {
-          const builtin = k.name === 'Sherpa';
+        {agents.map((k, i) => {
+          const builtin = k.name === 'Queenie';
           return (
             <div class="dir">
               <div class="frame"><Avatar name={k.name} avatar={k.avatar} size={52} hue={HUES[i % HUES.length]} /></div>
@@ -355,7 +355,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="wrap" style="position:relative;z-index:1">
       <span class="kicker" style="justify-content:center">Get started</span>
       <h2 class="display">Run your team in two minutes.</h2>
-      <p>One command. No external services to provision. Open your browser and Sherpa walks you through the rest.</p>
+      <p>One command. No external services to provision. Open your browser and Queenie walks you through the rest.</p>
       <div class="cmd"><span><span class="c">$</span> docker run -d -p 3000:3000 -v hivekeep-data:/app/data ghcr.io/marlburrow/hivekeep</span><span class="cp"><Icon name="lucide:copy" /></span></div>
       <div class="btns">
         <a class="btn btn-primary" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub</a>

@@ -23,9 +23,9 @@ Hivekeep uses environment variables for configuration. Copy `.env.example` to `.
 
 Hivekeep stores everything in a single directory (`HIVEKEEP_DATA_DIR`):
 
-- **SQLite database** — messages, kins, settings, memories
+- **SQLite database** — messages, agents, settings, memories
 - **File uploads** — user-uploaded files and generated images
-- **Kin workspaces** — custom tools and scripts created by Kins
+- **Agent workspaces** — custom tools and scripts created by Agents
 - **Encryption key** — auto-generated on first run if not provided
 
 :::tip

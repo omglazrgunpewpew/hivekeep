@@ -16,8 +16,8 @@ export const fileStorageRoutes = new Hono<{ Variables: AppVariables }>()
 
 // GET /api/file-storage — list all stored files
 fileStorageRoutes.get('/', async (c) => {
-  const kinId = c.req.query('kinId')
-  const files = await listFiles(kinId || undefined)
+  const agentId = c.req.query('agentId')
+  const files = await listFiles(agentId || undefined)
   return c.json({ files })
 })
 
@@ -27,7 +27,7 @@ fileStorageRoutes.post('/', async (c) => {
 
   const formData = await c.req.formData()
   const file = formData.get('file') as File | null
-  const kinId = formData.get('kinId') as string | null
+  const agentId = formData.get('agentId') as string | null
   const name = formData.get('name') as string | null
   const description = formData.get('description') as string | null
   const isPublic = formData.get('isPublic') as string | null
@@ -42,9 +42,9 @@ fileStorageRoutes.post('/', async (c) => {
     )
   }
 
-  if (!kinId) {
+  if (!agentId) {
     return c.json(
-      { error: { code: 'VALIDATION_ERROR', message: 'kinId is required' } },
+      { error: { code: 'VALIDATION_ERROR', message: 'agentId is required' } },
       400,
     )
   }
@@ -52,7 +52,7 @@ fileStorageRoutes.post('/', async (c) => {
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
     const result = await createFile({
-      kinId,
+      agentId,
       name: name || file.name,
       originalName: file.name,
       buffer,
@@ -64,7 +64,7 @@ fileStorageRoutes.post('/', async (c) => {
       readAndBurn: readAndBurn === 'true',
     })
 
-    log.info({ fileId: result.id, kinId, fileName: file.name, size: file.size }, 'File uploaded to storage')
+    log.info({ fileId: result.id, agentId, fileName: file.name, size: file.size }, 'File uploaded to storage')
     return c.json({ file: result }, 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Upload failed'

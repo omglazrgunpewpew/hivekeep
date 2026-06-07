@@ -34,7 +34,7 @@ export interface ExecuteToolBatchOptions {
   stepToolCalls: ToolCall[]
   tools: Record<string, Tool<any, any>>
   abortController: AbortController
-  kinId: string
+  agentId: string
   assistantMessageId: string
   /** Extra fields merged into SSE event data (e.g. sessionId, taskId) */
   sseExtra?: Record<string, unknown>
@@ -90,7 +90,7 @@ export function partitionToolCalls(calls: ToolCall[]): ToolBatch[] {
  * serially. Results are always returned in the original request order.
  */
 export async function executeToolBatch(opts: ExecuteToolBatchOptions): Promise<ExecuteToolBatchResult> {
-  const { stepToolCalls, tools, abortController, kinId, assistantMessageId, sseExtra } = opts
+  const { stepToolCalls, tools, abortController, agentId, assistantMessageId, sseExtra } = opts
   const toolCallsLog: ToolLogEntry[] = []
   const toolResults: ToolResultEntry[] = []
   const concurrencyCap = config.tools?.concurrencyCap ?? HIVEKEEP_MAX_TOOL_USE_CONCURRENCY_DEFAULT
@@ -103,7 +103,7 @@ export async function executeToolBatch(opts: ExecuteToolBatchOptions): Promise<E
 
     log.debug(
       {
-        kinId,
+        agentId,
         batchSize: batch.calls.length,
         isConcurrencySafe: batch.isConcurrencySafe,
         toolNames: batch.calls.map(c => c.name),
@@ -119,9 +119,9 @@ export async function executeToolBatch(opts: ExecuteToolBatchOptions): Promise<E
           const result = await executeSingleTool(tc, tools, abortController)
           resultMap.set(tc.id, result)
 
-          sseManager.sendToKin(kinId, {
+          sseManager.sendToAgent(agentId, {
             type: 'chat:tool-result',
-            kinId,
+            agentId,
             data: { messageId: assistantMessageId, toolCallId: tc.id, toolName: tc.name, result, ...sseExtra },
           })
         }),
@@ -134,9 +134,9 @@ export async function executeToolBatch(opts: ExecuteToolBatchOptions): Promise<E
         const result = await executeSingleTool(tc, tools, abortController)
         resultMap.set(tc.id, result)
 
-        sseManager.sendToKin(kinId, {
+        sseManager.sendToAgent(agentId, {
           type: 'chat:tool-result',
-          kinId,
+          agentId,
           data: { messageId: assistantMessageId, toolCallId: tc.id, toolName: tc.name, result, ...sseExtra },
         })
       }
@@ -165,7 +165,7 @@ export async function executeToolBatch(opts: ExecuteToolBatchOptions): Promise<E
 
 /**
  * Classify a tool name that is NOT present in the current (already-resolved,
- * granted-only) toolset and produce a CLEAR, ACTIONABLE message for the Kin/LLM.
+ * granted-only) toolset and produce a CLEAR, ACTIONABLE message for the Agent/LLM.
  *
  * The message distinguishes the four cases that the old "has no execute
  * function" text conflated: not-granted, doesn't-exist, disabled, and the

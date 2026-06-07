@@ -10,7 +10,7 @@
  *     return {
  *       tools: {
  *         my_tool: {
- *           availability: ['main', 'sub-kin'],
+ *           availability: ['main', 'sub-agent'],
  *           create: () => tool({
  *             description: '...',
  *             inputSchema: z.object({ name: z.string() }),
@@ -146,17 +146,17 @@ export function asSchema(input: unknown): NormalizedSchema {
 
 // ─── Tool registration (what plugins put under `exports.tools`) ─────────────
 
-/** Where a tool is available: a Kin's main conversation, a sub-Kin task, or both. */
-export type ToolAvailability = 'main' | 'sub-kin'
+/** Where a tool is available: a Agent's main conversation, a sub-Agent task, or both. */
+export type ToolAvailability = 'main' | 'sub-agent'
 
 /** Runtime context passed to a tool factory by Hivekeep when the tool is resolved. */
 export interface ToolExecutionContext {
-  kinId: string
+  agentId: string
   userId?: string
   taskId?: string
   /** Current task depth (1-based). Present only when executing inside a task. */
   taskDepth?: number
-  isSubKin: boolean
+  isSubAgent: boolean
   /** ID of the originating channel queue item (causal chain tracking). */
   channelOriginId?: string
   /** Cron ID when executing a cron-triggered task. */
@@ -169,13 +169,13 @@ export type ToolFactory = (ctx: ToolExecutionContext) => Tool<any, any>
 
 /**
  * What a plugin returns for each entry of `exports.tools`. The `create`
- * factory is bound to a fresh `ToolExecutionContext` per Kin turn so the
- * tool can capture the right kinId / userId / taskId in its closure.
+ * factory is bound to a fresh `ToolExecutionContext` per Agent turn so the
+ * tool can capture the right agentId / userId / taskId in its closure.
  */
 export interface ToolRegistration {
   create: ToolFactory
   availability: ToolAvailability[]
-  /** Disabled by default unless the Kin's toolConfig opts in. */
+  /** Disabled by default unless the Agent's toolConfig opts in. */
   defaultDisabled?: boolean
   /**
    * True iff this tool **never** modifies external state — pure reads
@@ -199,7 +199,7 @@ export interface ToolRegistration {
   concurrencySafe?: boolean
   /**
    * True iff this tool may delete, overwrite, or otherwise destroy
-   * data the user cares about (rm, drop_table, delete_kin, etc.).
+   * data the user cares about (rm, drop_table, delete_agent, etc.).
    * Surfaced in UI as a confirmation prompt and to gating logic.
    * Doesn't affect execution scheduling — purely a user-facing signal.
    */
@@ -208,7 +208,7 @@ export interface ToolRegistration {
    *  the tool from the resolved toolset for a particular context. */
   condition?: (ctx: ToolExecutionContext) => boolean
   /**
-   * Human-readable label rendered in the Kin's Tools settings list.
+   * Human-readable label rendered in the Agent's Tools settings list.
    * Plugin tools without a label fall back to the bare tool name with
    * the `plugin_<plugin-name>_` prefix stripped — readable but not as
    * polished as a curated label.
@@ -310,7 +310,7 @@ export interface OutboundMessageParams {
   content: string
   replyToMessageId?: string
   attachments?: OutboundAttachment[]
-  /** Locale of the Kin owner (`en`, `fr`, …). Adapters may use it to localize
+  /** Locale of the Agent owner (`en`, `fr`, …). Adapters may use it to localize
    *  the `contextLine` they return. */
   locale?: string
 }
@@ -364,7 +364,7 @@ export interface DeliveryStatusUpdate {
  * The contract every channel adapter implements to connect Hivekeep to
  * an external messaging platform (Telegram, Discord, Slack, custom
  * webhook bridge, …). One adapter per platform handles many channels
- * (one channel = one chat / room / DM). The Kin's queue and Hivekeep
+ * (one channel = one chat / room / DM). The Agent's queue and Hivekeep
  * core stay platform-agnostic; the adapter owns every protocol detail.
  *
  * Lifecycle Hivekeep drives:
@@ -374,7 +374,7 @@ export interface DeliveryStatusUpdate {
  *   3. `start`          — open the inbound stream (polling, WebSocket,
  *                          webhook subscription) and hand Hivekeep the
  *                          `onMessage` callback. Must remain idempotent.
- *   4. `sendMessage`    — outbound from a Kin's response.
+ *   4. `sendMessage`    — outbound from a Agent's response.
  *   5. `stop`           — clean teardown when the channel is disabled
  *                          or Hivekeep shuts down.
  *
@@ -387,10 +387,10 @@ export interface DeliveryStatusUpdate {
 /**
  * A discoverable destination within a channel connection — a Discord
  * guild channel, a TeamSpeak room, a Telegram group, a Matrix room, a
- * DM thread, etc. Returned by `ChannelAdapter.listEndpoints` so a Kin
+ * DM thread, etc. Returned by `ChannelAdapter.listEndpoints` so a Agent
  * can post somewhere it hasn't received a message from first.
  *
- * The `id` is the opaque value the Kin later passes back as `chat_id`
+ * The `id` is the opaque value the Agent later passes back as `chat_id`
  * to `sendMessage` — same format the platform's inbound events use.
  */
 export interface ChannelEndpoint {
@@ -400,7 +400,7 @@ export interface ChannelEndpoint {
   /** Display name (e.g. `"#general"`, `"Alice"`, `"Lobby"`). Short. */
   displayName: string
   /**
-   * Type hint for the UI and the Kin's reasoning:
+   * Type hint for the UI and the Agent's reasoning:
    *   - `channel`  : multi-user space the bot is a member of (Discord
    *                  guild channel, Slack public/private channel)
    *   - `group`    : multi-user space typically smaller (Telegram
@@ -431,7 +431,7 @@ export interface ChannelAdapter {
    * per channel at startup, and again each time the channel is
    * re-enabled. Must be idempotent — calling twice with the same
    * channelId is a no-op for the second call (or a clean restart).
-   * `onMessage` is the only path inbound messages reach the Kin queue.
+   * `onMessage` is the only path inbound messages reach the Agent queue.
    */
   start(
     channelId: string,
@@ -443,7 +443,7 @@ export interface ChannelAdapter {
    *  subscription. Called on disable/delete or Hivekeep shutdown. */
   stop(channelId: string): Promise<void>
 
-  /** Send an outbound message authored by the Kin. Throw on failure;
+  /** Send an outbound message authored by the Agent. Throw on failure;
    *  Hivekeep records the error and surfaces it in the UI. */
   sendMessage(
     channelId: string,
@@ -452,14 +452,14 @@ export interface ChannelAdapter {
   ): Promise<OutboundMessageResult>
 
   /**
-   * Discover the destinations a Kin can post to within this channel
+   * Discover the destinations a Agent can post to within this channel
    * connection — Discord guild channels + DM threads, TeamSpeak rooms,
    * Matrix rooms, Telegram groups/DMs known to the bot, Slack channels,
    * etc. Optional: adapters where the destination is always a single
    * contact (Twilio SMS, Signal) don't implement this — the host tool
-   * falls back to telling the Kin to use `send_to_contact` instead.
+   * falls back to telling the Agent to use `send_to_contact` instead.
    *
-   * The `id` is the same opaque string the Kin passes back as
+   * The `id` is the same opaque string the Agent passes back as
    * `chat_id` to `send_channel_message` / `sendMessage`. Adapters
    * should NOT include endpoints the bot has no permission to write
    * to (e.g. read-only Slack channels) — Hivekeep trusts the list.
@@ -479,12 +479,12 @@ export interface ChannelAdapter {
 
   /**
    * How the adapter handles identity switching when a channel is transferred
-   * from one Kin to another (transfer_channel tool):
+   * from one Agent to another (transfer_channel tool):
    *   - 'native': the adapter implements `onIdentityChange` and pushes the
-   *     new Kin's display name (and avatar when supported) to the external
+   *     new Agent's display name (and avatar when supported) to the external
    *     platform. The core does NOT prefix outbound messages.
    *   - 'prefix': the adapter cannot switch identity natively. The core
-   *     prepends "[Kin Name] " to every outbound text message.
+   *     prepends "[Agent Name] " to every outbound text message.
    *   - 'none': neither identity change nor prefix. Use only when neither
    *     makes sense.
    *
@@ -496,8 +496,8 @@ export interface ChannelAdapter {
     channelId: string,
     config: Record<string, unknown>,
     newIdentity: {
-      kinSlug: string
-      kinName: string
+      agentSlug: string
+      agentName: string
       avatarUrl?: string
     },
   ): Promise<void>
@@ -517,7 +517,7 @@ export interface ChannelAdapter {
    * Handle an inbound HTTP webhook from the external platform. Called by
    * `POST /api/channels/plugin/:platform/webhook/:channelId`. The adapter
    * parses the request, validates the signature, and returns either an
-   * IncomingMessage to inject into the Kin queue (or null to ignore the
+   * IncomingMessage to inject into the Agent queue (or null to ignore the
    * event) along with the HTTP Response to send back to the platform.
    *
    * Adapters using long-lived connections (polling, WebSocket) don't need
@@ -1134,7 +1134,7 @@ export interface ImageRequest {
 
 /**
  * What `ImageProvider.generate()` returns. Hivekeep writes the bytes
- * to the kin's upload directory, registers an entry in `files`, and
+ * to the agent's upload directory, registers an entry in `files`, and
  * surfaces a URL back to the tool caller.
  */
 export interface ImageResult {
@@ -1221,7 +1221,7 @@ export interface ImageProvider extends ProviderUIHints {
 
 /**
  * Static capability declaration a search provider exposes so the host
- * (and the Kin, via `list_search_providers`) knows what it can ask for.
+ * (and the Agent, via `list_search_providers`) knows what it can ask for.
  *
  * All flags are optional and default to `false` — a provider that
  * declares no capabilities only supports the bare minimum: a plain
@@ -2054,16 +2054,16 @@ export type PluginProvider =
  * registry signature picks it up automatically.
  */
 export interface HookPayloadMap {
-  /** Fired once per Kin turn, just before the system prompt is assembled. */
+  /** Fired once per Agent turn, just before the system prompt is assembled. */
   beforeChat: {
-    kinId: string
+    agentId: string
     userId?: string
     /** The raw incoming user message content for this turn. */
     message: string
   }
-  /** Fired once per Kin turn, after the assistant's response is finalized. */
+  /** Fired once per Agent turn, after the assistant's response is finalized. */
   afterChat: {
-    kinId: string
+    agentId: string
     userId?: string
     /** The raw incoming user message content for this turn. */
     message: string
@@ -2073,10 +2073,10 @@ export interface HookPayloadMap {
   /** Fired before each tool call inside a turn. Mutations to `toolArgs` are
    *  observed by the executor when the handler returns the modified ctx. */
   beforeToolCall: {
-    kinId: string
+    agentId: string
     userId?: string
     taskId?: string
-    isSubKin: boolean
+    isSubAgent: boolean
     /** Tool name as seen by the LLM (already plugin-prefixed when applicable). */
     toolName: string
     /** The arguments passed to the tool by the LLM. */
@@ -2088,10 +2088,10 @@ export interface HookPayloadMap {
   }
   /** Fired after each tool call. `toolResult` is whatever the tool returned. */
   afterToolCall: {
-    kinId: string
+    agentId: string
     userId?: string
     taskId?: string
-    isSubKin: boolean
+    isSubAgent: boolean
     toolName: string
     toolArgs: unknown
     toolResult: unknown
@@ -2277,7 +2277,7 @@ export type PluginCardPrimitive =
  *   import { card, z } from '@hivekeep-developer/sdk'
  *
  *   ctx.cards.emit({
- *     kinId,
+ *     agentId,
  *     cardType: 'task-run',
  *     layout: [
  *       card.header({ title: 'Task running…', icon: 'Sparkles' }),
@@ -2372,7 +2372,7 @@ export const card = {
  *  in a `type` field fails at compile time. */
 export interface PluginCardsAPI {
   emit(params: {
-    kinId: string
+    agentId: string
     cardType: string
     layout: PluginCardPrimitive[]
     initialState: Record<string, unknown>
@@ -2388,7 +2388,7 @@ export interface PluginCardActionContext {
   cardInstanceId: string
   actionId: string
   input?: string
-  kinId: string
+  agentId: string
 }
 
 export type PluginCardActionResult = { ok: true } | { ok: false; error: string }

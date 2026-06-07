@@ -1,15 +1,15 @@
 ---
 title: Model Selection & Troubleshooting
-description: Choose the right model for your Kins and fix common issues like "text mode" and failed tool calls.
+description: Choose the right model for your Agents and fix common issues like "text mode" and failed tool calls.
 ---
 
-The model you assign to a Kin has a **massive** impact on how well it performs — especially for autonomous tasks. This guide helps you choose the right model and debug common problems.
+The model you assign to a Agent has a **massive** impact on how well it performs — especially for autonomous tasks. This guide helps you choose the right model and debug common problems.
 
 ## Recommended models
 
-### For autonomous / agentic Kins
+### For autonomous / agentic Agents
 
-These Kins run crons, process webhooks, and work without human oversight. They **must** reliably call tools.
+These Agents run crons, process webhooks, and work without human oversight. They **must** reliably call tools.
 
 | Model | Provider | Verdict | Notes |
 |---|---|---|---|
@@ -24,9 +24,9 @@ These Kins run crons, process webhooks, and work without human oversight. They *
 | **Llama 3.x (70B+)** | Groq/Together/Ollama | ⚠️ Limited | Open models struggle with reliable tool calling |
 | **Mistral Large** | Mistral | ⚠️ Usable | Decent tool use but less consistent than Claude |
 
-### For conversational Kins
+### For conversational Agents
 
-These Kins primarily chat with users and occasionally use tools. Most capable models work fine.
+These Agents primarily chat with users and occasionally use tools. Most capable models work fine.
 
 | Model | Provider | Verdict |
 |---|---|---|
@@ -44,7 +44,7 @@ When in doubt, start with **Claude Sonnet 4** or **Claude Sonnet 3.5**. They hav
 
 ## The "text mode" problem
 
-The most common issue with autonomous Kins is the model falling into **text mode** — where it describes what it would do instead of actually calling tools.
+The most common issue with autonomous Agents is the model falling into **text mode** — where it describes what it would do instead of actually calling tools.
 
 ### What it looks like
 
@@ -69,7 +69,7 @@ Claude Sonnet models are specifically trained for tool use. If you're experienci
 
 #### 2. Add explicit execution instructions
 
-In your Kin's system prompt, include:
+In your Agent's system prompt, include:
 
 ```
 You ALWAYS use tools to accomplish tasks. You NEVER describe what you would do —
@@ -85,7 +85,7 @@ RIGHT: [calls web_search("latest AI news", freshness="pd")]
 
 #### 3. Use the EXEC pattern in task descriptions
 
-For sub-Kin tasks (crons, webhooks), structure the task description as explicit commands:
+For sub-Agent tasks (crons, webhooks), structure the task description as explicit commands:
 
 ```
 ## Steps — EXECUTE each one using tools
@@ -102,7 +102,7 @@ This pattern tells the model unambiguously that it should execute tool calls, no
 
 #### 4. Check tool call indicators
 
-In the Hivekeep UI, each message shows whether tool calls were made. Look for the tool call indicators (collapsible sections showing the tool name and parameters). If a response has no tool calls, the Kin operated in text mode.
+In the Hivekeep UI, each message shows whether tool calls were made. Look for the tool call indicators (collapsible sections showing the tool name and parameters). If a response has no tool calls, the Agent operated in text mode.
 
 ## Provider setup tips
 
@@ -123,7 +123,7 @@ Anthropic models are the most thoroughly tested with Hivekeep's tool system. The
 
 1. Get an API key from [platform.openai.com](https://platform.openai.com/api-keys)
 2. Add as a provider in Hivekeep
-3. For autonomous Kins, use `gpt-4o` (not `gpt-4o-mini`)
+3. For autonomous Agents, use `gpt-4o` (not `gpt-4o-mini`)
 
 :::caution
 OpenAI models occasionally fall into "text mode" on complex multi-step tool chains. If this happens, add stronger execution instructions to your system prompt (see the EXEC pattern above).
@@ -136,7 +136,7 @@ OpenAI models occasionally fall into "text mode" on complex multi-step tool chai
 3. From Docker, use `http://host.docker.internal:11434`
 
 :::caution
-Local models through Ollama are great for conversational use but often struggle with reliable tool calling. For autonomous Kins, prefer a cloud provider with a strong model.
+Local models through Ollama are great for conversational use but often struggle with reliable tool calling. For autonomous Agents, prefer a cloud provider with a strong model.
 :::
 
 ### OpenRouter (access to many models)
@@ -149,15 +149,15 @@ OpenRouter is convenient if you want to test different models without setting up
 
 ## Verifying tool use is working
 
-After setting up a Kin, verify it's actually using tools:
+After setting up a Agent, verify it's actually using tools:
 
 ### Quick test
 
-Send your Kin a message that **requires** a tool call:
+Send your Agent a message that **requires** a tool call:
 
 > What's the current weather in Paris? Use web search to find out.
 
-A working Kin will call `web_search` and return real, current data. A text-mode Kin will make up a plausible weather report.
+A working Agent will call `web_search` and return real, current data. A text-mode Agent will make up a plausible weather report.
 
 ### Cron test
 
@@ -174,7 +174,7 @@ A working Kin will call `web_search` and return real, current data. A text-mode 
 
 ## Cost considerations
 
-Autonomous Kins consume more tokens than conversational ones because:
+Autonomous Agents consume more tokens than conversational ones because:
 
 - **Cron jobs** run on schedule regardless of whether there's work to do
 - **Webhook tasks** process each event individually
@@ -193,11 +193,11 @@ Autonomous Kins consume more tokens than conversational ones because:
 
 ## Quick reference: model selection flowchart
 
-1. **Is the Kin autonomous?** (crons, webhooks, sub-tasks)
+1. **Is the Agent autonomous?** (crons, webhooks, sub-tasks)
    - Yes → **Claude Sonnet 4** or **Claude Sonnet 3.5**
    - No → continue
 
-2. **Does the Kin use tools frequently?**
+2. **Does the Agent use tools frequently?**
    - Yes → **Claude Sonnet 3.5** or **GPT-4o**
    - No → continue
 

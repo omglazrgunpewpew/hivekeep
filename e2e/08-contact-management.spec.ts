@@ -10,7 +10,7 @@ async function openContactsSettings(page: Page) {
 
   await page.getByRole('dialog').getByText('Contacts', { exact: true }).click()
   await expect(
-    page.getByText('Manage the shared contact registry accessible by all Kins.'),
+    page.getByText('Manage the shared contact registry accessible by all Agents.'),
   ).toBeVisible({ timeout: 5_000 })
 }
 
@@ -120,7 +120,7 @@ test.describe.serial('Contact management', () => {
       timeout: 10_000,
     })
     await loginAs(page)
-    await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
   test('should navigate to contacts settings and see existing contacts', async ({ page }) => {

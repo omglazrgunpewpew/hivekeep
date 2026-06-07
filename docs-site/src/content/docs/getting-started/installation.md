@@ -71,4 +71,4 @@ When running manually without Docker, the default port is **3333** (set by `.env
 
 ## What's next?
 
-Head to [First Kin](/hivekeep/docs/getting-started/first-kin/) to create your first AI agent.
+Head to [First Agent](/hivekeep/docs/getting-started/first-agent/) to create your first AI agent.

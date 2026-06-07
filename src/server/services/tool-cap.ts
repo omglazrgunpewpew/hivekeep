@@ -1,5 +1,5 @@
 /**
- * Tool-cap helper — extracted from kin-engine.ts so it's testable
+ * Tool-cap helper — extracted from agent-engine.ts so it's testable
  * without dragging in the full engine module graph (and the mock-
  * pollution surface that comes with it).
  *

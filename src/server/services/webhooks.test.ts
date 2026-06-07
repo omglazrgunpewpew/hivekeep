@@ -35,14 +35,14 @@ mock.module('@/server/db/schema', () => ({
   ...fullMockSchema,
   webhooks: {},
   webhookLogs: {},
-  kins: {},
+  agents: {},
 }))
 
 mock.module('@/server/services/queue', () => ({
   enqueueMessage: async () => ({ id: 'queue-1', queuePosition: 1 }),
   dequeueMessage: async () => null,
   markQueueItemDone: async () => {},
-  isKinProcessing: async () => false,
+  isAgentProcessing: async () => false,
   getQueueSize: async () => 0,
   getPendingQueueItems: async () => [],
   removeQueueItem: async () => false,
@@ -52,7 +52,7 @@ mock.module('@/server/services/queue', () => ({
 mock.module('@/server/sse/index', () => ({
   sseManager: {
     broadcast: () => {},
-    sendToKin: () => {},
+    sendToAgent: () => {},
   },
 }))
 
@@ -62,11 +62,11 @@ mock.module('@/server/config', () => ({
     publicUrl: 'https://hivekeep.example.com',
     webhooks: {
       ...fullMockConfig.webhooks,
-      maxPerKin: 10,
+      maxPerAgent: 10,
     },
     queue: {
       ...fullMockConfig.queue,
-      kinPriority: 5,
+      agentPriority: 5,
     },
   },
 }))

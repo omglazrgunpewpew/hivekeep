@@ -7,11 +7,11 @@ This guide walks through creating a mini-app, from the basic setup to adding per
 
 ## Prerequisites
 
-Mini-apps are created by Kins using AI tools. You interact with them through conversation:
+Mini-apps are created by Agents using AI tools. You interact with them through conversation:
 
 > "Create a todo list mini-app"
 
-The Kin calls `create_mini_app` and the app appears in your sidebar. But understanding the internals helps you guide the Kin effectively.
+The Agent calls `create_mini_app` and the app appears in your sidebar. But understanding the internals helps you guide the Agent effectively.
 
 ## The Minimal App
 
@@ -68,7 +68,7 @@ createRoot(document.getElementById("root")).render(<App />);
 
 ## Using Templates
 
-Instead of writing HTML from scratch, Kins can use built-in templates:
+Instead of writing HTML from scratch, Agents can use built-in templates:
 
 ```
 "Create a dashboard mini-app using the dashboard template"
@@ -163,7 +163,7 @@ Before making risky changes, create a snapshot:
 "Create a snapshot of the todo app before the redesign"
 ```
 
-The Kin calls `create_mini_app_snapshot`. If something breaks, roll back:
+The Agent calls `create_mini_app_snapshot`. If something breaks, roll back:
 
 ```
 "Roll back the todo app to the previous version"

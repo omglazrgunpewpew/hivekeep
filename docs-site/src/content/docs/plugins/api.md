@@ -111,7 +111,7 @@ interface PluginExports {
 
 ```typescript
 interface ToolRegistration {
-  availability: Array<'main' | 'sub-kin'>
+  availability: Array<'main' | 'sub-agent'>
   defaultDisabled?: boolean
   create: (execCtx: ToolExecutionContext) => Tool
 }

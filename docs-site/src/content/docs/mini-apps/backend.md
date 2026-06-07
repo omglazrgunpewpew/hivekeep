@@ -35,7 +35,7 @@ The file must default-export a function that receives a context object and retur
 | `ctx.storage` | `object` | Key-value storage scoped to this app (see [Storage](#storage)) |
 | `ctx.events` | `object` | SSE event emitter (see [Real-Time Events](#real-time-events-sse)) |
 | `ctx.appId` | `string` | The mini-app's ID |
-| `ctx.kinId` | `string` | The parent Kin's ID |
+| `ctx.agentId` | `string` | The parent Agent's ID |
 | `ctx.appName` | `string` | The mini-app's display name |
 | `ctx.log` | `object` | Scoped logger (see [Logging](#logging)) |
 

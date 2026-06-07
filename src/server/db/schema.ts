@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, real, blob, primaryKey, uniqueIndex, index, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core'
-import type { KinKind } from '@/shared/types'
+import type { AgentKind } from '@/shared/types'
 
 // ─── Better Auth tables ────────────────────────────────────────────────────────
 // These tables are managed by Better Auth. Defined here for Drizzle relations
@@ -54,10 +54,10 @@ export const userProfiles = sqliteTable('user_profiles', {
   pseudonym: text('pseudonym').notNull(),
   language: text('language').notNull().default('fr'),
   role: text('role').notNull().default('member'),
-  kinOrder: text('kin_order'), // JSON array of kin IDs, e.g. '["id1","id2","id3"]'
+  agentOrder: text('agent_order'), // JSON array of agent IDs, e.g. '["id1","id2","id3"]'
   cronOrder: text('cron_order'), // JSON array of cron IDs, e.g. '["id1","id2","id3"]'
-  // Set once the user dismisses the conversational onboarding modal (Sherpa).
-  // Prevents the modal from auto-reopening; the Kin remains in the list. See sherpa.md.
+  // Set once the user dismisses the conversational onboarding modal (Queenie).
+  // Prevents the modal from auto-reopening; the Agent remains in the list. See queenie.md.
   onboardingModalDismissed: integer('onboarding_modal_dismissed', { mode: 'boolean' }).notNull().default(false),
   // Appearance preferences (DB-backed so they sync across devices). Null = unset
   // (the client falls back to its localStorage cache / defaults). `theme` is the
@@ -71,7 +71,7 @@ export const userProfiles = sqliteTable('user_profiles', {
 export const providers = sqliteTable('providers', {
   id: text('id').primaryKey(),
   /** Stable human-readable identifier (e.g. "openai-codex", "claude-max").
-   *  Used in tool calls (spawn_self/spawn_kin) where a Kin would otherwise
+   *  Used in tool calls (spawn_self/spawn_agent) where a Agent would otherwise
    *  have to manipulate the UUID. Auto-generated from `name` at creation,
    *  unique across all providers. */
   slug: text('slug').notNull().unique(),
@@ -85,7 +85,7 @@ export const providers = sqliteTable('providers', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 })
 
-export const kins = sqliteTable('kins', {
+export const agents = sqliteTable('agents', {
   id: text('id').primaryKey(),
   slug: text('slug').unique(),
   name: text('name').notNull(),
@@ -93,24 +93,24 @@ export const kins = sqliteTable('kins', {
   avatarPath: text('avatar_path'),
   character: text('character').notNull(),
   expertise: text('expertise').notNull(),
-  /** Kin kind. 'regular' for user-created Kins; 'configurator' for the seeded
-   *  onboarding guide (Sherpa) — drives the [Configurator mission]/[knowledge]
+  /** Agent kind. 'regular' for user-created Agents; 'configurator' for the seeded
+   *  onboarding guide (Queenie) — drives the [Configurator mission]/[knowledge]
    *  prompt blocks, the `configurator` toolbox, and exclusion from the
-   *  "first real Kin" onboarding counts. See sherpa.md. */
-  kind: text('kind').$type<KinKind>().notNull().default('regular'),
+   *  "first real Agent" onboarding counts. See queenie.md. */
+  kind: text('kind').$type<AgentKind>().notNull().default('regular'),
   model: text('model').notNull(),
   providerId: text('provider_id').references(() => providers.id, { onDelete: 'set null' }),
-  /** Optional cheap "scout" model used when this Kin (or a sub-task it owns)
+  /** Optional cheap "scout" model used when this Agent (or a sub-task it owns)
    *  delegates read-only exploration via the `scout` tool. Resolved by
    *  resolveScoutModel() with a fallback chain that ultimately lands on the
-   *  Kin's own main `model` when null. Coupled with `scoutProviderId` (one
+   *  Agent's own main `model` when null. Coupled with `scoutProviderId` (one
    *  being set without the other is treated as "no scout override"). */
   scoutModel: text('scout_model'),
   scoutProviderId: text('scout_provider_id').references(() => providers.id, { onDelete: 'set null' }),
   workspacePath: text('workspace_path').notNull(),
   toolboxIds: text('toolbox_ids'), // JSON string[] of toolbox ids; null/empty → 'all' built-in at resolution
-  compactingConfig: text('compacting_config'), // JSON: KinCompactingConfig
-  thinkingConfig: text('thinking_config'), // JSON: KinThinkingConfig
+  compactingConfig: text('compacting_config'), // JSON: AgentCompactingConfig
+  thinkingConfig: text('thinking_config'), // JSON: AgentThinkingConfig
   activeProjectId: text('active_project_id').references((): AnySQLiteColumn => projects.id, { onDelete: 'set null' }),
   createdBy: text('created_by').references(() => user.id),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -124,26 +124,26 @@ export const mcpServers = sqliteTable('mcp_servers', {
   args: text('args'), // JSON array
   env: text('env'), // JSON object
   status: text('status').notNull().default('active'), // 'active' | 'pending_approval'
-  createdByKinId: text('created_by_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  createdByAgentId: text('created_by_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 })
 
-export const kinMcpServers = sqliteTable('kin_mcp_servers', {
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+export const agentMcpServers = sqliteTable('agent_mcp_servers', {
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   mcpServerId: text('mcp_server_id').notNull().references(() => mcpServers.id, { onDelete: 'cascade' }),
 }, (table) => [
-  primaryKey({ columns: [table.kinId, table.mcpServerId] }),
+  primaryKey({ columns: [table.agentId, table.mcpServerId] }),
 ])
 
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   taskId: text('task_id').references(() => tasks.id),
   sessionId: text('session_id').references(() => quickSessions.id, { onDelete: 'cascade' }),
   role: text('role').notNull(), // 'user' | 'assistant' | 'system' | 'tool'
   content: text('content'),
-  sourceType: text('source_type').notNull(), // 'user' | 'kin' | 'task' | 'cron' | 'system'
+  sourceType: text('source_type').notNull(), // 'user' | 'agent' | 'task' | 'cron' | 'system'
   sourceId: text('source_id'),
   toolCalls: text('tool_calls'), // JSON array
   toolCallId: text('tool_call_id'),
@@ -156,27 +156,27 @@ export const messages = sqliteTable('messages', {
   metadata: text('metadata'), // JSON
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_messages_kin_id').on(table.kinId),
+  index('idx_messages_agent_id').on(table.agentId),
   index('idx_messages_task_id').on(table.taskId),
-  index('idx_messages_kin_created').on(table.kinId, table.createdAt),
+  index('idx_messages_agent_created').on(table.agentId, table.createdAt),
   index('idx_messages_source').on(table.sourceType, table.sourceId),
   index('idx_messages_session_id').on(table.sessionId),
 ])
 
 export const compactingSnapshots = sqliteTable('compacting_snapshots', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   summary: text('summary').notNull(),
   messagesUpToId: text('messages_up_to_id').notNull().references(() => messages.id),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_compacting_kin_active').on(table.kinId, table.isActive),
+  index('idx_compacting_agent_active').on(table.agentId, table.isActive),
 ])
 
 export const compactingSummaries = sqliteTable('compacting_summaries', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   summary: text('summary').notNull(),
   firstMessageAt: integer('first_message_at', { mode: 'timestamp_ms' }).notNull(),
   lastMessageAt: integer('last_message_at', { mode: 'timestamp_ms' }).notNull(),
@@ -189,12 +189,12 @@ export const compactingSummaries = sqliteTable('compacting_summaries', {
   sourceSummaryIds: text('source_summary_ids'), // JSON array of merged summary IDs (null for depth 0)
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_compacting_summaries_kin').on(table.kinId, table.isInContext),
+  index('idx_compacting_summaries_agent').on(table.agentId, table.isInContext),
 ])
 
 export const memories = sqliteTable('memories', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   content: text('content').notNull(),
   embedding: blob('embedding'),
   category: text('category').notNull(), // 'fact' | 'preference' | 'decision' | 'knowledge'
@@ -211,9 +211,9 @@ export const memories = sqliteTable('memories', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_memories_kin_id').on(table.kinId),
-  index('idx_memories_kin_category').on(table.kinId, table.category),
-  index('idx_memories_kin_subject').on(table.kinId, table.subject),
+  index('idx_memories_agent_id').on(table.agentId),
+  index('idx_memories_agent_category').on(table.agentId, table.category),
+  index('idx_memories_agent_subject').on(table.agentId, table.subject),
   index('idx_memories_scope').on(table.scope),
   index('idx_memories_scope_category').on(table.scope, table.category),
 ])
@@ -263,20 +263,20 @@ export const contactPlatformIds = sqliteTable('contact_platform_ids', {
 export const contactNotes = sqliteTable('contact_notes', {
   id: text('id').primaryKey(),
   contactId: text('contact_id').notNull().references(() => contacts.id, { onDelete: 'cascade' }),
-  kinId: text('kin_id').references(() => kins.id),
+  agentId: text('agent_id').references(() => agents.id),
   userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
   scope: text('scope').notNull(), // 'private' | 'global' | 'user'
   content: text('content').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  uniqueIndex('idx_contact_notes_unique').on(table.contactId, table.kinId, table.userId, table.scope),
+  uniqueIndex('idx_contact_notes_unique').on(table.contactId, table.agentId, table.userId, table.scope),
   index('idx_contact_notes_contact_id').on(table.contactId),
-  index('idx_contact_notes_kin_id').on(table.kinId),
+  index('idx_contact_notes_agent_id').on(table.agentId),
   index('idx_contact_notes_user_id').on(table.userId),
 ])
 
-// Custom tools are now GLOBAL (platform-wide), not per-Kin. Access is scoped by
+// Custom tools are now GLOBAL (platform-wide), not per-Agent. Access is scoped by
 // toolboxes (a toolbox lists `custom_<slug>` by name), exactly like MCP tools.
 // The executable script + its deps live on disk under
 // `config.customTools.baseDir/<slug>/`; this table holds metadata only.
@@ -299,7 +299,7 @@ export const customTools = sqliteTable('custom_tools', {
     .references(() => toolDomains.slug),
   timeoutMs: integer('timeout_ms'),              // per-tool timeout override (optional)
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
-  createdBy: text('created_by').notNull().default('user'), // 'user' | 'kin'
+  createdBy: text('created_by').notNull().default('user'), // 'user' | 'agent'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
@@ -308,7 +308,7 @@ export const customTools = sqliteTable('custom_tools', {
 
 export const quickSessions = sqliteTable('quick_sessions', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   createdBy: text('created_by').notNull().references(() => user.id, { onDelete: 'cascade' }),
   title: text('title'),
   status: text('status').notNull().default('active'), // 'active' | 'closed'
@@ -316,16 +316,16 @@ export const quickSessions = sqliteTable('quick_sessions', {
   closedAt: integer('closed_at', { mode: 'timestamp_ms' }),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
 }, (table) => [
-  index('idx_quick_sessions_kin_status').on(table.kinId, table.status),
+  index('idx_quick_sessions_agent_status').on(table.agentId, table.status),
   index('idx_quick_sessions_user').on(table.createdBy),
 ])
 
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
-  parentKinId: text('parent_kin_id').notNull().references(() => kins.id),
-  sourceKinId: text('source_kin_id').references(() => kins.id),
+  parentAgentId: text('parent_agent_id').notNull().references(() => agents.id),
+  sourceAgentId: text('source_agent_id').references(() => agents.id),
   spawnType: text('spawn_type').notNull(), // 'self' | 'other'
-  /** Specialized variant of a task. 'execute' (default) is the regular sub-Kin
+  /** Specialized variant of a task. 'execute' (default) is the regular sub-Agent
    *  run; 'enrich' is a ticket-enrichment task that rewrites title/description/tags
    *  rather than executing the ticket. Always paired with a non-null ticketId. */
   kind: text('kind').notNull().default('execute'), // 'execute' | 'enrich'
@@ -334,34 +334,34 @@ export const tasks = sqliteTable('tasks', {
   providerId: text('provider_id'),
   title: text('title'),
   description: text('description').notNull(),
-  status: text('status').notNull().default('pending'), // 'queued' | 'pending' | 'in_progress' | 'paused' | 'awaiting_human_input' | 'awaiting_kin_response' | 'awaiting_subtask' | 'completed' | 'failed' | 'cancelled'
+  status: text('status').notNull().default('pending'), // 'queued' | 'pending' | 'in_progress' | 'paused' | 'awaiting_human_input' | 'awaiting_agent_response' | 'awaiting_subtask' | 'completed' | 'failed' | 'cancelled'
   result: text('result'),
   error: text('error'),
   depth: integer('depth').notNull().default(1),
   parentTaskId: text('parent_task_id').references((): AnySQLiteColumn => tasks.id),
   cronId: text('cron_id').references(() => crons.id),
   requestInputCount: integer('request_input_count').notNull().default(0),
-  interKinRequestCount: integer('inter_kin_request_count').notNull().default(0),
+  interAgentRequestCount: integer('inter_agent_request_count').notNull().default(0),
   pendingRequestId: text('pending_request_id'),
-  /** When a TASK (sub-Kin) parent spawns an `await` child and suspends itself
+  /** When a TASK (sub-Agent) parent spawns an `await` child and suspends itself
    *  into status 'awaiting_subtask', this holds the child task's id. On the
    *  child's resolveTask() the runtime finds the waiting parent via this column,
-   *  injects the child's result, clears it, and re-enters executeSubKin. Mirrors
-   *  `pendingRequestId` for the inter-Kin suspend/resume path. Null otherwise. */
+   *  injects the child's result, clears it, and re-enters executeSubAgent. Mirrors
+   *  `pendingRequestId` for the inter-Agent suspend/resume path. Null otherwise. */
   pendingChildTaskId: text('pending_child_task_id'),
   channelOriginId: text('channel_origin_id'),
   webhookId: text('webhook_id').references(() => webhooks.id, { onDelete: 'set null' }),
   ticketId: text('ticket_id').references((): AnySQLiteColumn => tickets.id, { onDelete: 'set null' }),
   /** Frozen JSON snapshot of `TicketAssignmentInfo` captured at spawn time.
-   *  Used to keep the sub-Kin's system prompt stable for the lifetime of the
+   *  Used to keep the sub-Agent's system prompt stable for the lifetime of the
    *  task — external changes to the ticket (new comments, status flips, tag
    *  edits) won't invalidate the Anthropic prompt cache mid-execution. Null
    *  for non-ticket tasks and for legacy ticket tasks spawned before this
    *  column existed (those fall back to a live fetch). */
   ticketAssignmentSnapshot: text('ticket_assignment_snapshot'),
   /** Frozen JSON snapshot of the rest of the prompt context captured at spawn
-   *  time: Kin identity (name/slug/role/character/expertise/workspacePath +
-   *  model/provider/thinkingConfig), global platform prompt, Kin
+   *  time: Agent identity (name/slug/role/character/expertise/workspacePath +
+   *  model/provider/thinkingConfig), global platform prompt, Agent
    *  directory, and cron context (previous runs + accumulated learnings) when
    *  the task is cron-bound. Together with `ticketAssignmentSnapshot` this
    *  freezes the entire stable system prefix for the task's lifetime, so the
@@ -371,8 +371,8 @@ export const tasks = sqliteTable('tasks', {
    *  legacy tasks → callers fall back to live DB reads. */
   promptContextSnapshot: text('prompt_context_snapshot'),
   allowHumanPrompt: integer('allow_human_prompt', { mode: 'boolean' }).notNull().default(true),
-  thinkingConfig: text('thinking_config'), // JSON: KinThinkingConfig — overrides parent Kin if set
-  /** Legacy sub-Kin tool preset alias. Superseded by `toolboxIds`; kept only
+  thinkingConfig: text('thinking_config'), // JSON: AgentThinkingConfig — overrides parent Agent if set
+  /** Legacy sub-Agent tool preset alias. Superseded by `toolboxIds`; kept only
    *  for back-compat — when set and `toolboxIds` is null, the preset name maps
    *  to the built-in toolbox of the same name (see resolveTaskToolboxIds). */
   toolPreset: text('tool_preset'), // 'code' | 'research' | 'ops' | 'all' | null
@@ -383,7 +383,7 @@ export const tasks = sqliteTable('tasks', {
    *  (or 'code' for tickets / 'all' otherwise) to preserve old behaviour. */
   toolboxIds: text('toolbox_ids'), // JSON string[] of toolbox ids
   /** Optional run-specific instructions provided at task spawn (ticket tasks).
-   *  Injected as a dedicated block in the sub-Kin's brief so the agent can be
+   *  Injected as a dedicated block in the sub-Agent's brief so the agent can be
    *  scoped to a slice of the ticket (e.g. "focus only on backend",
    *  "stop after the DB migration phase"). Soft-limit 500 chars at the API
    *  surface. Null on tasks spawned without a sur-prompt. */
@@ -409,7 +409,7 @@ export const tasks = sqliteTable('tasks', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_tasks_parent_kin').on(table.parentKinId),
+  index('idx_tasks_parent_agent').on(table.parentAgentId),
   index('idx_tasks_status').on(table.status),
   index('idx_tasks_cron').on(table.cronId),
   index('idx_tasks_concurrency').on(table.concurrencyGroup, table.status, table.queuedAt),
@@ -419,14 +419,14 @@ export const tasks = sqliteTable('tasks', {
 
 export const crons = sqliteTable('crons', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   name: text('name').notNull(),
   schedule: text('schedule').notNull(),
   taskDescription: text('task_description').notNull(),
-  targetKinId: text('target_kin_id').references(() => kins.id),
+  targetAgentId: text('target_agent_id').references(() => agents.id),
   model: text('model'),
   providerId: text('provider_id'),
-  thinkingConfig: text('thinking_config'), // JSON: KinThinkingConfig — overrides parent Kin if set
+  thinkingConfig: text('thinking_config'), // JSON: AgentThinkingConfig — overrides parent Agent if set
   // JSON string[] of toolbox ids defining the native toolset of tasks spawned by
   // this cron (frozen onto the task row at spawn). Null → spawn default, which
   // is 'all' for crons (the full native surface).
@@ -434,11 +434,11 @@ export const crons = sqliteTable('crons', {
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   requiresApproval: integer('requires_approval', { mode: 'boolean' }).notNull().default(false),
   runOnce: integer('run_once', { mode: 'boolean' }).notNull().default(false),
-  // When true, each execution's final report wakes the parent Kin for an LLM turn
+  // When true, each execution's final report wakes the parent Agent for an LLM turn
   // (spawnTask mode 'await'). Default false preserves silent 'async' behavior.
   triggerParentTurn: integer('trigger_parent_turn', { mode: 'boolean' }).notNull().default(false),
   lastTriggeredAt: integer('last_triggered_at', { mode: 'timestamp_ms' }),
-  createdBy: text('created_by'), // 'user' | 'kin'
+  createdBy: text('created_by'), // 'user' | 'agent'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 })
@@ -449,8 +449,8 @@ export const pendingEmailSends = sqliteTable('pending_email_sends', {
   id: text('id').primaryKey(),
   /** The email account (a `providers` row) the message would be sent from. */
   accountId: text('account_id').notNull().references(() => providers.id, { onDelete: 'cascade' }),
-  /** The Kin that requested the send (already allow-list-checked at request time). */
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  /** The Agent that requested the send (already allow-list-checked at request time). */
+  agentId: text('agent_id').notNull().references(() => agents.id),
   /** The task that requested it, if any. No FK — tasks are ephemeral. */
   taskId: text('task_id'),
   /** JSON SendEmailParams (to/cc/bcc/subject/body/html/replyToMessageId). */
@@ -476,7 +476,7 @@ export const cronLearnings = sqliteTable('cron_learnings', {
 
 export const webhooks = sqliteTable('webhooks', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   name: text('name').notNull(),
   token: text('token').notNull().unique(),
   description: text('description'),
@@ -491,11 +491,11 @@ export const webhooks = sqliteTable('webhooks', {
   taskTitleTemplate: text('task_title_template'), // Template for task title (task mode)
   taskPromptTemplate: text('task_prompt_template'), // Template for task description (task mode)
   maxConcurrentTasks: integer('max_concurrent_tasks').notNull().default(1), // 0 = unlimited
-  createdBy: text('created_by'), // 'user' | 'kin'
+  createdBy: text('created_by'), // 'user' | 'agent'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_webhooks_kin_id').on(table.kinId),
+  index('idx_webhooks_agent_id').on(table.agentId),
 ])
 
 export const webhookLogs = sqliteTable('webhook_logs', {
@@ -517,7 +517,7 @@ export const vaultSecrets = sqliteTable('vault_secrets', {
   entryType: text('entry_type').notNull().default('text'), // 'text'|'credential'|'card'|'note'|'identity'|custom slug
   vaultTypeId: text('vault_type_id').references(() => vaultTypes.id, { onDelete: 'set null' }),
   isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
-  createdByKinId: text('created_by_kin_id').references(() => kins.id),
+  createdByAgentId: text('created_by_agent_id').references(() => agents.id),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
@@ -531,7 +531,7 @@ export const vaultTypes = sqliteTable('vault_types', {
   icon: text('icon'), // Lucide icon name
   fields: text('fields').notNull(), // JSON: VaultTypeField[]
   isBuiltIn: integer('is_built_in', { mode: 'boolean' }).notNull().default(false),
-  createdByKinId: text('created_by_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  createdByAgentId: text('created_by_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 })
@@ -550,10 +550,10 @@ export const vaultAttachments = sqliteTable('vault_attachments', {
 
 export const queueItems = sqliteTable('queue_items', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
-  messageType: text('message_type').notNull(), // 'user' | 'kin_request' | 'kin_inform' | 'kin_reply' | 'task_result' | 'task_input'
+  agentId: text('agent_id').notNull().references(() => agents.id),
+  messageType: text('message_type').notNull(), // 'user' | 'agent_request' | 'agent_inform' | 'agent_reply' | 'task_result' | 'task_input'
   content: text('content').notNull(),
-  sourceType: text('source_type').notNull(), // 'user' | 'kin' | 'task'
+  sourceType: text('source_type').notNull(), // 'user' | 'agent' | 'task'
   sourceId: text('source_id'),
   priority: integer('priority').notNull().default(0),
   requestId: text('request_id'),
@@ -566,12 +566,12 @@ export const queueItems = sqliteTable('queue_items', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   processedAt: integer('processed_at', { mode: 'timestamp_ms' }),
 }, (table) => [
-  index('idx_queue_kin_status_priority').on(table.kinId, table.status, table.priority, table.createdAt),
+  index('idx_queue_agent_status_priority').on(table.agentId, table.status, table.priority, table.createdAt),
 ])
 
 export const files = sqliteTable('files', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   messageId: text('message_id').references(() => messages.id),
   uploadedBy: text('uploaded_by').references(() => user.id),
   originalName: text('original_name').notNull(),
@@ -583,7 +583,7 @@ export const files = sqliteTable('files', {
 
 export const humanPrompts = sqliteTable('human_prompts', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   taskId: text('task_id').references(() => tasks.id),
   messageId: text('message_id').references(() => messages.id),
   promptType: text('prompt_type').notNull(), // 'confirm' | 'select' | 'multi_select'
@@ -595,7 +595,7 @@ export const humanPrompts = sqliteTable('human_prompts', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   respondedAt: integer('responded_at', { mode: 'timestamp_ms' }),
 }, (table) => [
-  index('idx_human_prompts_kin').on(table.kinId),
+  index('idx_human_prompts_agent').on(table.agentId),
   index('idx_human_prompts_task').on(table.taskId),
   index('idx_human_prompts_status').on(table.status),
 ])
@@ -604,10 +604,10 @@ export const humanPrompts = sqliteTable('human_prompts', {
 // Pending requests for the user to type a secret (API key, token) into a UI
 // popup. The raw value NEVER lands here — on response it goes straight to the
 // vault and the side effect (create+test provider, store secret) runs; only a
-// non-sensitive reference (providerId / vault key) is recorded. See sherpa.md §7.
+// non-sensitive reference (providerId / vault key) is recorded. See queenie.md §7.
 export const secretPrompts = sqliteTable('secret_prompts', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   taskId: text('task_id').references(() => tasks.id),
   purpose: text('purpose').notNull(), // 'provider' | 'channel' | 'vault'
   spec: text('spec').notNull(), // JSON: { fields:[{key,label,secret,...}], + purpose-specific (type/name/families/config | key) }
@@ -616,7 +616,7 @@ export const secretPrompts = sqliteTable('secret_prompts', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   respondedAt: integer('responded_at', { mode: 'timestamp_ms' }),
 }, (table) => [
-  index('idx_secret_prompts_kin').on(table.kinId),
+  index('idx_secret_prompts_agent').on(table.agentId),
   index('idx_secret_prompts_status').on(table.status),
 ])
 
@@ -624,7 +624,7 @@ export const secretPrompts = sqliteTable('secret_prompts', {
 
 export const channels = sqliteTable('channels', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   platform: text('platform').notNull(), // 'telegram' (+ 'discord' in phase 2)
   platformConfig: text('platform_config').notNull(), // JSON (botTokenVaultKey, allowedChatIds, etc.)
@@ -634,11 +634,11 @@ export const channels = sqliteTable('channels', {
   messagesReceived: integer('messages_received').notNull().default(0),
   messagesSent: integer('messages_sent').notNull().default(0),
   lastActivityAt: integer('last_activity_at', { mode: 'timestamp_ms' }),
-  createdBy: text('created_by').notNull().default('user'), // 'user' | 'kin'
+  createdBy: text('created_by').notNull().default('user'), // 'user' | 'agent'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_channels_kin_id').on(table.kinId),
+  index('idx_channels_agent_id').on(table.agentId),
 ])
 
 export const channelUserMappings = sqliteTable('channel_user_mappings', {
@@ -660,17 +660,17 @@ export const channelMessageLinks = sqliteTable('channel_message_links', {
   id: text('id').primaryKey(),
   channelId: text('channel_id').notNull().references(() => channels.id, { onDelete: 'cascade' }),
   // Nullable: proactive sends (send_channel_message / send_to_contact) leave an
-  // audit link with no originating assistant `messages` row. Auto-delivered Kin
+  // audit link with no originating assistant `messages` row. Auto-delivered Agent
   // replies still set this to the assistant message id.
   messageId: text('message_id').references(() => messages.id, { onDelete: 'cascade' }),
   platformMessageId: text('platform_message_id').notNull(),
   platformChatId: text('platform_chat_id').notNull(),
   direction: text('direction').notNull(), // 'inbound' | 'outbound'
-  // Kin that actually authored/sent the message. Distinct from the channel's
-  // owner (channels.kinId) when a Kin borrows another Kin's channel (cross-Kin
-  // send). Null for legacy rows and inbound links. FK set null on Kin delete so
+  // Agent that actually authored/sent the message. Distinct from the channel's
+  // owner (channels.agentId) when a Agent borrows another Agent's channel (cross-Agent
+  // send). Null for legacy rows and inbound links. FK set null on Agent delete so
   // the audit row survives.
-  sentByKinId: text('sent_by_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  sentByAgentId: text('sent_by_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
   index('idx_cml_message').on(table.messageId),
@@ -684,7 +684,7 @@ export const invitations = sqliteTable('invitations', {
   token: text('token').notNull().unique(),
   label: text('label'),
   createdBy: text('created_by').notNull().references(() => user.id),
-  kinId: text('kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  agentId: text('agent_id').references(() => agents.id, { onDelete: 'set null' }),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   usedAt: integer('used_at', { mode: 'timestamp_ms' }),
   usedBy: text('used_by').references(() => user.id),
@@ -701,9 +701,9 @@ export const notifications = sqliteTable('notifications', {
   type: text('type').notNull(), // NotificationType
   title: text('title').notNull(),
   body: text('body'),
-  kinId: text('kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  agentId: text('agent_id').references(() => agents.id, { onDelete: 'set null' }),
   relatedId: text('related_id'),
-  relatedType: text('related_type'), // 'prompt' | 'channel' | 'cron' | 'mcp' | 'kin'
+  relatedType: text('related_type'), // 'prompt' | 'channel' | 'cron' | 'mcp' | 'agent'
   isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
@@ -744,8 +744,8 @@ export const notificationChannels = sqliteTable('notification_channels', {
 
 export const scheduledWakeups = sqliteTable('scheduled_wakeups', {
   id: text('id').primaryKey(),
-  callerKinId: text('caller_kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
-  targetKinId: text('target_kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  callerAgentId: text('caller_agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  targetAgentId: text('target_agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   reason: text('reason'),
   fireAt: integer('fire_at').notNull(), // Unix ms
   intervalSeconds: integer('interval_seconds'), // null = one-shot, >0 = recurring
@@ -753,8 +753,8 @@ export const scheduledWakeups = sqliteTable('scheduled_wakeups', {
   status: text('status').notNull().default('pending'), // 'pending' | 'fired' | 'cancelled'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_wakeups_target_status').on(table.targetKinId, table.status),
-  index('idx_wakeups_caller').on(table.callerKinId),
+  index('idx_wakeups_target_status').on(table.targetAgentId, table.status),
+  index('idx_wakeups_caller').on(table.callerAgentId),
 ])
 
 // ─── Message Reactions ───────────────────────────────────────────────────────
@@ -797,7 +797,7 @@ export const toolboxes = sqliteTable('toolboxes', {
 // ─── Tool domains ─────────────────────────────────────────────────────────────
 // Dynamic, DB-backed categories used to group tools in the UI (icon + color +
 // label). The 26 built-in domains are seeded idempotently at boot from
-// TOOL_DOMAIN_META (builtin=1, read-only); users/Kins can create custom domains
+// TOOL_DOMAIN_META (builtin=1, read-only); users/Agents can create custom domains
 // to organize their custom tools. `slug` is the stable key referenced by
 // custom_tools.domain_slug and by the registry's name→domain map. For builtin
 // rows the visual triple is resolved from TOOL_DOMAIN_META and the label from
@@ -820,11 +820,11 @@ export const toolDomains = sqliteTable('tool_domains', {
 
 export const miniApps = sqliteTable('mini_apps', {
   id: text('id').primaryKey(),
-  // Maintainer Kin (reassignable). Any Kin can edit/delete an app; `kinId` is the
-  // Kin responsible for it and the target of "improve this app" requests. Exposed
-  // as `maintainerKinId` in the API. On reassignment the on-disk app directory is
+  // Maintainer Agent (reassignable). Any Agent can edit/delete an app; `agentId` is the
+  // Agent responsible for it and the target of "improve this app" requests. Exposed
+  // as `maintainerAgentId` in the API. On reassignment the on-disk app directory is
   // moved (see setMiniAppMaintainer in services/mini-apps.ts).
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
   description: text('description'),
@@ -837,8 +837,8 @@ export const miniApps = sqliteTable('mini_apps', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  uniqueIndex('idx_mini_apps_kin_slug').on(table.kinId, table.slug),
-  index('idx_mini_apps_kin_id').on(table.kinId),
+  uniqueIndex('idx_mini_apps_agent_slug').on(table.agentId, table.slug),
+  index('idx_mini_apps_agent_id').on(table.agentId),
 ])
 
 // ─── Mini-App Key-Value Storage ──────────────────────────────────────────────
@@ -872,7 +872,7 @@ export const miniAppSnapshots = sqliteTable('mini_app_snapshots', {
 
 export const fileStorage = sqliteTable('file_storage', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id),
+  agentId: text('agent_id').notNull().references(() => agents.id),
   name: text('name').notNull(),
   description: text('description'),
   originalName: text('original_name').notNull(),
@@ -885,12 +885,12 @@ export const fileStorage = sqliteTable('file_storage', {
   readAndBurn: integer('read_and_burn', { mode: 'boolean' }).notNull().default(false),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
   downloadCount: integer('download_count').notNull().default(0),
-  createdByKinId: text('created_by_kin_id').references(() => kins.id),
+  createdByAgentId: text('created_by_agent_id').references(() => agents.id),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
   index('idx_file_storage_token').on(table.accessToken),
-  index('idx_file_storage_kin').on(table.kinId),
+  index('idx_file_storage_agent').on(table.agentId),
   index('idx_file_storage_expires').on(table.expiresAt),
 ])
 
@@ -898,7 +898,7 @@ export const fileStorage = sqliteTable('file_storage', {
 
 export const knowledgeSources = sqliteTable('knowledge_sources', {
   id: text('id').primaryKey(),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   type: text('type').notNull(), // 'file' | 'text' | 'url'
   status: text('status').notNull().default('pending'), // 'pending' | 'processing' | 'ready' | 'error'
@@ -914,13 +914,13 @@ export const knowledgeSources = sqliteTable('knowledge_sources', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_knowledge_sources_kin_id').on(table.kinId),
+  index('idx_knowledge_sources_agent_id').on(table.agentId),
 ])
 
 export const knowledgeChunks = sqliteTable('knowledge_chunks', {
   id: text('id').primaryKey(),
   sourceId: text('source_id').notNull().references(() => knowledgeSources.id, { onDelete: 'cascade' }),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   embedding: blob('embedding'),
   position: integer('position').notNull(),
@@ -928,7 +928,7 @@ export const knowledgeChunks = sqliteTable('knowledge_chunks', {
   metadata: text('metadata'), // JSON
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  index('idx_knowledge_chunks_kin_id').on(table.kinId),
+  index('idx_knowledge_chunks_agent_id').on(table.agentId),
   index('idx_knowledge_chunks_source_id').on(table.sourceId),
 ])
 
@@ -970,7 +970,7 @@ export const llmUsage = sqliteTable('llm_usage', {
   providerType: text('provider_type'),   // 'anthropic' | 'openai' | 'gemini' | etc.
   providerId: text('provider_id'),       // Provider UUID (nullable — provider may be deleted)
   modelId: text('model_id'),             // e.g. 'claude-sonnet-4-20250514'
-  kinId: text('kin_id'),                 // Nullable for non-kin calls
+  agentId: text('agent_id'),                 // Nullable for non-agent calls
   taskId: text('task_id'),               // Nullable
   cronId: text('cron_id'),               // Nullable
   sessionId: text('session_id'),         // Quick session ID, nullable
@@ -994,25 +994,25 @@ export const llmUsage = sqliteTable('llm_usage', {
   stepCount: integer('step_count').notNull().default(1),
 }, (table) => [
   index('idx_llm_usage_created').on(table.createdAt),
-  index('idx_llm_usage_kin').on(table.kinId, table.createdAt),
+  index('idx_llm_usage_agent').on(table.agentId, table.createdAt),
   index('idx_llm_usage_provider_type').on(table.providerType, table.createdAt),
   index('idx_llm_usage_model').on(table.modelId, table.createdAt),
   index('idx_llm_usage_task').on(table.taskId),
   index('idx_llm_usage_cron').on(table.cronId),
 ])
 
-export const kinReadState = sqliteTable('kin_read_state', {
+export const agentReadState = sqliteTable('agent_read_state', {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  kinId: text('kin_id').notNull().references(() => kins.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
   lastReadAt: integer('last_read_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
-  primaryKey({ columns: [table.userId, table.kinId] }),
-  index('idx_kin_read_state_user').on(table.userId),
+  primaryKey({ columns: [table.userId, table.agentId] }),
+  index('idx_agent_read_state_user').on(table.userId),
 ])
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
-// Independent entities shared across all users. Any Kin can select any project
-// via kins.active_project_id. See projects.md for the full spec.
+// Independent entities shared across all users. Any Agent can select any project
+// via agents.active_project_id. See projects.md for the full spec.
 
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
@@ -1034,24 +1034,24 @@ export const projects = sqliteTable('projects', {
   cloneStatus: text('clone_status').notNull().default('none'),
   cloneError: text('clone_error'),
   clonedAt: integer('cloned_at', { mode: 'timestamp_ms' }),
-  /** Optional default model for sub-Kin tasks spawned on tickets of this
+  /** Optional default model for sub-Agent tasks spawned on tickets of this
    *  project. Frozen into `tasks.model` at spawn time when no explicit task
-   *  override is provided. Falls back to the parent Kin's own model. */
+   *  override is provided. Falls back to the parent Agent's own model. */
   model: text('model'),
   providerId: text('provider_id'),
-  /** Optional default scout model for sub-Kin tasks spawned on tickets of
+  /** Optional default scout model for sub-Agent tasks spawned on tickets of
    *  this project. One step in resolveScoutModel()'s chain (between the
-   *  per-Kin scout model and the global default). Coupled with
-   *  `scoutProviderId`. Null falls through to the global default → Kin main
+   *  per-Agent scout model and the global default). Coupled with
+   *  `scoutProviderId`. Null falls through to the global default → Agent main
    *  model. */
   scoutModel: text('scout_model'),
   scoutProviderId: text('scout_provider_id'),
-  /** Optional default thinking/reasoning config for sub-Kin tasks spawned on
-   *  tickets of this project. JSON: KinThinkingConfig. Same freeze-at-spawn
+  /** Optional default thinking/reasoning config for sub-Agent tasks spawned on
+   *  tickets of this project. JSON: AgentThinkingConfig. Same freeze-at-spawn
    *  pattern as `model`: copied into `tasks.thinking_config` if no explicit
-   *  task override is given. Falls back to the parent Kin's own config. */
+   *  task override is given. Falls back to the parent Agent's own config. */
   thinkingConfig: text('thinking_config'),
-  /** Optional default toolbox selection for sub-Kin tasks spawned on tickets
+  /** Optional default toolbox selection for sub-Agent tasks spawned on tickets
    *  of this project. JSON: string[] of toolbox ids. Frozen into
    *  `tasks.toolbox_ids` at spawn when no explicit task override is provided.
    *  Null means "inherit the runtime default" ('code' for ticket tasks via
@@ -1088,9 +1088,9 @@ export const tickets = sqliteTable('tickets', {
   status: text('status').notNull().default('backlog'), // 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'done'
   position: integer('position').notNull().default(0),
   /** Reporter — who created this ticket. Exactly one of reporter_user_id /
-   *  reporter_kin_id is set (or both NULL for legacy/seeded rows). */
+   *  reporter_agent_id is set (or both NULL for legacy/seeded rows). */
   reporterUserId: text('reporter_user_id').references(() => user.id, { onDelete: 'set null' }),
-  reporterKinId: text('reporter_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  reporterAgentId: text('reporter_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   /** When the ticket last entered the 'in_progress' column. Updated on every
    *  transition into 'in_progress' (and cleared when it leaves). Drives the
    *  "in progress since" duration on the kanban card. Null for tickets that
@@ -1116,9 +1116,9 @@ export const ticketTags = sqliteTable('ticket_tags', {
 export const ticketComments = sqliteTable('ticket_comments', {
   id: text('id').primaryKey(),
   ticketId: text('ticket_id').notNull().references(() => tickets.id, { onDelete: 'cascade' }),
-  authorType: text('author_type').notNull(), // 'user' | 'kin'
+  authorType: text('author_type').notNull(), // 'user' | 'agent'
   authorUserId: text('author_user_id').references(() => user.id, { onDelete: 'set null' }),
-  authorKinId: text('author_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  authorAgentId: text('author_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   content: text('content').notNull(),
   metadata: text('metadata'), // JSON: { fromTaskId?: string; autoGenerated?: boolean }
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -1146,7 +1146,7 @@ export const ticketAttachments = sqliteTable('ticket_attachments', {
   size: integer('size').notNull(),
   description: text('description'),
   uploadedByUserId: text('uploaded_by_user_id').references(() => user.id, { onDelete: 'set null' }),
-  uploadedByKinId: text('uploaded_by_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  uploadedByAgentId: text('uploaded_by_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [
@@ -1156,16 +1156,16 @@ export const ticketAttachments = sqliteTable('ticket_attachments', {
 
 /**
  * Durable, curated knowledge entries scoped to a project. Shared across all
- * Kins acting on the project (main Kin with active_project_id, or sub-Kin of
- * a ticket-bound task). Distinct from `memories` (kin-scoped, decay-aware)
- * and `knowledge_chunks` (kin-scoped, ingested docs).
+ * Agents acting on the project (main Agent with active_project_id, or sub-Agent of
+ * a ticket-bound task). Distinct from `memories` (agent-scoped, decay-aware)
+ * and `knowledge_chunks` (agent-scoped, ingested docs).
  *
  * Pinned entries (max 10/project, enforced at the service layer) are injected
  * into the system prompt's Active project / Ticket assignment block. The rest
  * is reachable via the `search_project_knowledge` tool.
  *
- * authorKinId is nullable: a NULL value means the entry was created by the
- * end-user via the REST API / UI rather than by a Kin tool call.
+ * authorAgentId is nullable: a NULL value means the entry was created by the
+ * end-user via the REST API / UI rather than by a Agent tool call.
  */
 export const projectKnowledge = sqliteTable('project_knowledge', {
   id: text('id').primaryKey(),
@@ -1178,10 +1178,10 @@ export const projectKnowledge = sqliteTable('project_knowledge', {
   embedding: blob('embedding'), // nullable — FTS5 still works if embedding fails
   category: text('category'), // free-text (e.g. 'arch', 'decision', 'gotcha', 'convention')
   /** When true, the full markdown content is injected inline in the system
-   *  prompt. When false, only the title appears in the index and the Kin
+   *  prompt. When false, only the title appears in the index and the Agent
    *  reads the body via get_project_knowledge(id). */
   pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
-  authorKinId: text('author_kin_id').references(() => kins.id, { onDelete: 'set null' }),
+  authorAgentId: text('author_agent_id').references(() => agents.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (table) => [

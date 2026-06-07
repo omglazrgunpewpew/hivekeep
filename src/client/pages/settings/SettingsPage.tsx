@@ -169,7 +169,7 @@ const sectionComponents: Record<string, React.FC> = {
 }
 
 export interface SettingsFilters {
-  kinId?: string
+  agentId?: string
 }
 
 interface SettingsModalProps {
@@ -183,7 +183,7 @@ interface SystemInfo {
   version: string
   uptimeMs: number
   stats: {
-    kins: number
+    agents: number
     providers: number
     channels: number
     crons: number
@@ -217,7 +217,7 @@ function SettingsFooter() {
   if (!info) return null
 
   const stats = [
-    { icon: Bot, label: t('settings.info.kins'), value: info.stats.kins },
+    { icon: Bot, label: t('settings.info.agents'), value: info.stats.agents },
     { icon: BrainCircuit, label: t('settings.info.providers'), value: info.stats.providers },
     { icon: Radio, label: t('settings.info.channels'), value: info.stats.channels },
     { icon: Timer, label: t('settings.info.crons'), value: info.stats.crons },
@@ -356,7 +356,7 @@ export function SettingsModal({ open, onOpenChange, initialSection, initialFilte
               <SettingsNavContext.Provider value={setActiveSection}>
                 {ActiveComponent && (
                   activeSection === 'tokenUsage' && initialFilters
-                    ? <TokenUsageSettings initialKinFilter={initialFilters.kinId} />
+                    ? <TokenUsageSettings initialAgentFilter={initialFilters.agentId} />
                     : <ActiveComponent />
                 )}
               </SettingsNavContext.Provider>

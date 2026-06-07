@@ -80,22 +80,22 @@ test('Hivekeep showcase walkthrough', async ({ page }) => {
   await page.getByRole('button', { name: 'Skip for now' }).click()
 
   // ── Main App — landed ──
-  await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   await pause(page, 2000)
 
-  // ── Create a Kin ──
-  await page.getByTitle('New Kin').click()
+  // ── Create a Agent ──
+  await page.getByTitle('New Agent').click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Describe your Kin' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Describe your Agent' })).toBeVisible()
   await pause(page, 500)
 
   await page.getByRole('button', { name: 'Create manually' }).click()
   await pause(page, 500)
 
-  await typeSlowly(page, '#kinFormName', 'Chef Claude', 80)
+  await typeSlowly(page, '#agentFormName', 'Chef Claude', 80)
   await typeSlowly(
     page,
-    '#kinFormRole',
+    '#agentFormRole',
     'A culinary expert specializing in world cuisines and cooking techniques',
     35,
   )
@@ -105,10 +105,10 @@ test('Hivekeep showcase walkthrough', async ({ page }) => {
   const modelPicker = page.getByRole('combobox').first()
   await modelPicker.click()
   await page.getByRole('option', { name: /GPT-4o/i }).click()
-  await page.locator('#kinFormName').click()
+  await page.locator('#agentFormName').click()
   await pause(page, 500)
 
-  await page.getByRole('button', { name: 'Create Kin' }).click()
+  await page.getByRole('button', { name: 'Create Agent' }).click()
   await expect(page.getByText('Chef Claude').first()).toBeVisible({ timeout: 15_000 })
   await pause(page, 2000)
 

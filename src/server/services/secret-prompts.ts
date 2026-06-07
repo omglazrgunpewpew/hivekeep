@@ -5,12 +5,12 @@
  * Flow (mirrors human-prompts but secret-safe):
  *   1. A tool (request_provider_setup / prompt_secret) calls createSecretPrompt,
  *      which emits `prompt:secret-request` over SSE and returns a promptId. The
- *      Kin's turn ends, waiting.
+ *      Agent's turn ends, waiting.
  *   2. The user fills the popup; the client POSTs the raw values to
  *      /api/secret-prompts/:id/respond.
  *   3. respondToSecretPrompt stores the secret in the vault and performs the
  *      side effect (create + test a provider, or just store the secret), then
- *      injects a NON-SENSITIVE confirmation message that resumes the Kin's turn.
+ *      injects a NON-SENSITIVE confirmation message that resumes the Agent's turn.
  *
  * The raw secret is never written to `secret_prompts`, never logged, never
  * placed in a `messages` row, and never returned to the LLM.
@@ -40,7 +40,7 @@ export interface ProviderSecretSpec {
   type: string
   name: string
   families?: string[]
-  /** Non-secret config fields (baseUrl, etc.) supplied by the Kin up front. */
+  /** Non-secret config fields (baseUrl, etc.) supplied by the Agent up front. */
   config?: Record<string, string>
 }
 export interface VaultSecretSpec {
@@ -49,13 +49,13 @@ export interface VaultSecretSpec {
 export interface ChannelSecretSpec {
   platform: string
   name: string
-  kinId: string
+  agentId: string
   /** Non-secret config fields (allowedChatIds, etc.). */
   config?: Record<string, unknown>
 }
 
 interface CreateSecretPromptParams {
-  kinId: string
+  agentId: string
   taskId?: string
   purpose: SecretPromptPurpose
   title: string
@@ -70,7 +70,7 @@ export async function createSecretPrompt(params: CreateSecretPromptParams): Prom
   const promptId = uuid()
   await db.insert(secretPrompts).values({
     id: promptId,
-    kinId: params.kinId,
+    agentId: params.agentId,
     taskId: params.taskId ?? null,
     purpose: params.purpose,
     spec: JSON.stringify({ ...params.spec, fields: params.fields, title: params.title, description: params.description ?? null }),
@@ -89,12 +89,12 @@ export async function createSecretPrompt(params: CreateSecretPromptParams): Prom
     }
   }
 
-  sseManager.sendToKin(params.kinId, {
+  sseManager.sendToAgent(params.agentId, {
     type: 'prompt:secret-request',
-    kinId: params.kinId,
+    agentId: params.agentId,
     data: {
       promptId,
-      kinId: params.kinId,
+      agentId: params.agentId,
       purpose: params.purpose,
       title: params.title,
       description: params.description ?? null,
@@ -109,14 +109,14 @@ export async function createSecretPrompt(params: CreateSecretPromptParams): Prom
         type: 'prompt:pending',
         title: 'Secure input needed',
         body: params.title,
-        kinId: params.kinId,
+        agentId: params.agentId,
         relatedId: promptId,
         relatedType: 'prompt',
       }).catch(() => {}),
     )
     .catch(() => {})
 
-  log.info({ promptId, kinId: params.kinId, purpose: params.purpose, fields: params.fields.map((f) => f.key) }, 'Secret prompt created')
+  log.info({ promptId, agentId: params.agentId, purpose: params.purpose, fields: params.fields.map((f) => f.key) }, 'Secret prompt created')
   return { promptId }
 }
 
@@ -162,7 +162,7 @@ export async function respondToSecretPrompt(
       }
 
       const id = uuid()
-      const vaulted = await vaultifyProviderConfig(ps.type, id, rawConfig, prompt.kinId)
+      const vaulted = await vaultifyProviderConfig(ps.type, id, rawConfig, prompt.agentId)
       const configEncrypted = await encrypt(JSON.stringify(vaulted))
       const slug = generateProviderSlug(ps.name)
       const now = new Date()
@@ -192,7 +192,7 @@ export async function respondToSecretPrompt(
       const storedKeys: string[] = []
       for (const f of fields) {
         if (!f.secret) continue
-        await createSecret(f.key, values[f.key]!, prompt.kinId, f.label)
+        await createSecret(f.key, values[f.key]!, prompt.agentId, f.label)
         storedKeys.push(f.key)
       }
       resultRef = { vaultKeys: storedKeys }
@@ -203,11 +203,11 @@ export async function respondToSecretPrompt(
       const { createChannel, activateChannel } = await import('@/server/services/channels')
       // createChannel auto-vaults the password fields; pass raw secret values + non-secret config.
       const channel = await createChannel({
-        kinId: cs.kinId,
+        agentId: cs.agentId,
         name: cs.name,
         platform: cs.platform as Parameters<typeof createChannel>[0]['platform'],
         platformConfig: { ...(cs.config ?? {}), ...values },
-        createdBy: 'kin',
+        createdBy: 'agent',
       })
       const activated = await activateChannel(channel.id)
       const ok = activated?.status === 'active'
@@ -239,7 +239,7 @@ export async function respondToSecretPrompt(
     if (claim.changes > 0) {
       await db.insert(messages).values({
         id: uuid(),
-        kinId: prompt.kinId,
+        agentId: prompt.agentId,
         taskId: prompt.taskId,
         role: 'user',
         content: confirmation,
@@ -249,12 +249,12 @@ export async function respondToSecretPrompt(
       })
       const { runOrQueueResumedTask } = await import('@/server/services/tasks')
       runOrQueueResumedTask(prompt.taskId).catch((err) =>
-        log.error({ taskId: prompt.taskId, err }, 'Sub-Kin resume error after secret prompt'),
+        log.error({ taskId: prompt.taskId, err }, 'Sub-Agent resume error after secret prompt'),
       )
     }
   } else {
     await enqueueMessage({
-      kinId: prompt.kinId,
+      agentId: prompt.agentId,
       messageType: 'user',
       content: confirmation,
       sourceType: 'user',
@@ -263,20 +263,20 @@ export async function respondToSecretPrompt(
     })
   }
 
-  sseManager.sendToKin(prompt.kinId, {
+  sseManager.sendToAgent(prompt.agentId, {
     type: 'prompt:secret-resolved',
-    kinId: prompt.kinId,
-    data: { promptId, kinId: prompt.kinId, ok: true, summary },
+    agentId: prompt.agentId,
+    data: { promptId, agentId: prompt.agentId, ok: true, summary },
   })
 
   return { success: true, summary }
 }
 
-export async function getPendingSecretPrompts(kinId: string) {
+export async function getPendingSecretPrompts(agentId: string) {
   const rows = await db
     .select()
     .from(secretPrompts)
-    .where(eq(secretPrompts.kinId, kinId))
+    .where(eq(secretPrompts.agentId, agentId))
     .all()
   return rows
     .filter((r) => r.status === 'pending')
@@ -284,7 +284,7 @@ export async function getPendingSecretPrompts(kinId: string) {
       const spec = JSON.parse(r.spec) as { fields: SecretPromptField[]; title?: string; description?: string | null }
       return {
         promptId: r.id,
-        kinId: r.kinId,
+        agentId: r.agentId,
         purpose: r.purpose as SecretPromptPurpose,
         title: spec.title ?? 'Secure input needed',
         description: spec.description ?? null,

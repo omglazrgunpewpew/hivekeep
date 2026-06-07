@@ -4,7 +4,7 @@
  */
 
 import type {
-  Hivekeep, HivekeepTheme, HivekeepKin, HivekeepUser, HivekeepStorage,
+  Hivekeep, HivekeepTheme, HivekeepAgent, HivekeepUser, HivekeepStorage,
   HivekeepApi, HivekeepHttp, HivekeepClipboard, HivekeepEvents, HivekeepApps,
   HivekeepMemory, HivekeepConversation, MiniAppInfo, MemoryResult,
   CreatedMemory, ConversationMessage, SharedData, ToastType,
@@ -35,10 +35,10 @@ export function useStorage<T = unknown>(
 /** Reactive theme hook. */
 export function useTheme(): HivekeepTheme;
 
-// ─── useKin ─────────────────────────────────────────────────────────────────
+// ─── useAgent ─────────────────────────────────────────────────────────────────
 
-/** Reactive Kin info hook. */
-export function useKin(): { kin: HivekeepKin; loading: boolean };
+/** Reactive Agent info hook. */
+export function useAgent(): { agent: HivekeepAgent; loading: boolean };
 
 // ─── useUser ────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export interface UseMemoryReturn {
   loading: boolean;
 }
 
-/** Search and store Kin memories with reactive state. */
+/** Search and store Agent memories with reactive state. */
 export function useMemory(): UseMemoryReturn;
 
 // ─── useConversation ────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ export interface UseConversationReturn {
   loading: boolean;
 }
 
-/** Interact with Kin conversation. */
+/** Interact with Agent conversation. */
 export function useConversation(): UseConversationReturn;
 
 // ─── useShortcut ────────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export interface UseAppsReturn {
   refresh: () => Promise<void>;
 }
 
-/** List mini-apps from the same Kin. */
+/** List mini-apps from the same Agent. */
 export function useApps(): UseAppsReturn;
 
 // ─── useSharedData ──────────────────────────────────────────────────────────
@@ -322,7 +322,7 @@ export const storage: Hivekeep['storage'];
 export const api: Hivekeep['api'];
 export const http: Hivekeep['http'];
 export const events: Hivekeep['events'];
-export const kin: Hivekeep['kin'];
+export const agent: Hivekeep['agent'];
 export const user: Hivekeep['user'];
 export const memory: Hivekeep['memory'];
 export const conversation: Hivekeep['conversation'];

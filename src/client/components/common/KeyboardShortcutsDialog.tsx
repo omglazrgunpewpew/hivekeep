@@ -35,10 +35,10 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
-    titleKey: 'shortcuts.group.kins',
+    titleKey: 'shortcuts.group.agents',
     shortcuts: [
-      { keys: [MOD, '1-9'], labelKey: 'shortcuts.switchKin' },
-      { keys: [MOD, 'Shift', 'N'], labelKey: 'shortcuts.createKin' },
+      { keys: [MOD, '1-9'], labelKey: 'shortcuts.switchAgent' },
+      { keys: [MOD, 'Shift', 'N'], labelKey: 'shortcuts.createAgent' },
     ],
   },
   {

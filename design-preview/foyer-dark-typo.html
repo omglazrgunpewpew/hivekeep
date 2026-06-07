@@ -48,13 +48,13 @@ a{color:inherit;text-decoration:none}
 .reassure .it svg{color:oklch(0.72 0.18 155)}
 .hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-top:26px}
 
-/* kins cluster (shared) */
-.kins{position:relative;height:380px;}
-.kin{position:absolute;}
-.kin .card{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--line-strong);border-radius:20px;padding:12px 15px;box-shadow:0 24px 60px oklch(0 0 0/.45);display:flex;align-items:center;gap:11px;}
-.kin .name{font-weight:700;font-size:.9rem}.kin .role{font-size:.72rem;color:var(--ink-soft)}
-.kin .av{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}
-.kin.k1{top:6px;left:30px}.kin.k2{top:104px;right:0}.kin.k3{top:212px;left:6px}.kin.k4{top:296px;right:46px}
+/* agents cluster (shared) */
+.agents{position:relative;height:380px;}
+.agent{position:absolute;}
+.agent .card{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--line-strong);border-radius:20px;padding:12px 15px;box-shadow:0 24px 60px oklch(0 0 0/.45);display:flex;align-items:center;gap:11px;}
+.agent .name{font-weight:700;font-size:.9rem}.agent .role{font-size:.72rem;color:var(--ink-soft)}
+.agent .av{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}
+.agent.k1{top:6px;left:30px}.agent.k2{top:104px;right:0}.agent.k3{top:212px;left:6px}.agent.k4{top:296px;right:46px}
 .badge{position:absolute;top:168px;left:130px;background:var(--grad);color:#fff;font-size:.7rem;font-weight:700;padding:.3rem .6rem;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
 
 /* channel strip with real brand logos */
@@ -116,15 +116,15 @@ a{color:inherit;text-decoration:none}
       <span class="eyebrow"><i data-lucide="terminal"></i> plateforme d'agents IA autonomes · self-hosted</span>
       <h1>Votre équipe d'IA,<br><em>chez vous.</em></h1>
       <p class="sub">Des agents qui se souviennent, collaborent et grandissent avec vous. Un seul conteneur, zéro infra externe.</p>
-      <div class="mono-hint"><span class="d">$</span> docker run hivekeep <span style="color:var(--ink-soft)"># Sherpa fait le reste</span></div>
+      <div class="mono-hint"><span class="d">$</span> docker run hivekeep <span style="color:var(--ink-soft)"># Queenie fait le reste</span></div>
       <div class="hero-cta"><a class="btn btn-primary"><i data-lucide="rocket" class="svglucide"></i> Démarrer en 2 min</a><a class="btn btn-ghost"><i data-lucide="play" class="svglucide"></i> Voir la démo</a></div>
       <div class="reassure"><span class="it"><i data-lucide="check" class="svglucide"></i> open-source MIT</span><span class="it"><i data-lucide="server" class="svglucide"></i> self-hosted</span><span class="it"><i data-lucide="box" class="svglucide"></i> zéro infra externe</span></div>
     </div>
-    <div class="kins">
-      <div class="kin k1"><div class="card"><span class="av" style="background:oklch(0.66 0.20 300/.18);color:oklch(0.70 0.18 300)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche</div></div></div></div>
-      <div class="kin k2"><div class="card"><span class="av" style="background:oklch(0.72 0.16 350/.18);color:oklch(0.74 0.16 350)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
-      <div class="kin k3"><div class="card"><span class="av" style="background:oklch(0.80 0.13 50/.18);color:oklch(0.80 0.13 50)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Sherpa</div><div class="role">Configurateur</div></div></div></div>
-      <div class="kin k4"><div class="card"><span class="av" style="background:oklch(0.68 0.15 250/.18);color:oklch(0.70 0.15 250)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance</div></div></div></div>
+    <div class="agents">
+      <div class="agent k1"><div class="card"><span class="av" style="background:oklch(0.66 0.20 300/.18);color:oklch(0.70 0.18 300)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche</div></div></div></div>
+      <div class="agent k2"><div class="card"><span class="av" style="background:oklch(0.72 0.16 350/.18);color:oklch(0.74 0.16 350)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
+      <div class="agent k3"><div class="card"><span class="av" style="background:oklch(0.80 0.13 50/.18);color:oklch(0.80 0.13 50)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Queenie</div><div class="role">Configurateur</div></div></div></div>
+      <div class="agent k4"><div class="card"><span class="av" style="background:oklch(0.68 0.15 250/.18);color:oklch(0.70 0.15 250)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance</div></div></div></div>
       <span class="badge"><i data-lucide="brain" class="svglucide"></i> se souvient de vous</span>
     </div>
   </div>
@@ -151,11 +151,11 @@ a{color:inherit;text-decoration:none}
       <div class="hero-cta"><a class="btn btn-primary"><i data-lucide="rocket" class="svglucide"></i> Démarrer en 2 min</a><a class="btn btn-ghost"><i data-lucide="play" class="svglucide"></i> Voir la démo</a></div>
       <div class="reassure"><span class="it"><i data-lucide="check" class="svglucide"></i> open-source MIT</span><span class="it"><i data-lucide="server" class="svglucide"></i> self-hosted</span><span class="it"><i data-lucide="box" class="svglucide"></i> zéro infra externe</span></div>
     </div>
-    <div class="kins">
-      <div class="kin k1"><div class="card"><span class="av" style="background:oklch(0.66 0.20 300/.18);color:oklch(0.70 0.18 300)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche</div></div></div></div>
-      <div class="kin k2"><div class="card"><span class="av" style="background:oklch(0.80 0.13 50/.18);color:oklch(0.80 0.13 50)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
-      <div class="kin k3"><div class="card"><span class="av" style="background:oklch(0.72 0.16 350/.18);color:oklch(0.74 0.16 350)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Sherpa</div><div class="role">Configurateur</div></div></div></div>
-      <div class="kin k4"><div class="card"><span class="av" style="background:oklch(0.68 0.15 250/.18);color:oklch(0.70 0.15 250)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance</div></div></div></div>
+    <div class="agents">
+      <div class="agent k1"><div class="card"><span class="av" style="background:oklch(0.66 0.20 300/.18);color:oklch(0.70 0.18 300)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Atlas</div><div class="role">Recherche</div></div></div></div>
+      <div class="agent k2"><div class="card"><span class="av" style="background:oklch(0.80 0.13 50/.18);color:oklch(0.80 0.13 50)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Plume</div><div class="role">Rédaction</div></div></div></div>
+      <div class="agent k3"><div class="card"><span class="av" style="background:oklch(0.72 0.16 350/.18);color:oklch(0.74 0.16 350)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Queenie</div><div class="role">Configurateur</div></div></div></div>
+      <div class="agent k4"><div class="card"><span class="av" style="background:oklch(0.68 0.15 250/.18);color:oklch(0.70 0.15 250)"><svg width="30" height="30" viewBox="0 0 64 64"><use href="#bot" y="6"/></svg></span><div><div class="name">Ledger</div><div class="role">Finance</div></div></div></div>
       <span class="badge"><i data-lucide="brain" class="svglucide"></i> se souvient de vous</span>
     </div>
   </div>

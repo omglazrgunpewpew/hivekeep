@@ -1,6 +1,6 @@
 ---
 title: WhatsApp
-description: Connect your Kin to WhatsApp using the Cloud API.
+description: Connect your Agent to WhatsApp using the Cloud API.
 ---
 
 WhatsApp integration uses the [Meta Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api) for both inbound and outbound messaging.
@@ -26,7 +26,7 @@ WhatsApp integration uses the [Meta Cloud API](https://developers.facebook.com/d
 
 ## How It Works
 
-- **Inbound:** Meta sends webhook events to Hivekeep. The adapter verifies the token, extracts message content and media, and routes to the Kin.
+- **Inbound:** Meta sends webhook events to Hivekeep. The adapter verifies the token, extracts message content and media, and routes to the Agent.
 - **Outbound:** Messages are sent via the Graph API (`/messages` endpoint). Long messages (>4,096 chars) are split. Images are sent as media messages, other files as documents.
 
 ## Features

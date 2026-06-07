@@ -87,7 +87,7 @@ If you read secrets via the internal vault module, switch to `ctx.vault`:
 
 ## Hooks
 
-`HookContext` was a loose `{ kinId, userId?, taskId?, [key: string]: unknown }`. It's now a discriminated union keyed by hook name:
+`HookContext` was a loose `{ agentId, userId?, taskId?, [key: string]: unknown }`. It's now a discriminated union keyed by hook name:
 
 ```diff
 - import type { HookHandler } from '@/server/hooks/types'
@@ -98,7 +98,7 @@ If you read secrets via the internal vault module, switch to `ctx.vault`:
 -     const response = ctx.response as string   // had to cast
 -   },
 +   afterChat: (ctx) => {
-+     // ctx.message, ctx.response, ctx.kinId, ctx.userId — all typed
++     // ctx.message, ctx.response, ctx.agentId, ctx.userId — all typed
 +   },
 +   afterToolCall: (ctx) => {
 +     // ctx.toolName, ctx.toolArgs, ctx.toolResult — all typed
@@ -170,7 +170,7 @@ If you emitted cards with `Record<string, unknown>[]` layouts, you can keep doin
 + import { card } from '@hivekeep-developer/sdk'
 
   ctx.cards.emit({
-    kinId,
+    agentId,
     cardType: 'progress',
     layout: [
 -     { type: 'header', title: 'Working...' },
@@ -228,4 +228,4 @@ Done with your migration when:
 - [ ] `plugin.json` has a `$schema` line and an explicit `hivekeep` range.
 - [ ] `bun typecheck` passes.
 
-Stuck on something not covered here? Open an issue at <https://github.com/MarlBurroW/hivekeep/issues> with the plugin's source — the SDK's tests run against the `hello-kin` reference example, so anything matching that shape is guaranteed to load.
+Stuck on something not covered here? Open an issue at <https://github.com/MarlBurroW/hivekeep/issues> with the plugin's source — the SDK's tests run against the `hello-agent` reference example, so anything matching that shape is guaranteed to load.

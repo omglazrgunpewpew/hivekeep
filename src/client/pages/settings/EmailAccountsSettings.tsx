@@ -640,7 +640,7 @@ function PendingCard({
       <CardContent className="space-y-1.5 p-3">
         <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
           <span className="truncate">
-            {item.kinName} · {item.accountEmail}
+            {item.agentName} · {item.accountEmail}
           </span>
         </div>
         <p className="text-sm font-medium">{item.subject || '(no subject)'}</p>

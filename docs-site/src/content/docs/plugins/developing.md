@@ -10,8 +10,8 @@ This is the canonical guide for writing Hivekeep plugins. Every plugin imports e
 ## Quickstart
 
 ```bash
-bunx create-hivekeep-plugin --name hello-kin --type tools
-cd hello-kin
+bunx create-hivekeep-plugin --name hello-agent --type tools
+cd hello-agent
 ```
 
 The scaffolder generates a `plugin.json` manifest, an `index.ts` entry point, and a `README.md`. Drop the folder into your Hivekeep install's `plugins/` directory and Hivekeep picks it up at startup.
@@ -19,17 +19,17 @@ The scaffolder generates a `plugin.json` manifest, an `index.ts` entry point, an
 Or write it by hand:
 
 ```typescript
-// plugins/hello-kin/index.ts
+// plugins/hello-agent/index.ts
 import { tool, z } from '@hivekeep-developer/sdk'
 import type { PluginContext, PluginExports } from '@hivekeep-developer/sdk'
 
 export default function (ctx: PluginContext): PluginExports {
-  ctx.log.info('hello-kin plugin loaded')
+  ctx.log.info('hello-agent plugin loaded')
 
   return {
     tools: {
       greet: {
-        availability: ['main', 'sub-kin'],
+        availability: ['main', 'sub-agent'],
         create: () =>
           tool({
             description: 'Say hi to someone.',
@@ -47,10 +47,10 @@ export default function (ctx: PluginContext): PluginExports {
 ```
 
 ```json
-// plugins/hello-kin/plugin.json
+// plugins/hello-agent/plugin.json
 {
   "$schema": "https://unpkg.com/@hivekeep-developer/sdk/schemas/plugin-manifest.schema.json",
-  "name": "hello-kin",
+  "name": "hello-agent",
   "version": "0.1.0",
   "description": "Greet users by name.",
   "main": "index.ts",
@@ -58,7 +58,7 @@ export default function (ctx: PluginContext): PluginExports {
 }
 ```
 
-That's it. Restart Hivekeep, enable the plugin in Settings → Plugins, and Kins can call `greet({name:'Marl'})`.
+That's it. Restart Hivekeep, enable the plugin in Settings → Plugins, and Agents can call `greet({name:'Marl'})`.
 
 ## Manifest (`plugin.json`)
 
@@ -157,7 +157,7 @@ See the [Cards](#cards) section below.
 
 ## Tools
 
-Tools are AI-callable functions Kins can invoke during a turn. Declare them with `tool()` from the SDK — `inputSchema` is a zod schema, the `execute` callback's argument is inferred from it.
+Tools are AI-callable functions Agents can invoke during a turn. Declare them with `tool()` from the SDK — `inputSchema` is a zod schema, the `execute` callback's argument is inferred from it.
 
 ```ts
 import { tool, z } from '@hivekeep-developer/sdk'
@@ -165,7 +165,7 @@ import { tool, z } from '@hivekeep-developer/sdk'
 return {
   tools: {
     fetch_weather: {
-      availability: ['main', 'sub-kin'],
+      availability: ['main', 'sub-agent'],
       defaultDisabled: false,
       readOnly: true,
       concurrencySafe: true,
@@ -177,7 +177,7 @@ return {
             units: z.enum(['metric', 'imperial']).optional(),
           }),
           execute: async ({ location, units = 'metric' }) => {
-            // execCtx.kinId, execCtx.userId, etc. are available in the closure
+            // execCtx.agentId, execCtx.userId, etc. are available in the closure
             const res = await ctx.http.fetch(`https://api.example.com/?q=${location}&units=${units}`)
             return res.json()
           },
@@ -191,8 +191,8 @@ Available `ToolRegistration` flags:
 
 | Flag | Default | Effect |
 |---|---|---|
-| `availability` | required | Which agents see the tool — `'main'`, `'sub-kin'`, or both. |
-| `defaultDisabled` | `false` | If true, Kins must explicitly opt in to enable the tool. |
+| `availability` | required | Which agents see the tool — `'main'`, `'sub-agent'`, or both. |
+| `defaultDisabled` | `false` | If true, Agents must explicitly opt in to enable the tool. |
 | `readOnly` | `false` | Declares the tool doesn't mutate state. Used by UI confirmations. |
 | `concurrencySafe` | `false` | Allows Hivekeep to invoke this tool in parallel with other safe tools in the same step. |
 | `destructive` | `false` | Marks the tool as performing irreversible operations. UI may confirm before firing. |
@@ -236,7 +236,7 @@ export default function (ctx: PluginContext) {
 
 Webhook-driven adapters implement `handleInboundWebhook`. Hivekeep routes `POST /api/channels/plugin/<platform>/webhook/<channelId>` to it — the adapter verifies the request signature, returns the `IncomingMessage` to inject (or `null` to drop the event) plus the HTTP `Response` to send back to the platform.
 
-Identity-switch behaviour (when a channel is transferred to a different Kin) is controlled by `identitySwitchMode`: `'native'` (adapter implements `onIdentityChange`), `'prefix'` (default — Hivekeep prefixes outbound messages with the new Kin's name), or `'none'`.
+Identity-switch behaviour (when a channel is transferred to a different Agent) is controlled by `identitySwitchMode`: `'native'` (adapter implements `onIdentityChange`), `'prefix'` (default — Hivekeep prefixes outbound messages with the new Agent's name), or `'none'`.
 
 ## Providers (LLM, Embedding, Image, Search)
 
@@ -375,7 +375,7 @@ Plugin cards are declarative UI primitives that show up in the chat as rich live
 import { card } from '@hivekeep-developer/sdk'
 
 const { messageId, cardInstanceId } = await ctx.cards.emit({
-  kinId: execCtx.kinId,
+  agentId: execCtx.agentId,
   cardType: 'fetch-progress',
   layout: [
     card.header({ title: 'Fetching weather…', icon: 'Sparkles' }),
@@ -397,7 +397,7 @@ Handle button clicks via `onCardAction`:
 ```ts
 return {
   cards: { /* … */ },
-  async onCardAction({ cardInstanceId, actionId, input, kinId }) {
+  async onCardAction({ cardInstanceId, actionId, input, agentId }) {
     if (actionId === 'cancel') {
       await abortMyTask(cardInstanceId)
       return { ok: true }
@@ -437,7 +437,7 @@ import createPlugin from './index'
 
 it('greets', async () => {
   const { tools } = createPlugin({ /* fake ctx */ } as any)
-  const t = tools!.greet.create({ kinId: 'k', isSubKin: false })
+  const t = tools!.greet.create({ agentId: 'k', isSubAgent: false })
   expect(await t.execute!({ name: 'Marl' })).toEqual({ reply: 'Hi Marl, glad to meet you!' })
 })
 ```

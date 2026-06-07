@@ -43,8 +43,8 @@ scripts/
 npm_token
 .npmrc
 .mcp.json
-kin-context.json
-kin-context.json.*
+agent-context.json
+agent-context.json.*
 
 # Local agent / tooling state and worktrees (huge: .claude holds full-repo
 # worktree copies). None are build inputs; they'd only bloat the build context

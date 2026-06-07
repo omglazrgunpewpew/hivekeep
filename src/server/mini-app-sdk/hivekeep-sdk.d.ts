@@ -17,15 +17,15 @@ export interface HivekeepAppMeta {
   id: string;
   name: string;
   slug: string;
-  kinId: string;
-  kinName: string;
-  kinAvatarUrl: string | null;
+  agentId: string;
+  agentName: string;
+  agentAvatarUrl: string | null;
   isFullPage: boolean;
   locale: string;
   user: HivekeepUser;
 }
 
-export interface HivekeepKin {
+export interface HivekeepAgent {
   id: string | null;
   name: string | null;
   avatarUrl: string | null;
@@ -160,7 +160,7 @@ export interface HivekeepEvents {
 // ─── Apps ───────────────────────────────────────────────────────────────────
 
 export interface HivekeepApps {
-  /** List all mini-apps from the same Kin. */
+  /** List all mini-apps from the same Agent. */
   list(): Promise<MiniAppInfo[]>;
   /** Get details of a specific mini-app by ID. */
   get(appId: string): Promise<MiniAppInfo>;
@@ -169,9 +169,9 @@ export interface HivekeepApps {
 // ─── Memory ─────────────────────────────────────────────────────────────────
 
 export interface HivekeepMemory {
-  /** Semantic search the Kin's memories. */
+  /** Semantic search the Agent's memories. */
   search(query: string, limit?: number): Promise<MemoryResult[]>;
-  /** Store a new memory for the Kin. */
+  /** Store a new memory for the Agent. */
   store(content: string, options?: { category?: 'fact' | 'preference' | 'decision' | 'knowledge'; subject?: string }): Promise<CreatedMemory>;
 }
 
@@ -180,7 +180,7 @@ export interface HivekeepMemory {
 export interface HivekeepConversation {
   /** Get recent conversation messages. */
   history(limit?: number): Promise<ConversationMessage[]>;
-  /** Send a message to the Kin's conversation. */
+  /** Send a message to the Agent's conversation. */
   send(text: string, options?: { silent?: boolean }): Promise<boolean>;
 }
 
@@ -191,8 +191,8 @@ export interface Hivekeep {
   readonly theme: HivekeepTheme;
   /** Current app metadata. */
   readonly app: HivekeepAppMeta | null;
-  /** Info about the parent Kin. */
-  readonly kin: HivekeepKin;
+  /** Info about the parent Agent. */
+  readonly agent: HivekeepAgent;
   /** Info about the current user. */
   readonly user: HivekeepUser;
   /** Whether the app is in full-page mode. */
@@ -219,7 +219,7 @@ export interface Hivekeep {
   setTitle(title: string): void;
   /** Show a badge on the app in the sidebar. Pass null to clear. */
   setBadge(value: string | number | null): void;
-  /** Open another mini-app from the same Kin by slug. */
+  /** Open another mini-app from the same Agent by slug. */
   openApp(slug: string): void;
   /** Navigate the parent Hivekeep UI to a path. */
   navigate(path: string): void;
@@ -245,15 +245,15 @@ export interface Hivekeep {
   events: HivekeepEvents;
 
   // ─── Communication ──────────────────────────────────────────────────
-  /** Send a message to the Kin's conversation. */
+  /** Send a message to the Agent's conversation. */
   sendMessage(text: string, options?: { silent?: boolean }): Promise<boolean>;
   /** Browser notification via parent window. */
   notification(title: string, body?: string): Promise<boolean>;
 
   // ─── Namespaces ─────────────────────────────────────────────────────
-  /** List and get mini-apps from the same Kin. */
+  /** List and get mini-apps from the same Agent. */
   apps: HivekeepApps;
-  /** Search and store Kin memories. */
+  /** Search and store Agent memories. */
   memory: HivekeepMemory;
   /** Read and send conversation messages. */
   conversation: HivekeepConversation;

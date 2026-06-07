@@ -60,10 +60,10 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(http:[^\\s]+|storage|cards|vault|cron|kins)$",
+        "pattern": "^(http:[^\\s]+|storage|cards|vault|cron|agents)$",
         "description": "A permission grant. Hivekeep enforces http:* permissions at runtime through ctx.http.fetch — calls to undeclared hosts throw before going out. Other grants are informational today and will be enforced in future releases."
       },
-      "description": "Permissions the plugin requires. Each entry is either an http permission (\"http:api.example.com\", or \"http:*\" for any host) or one of the named capabilities (\"storage\", \"cards\", \"vault\", \"cron\", \"kins\")."
+      "description": "Permissions the plugin requires. Each entry is either an http permission (\"http:api.example.com\", or \"http:*\" for any host) or one of the named capabilities (\"storage\", \"cards\", \"vault\", \"cron\", \"agents\")."
     },
     "dependencies": {
       "type": "object",

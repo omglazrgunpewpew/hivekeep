@@ -33,7 +33,7 @@ import {
 } from '@/server/services/mini-app-deps'
 import { getTemplateById } from '@/server/tools/mini-app-templates'
 import { sseManager } from '@/server/sse/index'
-import { resolveKinId } from '@/server/services/kin-resolver'
+import { resolveAgentId } from '@/server/services/agent-resolver'
 import type { ToolRegistration } from '@/server/tools/types'
 
 const log = createLogger('tools:mini-apps')
@@ -70,7 +70,7 @@ export const createMiniAppTool: ToolRegistration = {
           .describe('Import-map shorthand, e.g. { "react": "https://esm.sh/react@19" }. Written into app.json (merged if app.json is also provided).'),
       }),
       execute: async ({ name, slug, description, icon, html, template, files, dependencies }) => {
-        log.debug({ kinId: ctx.kinId, name, slug }, 'create_mini_app invoked')
+        log.debug({ agentId: ctx.agentId, name, slug }, 'create_mini_app invoked')
 
         try {
           // Resolve template if specified
@@ -121,7 +121,7 @@ export const createMiniAppTool: ToolRegistration = {
           }
 
           const app = await createMiniApp({
-            kinId: ctx.kinId,
+            agentId: ctx.agentId,
             name,
             slug,
             description,
@@ -134,7 +134,7 @@ export const createMiniAppTool: ToolRegistration = {
 
           // Re-fetch to get updated version
           const updated = await getMiniApp(app.id)
-          sseManager.broadcast({ type: 'miniapp:created', kinId: ctx.kinId, data: { app: updated } })
+          sseManager.broadcast({ type: 'miniapp:created', agentId: ctx.agentId, data: { app: updated } })
 
           return {
             appId: app.id,
@@ -146,7 +146,7 @@ export const createMiniAppTool: ToolRegistration = {
           }
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Failed to create app'
-          log.warn({ kinId: ctx.kinId, name, error: message }, 'create_mini_app failed')
+          log.warn({ agentId: ctx.agentId, name, error: message }, 'create_mini_app failed')
           return { error: message }
         }
       },
@@ -169,7 +169,7 @@ export const updateMiniAppTool: ToolRegistration = {
         is_active: z.boolean().optional(),
       }),
       execute: async (args) => {
-        log.debug({ kinId: ctx.kinId, appId: args.app_id }, 'update_mini_app invoked')
+        log.debug({ agentId: ctx.agentId, appId: args.app_id }, 'update_mini_app invoked')
 
         const existing = await getMiniApp(args.app_id)
         if (!existing) return { error: 'App not found' }
@@ -183,7 +183,7 @@ export const updateMiniAppTool: ToolRegistration = {
             isActive: args.is_active,
           })
 
-          sseManager.broadcast({ type: 'miniapp:updated', kinId: ctx.kinId, data: { app } })
+          sseManager.broadcast({ type: 'miniapp:updated', agentId: ctx.agentId, data: { app } })
           return { appId: args.app_id, message: 'App updated successfully' }
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Failed to update app'
@@ -205,13 +205,13 @@ export const deleteMiniAppTool: ToolRegistration = {
         app_id: z.string(),
       }),
       execute: async ({ app_id }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id }, 'delete_mini_app invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id }, 'delete_mini_app invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
 
         await deleteMiniApp(app_id)
-        sseManager.broadcast({ type: 'miniapp:deleted', kinId: ctx.kinId, data: { appId: app_id } })
+        sseManager.broadcast({ type: 'miniapp:deleted', agentId: ctx.agentId, data: { appId: app_id } })
 
         return { message: `App "${existing.name}" deleted successfully` }
       },
@@ -226,7 +226,7 @@ export const listMiniAppsTool: ToolRegistration = {
   concurrencySafe: true,
   create: (ctx) =>
     tool({
-      description: 'List ALL mini apps (not just ones you maintain). You can edit any of them; `maintainerKinId`/`maintainerKinName` show who is responsible and `maintainedByYou` whether that is you.',
+      description: 'List ALL mini apps (not just ones you maintain). You can edit any of them; `maintainerAgentId`/`maintainerAgentName` show who is responsible and `maintainedByYou` whether that is you.',
       inputSchema: z.object({}),
       execute: async () => {
         const apps = await listAllMiniApps()
@@ -240,9 +240,9 @@ export const listMiniAppsTool: ToolRegistration = {
             isActive: a.isActive,
             hasBackend: a.hasBackend,
             version: a.version,
-            maintainerKinId: a.maintainerKinId,
-            maintainerKinName: a.maintainerKinName,
-            maintainedByYou: a.maintainerKinId === ctx.kinId,
+            maintainerAgentId: a.maintainerAgentId,
+            maintainerAgentName: a.maintainerAgentName,
+            maintainedByYou: a.maintainerAgentId === ctx.agentId,
           })),
         }
       },
@@ -264,7 +264,7 @@ export const writeMiniAppFileTool: ToolRegistration = {
         is_base64: z.boolean().optional().describe('True if content is base64-encoded'),
       }),
       execute: async ({ app_id, path, content, is_base64 }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id, path }, 'write_mini_app_file invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id, path }, 'write_mini_app_file invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
@@ -277,7 +277,7 @@ export const writeMiniAppFileTool: ToolRegistration = {
           if (row) {
             sseManager.broadcast({
               type: 'miniapp:file-updated',
-              kinId: ctx.kinId,
+              agentId: ctx.agentId,
               data: { appId: app_id, path, version: row.version },
             })
           }
@@ -349,7 +349,7 @@ export const deleteMiniAppFileTool: ToolRegistration = {
           if (row) {
             sseManager.broadcast({
               type: 'miniapp:file-updated',
-              kinId: ctx.kinId,
+              agentId: ctx.agentId,
               data: { appId: app_id, path, version: row.version },
             })
           }
@@ -533,7 +533,7 @@ export const createMiniAppSnapshotTool: ToolRegistration = {
         label: z.string().optional(),
       }),
       execute: async ({ app_id, label }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id }, 'create_mini_app_snapshot invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id }, 'create_mini_app_snapshot invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
@@ -603,7 +603,7 @@ export const rollbackMiniAppTool: ToolRegistration = {
         version: z.number().int().positive().describe('Version from list_mini_app_snapshots'),
       }),
       execute: async ({ app_id, version }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id, version }, 'rollback_mini_app invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id, version }, 'rollback_mini_app invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
@@ -617,7 +617,7 @@ export const rollbackMiniAppTool: ToolRegistration = {
           if (updated) {
             sseManager.broadcast({
               type: 'miniapp:updated',
-              kinId: ctx.kinId,
+              agentId: ctx.agentId,
               data: { app: updated },
             })
           }
@@ -644,17 +644,17 @@ export const generateMiniAppIconTool: ToolRegistration = {
         app_id: z.string(),
       }),
       execute: async ({ app_id }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id }, 'generate_mini_app_icon invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id }, 'generate_mini_app_icon invoked')
 
-        // Verify the app belongs to this kin
+        // Verify the app belongs to this agent
         const row = await getMiniAppRow(app_id)
         if (!row) {
-          return { error: 'Mini-app not found or does not belong to this Kin' }
+          return { error: 'Mini-app not found or does not belong to this Agent' }
         }
 
         try {
           const app = await generateMiniAppIcon(app_id)
-          sseManager.broadcast({ type: 'miniapp:updated', kinId: ctx.kinId, data: { app } })
+          sseManager.broadcast({ type: 'miniapp:updated', agentId: ctx.agentId, data: { app } })
           return {
             iconUrl: app.iconUrl,
             message: `Icon generated for "${app.name}". It is now visible in the sidebar and gallery.`,
@@ -664,7 +664,7 @@ export const generateMiniAppIconTool: ToolRegistration = {
             return { error: 'No image generation provider is configured. The app will keep using its emoji icon.' }
           }
           const message = err instanceof Error ? err.message : 'Failed to generate icon'
-          log.warn({ kinId: ctx.kinId, appId: app_id, error: message }, 'generate_mini_app_icon failed')
+          log.warn({ agentId: ctx.agentId, appId: app_id, error: message }, 'generate_mini_app_icon failed')
           return { error: message }
         }
       },
@@ -690,7 +690,7 @@ export const editMiniAppFileTool: ToolRegistration = {
           .describe('If true, replace ALL occurrences of oldText. Default: false'),
       }),
       execute: async ({ app_id, path, oldText, newText, replaceAll }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id, path }, 'edit_mini_app_file invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id, path }, 'edit_mini_app_file invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
@@ -727,13 +727,13 @@ export const editMiniAppFileTool: ToolRegistration = {
           if (row) {
             sseManager.broadcast({
               type: 'miniapp:file-updated',
-              kinId: ctx.kinId,
+              agentId: ctx.agentId,
               data: { appId: app_id, path, version: row.version },
             })
           }
 
           log.info(
-            { kinId: ctx.kinId, appId: app_id, path, replacementCount: replaceAll ? occurrences : 1 },
+            { agentId: ctx.agentId, appId: app_id, path, replacementCount: replaceAll ? occurrences : 1 },
             'Mini app file edited',
           )
 
@@ -773,7 +773,7 @@ export const multiEditMiniAppFileTool: ToolRegistration = {
           .describe('Ordered list of edits. Each oldText must match exactly once in the content at that point.'),
       }),
       execute: async ({ app_id, path, edits }) => {
-        log.debug({ kinId: ctx.kinId, appId: app_id, path }, 'multi_edit_mini_app_file invoked')
+        log.debug({ agentId: ctx.agentId, appId: app_id, path }, 'multi_edit_mini_app_file invoked')
 
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
@@ -817,13 +817,13 @@ export const multiEditMiniAppFileTool: ToolRegistration = {
           if (row) {
             sseManager.broadcast({
               type: 'miniapp:file-updated',
-              kinId: ctx.kinId,
+              agentId: ctx.agentId,
               data: { appId: app_id, path, version: row.version },
             })
           }
 
           log.info(
-            { kinId: ctx.kinId, appId: app_id, path, editsApplied: edits.length },
+            { agentId: ctx.agentId, appId: app_id, path, editsApplied: edits.length },
             'Mini app file multi-edited',
           )
 
@@ -911,7 +911,7 @@ export const reloadMiniAppTool: ToolRegistration = {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
 
-        sseManager.broadcast({ type: 'miniapp:reload', kinId: ctx.kinId, data: { appId: app_id } })
+        sseManager.broadcast({ type: 'miniapp:reload', agentId: ctx.agentId, data: { appId: app_id } })
 
         return {
           appId: app_id,
@@ -929,21 +929,21 @@ export const setMiniAppMaintainerTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Reassign the maintainer Kin of a mini app (the Kin responsible for it and the target of "improve this app" requests). Any Kin can do this. `kin` accepts a Kin id or slug.',
+        'Reassign the maintainer Agent of a mini app (the Agent responsible for it and the target of "improve this app" requests). Any Agent can do this. `agent` accepts a Agent id or slug.',
       inputSchema: z.object({
         app_id: z.string(),
-        kin: z.string().describe('Target maintainer Kin (id or slug)'),
+        agent: z.string().describe('Target maintainer Agent (id or slug)'),
       }),
-      execute: async ({ app_id, kin }) => {
+      execute: async ({ app_id, agent }) => {
         const existing = await getMiniApp(app_id)
         if (!existing) return { error: 'App not found' }
-        const targetKinId = resolveKinId(kin)
-        if (!targetKinId) return { error: `Kin "${kin}" not found` }
+        const targetAgentId = resolveAgentId(agent)
+        if (!targetAgentId) return { error: `Agent "${agent}" not found` }
         try {
-          const app = await setMiniAppMaintainer(app_id, targetKinId)
+          const app = await setMiniAppMaintainer(app_id, targetAgentId)
           if (!app) return { error: 'App not found' }
-          sseManager.broadcast({ type: 'miniapp:updated', kinId: ctx.kinId, data: { app } })
-          return { appId: app_id, maintainerKinId: app.maintainerKinId, maintainerKinName: app.maintainerKinName, message: `Maintainer set to ${app.maintainerKinName}` }
+          sseManager.broadcast({ type: 'miniapp:updated', agentId: ctx.agentId, data: { app } })
+          return { appId: app_id, maintainerAgentId: app.maintainerAgentId, maintainerAgentName: app.maintainerAgentName, message: `Maintainer set to ${app.maintainerAgentName}` }
         } catch (err) {
           return { error: err instanceof Error ? err.message : 'Failed to set maintainer' }
         }

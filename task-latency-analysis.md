@@ -39,7 +39,7 @@ Wire-level capture, both harnesses routed through one local proxy via
 - Captures live under `data/llm-capture/<label>/`.
 
 **Test task** (identical across all runs): a read-only "map how the thinking
-config flows from a Kin's settings to the Anthropic request" exploration of the
+config flows from a Agent's settings to the Anthropic request" exploration of the
 hivekeep repo. Read-only → no repo state to reset → starting state identical.
 
 ## Runs
@@ -84,9 +84,9 @@ forced. We were turning the wrong knob in every "budget" comparison.
 CC offloaded 43/52 requests to a Haiku sub-agent (no thinking, maxTok 32000) for
 the file reading/grepping; the Opus orchestrator only planned, spawned, and
 synthesized (6 thinking steps, batching 3.0 calls/step). Hivekeep ran all ~96
-steps itself in Opus-with-thinking. The Kin *had* `spawn_self` (the prompt even
+steps itself in Opus-with-thinking. The Agent *had* `spawn_self` (the prompt even
 recommends it for >5 searches) but **didn't use it** — and even if it had, a
-spawned sub-Kin runs the **same expensive Opus+thinking**, so the incentive to
+spawned sub-Agent runs the **same expensive Opus+thinking**, so the incentive to
 delegate is weak.
 
 ### Axis 3 — orchestrator batching
@@ -150,16 +150,16 @@ Two concerns to keep separate:
 `resolveSearchProvider` pattern (explicit → global default → first valid):
 
 ```
-explicit param on the spawn  →  Kin-level setting  →  project-level setting
-  →  global app_settings.default_scout_model_id  →  (fallback) the Kin's main model
+explicit param on the spawn  →  Agent-level setting  →  project-level setting
+  →  global app_settings.default_scout_model_id  →  (fallback) the Agent's main model
 ```
 
 - Store as a concrete `{providerId, modelId}` (a *tier* like "cheap" can't be
   assumed across providers).
 - **Decided (user, 2026-05-29):** configure it at **project level** (where the
-  task model is declared) **and Kin level** — both, mirroring how the main model
+  task model is declared) **and Agent level** — both, mirroring how the main model
   is configured. Not at the provider level (rejected: a provider-declared "light
-  model" is the wrong layer — the choice belongs with the project/Kin, like the
+  model" is the wrong layer — the choice belongs with the project/Agent, like the
   main model). Add a global default and a per-spawn override on top.
 - If nothing is configured, fall back to the main model (current behaviour) but
   surface "no scout model set" so the user configures one. Auto-picking the
@@ -168,7 +168,7 @@ explicit param on the spawn  →  Kin-level setting  →  project-level setting
 - This config benefits **crons and sub-tasks too**, not just a scout tool —
   which is why it should be a first-class setting, decided independently of (B).
 
-**(B) How does the Kin decide to delegate?** The Kin under-uses `spawn_self`
+**(B) How does the Agent decide to delegate?** The Agent under-uses `spawn_self`
 today. Options:
 - *Enhance `spawn_self`*: add a `model`/`tier` param, default read-only scouting
   spawns to the scout model from (A), and make the affordance prominent in the

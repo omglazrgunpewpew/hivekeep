@@ -2,7 +2,7 @@
   "name": "hivekeep",
   "version": "0.41.0",
   "type": "module",
-  "description": "Self-hosted platform of specialized AI agents (Kins) with persistent identity, memory, tools, and collaboration",
+  "description": "Self-hosted platform of specialized AI agents (Agents) with persistent identity, memory, tools, and collaboration",
   "license": "AGPL-3.0-only",
   "author": "marlburrow",
   "homepage": "https://marlburrow.github.io/hivekeep",
@@ -15,7 +15,7 @@
   },
   "keywords": [
     "ai-agents",
-    "kins",
+    "agents",
     "self-hosted",
     "llm",
     "multi-agent",

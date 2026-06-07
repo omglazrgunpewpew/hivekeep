@@ -1,6 +1,6 @@
 ---
 title: Slack
-description: Connect your Kin to Slack using a bot.
+description: Connect your Agent to Slack using a bot.
 ---
 
 Slack integration uses the [Events API](https://api.slack.com/apis/events-api) with webhooks for inbound messages and the [Web API](https://api.slack.com/web) for sending.
@@ -28,7 +28,7 @@ Slack integration uses the [Events API](https://api.slack.com/apis/events-api) w
 
 ## How It Works
 
-- **Inbound:** Slack sends events to Hivekeep's webhook endpoint. The adapter verifies the request signature (v0), handles URL verification challenges, and routes messages to the Kin.
+- **Inbound:** Slack sends events to Hivekeep's webhook endpoint. The adapter verifies the request signature (v0), handles URL verification challenges, and routes messages to the Agent.
 - **Outbound:** Messages are sent via `chat.postMessage`. Long messages (>4,000 chars) are split automatically. Files are uploaded via `files.upload`.
 
 ## Features

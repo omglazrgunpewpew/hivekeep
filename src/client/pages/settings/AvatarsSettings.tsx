@@ -74,7 +74,7 @@ export function AvatarsSettings() {
 
   const fetchConfig = async () => {
     try {
-      const cfg = await api.get<AvatarConfig>('/kins/avatar-config')
+      const cfg = await api.get<AvatarConfig>('/agents/avatar-config')
       setStyle(cfg.style)
       setInitialStyle(cfg.style)
       setSubject(cfg.subject)
@@ -220,7 +220,7 @@ export function AvatarsSettings() {
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:gap-4">
           <Avatar className="size-20 rounded-lg ring-1 ring-border">
             <AvatarImage
-              src={`/api/kins/avatar-base/image?v=${baseVersion}`}
+              src={`/api/agents/avatar-base/image?v=${baseVersion}`}
               alt={t('settings.avatars.base.title')}
               className="object-cover"
             />

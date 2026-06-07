@@ -2,7 +2,7 @@
 /**
  * Avatar: renders a generated avatar image when `avatar` is set (path under /avatars/),
  * otherwise a themed placeholder robot. Drop real images into public/avatars/ and point
- * each kins.json entry's `avatar` at them; the placeholder disappears automatically.
+ * each agents.json entry's `avatar` at them; the placeholder disappears automatically.
  */
 interface Props { name?: string; avatar?: string | null; size?: number; hue?: number; }
 const { name = '', avatar = null, size = 46, hue = 305 } = Astro.props;

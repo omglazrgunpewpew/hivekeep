@@ -1,8 +1,8 @@
 /**
- * Diagnose why compacting is leaving a Kin much heavier than expected.
+ * Diagnose why compacting is leaving a Agent much heavier than expected.
  *
  * Usage on prod:
- *   bun run scripts/diag-compacting.ts <kin-slug-or-id>
+ *   bun run scripts/diag-compacting.ts <agent-slug-or-id>
  *
  * Decomposes the post-compact context into:
  *   - System prompt + tools + memories (stuff that compacting can't touch)
@@ -15,7 +15,7 @@ import { resolve } from 'path'
 
 const arg = process.argv[2]
 if (!arg) {
-  console.error('Usage: bun run scripts/diag-compacting.ts <kin-slug-or-id>')
+  console.error('Usage: bun run scripts/diag-compacting.ts <agent-slug-or-id>')
   process.exit(1)
 }
 
@@ -27,32 +27,32 @@ const db = new Database(DB_PATH, { readonly: true })
 // but adds startup cost — for an order-of-magnitude diagnostic chars/4 is fine)
 const tok = (s: string | null | undefined) => s ? Math.ceil(s.length / 4) : 0
 
-// Resolve kin
-const kin = db.query<{ id: string; slug: string; name: string; model: string; compacting_config: string | null; tool_config: string | null }, string>(
-  `SELECT id, slug, name, model, compacting_config, tool_config FROM kins WHERE id = ? OR slug = ?`,
+// Resolve agent
+const agent = db.query<{ id: string; slug: string; name: string; model: string; compacting_config: string | null; tool_config: string | null }, string>(
+  `SELECT id, slug, name, model, compacting_config, tool_config FROM agents WHERE id = ? OR slug = ?`,
 ).all(arg, arg)[0]
 
-if (!kin) {
-  console.error(`No kin found for "${arg}"`)
+if (!agent) {
+  console.error(`No agent found for "${arg}"`)
   process.exit(1)
 }
 
-console.log(`\n═══ Compacting diagnostic for ${kin.name} (${kin.slug}) ═══`)
-console.log(`Kin ID: ${kin.id}`)
-console.log(`Model:  ${kin.model}`)
+console.log(`\n═══ Compacting diagnostic for ${agent.name} (${agent.slug}) ═══`)
+console.log(`Agent ID: ${agent.id}`)
+console.log(`Model:  ${agent.model}`)
 
-// Per-Kin compacting config (overrides global)
-const compactingConfig = kin.compacting_config ? JSON.parse(kin.compacting_config) : {}
-console.log(`\n--- Compacting config (per-Kin overrides) ---`)
+// Per-Agent compacting config (overrides global)
+const compactingConfig = agent.compacting_config ? JSON.parse(agent.compacting_config) : {}
+console.log(`\n--- Compacting config (per-Agent overrides) ---`)
 console.log(JSON.stringify(compactingConfig, null, 2))
 
 // Active summaries
 const summaries = db.query<{ id: string; summary: string; first_message_at: number; last_message_at: number; message_count: number; depth: number; created_at: number }, string>(
   `SELECT id, summary, first_message_at, last_message_at, message_count, depth, created_at
    FROM compacting_summaries
-   WHERE kin_id = ? AND is_in_context = 1
+   WHERE agent_id = ? AND is_in_context = 1
    ORDER BY last_message_at ASC`,
-).all(kin.id)
+).all(agent.id)
 
 console.log(`\n--- Active summaries (${summaries.length}) ---`)
 let totalSummaryTokens = 0
@@ -71,13 +71,13 @@ console.log(`\nCutoff timestamp: ${cutoff ? new Date(cutoff).toISOString() : '(n
 const recentMsgs = db.query<{ id: string; role: string; content: string | null; tool_calls: string | null; created_at: number; source_type: string | null }, [string, number]>(
   `SELECT id, role, content, tool_calls, created_at, source_type
    FROM messages
-   WHERE kin_id = ?
+   WHERE agent_id = ?
      AND task_id IS NULL
      AND session_id IS NULL
      AND source_type != 'compacting'
      AND (created_at > ? OR ? = 0)
    ORDER BY created_at ASC`,
-).all(kin.id, cutoff ?? 0, cutoff ? 1 : 0)
+).all(agent.id, cutoff ?? 0, cutoff ? 1 : 0)
 
 console.log(`\n--- Non-compacted messages (${recentMsgs.length}) ---`)
 let totalMsgTokens = 0
@@ -115,7 +115,7 @@ for (const b of buckets) {
 // Cached context usage (what the navbar shows)
 const usage = db.query<{ value: string }, string>(
   `SELECT value FROM app_settings WHERE key = ?`,
-).all(`context_usage:${kin.id}`)[0]
+).all(`context_usage:${agent.id}`)[0]
 if (usage) {
   const parsed = JSON.parse(usage.value)
   console.log(`\n--- Cached context usage (navbar source) ---`)
@@ -127,7 +127,7 @@ if (usage) {
 }
 
 // Memories count (rough indicator)
-const memCount = db.query<{ n: number }, string>(`SELECT count(*) AS n FROM memories WHERE kin_id = ?`).all(kin.id)[0]?.n ?? 0
+const memCount = db.query<{ n: number }, string>(`SELECT count(*) AS n FROM memories WHERE agent_id = ?`).all(agent.id)[0]?.n ?? 0
 console.log(`\n--- Memories ---`)
 console.log(`  Total: ${memCount}`)
 

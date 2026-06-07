@@ -19,8 +19,8 @@ import { NotificationChannelFormDialog } from './NotificationChannelFormDialog'
 import type { NotificationType, NotificationChannelSummary } from '@/shared/types'
 
 const NOTIFICATION_TYPE_ICONS: Record<string, React.ElementType> = {
-  'kin:alert': Bell,
-  'kin:error': AlertTriangle,
+  'agent:alert': Bell,
+  'agent:error': AlertTriangle,
   'prompt:pending': MessageCircle,
   'cron:pending-approval': Clock,
   'mcp:pending-approval': ShieldAlert,

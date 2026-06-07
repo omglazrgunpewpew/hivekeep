@@ -80,8 +80,8 @@ function cleanupEmitter(appId: string): void {
 export interface MiniAppBackendContext {
   /** App ID */
   appId: string
-  /** Kin ID that owns this app */
-  kinId: string
+  /** Agent ID that owns this app */
+  agentId: string
   /** App name */
   appName: string
   /** Hono constructor for creating routes */
@@ -131,13 +131,13 @@ export function invalidateBackend(appId: string): void {
 
 // ─── Build context ──────────────────────────────────────────────────────────
 
-function buildContext(appId: string, kinId: string, appName: string): MiniAppBackendContext {
+function buildContext(appId: string, agentId: string, appName: string): MiniAppBackendContext {
   const appLog = createLogger(`mini-app:${appId.slice(0, 8)}`)
   const emitter = getAppEmitter(appId)
 
   return {
     appId,
-    kinId,
+    agentId,
     appName,
     Hono,
     storage: {
@@ -178,7 +178,7 @@ async function loadBackend(appId: string): Promise<Hono | null> {
     return cached.handler
   }
 
-  const dir = getAppDir(app.kinId, appId)
+  const dir = getAppDir(app.agentId, appId)
   const serverJsPath = resolve(join(dir, '_server.js'))
   const serverTsPath = resolve(join(dir, '_server.ts'))
 
@@ -199,7 +199,7 @@ async function loadBackend(appId: string): Promise<Hono | null> {
       return null
     }
 
-    const ctx = buildContext(appId, app.kinId, app.name)
+    const ctx = buildContext(appId, app.agentId, app.name)
     const handler = factory(ctx)
 
     if (!handler || typeof handler.fetch !== 'function') {

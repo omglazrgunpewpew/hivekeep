@@ -13,11 +13,11 @@ import { TicketMentionPopover, TICKET_MENTION_MAX_VISIBLE } from '@/client/compo
 import { useTicketSearch, type TicketSearchHit } from '@/client/hooks/useTicketSearch'
 import { getCaretCoordinates } from '@/client/lib/getCaretCoordinates'
 import { PROJECT_SLUG_REGEX } from '@/shared/constants'
-import type { MentionableUser, MentionableKin } from '@/client/hooks/useMentionables'
+import type { MentionableUser, MentionableAgent } from '@/client/hooks/useMentionables'
 import type { PendingFile } from '@/client/hooks/useFileUpload'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ThinkingEffortPicker } from '@/client/components/chat/ThinkingEffortPicker'
-import type { KinThinkingEffort } from '@/shared/types'
+import type { AgentThinkingEffort } from '@/shared/types'
 
 export interface MessageInputHandle {
   focus: () => void
@@ -27,7 +27,7 @@ interface MessageInputProps {
   onSend: (content: string, fileIds?: string[]) => void
   onStop?: () => void
   isStreaming?: boolean
-  /** Kin is processing (dequeued) but may not have started streaming tokens yet */
+  /** Agent is processing (dequeued) but may not have started streaming tokens yet */
   isProcessing?: boolean
   disabled?: boolean
   disabledReason?: string
@@ -47,12 +47,12 @@ interface MessageInputProps {
   onInject?: (content: string) => void
   /** Handle a slash command (name without /, optional arg) */
   onCommand?: (command: string, arg?: string) => void
-  /** Kin ID for input history (Up/Down arrow to cycle through sent messages) */
-  kinId?: string
+  /** Agent ID for input history (Up/Down arrow to cycle through sent messages) */
+  agentId?: string
   /** Users available for @mention autocomplete */
   mentionableUsers?: MentionableUser[]
-  /** Kins available for @mention autocomplete */
-  mentionableKins?: MentionableKin[]
+  /** Agents available for @mention autocomplete */
+  mentionableAgents?: MentionableAgent[]
   /** Active project UUID for the `#` ticket mention autocomplete. When null,
    *  bare `#N` searches return nothing — the user must use a `slug#` prefix. */
   activeProjectId?: string | null
@@ -71,9 +71,9 @@ interface MessageInputProps {
   /** Whether extended thinking is enabled. */
   thinkingEnabled?: boolean
   /** Current thinking effort level. */
-  thinkingEffort?: KinThinkingEffort | null
+  thinkingEffort?: AgentThinkingEffort | null
   /** Change thinking enabled/effort. When omitted the effort picker is hidden. */
-  onChangeThinking?: (next: { enabled: boolean; effort: KinThinkingEffort | null }) => void
+  onChangeThinking?: (next: { enabled: boolean; effort: AgentThinkingEffort | null }) => void
 }
 
 export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProps>(function MessageInput({
@@ -91,9 +91,9 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
   onRemoveFile,
   onInject,
   onCommand,
-  kinId,
+  agentId,
   mentionableUsers,
-  mentionableKins,
+  mentionableAgents,
   activeProjectId,
   activeProjectSlug,
   llmModels,
@@ -115,7 +115,7 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
   const [mentionStartIndex, setMentionStartIndex] = useState(0)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
   const [mentionPosition, setMentionPosition] = useState<{ top: number; left: number }>({ top: 8, left: 0 })
-  const isMentionOpen = mentionQuery !== null && (mentionableUsers?.length || mentionableKins?.length)
+  const isMentionOpen = mentionQuery !== null && (mentionableUsers?.length || mentionableAgents?.length)
 
   // Slash command autocomplete state
   const [commandQuery, setCommandQuery] = useState<string | null>(null)
@@ -156,7 +156,7 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
     focus: () => textareaRef.current?.focus(),
   }))
 
-  const history = useInputHistory(kinId ?? '__default__')
+  const history = useInputHistory(agentId ?? '__default__')
 
   /** Detect @mention trigger from the current cursor position */
   const detectMention = useCallback((text: string, cursorPos: number) => {
@@ -434,8 +434,8 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
     }
 
     // Mention popover keyboard navigation
-    if (isMentionOpen && mentionableUsers && mentionableKins) {
-      const count = getMentionItemCount(mentionQuery!, mentionableUsers, mentionableKins)
+    if (isMentionOpen && mentionableUsers && mentionableAgents) {
+      const count = getMentionItemCount(mentionQuery!, mentionableUsers, mentionableAgents)
       if (count > 0) {
         if (e.key === 'ArrowDown') {
           e.preventDefault()
@@ -449,7 +449,7 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
         }
         if (e.key === 'Enter' || e.key === 'Tab') {
           e.preventDefault()
-          const item = getMentionItemAt(mentionSelectedIndex, mentionQuery!, mentionableUsers, mentionableKins)
+          const item = getMentionItemAt(mentionSelectedIndex, mentionQuery!, mentionableUsers, mentionableAgents)
           if (item) handleMentionSelect(item)
           return
         }
@@ -694,11 +694,11 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
           />
 
           {/* @mention autocomplete popover */}
-          {isMentionOpen && mentionableUsers && mentionableKins && (
+          {isMentionOpen && mentionableUsers && mentionableAgents && (
             <MentionPopover
               query={mentionQuery!}
               users={mentionableUsers}
-              kins={mentionableKins}
+              agents={mentionableAgents}
               selectedIndex={mentionSelectedIndex}
               position={mentionPosition}
               onSelect={handleMentionSelect}
@@ -793,7 +793,7 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
                   : '\u00A0'}
             </span>
 
-            {/* Send / Stop — one button that morphs with the Kin's state.
+            {/* Send / Stop — one button that morphs with the Agent's state.
                 Follow-ups can still be queued while streaming via the Enter key. */}
             {(isStreaming || isProcessing) ? (
               <Tooltip>

@@ -12,7 +12,7 @@ interface ThinkingEffortSelectProps {
   value: ThinkingChoice
   onChange: (value: ThinkingChoice) => void
   disabled?: boolean
-  /** Label shown for the `inherit` option. Lets callers say "project/Kin" vs "Kin". */
+  /** Label shown for the `inherit` option. Lets callers say "project/Agent" vs "Agent". */
   inheritLabel: string
   className?: string
 }
@@ -23,7 +23,7 @@ interface ThinkingEffortSelectProps {
  * Mirrors the effort `<Select>` used in project settings, but packaged so the
  * task-start dialogs can drop it in. Defaults caller-side to `'inherit'` so an
  * unset override changes nothing. The `inherit` label is caller-supplied
- * because the fallback source differs (project→Kin for ticket tasks, Kin for
+ * because the fallback source differs (project→Agent for ticket tasks, Agent for
  * orphan tasks).
  */
 export function ThinkingEffortSelect({

@@ -145,7 +145,7 @@ describe('buildSegmentedMessages', () => {
   })
 
   it('skips empty-text-only message as cross-turn anchor (Anthropic rejects cache_control on empty text blocks)', () => {
-    // Reproduces the sub-Kin resume failure after request_input: an assistant
+    // Reproduces the sub-Agent resume failure after request_input: an assistant
     // row with content=[{text: ''}] sat between the original user message
     // and the human-response user message. The natural anchor (idx 1) is
     // empty, so cache_control must walk back to a prior carriable message.

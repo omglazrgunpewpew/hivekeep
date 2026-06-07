@@ -41,12 +41,12 @@ describe('getMaxToolsForProvider', () => {
   })
 
   it('falls back to the conservative default for an unknown provider type', () => {
-    // 128 matches DEFAULT_MAX_LLM_TOOLS in kin-engine.ts. Bumping that
+    // 128 matches DEFAULT_MAX_LLM_TOOLS in agent-engine.ts. Bumping that
     // constant requires bumping this assertion in lockstep.
     expect(getMaxToolsForProvider('plugin:made-up-vendor')).toBe(128)
   })
 
-  it('falls back when providerType is null (no Kin model selected yet)', () => {
+  it('falls back when providerType is null (no Agent model selected yet)', () => {
     expect(getMaxToolsForProvider(null)).toBe(128)
   })
 })

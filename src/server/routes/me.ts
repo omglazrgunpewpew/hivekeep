@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { userProfiles, user } from '@/server/db/schema'
-import { getUnreadCountsForUser } from '@/server/services/kin-read-state'
+import { getUnreadCountsForUser } from '@/server/services/agent-read-state'
 import { THEME_MODES, CONTRAST_MODES, PALETTE_IDS } from '@/shared/constants'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
@@ -26,7 +26,7 @@ meRoutes.get('/', async (c) => {
       language: userProfiles.language,
       role: userProfiles.role,
       avatarUrl: user.image,
-      kinOrder: userProfiles.kinOrder,
+      agentOrder: userProfiles.agentOrder,
       cronOrder: userProfiles.cronOrder,
       onboardingModalDismissed: userProfiles.onboardingModalDismissed,
       theme: userProfiles.theme,
@@ -99,11 +99,11 @@ meRoutes.patch('/', async (c) => {
   if (body.contrastMode !== undefined && body.contrastMode !== null) {
     if (!(CONTRAST_MODES as readonly string[]).includes(body.contrastMode)) errors.push(`contrastMode must be one of: ${CONTRAST_MODES.join(', ')}`)
   }
-  if (body.kinOrder !== undefined) {
-    if (!Array.isArray(body.kinOrder) || !body.kinOrder.every((id: unknown) => typeof id === 'string')) {
-      errors.push('kinOrder must be an array of strings')
-    } else if (body.kinOrder.length > 200) {
-      errors.push('kinOrder exceeds maximum length')
+  if (body.agentOrder !== undefined) {
+    if (!Array.isArray(body.agentOrder) || !body.agentOrder.every((id: unknown) => typeof id === 'string')) {
+      errors.push('agentOrder must be an array of strings')
+    } else if (body.agentOrder.length > 200) {
+      errors.push('agentOrder exceeds maximum length')
     }
   }
   if (body.cronOrder !== undefined) {
@@ -126,7 +126,7 @@ meRoutes.patch('/', async (c) => {
   if (body.lastName !== undefined) updates.lastName = body.lastName
   if (body.pseudonym !== undefined) updates.pseudonym = body.pseudonym
   if (body.language !== undefined) updates.language = body.language
-  if (body.kinOrder !== undefined) updates.kinOrder = body.kinOrder
+  if (body.agentOrder !== undefined) updates.agentOrder = body.agentOrder
   if (body.cronOrder !== undefined) updates.cronOrder = body.cronOrder
   if (body.onboardingModalDismissed !== undefined) updates.onboardingModalDismissed = body.onboardingModalDismissed
   if (body.theme !== undefined) updates.theme = body.theme
@@ -170,14 +170,14 @@ meRoutes.patch('/', async (c) => {
 
   log.debug({ userId: sessionUser.id, updatedFields: Object.keys(updates) }, 'Profile updated')
 
-  // Notify all of this user's connected tabs/devices when kinOrder or cronOrder
+  // Notify all of this user's connected tabs/devices when agentOrder or cronOrder
   // changes, so a reorder in one tab is immediately reflected in others without
   // requiring a manual refresh.
-  if (updates.kinOrder !== undefined || updates.cronOrder !== undefined) {
+  if (updates.agentOrder !== undefined || updates.cronOrder !== undefined) {
     sseManager.sendToUser(sessionUser.id, {
       type: 'profile:updated',
       data: {
-        ...(updates.kinOrder !== undefined && { kinOrder: updates.kinOrder }),
+        ...(updates.agentOrder !== undefined && { agentOrder: updates.agentOrder }),
         ...(updates.cronOrder !== undefined && { cronOrder: updates.cronOrder }),
       },
     })
@@ -194,7 +194,7 @@ meRoutes.patch('/', async (c) => {
       language: userProfiles.language,
       role: userProfiles.role,
       avatarUrl: user.image,
-      kinOrder: userProfiles.kinOrder,
+      agentOrder: userProfiles.agentOrder,
       cronOrder: userProfiles.cronOrder,
       theme: userProfiles.theme,
       palette: userProfiles.palette,
@@ -269,7 +269,7 @@ meRoutes.post('/avatar', async (c) => {
   return c.json({ avatarUrl })
 })
 
-// GET /api/me/unread-counts — per-Kin unread assistant message counts for the current user
+// GET /api/me/unread-counts — per-Agent unread assistant message counts for the current user
 meRoutes.get('/unread-counts', async (c) => {
   const sessionUser = c.get('user') as { id: string }
   const counts = getUnreadCountsForUser(sessionUser.id)

@@ -7,7 +7,7 @@ import { FormField } from '@/client/components/common/FormField'
 import { Label } from '@/client/components/ui/label'
 import { Switch } from '@/client/components/ui/switch'
 import { InfoTip } from '@/client/components/common/InfoTip'
-import { KinSelector } from '@/client/components/common/KinSelector'
+import { AgentSelector } from '@/client/components/common/AgentSelector'
 import { api, getErrorMessage } from '@/client/lib/api'
 import type { StoredFileData } from '@/client/components/file-storage/FileStorageCard'
 
@@ -16,7 +16,7 @@ interface FileStorageFormDialogProps {
   onOpenChange: (open: boolean) => void
   onSaved: () => void
   file?: StoredFileData | null
-  kins: { id: string; name: string }[]
+  agents: { id: string; name: string }[]
 }
 
 export function FileStorageFormDialog({
@@ -24,7 +24,7 @@ export function FileStorageFormDialog({
   onOpenChange,
   onSaved,
   file,
-  kins,
+  agents,
 }: FileStorageFormDialogProps) {
   const { t } = useTranslation()
   const isEditing = !!file
@@ -34,7 +34,7 @@ export function FileStorageFormDialog({
   const [error, setError] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [kinId, setKinId] = useState('')
+  const [agentId, setAgentId] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [password, setPassword] = useState('')
   const [expiresIn, setExpiresIn] = useState('')
@@ -45,7 +45,7 @@ export function FileStorageFormDialog({
     if (open && file) {
       setName(file.name)
       setDescription(file.description ?? '')
-      setKinId(file.kinId)
+      setAgentId(file.agentId)
       setIsPublic(file.isPublic)
       setPassword('')
       setExpiresIn('')
@@ -55,7 +55,7 @@ export function FileStorageFormDialog({
     } else if (open) {
       setName('')
       setDescription('')
-      setKinId(kins[0]?.id ?? '')
+      setAgentId(agents[0]?.id ?? '')
       setIsPublic(true)
       setPassword('')
       setExpiresIn('')
@@ -63,7 +63,7 @@ export function FileStorageFormDialog({
       setSelectedFile(null)
       setError('')
     }
-  }, [open, file, kins])
+  }, [open, file, agents])
 
   const handleClose = () => {
     onOpenChange(false)
@@ -94,7 +94,7 @@ export function FileStorageFormDialog({
 
         const formData = new FormData()
         formData.append('file', selectedFile)
-        formData.append('kinId', kinId)
+        formData.append('agentId', agentId)
         formData.append('name', name || selectedFile.name)
         if (description) formData.append('description', description)
         formData.append('isPublic', String(isPublic))
@@ -122,7 +122,7 @@ export function FileStorageFormDialog({
     }
   }
 
-  const canSave = isEditing ? true : !!selectedFile && !!kinId
+  const canSave = isEditing ? true : !!selectedFile && !!agentId
 
   return (
     <FormDialog
@@ -153,14 +153,14 @@ export function FileStorageFormDialog({
           </FormField>
 
           <FormField
-            label={t('settings.files.kin')}
-            htmlFor="file-storage-kin"
-            tip={t('settings.files.kinTip')}
+            label={t('settings.files.agent')}
+            htmlFor="file-storage-agent"
+            tip={t('settings.files.agentTip')}
           >
-            <KinSelector
-              value={kinId}
-              onValueChange={setKinId}
-              kins={kins}
+            <AgentSelector
+              value={agentId}
+              onValueChange={setAgentId}
+              agents={agents}
             />
           </FormField>
         </>

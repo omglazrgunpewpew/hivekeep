@@ -143,30 +143,30 @@ export function useTheme() {
   return theme
 }
 
-// ─── useKin ─────────────────────────────────────────────────────────────────
+// ─── useAgent ─────────────────────────────────────────────────────────────────
 
 /**
- * Reactive access to the parent Kin info (id, name, avatarUrl).
- * Waits for Hivekeep.ready() then returns Hivekeep.kin.
+ * Reactive access to the parent Agent info (id, name, avatarUrl).
+ * Waits for Hivekeep.ready() then returns Hivekeep.agent.
  *
- * @returns {{ kin: object|null, loading: boolean }}
+ * @returns {{ agent: object|null, loading: boolean }}
  */
-export function useKin() {
-  const [kin, setKin] = useState(null)
+export function useAgent() {
+  const [agent, setAgent] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
     window.Hivekeep.ready().then(() => {
       if (mounted) {
-        setKin(window.Hivekeep.kin)
+        setAgent(window.Hivekeep.agent)
         setLoading(false)
       }
     })
     return () => { mounted = false }
   }, [])
 
-  return { kin, loading }
+  return { agent, loading }
 }
 
 // ─── useUser ────────────────────────────────────────────────────────────────
@@ -398,7 +398,7 @@ export function useForm(initialValues, validate) {
 // ─── useMemory ──────────────────────────────────────────────────────────────
 
 /**
- * Hook for searching and storing Kin memories from within a mini-app.
+ * Hook for searching and storing Agent memories from within a mini-app.
  * Wraps Hivekeep.memory.search() and Hivekeep.memory.store().
  *
  * @returns {{ search: (query, limit?) => Promise<Array>, store: (content, options?) => Promise<object>, results: Array, loading: boolean }}
@@ -441,7 +441,7 @@ export function useMemory() {
 // ─── useConversation ────────────────────────────────────────────────────────
 
 /**
- * Hook for interacting with the Kin's conversation.
+ * Hook for interacting with the Agent's conversation.
  * Wraps Hivekeep.conversation.history() and Hivekeep.conversation.send().
  *
  * @returns {{ history: (limit?) => Promise<Array>, send: (text, options?) => Promise, messages: Array, loading: boolean }}
@@ -514,7 +514,7 @@ export function useShortcut(key, callback) {
 // ─── useApps ────────────────────────────────────────────────────────────────
 
 /**
- * List other mini-apps from the same Kin.
+ * List other mini-apps from the same Agent.
  * Fetches on mount and returns the list reactively.
  *
  * @returns {{ apps: Array, loading: boolean, refresh: () => Promise<Array> }}
@@ -1278,7 +1278,7 @@ export const storage = window.Hivekeep.storage
 export const api = window.Hivekeep.api
 export const http = window.Hivekeep.http
 export const events = window.Hivekeep.events
-export const kin = window.Hivekeep.kin
+export const agent = window.Hivekeep.agent
 export const user = window.Hivekeep.user
 export const memory = window.Hivekeep.memory
 export const conversation = window.Hivekeep.conversation

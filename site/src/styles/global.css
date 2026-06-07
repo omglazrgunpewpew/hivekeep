@@ -82,7 +82,7 @@ hr.rule{border:0;border-top:1px solid var(--line);margin:0;}
 .colophon .row .v .amb{color:var(--peach);}
 .cta{display:flex;align-items:center;gap:20px;margin-top:24px;flex-wrap:wrap;}
 
-/* kins panel (product-like) */
+/* agents panel (product-like) */
 .panel{border-radius:var(--r-card);box-shadow:var(--shadow);overflow:hidden;position:relative;}
 .panel::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);z-index:2;}
 .panel .ph-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line);}

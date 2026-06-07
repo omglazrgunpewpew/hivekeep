@@ -92,7 +92,7 @@ Use \`get_mini_app_templates\` to see built-in templates (dashboard, todo-list, 
 ## Core
 - \`useHivekeep()\` → \`{ app, ready, theme, locale, isFullPage, api }\` — MUST call at root, wait for \`ready\`
 - \`useTheme()\` → \`{ mode, palette }\` — lighter alternative when you only need theme
-- \`useKin()\` → \`{ kin, loading }\` — parent Kin info (id, name, avatarUrl)
+- \`useAgent()\` → \`{ agent, loading }\` — parent Agent info (id, name, avatarUrl)
 - \`useUser()\` → \`{ user, loading }\` — current user info
 
 ## Data & Storage
@@ -103,8 +103,8 @@ Use \`get_mini_app_templates\` to see built-in templates (dashboard, todo-list, 
 - \`useAsync(asyncFn)\` → \`{ run, data, loading, error, reset }\` — wrap any async function
 
 ## Memory & Conversation
-- \`useMemory()\` → \`{ search, store, results, loading }\` — search/store Kin memories
-- \`useConversation()\` → \`{ history, send, messages, loading }\` — interact with Kin conversation
+- \`useMemory()\` → \`{ search, store, results, loading }\` — search/store Agent memories
+- \`useConversation()\` → \`{ history, send, messages, loading }\` — interact with Agent conversation
 
 ## UI & Layout
 - \`useForm(initialValues, validate?)\` → form state management with validation
@@ -197,11 +197,11 @@ Direct SDK exports from @hivekeep/react (use hooks when possible):
 - \`download(filename, content, mimeType?)\`
 - \`shortcut(key, callback)\` — keyboard shortcuts
 - \`apps.list()\`, \`apps.get(id)\` — inter-app discovery
-- \`Hivekeep.sendMessage(text, options?)\` — send message to Kin conversation
+- \`Hivekeep.sendMessage(text, options?)\` — send message to Agent conversation
 - \`Hivekeep.share(targetSlug, data)\` — share data with another app
 - \`Hivekeep.resize(width?, height?)\` — request panel resize
 - \`Hivekeep.notification(title, body?)\` — browser notification
-- \`Hivekeep.memory.search/store\` — Kin memory access
+- \`Hivekeep.memory.search/store\` — Agent memory access
 - \`Hivekeep.conversation.history/send\` — conversation access`,
   },
 
@@ -224,7 +224,7 @@ export default function(ctx) {
 - \`ctx.Hono\` — Hono constructor
 - \`ctx.storage\` — KV storage (.get/.set/.delete/.list/.clear)
 - \`ctx.events\` — SSE (.emit(event, data))
-- \`ctx.appId\`, \`ctx.kinId\`, \`ctx.appName\`, \`ctx.log\`
+- \`ctx.appId\`, \`ctx.agentId\`, \`ctx.appName\`, \`ctx.log\`
 
 ## Routes
 Served at \`/api/mini-apps/<appId>/api/*\`

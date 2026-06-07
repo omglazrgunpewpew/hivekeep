@@ -14,14 +14,14 @@
  *   - empty query returns the most recent tickets (limit honoured)
  */
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
-import { fullMockSchema, fullMockDrizzleOrm } from '../../test-helpers'
+import { fullMockSchema, fullMockDrizzleOrm, fullMockConfig } from '../../test-helpers'
 
 mock.module('@/server/logger', () => ({
   createLogger: () => ({ info: () => {}, warn: () => {}, debug: () => {}, error: () => {} }),
 }))
 
 mock.module('@/server/sse/index', () => ({ sseManager: { broadcast: () => {} } }))
-mock.module('@/server/config', () => ({ config: {} }))
+mock.module('@/server/config', () => ({ config: { ...fullMockConfig } }))
 mock.module('@/server/services/tasks', () => ({ spawnTask: async () => ({ id: 'stub' }) }))
 
 interface FakeProjectRow { id: string; slug: string | null; title: string }
@@ -65,7 +65,7 @@ mock.module('@/server/db/schema', () => ({
   ticketTags: { __name: 'ticketTags' as const, ticketId: 'ticketId', tagId: 'tagId' },
   projectTags: { __name: 'projectTags' as const, id: 'id', projectId: 'projectId', label: 'label', color: 'color' },
   tasks: { __name: 'tasks' as const },
-  kins: { __name: 'kins' as const },
+  agents: { __name: 'agents' as const },
   user: { __name: 'user' as const },
   userProfiles: { __name: 'userProfiles' as const },
 }))

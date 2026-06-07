@@ -1,6 +1,6 @@
 /**
  * Conversion helpers between the Vercel AI SDK shapes still used at the
- * boundary of kin-engine and the hivekeep `LLMProvider` abstraction.
+ * boundary of agent-engine and the hivekeep `LLMProvider` abstraction.
  *
  * These helpers exist because:
  *   - Tool definitions still use the Vercel `tool({...})` shape — they're
@@ -137,7 +137,7 @@ export function modelMessagesToHivekeep(messages: ModelMessage[]): HivekeepMessa
  * Vercel SDK (`{ type: 'json', value }`, `{ type: 'text', value/text }`) and
  * falls back to `JSON.stringify` for arbitrary objects.
  *
- * Exported for the in-loop appends in kin-engine / tasks where freshly
+ * Exported for the in-loop appends in agent-engine / tasks where freshly
  * executed tool results are appended directly to a `HivekeepMessage[]` history.
  */
 export function stringifyToolResultValue(output: unknown): string {

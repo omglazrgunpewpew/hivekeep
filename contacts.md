@@ -1,12 +1,12 @@
 # Hivekeep — Address books (external contacts)
 
 Read-only access to **external** address books (iCloud, Google, Microsoft, generic
-CardDAV) so Kins can look up a contact — typically a phone number to hand to
+CardDAV) so Agents can look up a contact — typically a phone number to hand to
 `send_channel_message` (e.g. an SMS via the Twilio channel). These contacts are
 **never** copied into Hivekeep's own contacts CRM; they are fetched on demand.
 
 > Not to be confused with Hivekeep's internal contacts (`contact-tools.ts`,
-> `create_contact`/`get_contact`/…) which are the Kin's own writable address
+> `create_contact`/`get_contact`/…) which are the Agent's own writable address
 > book with per-channel platform links. The address-book feature is a separate,
 > read-only, provider-backed source.
 
@@ -38,8 +38,8 @@ Registry: `src/server/contacts/registry.ts`. Built-ins register at boot via
 
 A contacts account is a row in the `providers` table with capability
 `contacts` (no new table). `config_encrypted` holds
-`{ account_label, credentials, allowed_kin_ids }`. Resolution mirrors email:
-`resolveContactsProvider({ slug?, kinId })` → explicit slug → first valid;
+`{ account_label, credentials, allowed_agent_ids }`. Resolution mirrors email:
+`resolveContactsProvider({ slug?, agentId })` → explicit slug → first valid;
 enforces the per-account allow-list; spreads `credentials` into the
 ProviderConfig. A single connected identity (e.g. iCloud) could later carry
 `['email','contacts','calendar']` capabilities at once.
@@ -64,14 +64,14 @@ configSchema fields via `provider.authenticate(config)` (a live CardDAV connect)
 providers (Google/Microsoft) would add a `/connect/:type` flow later, reusing the
 generic OAuth2 host code.
 
-## Kin tools + toolbox
+## Agent tools + toolbox
 
 Native tools (`src/server/tools/address-book-tools.ts`), gated by the built-in
 `address-book` toolbox. Deliberately named apart from the internal contacts CRM.
 
 | Tool | Flags | |
 |---|---|---|
-| `list_address_books` | readOnly, concurrencySafe | accounts this Kin may use |
+| `list_address_books` | readOnly, concurrencySafe | accounts this Agent may use |
 | `list_address_book_contacts` | readOnly, concurrencySafe | page an address book |
 | `get_address_book_contact` | readOnly, concurrencySafe | full card by id |
 | `search_address_book` | readOnly, concurrencySafe | name / org / email / phone |

@@ -21,7 +21,7 @@
  *     (the official CLI only opts into this on the one-shot key verification
  *     path; sending it on every request was a strong "not Claude Code" signal)
  *   - `metadata.user_id` is injected on each request body (the OAuth fetch
- *     wrapper in `kin-engine.ts` calls `getOAuthUserId()` for this)
+ *     wrapper in `agent-engine.ts` calls `getOAuthUserId()` for this)
  *
  * Anthropic actively iterates on detection — these mitigations are best-effort
  * and may need to be refreshed.
@@ -185,7 +185,7 @@ async function doRefresh(credsPath: string): Promise<string> {
 
 /**
  * Get a fresh OAuth access token for the Anthropic API.
- * Useful for external callers (e.g. the Kin engine) that need
+ * Useful for external callers (e.g. the Agent engine) that need
  * the token to pass to the Vercel AI SDK.
  */
 export async function getOAuthAccessToken(overridePath?: string): Promise<string> {

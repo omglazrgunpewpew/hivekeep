@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
-import { userProfiles, kins } from '@/server/db/schema'
+import { userProfiles, agents } from '@/server/db/schema'
 import {
   getGlobalPrompt,
   setGlobalPrompt,
@@ -65,7 +65,7 @@ const settingsRoutes = new Hono<{ Variables: AppVariables }>()
 /**
  * Notify clients that a default-model setting changed.
  *
- * The setup checklist + KinFormModal pre-fill rely on
+ * The setup checklist + AgentFormModal pre-fill rely on
  * `/settings/default-models`, but there was no event to invalidate
  * them — adding a default LLM updated the navbar popover (popovers
  * remount fresh on open) but left the inline checklist stale. One
@@ -193,7 +193,7 @@ settingsRoutes.post('/avatar-base/generate', async (c) => {
     })
     const ext = result.mediaType.includes('webp') ? 'webp' : 'png'
     log.info('Neutral avatar base generated')
-    return c.json({ baseImageUrl: `/api/kins/avatar-base/image?v=${Date.now()}`, ext })
+    return c.json({ baseImageUrl: `/api/agents/avatar-base/image?v=${Date.now()}`, ext })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Base avatar generation failed'
     log.error({ err }, 'Failed to generate neutral avatar base')
@@ -217,14 +217,14 @@ settingsRoutes.post('/avatar-base/upload', async (c) => {
   const bytes = Buffer.from(await file.arrayBuffer())
   await setCustomBaseAvatar(bytes, ext)
   log.info({ ext }, 'Custom avatar base uploaded')
-  return c.json({ baseImageUrl: `/api/kins/avatar-base/image?v=${Date.now()}`, hasCustomBase: true })
+  return c.json({ baseImageUrl: `/api/agents/avatar-base/image?v=${Date.now()}`, hasCustomBase: true })
 })
 
 // DELETE /api/settings/avatar-base — drop the custom base, fall back to bundled.
 settingsRoutes.delete('/avatar-base', async (c) => {
   clearCustomBaseAvatar()
   log.info('Custom avatar base cleared')
-  return c.json({ baseImageUrl: `/api/kins/avatar-base/image?v=${Date.now()}`, hasCustomBase: false })
+  return c.json({ baseImageUrl: `/api/agents/avatar-base/image?v=${Date.now()}`, hasCustomBase: false })
 })
 
 // GET /api/settings/models — legacy endpoint (extraction + embedding only)

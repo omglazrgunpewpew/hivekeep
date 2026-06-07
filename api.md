@@ -194,14 +194,14 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 
 ---
 
-## Kins
+## Agents
 
-### `GET /api/kins`
+### `GET /api/agents`
 
 ```typescript
 // Response 200
 {
-  kins: Array<{
+  agents: Array<{
     id: string
     name: string
     role: string
@@ -213,7 +213,7 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 }
 ```
 
-### `GET /api/kins/:id`
+### `GET /api/agents/:id`
 
 ```typescript
 // Response 200
@@ -233,7 +233,7 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 }
 ```
 
-### `POST /api/kins`
+### `POST /api/agents`
 
 ```typescript
 // Request
@@ -248,13 +248,13 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
   avatarPrompt?: string       // si avatar === 'prompt'
 }
 
-// Si avatar === 'upload', utiliser POST /api/kins/:id/avatar après création
+// Si avatar === 'upload', utiliser POST /api/agents/:id/avatar après création
 
 // Response 201
-{ kin: { ...same as GET /api/kins/:id } }
+{ agent: { ...same as GET /api/agents/:id } }
 ```
 
-### `PATCH /api/kins/:id`
+### `PATCH /api/agents/:id`
 
 ```typescript
 // Request (tous optionnels)
@@ -268,17 +268,17 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 }
 
 // Response 200
-{ kin: { ...same shape } }
+{ agent: { ...same shape } }
 ```
 
-### `DELETE /api/kins/:id`
+### `DELETE /api/agents/:id`
 
 ```typescript
 // Response 200
 { success: true }
 ```
 
-### `POST /api/kins/:id/avatar`
+### `POST /api/agents/:id/avatar`
 
 Upload ou génération d'avatar.
 
@@ -291,7 +291,7 @@ Upload ou génération d'avatar.
 { avatarUrl: string }
 ```
 
-### `GET /api/kins/:id/context-preview`
+### `GET /api/agents/:id/context-preview`
 
 Reconstruit et retourne le contexte LLM complet tel qu'il serait envoyé au modèle.
 Utile pour le debugging et la transparence. Accepte des query params optionnels pour les tâches et sessions rapides.
@@ -332,9 +332,9 @@ Utile pour le debugging et la transparence. Accepte des query params optionnels 
 }
 ```
 
-### `PATCH /api/kins/:id/active-project`
+### `PATCH /api/agents/:id/active-project`
 
-Définit le projet actif du Kin. Le contexte du projet sera injecté dans le bloc volatile du prompt système aux tours suivants. Voir `projects.md` § 4.
+Définit le projet actif du Agent. Le contexte du projet sera injecté dans le bloc volatile du prompt système aux tours suivants. Voir `projects.md` § 4.
 
 ```typescript
 // Request
@@ -348,15 +348,15 @@ Définit le projet actif du Kin. Le contexte du projet sera injecté dans le blo
 // 404 — { error: { code: 'KIN_NOT_FOUND', message: '...' } }
 ```
 
-Un event SSE `kin:active-project` est émis à tous les clients connectés (utile pour synchroniser les chips "Projet actif" dans les autres onglets / vues).
+Un event SSE `agent:active-project` est émis à tous les clients connectés (utile pour synchroniser les chips "Projet actif" dans les autres onglets / vues).
 
 ---
 
 ## Messages / Chat
 
-### `POST /api/kins/:id/messages`
+### `POST /api/agents/:id/messages`
 
-Envoie un message a un Kin. Déclenche le traitement et le streaming SSE de la réponse.
+Envoie un message a un Agent. Déclenche le traitement et le streaming SSE de la réponse.
 
 ```typescript
 // Request
@@ -373,11 +373,11 @@ Envoie un message a un Kin. Déclenche le traitement et le streaming SSE de la r
 { messageId: string, queuePosition: number }   // messageId = id du queue item, ≠ PK du message
 ```
 
-> La réponse du Kin arrive via SSE (pas dans cette response HTTP).
+> La réponse du Agent arrive via SSE (pas dans cette response HTTP).
 > Le message utilisateur lui-même est aussi diffusé en temps réel via `chat:message`
 > (sync multi-appareils / multi-membres), avec `clientMessageId` pour la réconciliation.
 
-### `GET /api/kins/:id/messages`
+### `GET /api/agents/:id/messages`
 
 Historique paginé des messages.
 
@@ -390,9 +390,9 @@ Historique paginé des messages.
     id: string
     role: 'user' | 'assistant' | 'system' | 'tool'
     content: string
-    sourceType: 'user' | 'kin' | 'task' | 'cron' | 'system'
+    sourceType: 'user' | 'agent' | 'task' | 'cron' | 'system'
     sourceId: string | null
-    sourceName: string | null   // pseudonym, kin name, task name, cron name
+    sourceName: string | null   // pseudonym, agent name, task name, cron name
     isRedacted: boolean
     tokenUsage: { inputTokens: number, outputTokens: number, totalTokens: number, cacheReadTokens?: number, cacheWriteTokens?: number, reasoningTokens?: number, stepCount?: number } | null
     files: Array<{ id: string, name: string, mimeType: string, url: string }>
@@ -402,9 +402,9 @@ Historique paginé des messages.
 }
 ```
 
-### `POST /api/kins/:id/messages/inject`
+### `POST /api/agents/:id/messages/inject`
 
-Injecte un message dans la conversation en cours. Si le Kin est en train de streamer une réponse, le stream est interrompu (la réponse partielle est sauvegardée) et le message injecté est mis en file d'attente en priorité haute. Utilisé pour la commande `/btw` et la promotion de messages depuis la queue.
+Injecte un message dans la conversation en cours. Si le Agent est en train de streamer une réponse, le stream est interrompu (la réponse partielle est sauvegardée) et le message injecté est mis en file d'attente en priorité haute. Utilisé pour la commande `/btw` et la promotion de messages depuis la queue.
 
 ```typescript
 // Request
@@ -430,14 +430,14 @@ Injecte un message dans la conversation en cours. Si le Kin est en train de stre
 Liste toutes les tâches en cours.
 
 ```typescript
-// Query params : ?status={pending|in_progress|paused|completed|failed|cancelled}&kinId={string}
+// Query params : ?status={pending|in_progress|paused|completed|failed|cancelled}&agentId={string}
 
 // Response 200
 {
   tasks: Array<{
     id: string
-    parentKinId: string
-    parentKinName: string
+    parentAgentId: string
+    parentAgentName: string
     description: string
     status: 'pending' | 'in_progress' | 'paused' | 'completed' | 'failed' | 'cancelled'
     mode: 'await' | 'async'
@@ -586,7 +586,7 @@ Voir `projects.md` pour la spec complète.
 
 ### `DELETE /api/projects/:id`
 
-Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. Les tasks historiques liées voient leur `ticketId` mis à NULL (historique préservé dans les threads des Kins). Les Kins qui avaient ce projet en `activeProjectId` voient leur valeur mise à NULL.
+Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. Les tasks historiques liées voient leur `ticketId` mis à NULL (historique préservé dans les threads des Agents). Les Agents qui avaient ce projet en `activeProjectId` voient leur valeur mise à NULL.
 
 ```typescript
 // Response 200
@@ -680,8 +680,8 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
     tags: Array<{ id: string, label: string, color: string }>
     tasks: Array<{
       id: string
-      parentKinId: string
-      parentKinName: string
+      parentAgentId: string
+      parentAgentName: string
       status: string
       mode: 'await' | 'async'
       createdAt: number
@@ -735,19 +735,19 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
 
 ### `POST /api/tickets/:id/start-task`
 
-Spawn un sub-Kin pour travailler sur le ticket. Le `kinId` du Kin parent doit être passé explicitement (pas de défaut implicite — cf. `projects.md` § 4). **Toujours en mode `await`** : le mode `async` n'est pas autorisé pour les tasks liées à un ticket (sinon le ticket resterait figé sans turn de cloture, cf. `projects.md` § 5).
+Spawn un sub-Agent pour travailler sur le ticket. Le `agentId` du Agent parent doit être passé explicitement (pas de défaut implicite — cf. `projects.md` § 4). **Toujours en mode `await`** : le mode `async` n'est pas autorisé pour les tasks liées à un ticket (sinon le ticket resterait figé sans turn de cloture, cf. `projects.md` § 5).
 
 ```typescript
 // Request
 {
-  kinId: string              // Kin qui spawn la task (= parent_kin_id)
+  agentId: string              // Agent qui spawn la task (= parent_agent_id)
 }
 
 // Response 201
 {
   task: {
     id: string
-    parentKinId: string
+    parentAgentId: string
     ticketId: string
     status: string
     mode: 'await'
@@ -761,7 +761,7 @@ Spawn un sub-Kin pour travailler sur le ticket. Le `kinId` du Kin parent doit ê
 ```
 
 Effets de bord :
-- **Aucun effet sur le ticket** (status / position / tags inchangés — c'est au Kin ou à l'utilisateur de gérer le statut manuellement)
+- **Aucun effet sur le ticket** (status / position / tags inchangés — c'est au Agent ou à l'utilisateur de gérer le statut manuellement)
 - Un event SSE `task:status` est émis pour la nouvelle task
 
 ---
@@ -771,18 +771,18 @@ Effets de bord :
 ### `GET /api/crons`
 
 ```typescript
-// Query params : ?kinId={string}
+// Query params : ?agentId={string}
 
 // Response 200
 {
   crons: Array<{
     id: string
-    kinId: string
-    kinName: string
+    agentId: string
+    agentName: string
     name: string
     schedule: string
     taskDescription: string
-    targetKinId: string | null
+    targetAgentId: string | null
     model: string | null
     toolboxIds: string[]        // IDs de toolboxes; [] = surface native complète ('all')
     isActive: boolean
@@ -798,11 +798,11 @@ Effets de bord :
 ```typescript
 // Request
 {
-  kinId: string
+  agentId: string
   name: string
   schedule: string
   taskDescription: string
-  targetKinId?: string
+  targetAgentId?: string
   model?: string
   toolboxIds?: string[]         // toolset natif des tâches spawnées; omis = 'all'
 }
@@ -819,7 +819,7 @@ Effets de bord :
   name?: string
   schedule?: string
   taskDescription?: string
-  targetKinId?: string
+  targetAgentId?: string
   model?: string
   isActive?: boolean
   toolboxIds?: string[] | null  // [] ou null efface la restriction (retour à 'all')
@@ -838,7 +838,7 @@ Effets de bord :
 
 ### `POST /api/crons/:id/approve`
 
-Approuve un cron créé par un Kin (qui nécessite validation).
+Approuve un cron créé par un Agent (qui nécessite validation).
 
 ```typescript
 // Response 200
@@ -886,7 +886,7 @@ Approuve un cron créé par un Kin (qui nécessite validation).
 
 ## Custom Tools & Tool Domains
 
-Outils custom **globaux** (scripts authored via l'UI ou les Kins) et domaines dynamiques. Voir `idea.md` / `schema.md`.
+Outils custom **globaux** (scripts authored via l'UI ou les Agents) et domaines dynamiques. Voir `idea.md` / `schema.md`.
 
 ### `GET /api/tools/catalog`
 Catalogue agnostique de tous les outils grantables (native / plugin / mcp / custom). Les entrées custom sont globales (`custom_<slug>`, `domain` = leur `domain_slug`, `enabled`).
@@ -974,7 +974,7 @@ Liste les secrets (clés uniquement, jamais les valeurs).
 Upload multipart/form-data.
 
 ```typescript
-// Request: FormData avec champ "file" + "kinId"
+// Request: FormData avec champ "file" + "agentId"
 
 // Response 201
 { file: { id: string, name: string, mimeType: string, size: number, url: string } }
@@ -984,7 +984,7 @@ Upload multipart/form-data.
 
 ## Memories (gestion via UI)
 
-### `GET /api/kins/:id/memories`
+### `GET /api/agents/:id/memories`
 
 ```typescript
 // Query params : ?category={fact|preference|decision|knowledge}&subject={string}&limit={number}
@@ -1003,7 +1003,7 @@ Upload multipart/form-data.
 }
 ```
 
-### `DELETE /api/kins/:id/memories/:memoryId`
+### `DELETE /api/agents/:id/memories/:memoryId`
 
 ```typescript
 // Response 200
@@ -1014,7 +1014,7 @@ Upload multipart/form-data.
 
 ## Compacting (gestion via UI)
 
-### `POST /api/kins/:id/compacting/purge`
+### `POST /api/agents/:id/compacting/purge`
 
 Réinitialise le compacting (supprime le snapshot actif).
 
@@ -1023,7 +1023,7 @@ Réinitialise le compacting (supprime le snapshot actif).
 { success: true }
 ```
 
-### `GET /api/kins/:id/compacting/snapshots`
+### `GET /api/agents/:id/compacting/snapshots`
 
 Liste les snapshots pour le rollback.
 
@@ -1039,7 +1039,7 @@ Liste les snapshots pour le rollback.
 }
 ```
 
-### `POST /api/kins/:id/compacting/rollback`
+### `POST /api/agents/:id/compacting/rollback`
 
 ```typescript
 // Request
@@ -1175,7 +1175,7 @@ Liste des item IDs de la setup checklist que l'utilisateur a explicitement skipp
 { items: string[] }
 ```
 
-Item IDs reconnus côté UI : `add_llm_provider`, `set_default_llm`, `add_embedding_provider`, `set_default_embedding`, `add_image_provider`, `add_search_provider`, `create_first_kin`.
+Item IDs reconnus côté UI : `add_llm_provider`, `set_default_llm`, `add_embedding_provider`, `set_default_embedding`, `add_image_provider`, `add_search_provider`, `create_first_agent`.
 
 ### `POST /api/settings/dismissed-setup-items/:itemId`
 
@@ -1210,7 +1210,7 @@ Liste paginée des enregistrements de consommation LLM.
 
 ```typescript
 // Query params (tous optionnels)
-kinId?: string
+agentId?: string
 providerId?: string
 providerType?: string
 modelId?: string
@@ -1232,7 +1232,7 @@ offset?: number      // default 0
     providerType: string | null
     providerId: string | null
     modelId: string | null
-    kinId: string | null
+    agentId: string | null
     taskId: string | null
     cronId: string | null
     sessionId: string | null
@@ -1255,8 +1255,8 @@ Agrégation de la consommation groupée par une dimension.
 
 ```typescript
 // Query params
-groupBy: 'provider_type' | 'model_id' | 'kin_id' | 'call_site' | 'day'  // obligatoire
-kinId?: string
+groupBy: 'provider_type' | 'model_id' | 'agent_id' | 'call_site' | 'day'  // obligatoire
+agentId?: string
 providerType?: string
 modelId?: string
 from?: number
@@ -1280,41 +1280,41 @@ to?: number
 
 ### `GET /api/sse`
 
-Connexion SSE **globale** (une seule par client). Le serveur multiplex les événements de tous les Kins.
+Connexion SSE **globale** (une seule par client). Le serveur multiplex les événements de tous les Agents.
 
 #### Types d'événements
 
 ```typescript
 // Tokens LLM en streaming
-{ event: 'chat:token', data: { kinId: string, token: string } }
+{ event: 'chat:token', data: { agentId: string, token: string } }
 
 // Réponse LLM terminée
-{ event: 'chat:done', data: { kinId: string, messageId: string, tokenUsage?: { inputTokens: number, outputTokens: number, totalTokens: number } } }
+{ event: 'chat:done', data: { agentId: string, messageId: string, tokenUsage?: { inputTokens: number, outputTokens: number, totalTokens: number } } }
 
 // Nouveau message entrant dans le chat — émis pour TOUTES les sources, y compris
 // les messages utilisateur (sync temps-réel multi-appareils / multi-membres).
 // Pour les messages utilisateur web, `clientMessageId` reprend le token envoyé au
 // POST : le client émetteur réconcilie sa bulle optimiste, les autres l'ajoutent.
 // (Le payload est aplati au niveau racine, pas imbriqué sous `message`.)
-{ event: 'chat:message', data: { kinId: string, id: string, clientMessageId?: string | null, role: string, content: string, files: FileShape[], ... } }
+{ event: 'chat:message', data: { agentId: string, id: string, clientMessageId?: string | null, role: string, content: string, files: FileShape[], ... } }
 
 // Changement d'état d'une tâche
-{ event: 'task:status', data: { taskId: string, kinId: string, status: string } }
+{ event: 'task:status', data: { taskId: string, agentId: string, status: string } }
 
 // Tâche terminée
-{ event: 'task:done', data: { taskId: string, kinId: string, result: string } }
+{ event: 'task:done', data: { taskId: string, agentId: string, result: string } }
 
 // Exécution d'un cron
-{ event: 'cron:triggered', data: { cronId: string, kinId: string, taskId: string } }
+{ event: 'cron:triggered', data: { cronId: string, agentId: string, taskId: string } }
 
 // Queue mise a jour
-{ event: 'queue:update', data: { kinId: string, queueSize: number, isProcessing: boolean, processingStartedAt?: number } }
+{ event: 'queue:update', data: { agentId: string, queueSize: number, isProcessing: boolean, processingStartedAt?: number } }
 
-// Erreur sur un Kin
-{ event: 'kin:error', data: { kinId: string, error: string } }
+// Erreur sur un Agent
+{ event: 'agent:error', data: { agentId: string, error: string } }
 
-// Projet actif d'un Kin changé
-{ event: 'kin:active-project', data: { kinId: string, activeProjectId: string | null } }
+// Projet actif d'un Agent changé
+{ event: 'agent:active-project', data: { agentId: string, activeProjectId: string | null } }
 
 // Projet créé / modifié / supprimé
 { event: 'project:created', data: { project: ProjectSummary } }
@@ -1332,6 +1332,6 @@ Connexion SSE **globale** (une seule par client). Le serveur multiplex les évé
 { event: 'project-tag:deleted', data: { tagId: string, projectId: string } }
 ```
 
-> Le SSE est **global** (pas par Kin). Le client filtre côté frontend par `kinId` pour n'afficher que les événements pertinents. Cela permet de mettre a jour la sidebar (badges, statuts) pour tous les Kins simultanément.
+> Le SSE est **global** (pas par Agent). Le client filtre côté frontend par `agentId` pour n'afficher que les événements pertinents. Cela permet de mettre a jour la sidebar (badges, statuts) pour tous les Agents simultanément.
 
 > Les événements `task:*` existants restent inchangés. Les clients qui s'intéressent aux tasks liées aux tickets filtrent côté frontend sur `task.ticketId !== null` (le champ est désormais présent dans le payload des tasks).

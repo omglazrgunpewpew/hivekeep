@@ -784,7 +784,7 @@ export default {
   {
     id: 'chat',
     name: 'Chat Interface',
-    description: 'A conversational chat interface that uses Hivekeep.sendMessage() to talk to the Kin and Hivekeep.memory to search/store memories. Great for building custom chat experiences or knowledge assistants.',
+    description: 'A conversational chat interface that uses Hivekeep.sendMessage() to talk to the Agent and Hivekeep.memory to search/store memories. Great for building custom chat experiences or knowledge assistants.',
     icon: '💬',
     tags: ['chat', 'messaging', 'memory', 'conversational'],
     suggestedSlug: 'chat',

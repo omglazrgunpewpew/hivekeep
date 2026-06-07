@@ -50,7 +50,7 @@ export default function (ctx: PluginContext) {
 
 The plugin loader inspects which method each provider exposes (`chat` → LLM, `embed` → embedding, `generate` → image, `search` → search) and registers it into the matching registry. The provider's `type` is prefixed internally to `plugin:<your-plugin-name>:<type>` so it can't collide with built-ins.
 
-Once your plugin is enabled, the provider appears in **Settings > Providers** and Kins can use it through the standard tools (`web_search`, `generate_image`, etc.) — no further wiring needed on the host side.
+Once your plugin is enabled, the provider appears in **Settings > Providers** and Agents can use it through the standard tools (`web_search`, `generate_image`, etc.) — no further wiring needed on the host side.
 
 ## OpenAI-Compatible Endpoints
 

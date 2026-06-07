@@ -19,10 +19,10 @@ export type SSEEventType =
   | 'cron:updated'
   | 'cron:deleted'
   | 'queue:update'
-  | 'kin:error'
-  | 'kin:created'
-  | 'kin:updated'
-  | 'kin:deleted'
+  | 'agent:error'
+  | 'agent:created'
+  | 'agent:updated'
+  | 'agent:deleted'
   | 'prompt:pending'
   | 'prompt:answered'
   | 'prompt:expired'
@@ -75,7 +75,7 @@ export type SSEEventType =
   | 'connected-account:created'
   | 'connected-account:updated'
   | 'connected-account:deleted'
-  | 'kin:read'
+  | 'agent:read'
   | 'profile:updated'
   | 'mcp-server:created'
   | 'mcp-server:updated'
@@ -99,7 +99,7 @@ export type SSEEventType =
   | 'version:update-available'
   | 'log:entry'
   | 'card:updated'
-  | 'kin:active-project'
+  | 'agent:active-project'
   | 'project:created'
   | 'project:updated'
   | 'project:deleted'
@@ -116,6 +116,6 @@ export type SSEEventType =
 
 export interface SSEEvent {
   type: SSEEventType
-  kinId?: string
+  agentId?: string
   data: Record<string, unknown>
 }

@@ -245,7 +245,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
                   ) : (
                     <Crop className="size-4" />
                   )}
-                  {t('kin.avatar.cropConfirm')}
+                  {t('agent.avatar.cropConfirm')}
                 </Button>
               </div>
             </div>

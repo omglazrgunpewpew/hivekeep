@@ -6,7 +6,7 @@ Constraint: read-only audit, no code change.
 
 ## TL;DR
 
-The "12-minute force finalize" is **not** a wall-clock timeout. It is a hard cap of **100 streamText iterations** baked into `executeSubKin` (the sub-task LLM loop), followed by a **single-shot nudge / fail** sequence. When the loop exits (either by hitting the 100-step ceiling or by the model emitting a step with zero tool calls), the post-loop block at [src/server/services/tasks.ts:1040-1067](src/server/services/tasks.ts#L1040-L1067) injects a "[System] You have not called update_task_status() yet" message and re-enters the loop with `isNudge = true`. If the nudge round still does not flip the task out of `in_progress`, the task is force-failed.
+The "12-minute force finalize" is **not** a wall-clock timeout. It is a hard cap of **100 streamText iterations** baked into `executeSubAgent` (the sub-task LLM loop), followed by a **single-shot nudge / fail** sequence. When the loop exits (either by hitting the 100-step ceiling or by the model emitting a step with zero tool calls), the post-loop block at [src/server/services/tasks.ts:1040-1067](src/server/services/tasks.ts#L1040-L1067) injects a "[System] You have not called update_task_status() yet" message and re-enters the loop with `isNudge = true`. If the nudge round still does not flip the task out of `in_progress`, the task is force-failed.
 
 The DB evidence for task 97d4e72b is consistent with hitting the 100-step ceiling: the assistant message persists **exactly 100 tool calls** in its `tool_calls` array, the last of which is `edit_file`, and the message ends mid-thought with `"Now update the rendering to include slug + number:"`, i.e. the model was about to call another tool when the loop terminated.
 
@@ -16,7 +16,7 @@ Twelve minutes is just how long 100 sequential tool-use rounds happen to take wi
 
 ### 1a. The sub-task LLM loop
 
-Entry point: `executeSubKin(taskId, isNudge = false)` at [src/server/services/tasks.ts:416](src/server/services/tasks.ts#L416).
+Entry point: `executeSubAgent(taskId, isNudge = false)` at [src/server/services/tasks.ts:416](src/server/services/tasks.ts#L416).
 
 Loop scaffolding ([src/server/services/tasks.ts:683-690](src/server/services/tasks.ts#L683-L690)):
 
@@ -47,14 +47,14 @@ Three ways out of the loop:
 2. `stepToolCalls.length === 0`: the model emits a step with text only, no tool calls.
 3. `streamError` or `abortController.signal.aborted`: error or external cancel.
 
-There is no wall-clock check anywhere in this loop. `grep "setTimeout\|deadline\|wall.clock"` on `tasks.ts` returns only the inter-Kin response timeout (a different mechanism, scoped to `awaiting_kin_response`), the in-flight `lastCheckpointAt` checkpoint timer, and the `Date.now()` ms stamps. No `setTimeout` is wired around the sub-task LLM stream.
+There is no wall-clock check anywhere in this loop. `grep "setTimeout\|deadline\|wall.clock"` on `tasks.ts` returns only the inter-Agent response timeout (a different mechanism, scoped to `awaiting_agent_response`), the in-flight `lastCheckpointAt` checkpoint timer, and the `Date.now()` ms stamps. No `setTimeout` is wired around the sub-task LLM stream.
 
 ### 1b. Nudge and force-fail
 
 Immediately after the loop, the code re-reads the task row from DB ([src/server/services/tasks.ts:1034](src/server/services/tasks.ts#L1034)) and branches:
 
-- If `status === 'awaiting_kin_response'` (suspended for an inter-Kin reply): return, no nudge.
-- If `status === 'in_progress'` (the Kin did not call `update_task_status`): nudge or fail.
+- If `status === 'awaiting_agent_response'` (suspended for an inter-Agent reply): return, no nudge.
+- If `status === 'in_progress'` (the Agent did not call `update_task_status`): nudge or fail.
 
 The nudge block ([src/server/services/tasks.ts:1042-1067](src/server/services/tasks.ts#L1042-L1067)):
 
@@ -74,7 +74,7 @@ if (currentTask && currentTask.status === 'in_progress') {
       sourceType: 'system',
       ...
     })
-    await executeSubKin(taskId, true)
+    await executeSubAgent(taskId, true)
   } else {
     // Already nudged once: now fail for real
     await resolveTask(taskId, 'failed', undefined, 'Task did not explicitly report completion')
@@ -84,9 +84,9 @@ if (currentTask && currentTask.status === 'in_progress') {
 
 Important properties:
 - The trigger is **status-based**, not turn-count-based or timer-based. Any path that exits the loop while `task.status === 'in_progress'` lands here.
-- The first nudge **recursively re-enters** `executeSubKin` with `isNudge = true`. That recursive invocation gets its own fresh 100-step budget, its own `assistantMessageId`, etc. So a Kin that calls `update_task_status` during the nudge round resolves cleanly.
+- The first nudge **recursively re-enters** `executeSubAgent` with `isNudge = true`. That recursive invocation gets its own fresh 100-step budget, its own `assistantMessageId`, etc. So a Agent that calls `update_task_status` during the nudge round resolves cleanly.
 - The second branch (else) only runs **after the nudge round itself terminates with the task still `in_progress`**. This is one nudge, then fail. No second chance.
-- There is **no `stepLimitReached` detection** here, unlike the main-Kin path in [src/server/services/kin-engine.ts:1807-1823](src/server/services/kin-engine.ts#L1807-L1823) where hitting the step cap is treated separately and the turn is closed with a "truncated, ask me to continue" string instead of nudging or failing.
+- There is **no `stepLimitReached` detection** here, unlike the main-Agent path in [src/server/services/agent-engine.ts:1807-1823](src/server/services/agent-engine.ts#L1807-L1823) where hitting the step cap is treated separately and the turn is closed with a "truncated, ask me to continue" string instead of nudging or failing.
 
 ### 1c. What "Forced to finalize early" actually means
 
@@ -96,17 +96,17 @@ The DB row for task 97d4e72b carries the literal error string:
 Task partially completed but not shippable. Forced to finalize early. WIP committed on branch ...
 ```
 
-That string is **not** produced by `resolveTask`. The `resolveTask` failure path only writes `'Task did not explicitly report completion'` ([src/server/services/tasks.ts:1066](src/server/services/tasks.ts#L1066)). The actual error text comes from the Kin itself: during the nudge round, the agent obeyed the system message and called `update_task_status("failed", undefined, "<that whole summary>")`. The `update_task_status` tool implementation is at [src/server/tools/subtask-tools.ts:42](src/server/tools/subtask-tools.ts#L42).
+That string is **not** produced by `resolveTask`. The `resolveTask` failure path only writes `'Task did not explicitly report completion'` ([src/server/services/tasks.ts:1066](src/server/services/tasks.ts#L1066)). The actual error text comes from the Agent itself: during the nudge round, the agent obeyed the system message and called `update_task_status("failed", undefined, "<that whole summary>")`. The `update_task_status` tool implementation is at [src/server/tools/subtask-tools.ts:42](src/server/tools/subtask-tools.ts#L42).
 
 So the failure mode is: the agent was making honest progress, the loop ended (most likely at the 100-step cap), the system told the agent "finalize now", and the agent honestly reported "I am not done, here is my WIP". That self-reported failure is what the user sees.
 
 ## Section 2: Timing
 
-Sub-task idle timer: **there is none**. The nudge is not gated on a duration. It fires whenever `executeSubKin` returns control while `task.status === 'in_progress'`.
+Sub-task idle timer: **there is none**. The nudge is not gated on a duration. It fires whenever `executeSubAgent` returns control while `task.status === 'in_progress'`.
 
 How long can a sub-task run before the nudge?
 
-- Bounded above by `maxSteps` streamText iterations. With `TOOLS_MAX_STEPS=0` (default), `maxSteps = 100` per `executeSubKin` invocation ([src/server/services/tasks.ts:683](src/server/services/tasks.ts#L683)).
+- Bounded above by `maxSteps` streamText iterations. With `TOOLS_MAX_STEPS=0` (default), `maxSteps = 100` per `executeSubAgent` invocation ([src/server/services/tasks.ts:683](src/server/services/tasks.ts#L683)).
 - Each iteration's duration is whatever the model and tool batch take: thinking time, model latency, tool execution time (bounded only by the underlying tool's behavior).
 - No `AbortSignal.timeout`, no scheduled `setTimeout`, no Promise.race wrapping the loop.
 
@@ -129,7 +129,7 @@ title   : Ticket: Slug projet + numéro de ticket lisible (hivekeep#42, #42, UUI
 created : 1778838820831  (start)
 updated : 1778839633053  (final resolve)
 elapsed : 812222 ms = 13 min 32 s
-error   : "Task partially completed but not shippable. Forced to finalize early. ..." (self-reported by the Kin)
+error   : "Task partially completed but not shippable. Forced to finalize early. ..." (self-reported by the Agent)
 ```
 
 ### 3b. Messages on this task
@@ -139,14 +139,14 @@ Only **four** messages total on the task message stream:
 | # | role | source | created_at (ms) | len | tool_calls | preview |
 |---|---|---|---|---|---|---|
 | 1 | user | system | 1778838820953 | 77 | 0 | "Work on ticket: Slug projet + numero de ticket lisible (hivekeep#42, #42, UUID)" |
-| 2 | assistant | kin | 1778838820958 | 2389 | **100** | "Now let me check the active speaker / kin engine context..." |
+| 2 | assistant | agent | 1778838820958 | 2389 | **100** | "Now let me check the active speaker / agent engine context..." |
 | 3 | user | system | 1778839550188 | 295 | 0 | "[System] You have not called update_task_status() yet. ..." |
-| 4 | assistant | kin | 1778839550247 | 1017 | 6 | "Task finalized as failed (partial WIP). Summary: ..." |
+| 4 | assistant | agent | 1778839550247 | 1017 | 6 | "Task finalized as failed (partial WIP). Summary: ..." |
 
 ### 3c. Timing analysis
 
 - Gap between first assistant turn and nudge: `1778839550188 - 1778838820958 = 729230 ms ≈ 12 min 9 s`.
-- Gap between nudge and final assistant resolution: `1778839550247 - 1778839550188 = 59 ms` (nudge injected, then second executeSubKin started immediately).
+- Gap between nudge and final assistant resolution: `1778839550247 - 1778839550188 = 59 ms` (nudge injected, then second executeSubAgent started immediately).
 - Final `resolveTask` at `1778839633053`, i.e. `82806 ms ≈ 1 min 23 s` after the nudge round began.
 
 ### 3d. Why this most likely hit the 100-step cap, not a "text-only" exit
@@ -168,7 +168,7 @@ I do not have offline access to `@anthropic-ai/claude-agent-sdk` source in this 
 
 Surface-level comparison:
 
-| Mechanism | Hivekeep `executeSubKin` | Claude Agent SDK (`query` / Claude Code) |
+| Mechanism | Hivekeep `executeSubAgent` | Claude Agent SDK (`query` / Claude Code) |
 |---|---|---|
 | Hard iteration cap | `maxSteps` (default 100, env-configurable) | `maxTurns` option (configurable, no hard internal cap baked in) |
 | What happens at the cap | Loop exits silently, then nudge, then force-fail | Session ends, returns a result; the SDK does not synthesize a "you must call tool X" prompt |
@@ -188,7 +188,7 @@ Three layered options, in increasing scope. They are not mutually exclusive; opt
 
 ### Option A: distinguish "step cap hit" from "model stopped on its own"
 
-Mirror the `stepLimitReached` logic from [src/server/services/kin-engine.ts:1807-1823](src/server/services/kin-engine.ts#L1807-L1823) inside `executeSubKin`. At loop exit, compute:
+Mirror the `stepLimitReached` logic from [src/server/services/agent-engine.ts:1807-1823](src/server/services/agent-engine.ts#L1807-L1823) inside `executeSubAgent`. At loop exit, compute:
 
 ```
 const stepLimitReached = step >= maxSteps && stepToolCalls.length > 0
@@ -197,7 +197,7 @@ const stepLimitReached = step >= maxSteps && stepToolCalls.length > 0
 When `stepLimitReached`:
 - Do **not** inject the current "you MUST finalize" nudge.
 - Instead, inject a softer message: "You have used your step budget for this round (`maxSteps` rounds). Either call `update_task_status` if you can summarize what you accomplished, or continue from where you left off in the next round; you have one more step budget to either finish the work or report status."
-- Re-enter `executeSubKin` with `isNudge = true` (so the existing one-shot failure guard still applies if the next round also leaves status unchanged).
+- Re-enter `executeSubAgent` with `isNudge = true` (so the existing one-shot failure guard still applies if the next round also leaves status unchanged).
 
 Tradeoff: one extra round of LLM cost per sub-task that hits the cap. Worth it because the current behavior **loses** that round entirely by forcing a fail.
 
@@ -205,15 +205,15 @@ Files affected: `src/server/services/tasks.ts` only.
 
 ### Option B: raise the hidden cap, make it explicit
 
-Change the fallback at [src/server/services/tasks.ts:683](src/server/services/tasks.ts#L683) from a silent `100` to a documented `config.tasks.subKinMaxSteps` (e.g., default 250) and log a `warn` when the cap is hit so it shows up in observability. The current `TOOLS_MAX_STEPS=0 -> 100` is surprising: the comment in `config.ts` claims "unlimited (capped at 100)" but in practice the cap **is** the limit since most operators never set the env.
+Change the fallback at [src/server/services/tasks.ts:683](src/server/services/tasks.ts#L683) from a silent `100` to a documented `config.tasks.subAgentMaxSteps` (e.g., default 250) and log a `warn` when the cap is hit so it shows up in observability. The current `TOOLS_MAX_STEPS=0 -> 100` is surprising: the comment in `config.ts` claims "unlimited (capped at 100)" but in practice the cap **is** the limit since most operators never set the env.
 
-Tradeoff: more LLM spend ceiling per task. A non-trivial refactor commonly needs 150-300 tool calls; 100 is too aggressive for sub-tasks specifically (the main-Kin path has the same cap but main-Kin runs are typically shorter conversational turns, not long refactors).
+Tradeoff: more LLM spend ceiling per task. A non-trivial refactor commonly needs 150-300 tool calls; 100 is too aggressive for sub-tasks specifically (the main-Agent path has the same cap but main-Agent runs are typically shorter conversational turns, not long refactors).
 
-Files affected: `src/server/config.ts` (new `tasks.subKinMaxSteps` field), `src/server/services/tasks.ts` (read the new field), possibly `src/server/tools/platform-tools.ts` (expose the new env name).
+Files affected: `src/server/config.ts` (new `tasks.subAgentMaxSteps` field), `src/server/services/tasks.ts` (read the new field), possibly `src/server/tools/platform-tools.ts` (expose the new env name).
 
 ### Option C: add an explicit wall-clock budget per sub-task (optional safety net)
 
-The current code has no upper time bound on a single `executeSubKin` invocation. If A and B are adopted, a malformed task could in principle keep emitting tool calls for hours. A simple safety net: wrap the loop in an `AbortSignal.timeout(config.tasks.subKinMaxWallClockMs)` (default ~30 minutes), so a stuck tool call cannot run forever, and a runaway loop cannot exhaust the higher step budget silently. On timeout, fall through to the existing post-loop nudge path so the agent still gets a chance to summarize.
+The current code has no upper time bound on a single `executeSubAgent` invocation. If A and B are adopted, a malformed task could in principle keep emitting tool calls for hours. A simple safety net: wrap the loop in an `AbortSignal.timeout(config.tasks.subAgentMaxWallClockMs)` (default ~30 minutes), so a stuck tool call cannot run forever, and a runaway loop cannot exhaust the higher step budget silently. On timeout, fall through to the existing post-loop nudge path so the agent still gets a chance to summarize.
 
 Tradeoff: introduces a wall-clock dimension that does not exist today. Should be tuned generously enough to not re-create the original problem.
 
@@ -225,19 +225,19 @@ Adopt **A + B**. A alone removes the "honest progress is punished" failure mode;
 
 ### What I would **not** do
 
-- **Do not just remove the nudge entirely.** The nudge is meaningful when the Kin actually stalls (text-only end-of-turn while still `in_progress`) and the system needs to converge to a known state.
+- **Do not just remove the nudge entirely.** The nudge is meaningful when the Agent actually stalls (text-only end-of-turn while still `in_progress`) and the system needs to converge to a known state.
 - **Do not switch to "no terminal tool required."** The `update_task_status` contract is load-bearing for downstream signal (await mode result delivery, ticket linkage, async informational message, etc., in `resolveTask` at [src/server/services/tasks.ts:1098-1199](src/server/services/tasks.ts#L1098-L1199)). Removing it would force a guess of the result string and break the ticket reminder flow.
-- **Do not change `maxSteps` semantics globally.** Main-Kin turns have different ergonomics from sub-task turns; they should be tunable independently.
+- **Do not change `maxSteps` semantics globally.** Main-Agent turns have different ergonomics from sub-task turns; they should be tunable independently.
 
 ## Section 6: Open questions
 
 These could not be answered from the code and DB alone.
 
-1. **Exact step count for 97d4e72b.** The 100 `tool_calls` in the assistant row strongly suggests `step` hit 100, but a streamText iteration can emit multiple parallel tool calls. The authoritative number is logged by [src/server/services/tasks.ts:891-901](src/server/services/tasks.ts#L891-L901) (`Sub-Kin LLM turn completed`, fields `stepCount` and `finishReasons`) but those logs are not persisted to the DB. Check `journalctl` / pino log files on the prod host for the line bearing `taskId=97d4e72b...` if you want the exact step count and the `finishReason` array. If `stepCount=100`, my main hypothesis is confirmed. If much lower, the loop exited via "no tool calls this step" and the diagnosis shifts toward "the model legitimately stopped emitting tools mid-refactor", which is a slightly different problem.
+1. **Exact step count for 97d4e72b.** The 100 `tool_calls` in the assistant row strongly suggests `step` hit 100, but a streamText iteration can emit multiple parallel tool calls. The authoritative number is logged by [src/server/services/tasks.ts:891-901](src/server/services/tasks.ts#L891-L901) (`Sub-Agent LLM turn completed`, fields `stepCount` and `finishReasons`) but those logs are not persisted to the DB. Check `journalctl` / pino log files on the prod host for the line bearing `taskId=97d4e72b...` if you want the exact step count and the `finishReason` array. If `stepCount=100`, my main hypothesis is confirmed. If much lower, the loop exited via "no tool calls this step" and the diagnosis shifts toward "the model legitimately stopped emitting tools mid-refactor", which is a slightly different problem.
 2. **Frequency.** How often does this happen? The current code path will surface this every time a sub-task does more than ~100 sequential tool calls. A quick `SELECT count(*) FROM tasks WHERE status='failed' AND error LIKE '%Forced to finalize early%' OR error LIKE '%did not explicitly report completion%'` over the last N days would establish whether 97d4e72b is one of many or a one-off.
 3. **Whether `TOOLS_MAX_STEPS` is set in prod.** I did not read the running container's environment. If it is set to something other than 0, the analysis still holds but the cap is wherever it is set, not 100.
 4. **Behavior under thinking-enabled Anthropic models specifically.** The streamText loop processes `reasoning-start`/`reasoning-delta`/`reasoning-end` parts but I did not verify whether a "reasoning-only" step (thinking, no tool, no text) counts as `stepToolCalls.length === 0` and breaks the loop. If yes, that would be a second, independent way to exit the loop prematurely and would warrant separate handling. Worth a focused test.
-5. **Whether the `resolveTask('failed', ..., 'Task did not explicitly report completion')` branch has ever actually fired in prod.** The DB I queried showed the Kin's self-reported error string, not that branch's hardcoded one. A `SELECT count(*) FROM tasks WHERE error = 'Task did not explicitly report completion'` would tell us.
+5. **Whether the `resolveTask('failed', ..., 'Task did not explicitly report completion')` branch has ever actually fired in prod.** The DB I queried showed the Agent's self-reported error string, not that branch's hardcoded one. A `SELECT count(*) FROM tasks WHERE error = 'Task did not explicitly report completion'` would tell us.
 
 ---
 

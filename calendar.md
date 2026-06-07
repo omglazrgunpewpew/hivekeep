@@ -1,7 +1,7 @@
 # Hivekeep — Calendar
 
 Read **and write** access to calendars (Google, Outlook, iCloud, generic CalDAV)
-so Kins can answer "what's on my week?" and create / move / cancel events.
+so Agents can answer "what's on my week?" and create / move / cancel events.
 
 ## Provider family (SDK)
 
@@ -24,7 +24,7 @@ interface CalendarProvider extends ProviderUIHints {
 ```
 
 Times are **ISO 8601** strings; all-day events set `allDay` with date-only
-`start`/`end`. An event carries its `calendarId` so the Kin can pass it back to
+`start`/`end`. An event carries its `calendarId` so the Agent can pass it back to
 get / update / delete. Registry: `src/server/calendar/registry.ts`; built-ins
 register at boot via `registerBuiltinCalendarProviders()`.
 
@@ -56,14 +56,14 @@ the **union** of email + contacts + calendar scopes in one consent. Config
 requested capability before writing one row. `resolveCalendarProvider` reuses the
 account's refresh token (OAuth) or credentials (CalDAV).
 
-## Kin tools + toolbox
+## Agent tools + toolbox
 
 Native tools (`src/server/tools/calendar-tools.ts`), gated by the built-in
 `calendar` toolbox, tool domain `calendar`:
 
 | Tool | Flags | |
 |---|---|---|
-| `list_calendar_accounts` | readOnly | accounts this Kin may use |
+| `list_calendar_accounts` | readOnly | accounts this Agent may use |
 | `list_calendars` | readOnly | calendars in an account |
 | `list_events` | readOnly | events in a time range |
 | `get_event` | readOnly | one event |

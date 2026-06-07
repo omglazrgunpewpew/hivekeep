@@ -114,7 +114,7 @@ export interface WorktreeRef {
  * Create (or attach idempotently to) a sub-task worktree.
  *
  * Throws on misconfiguration so the sub-task runner can fail fast and
- * surface a clear error to the parent Kin:
+ * surface a clear error to the parent Agent:
  *   - `PROJECT_NOT_FOUND` / `PROJECT_HAS_NO_SLUG` / `NO_GITHUB_REPO`
  *   - `CLONE_NOT_READY` — the parent clone is `cloning`, `error`, or `none`
  *   - `MISSING_PAT` — no vault entry resolves

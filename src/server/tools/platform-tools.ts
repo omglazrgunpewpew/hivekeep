@@ -74,7 +74,7 @@ export const getPlatformLogsTool: ToolRegistration = {
         module: z
           .string()
           .optional()
-          .describe('Partial match (e.g. "kin-engine", "queue", "cron")'),
+          .describe('Partial match (e.g. "agent-engine", "queue", "cron")'),
         search: z
           .string()
           .optional()
@@ -95,7 +95,7 @@ export const getPlatformLogsTool: ToolRegistration = {
           .describe('Default: 50'),
       }),
       execute: async ({ level, module, search, minutes_ago, limit }) => {
-        log.debug({ kinId: ctx.kinId, level, module, search }, 'Platform logs queried')
+        log.debug({ agentId: ctx.agentId, level, module, search }, 'Platform logs queried')
 
         const entries = logStore.query({
           level,
@@ -133,7 +133,7 @@ export const getPlatformConfigTool: ToolRegistration = {
         'Read the current Hivekeep platform configuration. Sensitive values are redacted.',
       inputSchema: z.object({}),
       execute: async () => {
-        log.debug({ kinId: ctx.kinId }, 'Platform config queried')
+        log.debug({ agentId: ctx.agentId }, 'Platform config queried')
 
         // Collect environment variables that are currently set
         const envVars: Record<string, string> = {}
@@ -301,7 +301,7 @@ export const listPlatformConfigOptionsTool: ToolRegistration = {
           .describe('Filter by exact key name (e.g. "HIVEKEEP_TIMEZONE").'),
       }),
       execute: async ({ section, key }) => {
-        log.debug({ kinId: ctx.kinId, section, key }, 'Platform config options listed')
+        log.debug({ agentId: ctx.agentId, section, key }, 'Platform config options listed')
         const { path, options } = loadConfigOptions()
 
         if (!path) {
@@ -386,7 +386,7 @@ export const updatePlatformConfigTool: ToolRegistration = {
         value: z.string(),
       }),
       execute: async ({ key, value }) => {
-        log.info({ kinId: ctx.kinId, key }, 'Platform config update requested')
+        log.info({ agentId: ctx.agentId, key }, 'Platform config update requested')
 
         // Validate key
         if (SENSITIVE_KEYS.has(key)) {
@@ -474,7 +474,7 @@ export const updatePlatformConfigTool: ToolRegistration = {
           }
 
           writeFileSync(envFilePath, lines.join('\n'))
-          log.info({ kinId: ctx.kinId, key, envFilePath }, 'Platform config updated in env file')
+          log.info({ agentId: ctx.agentId, key, envFilePath }, 'Platform config updated in env file')
 
           return {
             success: true,
@@ -492,7 +492,7 @@ export const updatePlatformConfigTool: ToolRegistration = {
                   : ' Restart the Hivekeep process.'),
           }
         } catch (err) {
-          log.error({ kinId: ctx.kinId, key, envFilePath, err }, 'Failed to update env file')
+          log.error({ agentId: ctx.agentId, key, envFilePath, err }, 'Failed to update env file')
           return {
             success: false,
             error: `Failed to write to ${envFilePath}: ${err instanceof Error ? err.message : String(err)}`,
@@ -539,7 +539,7 @@ export const restartPlatformTool: ToolRegistration = {
           }
         }
 
-        log.warn({ kinId: ctx.kinId, reason, installType }, 'Platform restart triggered by Kin')
+        log.warn({ agentId: ctx.agentId, reason, installType }, 'Platform restart triggered by Agent')
 
         // Schedule exit after a short delay to allow the response to be sent
         setTimeout(() => {

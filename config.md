@@ -30,19 +30,19 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `compacting.model` | `COMPACTING_MODEL` | — | Modèle utilisé pour le compacting (format `providerId:modelId` supporté). Si non défini, utilise le modèle du Kin |
+| `compacting.model` | `COMPACTING_MODEL` | — | Modèle utilisé pour le compacting (format `providerId:modelId` supporté). Si non défini, utilise le modèle du Agent |
 | `compacting.thresholdPercent` | `COMPACTING_THRESHOLD_PERCENT` | `75` | % d'utilisation du contexte avant déclenchement de la compaction |
 | `compacting.keepPercent` | `COMPACTING_KEEP_PERCENT` | `25` | % de la fenêtre de contexte préservé en messages bruts (keep-window) |
 | `compacting.summaryBudgetPercent` | `COMPACTING_SUMMARY_BUDGET_PERCENT` | `20` | % max de la fenêtre de contexte pour les résumés avant fusion télescopique |
 | `compacting.maxSummaries` | `COMPACTING_MAX_SUMMARIES` | `10` | Nombre max de résumés actifs avant fusion télescopique |
-| `compacting.maxSummariesPerKin` | `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Rétention totale de résumés par Kin (actifs + archivés) |
+| `compacting.maxSummariesPerAgent` | `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Rétention totale de résumés par Agent (actifs + archivés) |
 | `compacting.keepMaxTokens` | `COMPACTING_KEEP_MAX_TOKENS` | `100000` | Plafond **absolu** (tokens réels) de la keep-window — borne `keepPercent`. N'agit que sur les grandes fenêtres (1M) |
 | `compacting.triggerMaxTokens` | `COMPACTING_TRIGGER_MAX_TOKENS` | `300000` | Plafond **absolu** (tokens réels) avant déclenchement — borne `thresholdPercent` |
 | `compacting.summaryMaxTokens` | `COMPACTING_SUMMARY_MAX_TOKENS` | `48000` | Plafond **absolu** (tokens réels) des résumés avant fusion — borne `summaryBudgetPercent` |
 
 > **Budgets effectifs** : chaque budget est `min(pourcentage × fenêtre, plafond absolu)`. Sur un modèle 200k le pourcentage domine (comportement inchangé) ; sur 1M le plafond absolu borne l'empreinte. Voir `compacting.md` → « Absolute token ceilings ».
 
-> **Per-Kin override** : chaque Kin peut surcharger les paramètres de compacting via son `compactingConfig` (stocké en JSON dans `kins.compacting_config`). L'interface de configuration se trouve dans l'onglet Compaction des paramètres du Kin. Les champs disponibles sont : `thresholdPercent`, `keepPercent`, `summaryBudgetPercent`, `maxSummaries`, `keepMaxTokens`, `triggerMaxTokens`, `summaryMaxTokens`, `compactingModel`, et `compactingProviderId`.
+> **Per-Agent override** : chaque Agent peut surcharger les paramètres de compacting via son `compactingConfig` (stocké en JSON dans `agents.compacting_config`). L'interface de configuration se trouve dans l'onglet Compaction des paramètres du Agent. Les champs disponibles sont : `thresholdPercent`, `keepPercent`, `summaryBudgetPercent`, `maxSummaries`, `keepMaxTokens`, `triggerMaxTokens`, `summaryMaxTokens`, `compactingModel`, et `compactingProviderId`.
 
 ---
 
@@ -73,8 +73,8 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 |---|---|---|---|
 | `tools.maxSteps` | `TOOLS_MAX_STEPS` | `0` | Nombre max d'étapes de tool-calling par tour LLM. 0 = illimité (plafonné a 100 en interne) |
 | `tools.concurrencyCap` | `TOOLS_CONCURRENCY_CAP` | `5` | Nombre max d'exécutions parallèles d'outils en lecture seule. Quand toutes les tool calls d'un step sont read-only, elles s'exécutent en parallèle (limité a cette valeur). Les batches mixtes avec au moins un outil mutant restent séquentiels |
-| `shell.defaultTimeoutMs` | `HIVEKEEP_SHELL_TIMEOUT` | `30000` | Timeout par défaut d'une commande `run_shell` (ms), utilisé quand le Kin ne fournit pas de `timeout` |
-| `shell.maxTimeoutMs` | `HIVEKEEP_SHELL_MAX_TIMEOUT` | `600000` | Timeout maximum qu'un Kin peut demander par appel `run_shell` (ms). Le paramètre `timeout` de l'outil est plafonné à cette valeur (10 min par défaut, à relever pour des suites de tests/builds plus longs) |
+| `shell.defaultTimeoutMs` | `HIVEKEEP_SHELL_TIMEOUT` | `30000` | Timeout par défaut d'une commande `run_shell` (ms), utilisé quand le Agent ne fournit pas de `timeout` |
+| `shell.maxTimeoutMs` | `HIVEKEEP_SHELL_MAX_TIMEOUT` | `600000` | Timeout maximum qu'un Agent peut demander par appel `run_shell` (ms). Le paramètre `timeout` de l'outil est plafonné à cette valeur (10 min par défaut, à relever pour des suites de tests/builds plus longs) |
 
 ---
 
@@ -94,7 +94,7 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `memory.extractionModel` | `MEMORY_EXTRACTION_MODEL` | — | Modèle léger pour l'extraction de mémoires (ex: Haiku). Si non défini, utilise le modèle du Kin |
+| `memory.extractionModel` | `MEMORY_EXTRACTION_MODEL` | — | Modèle léger pour l'extraction de mémoires (ex: Haiku). Si non défini, utilise le modèle du Agent |
 | `memory.maxRelevantMemories` | `MEMORY_MAX_RELEVANT` | `10` | Nombre max de mémoires injectées dans le prompt système |
 | `memory.similarityThreshold` | `MEMORY_SIMILARITY_THRESHOLD` | `0.7` | Score minimum de similarité cosinus pour qu'une mémoire soit considérée pertinente |
 | `memory.embeddingModel` | `MEMORY_EMBEDDING_MODEL` | `text-embedding-3-small` | Modèle d'embedding par défaut |
@@ -107,19 +107,19 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
 | `queue.userPriority` | — | `100` | Priorité des messages utilisateur |
-| `queue.kinPriority` | — | `50` | Priorité des messages inter-Kins |
+| `queue.agentPriority` | — | `50` | Priorité des messages inter-Agents |
 | `queue.taskPriority` | — | `50` | Priorité des messages de tâches |
 | `queue.pollIntervalMs` | `QUEUE_POLL_INTERVAL` | `500` | Intervalle de vérification de la queue (ms) |
 
 ---
 
-## Tâches (sous-Kins)
+## Tâches (sous-Agents)
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `tasks.maxDepth` | `TASKS_MAX_DEPTH` | `3` | Profondeur maximale de nesting des sous-Kins |
-| `tasks.maxRequestInput` | `TASKS_MAX_REQUEST_INPUT` | `3` | Nombre max d'appels request_input par sous-Kin |
-| `tasks.maxConcurrent` | `TASKS_MAX_CONCURRENT` | `10` | Nombre max de tâches concurrentes (tous Kins confondus) |
+| `tasks.maxDepth` | `TASKS_MAX_DEPTH` | `3` | Profondeur maximale de nesting des sous-Agents |
+| `tasks.maxRequestInput` | `TASKS_MAX_REQUEST_INPUT` | `3` | Nombre max d'appels request_input par sous-Agent |
+| `tasks.maxConcurrent` | `TASKS_MAX_CONCURRENT` | `10` | Nombre max de tâches concurrentes (tous Agents confondus) |
 
 ---
 
@@ -132,12 +132,12 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 ---
 
-## Communication inter-Kins
+## Communication inter-Agents
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `interKin.maxChainDepth` | `INTER_KIN_MAX_CHAIN_DEPTH` | `5` | Profondeur max d'une chaîne de messages inter-Kins |
-| `interKin.rateLimitPerMinute` | `INTER_KIN_RATE_LIMIT` | `20` | Nombre max de messages qu'un Kin peut envoyer a un autre par minute |
+| `interAgent.maxChainDepth` | `INTER_KIN_MAX_CHAIN_DEPTH` | `5` | Profondeur max d'une chaîne de messages inter-Agents |
+| `interAgent.rateLimitPerMinute` | `INTER_KIN_RATE_LIMIT` | `20` | Nombre max de messages qu'un Agent peut envoyer a un autre par minute |
 
 ---
 
@@ -153,7 +153,7 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `workspace.baseDir` | `WORKSPACE_BASE_DIR` | `{dataDir}/workspaces` | Répertoire racine des workspaces des Kins |
+| `workspace.baseDir` | `WORKSPACE_BASE_DIR` | `{dataDir}/workspaces` | Répertoire racine des workspaces des Agents |
 
 ---
 
@@ -190,22 +190,22 @@ Configuration partagée par les tools `browse_url`, `extract_links`, `screenshot
 
 ## Sessions navigateur stateful
 
-Configuration des **sessions de navigateur persistantes par Kin**, utilisées par les tools `browser_open_session`, `browser_navigate`, `browser_click`, etc. (14 tools `browser_*`). Chaque session conserve son état (cookies, scroll, formulaires) entre plusieurs tours LLM.
+Configuration des **sessions de navigateur persistantes par Agent**, utilisées par les tools `browser_open_session`, `browser_navigate`, `browser_click`, etc. (14 tools `browser_*`). Chaque session conserve son état (cookies, scroll, formulaires) entre plusieurs tours LLM.
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `browserSessions.enabled` | `BROWSER_SESSIONS_ENABLED` | `true` | Active la famille de tools stateful. Mettre `false` pour la désactiver globalement (les tools restent registered mais retournent une erreur). Les tools individuels restent quoi qu'il arrive opt-in par Kin via `tool_config.enabledOptInTools` |
+| `browserSessions.enabled` | `BROWSER_SESSIONS_ENABLED` | `true` | Active la famille de tools stateful. Mettre `false` pour la désactiver globalement (les tools restent registered mais retournent une erreur). Les tools individuels restent quoi qu'il arrive opt-in par Agent via `tool_config.enabledOptInTools` |
 | `browserSessions.ttlMs` | `BROWSER_SESSION_TTL_MS` | `3_600_000` (1 h) | TTL absolu d'une session, depuis sa création, sans considération d'activité |
 | `browserSessions.idleTimeoutMs` | `BROWSER_SESSION_IDLE_TIMEOUT_MS` | `600_000` (10 min) | Délai d'inactivité avant fermeture automatique (GC) |
-| `browserSessions.maxTotal` | `BROWSER_MAX_TOTAL_SESSIONS` | `5` | Plafond global de sessions actives, toutes Kins confondues |
-| `browserSessions.maxPerKin` | `BROWSER_MAX_SESSIONS_PER_KIN` | `1` | Plafond par Kin |
+| `browserSessions.maxTotal` | `BROWSER_MAX_TOTAL_SESSIONS` | `5` | Plafond global de sessions actives, toutes Agents confondues |
+| `browserSessions.maxPerAgent` | `BROWSER_MAX_SESSIONS_PER_KIN` | `1` | Plafond par Agent |
 | `browserSessions.defaultViewport.width` | `BROWSER_DEFAULT_VIEWPORT_WIDTH` | `1280` | Largeur par défaut du viewport |
 | `browserSessions.defaultViewport.height` | `BROWSER_DEFAULT_VIEWPORT_HEIGHT` | `720` | Hauteur par défaut du viewport |
-| `browserSessions.statesDir` | `BROWSER_STATES_DIR` | `{dataDir}/browser-states` | Répertoire des états sauvegardés (cookies + localStorage). Stockés HORS du workspace pour que les filesystem tools du Kin ne puissent pas y accéder accidentellement. Permission `0o600`. |
-| `browserSessions.maxStatesPerKin` | `BROWSER_MAX_STATES_PER_KIN` | `20` | Nombre max d'états sauvegardés par Kin |
+| `browserSessions.statesDir` | `BROWSER_STATES_DIR` | `{dataDir}/browser-states` | Répertoire des états sauvegardés (cookies + localStorage). Stockés HORS du workspace pour que les filesystem tools du Agent ne puissent pas y accéder accidentellement. Permission `0o600`. |
+| `browserSessions.maxStatesPerAgent` | `BROWSER_MAX_STATES_PER_KIN` | `20` | Nombre max d'états sauvegardés par Agent |
 | `browserSessions.maxStateSizeBytes` | `BROWSER_MAX_STATE_SIZE_BYTES` | `5_242_880` (5 Mo) | Taille max d'un fichier d'état (limite localStorage gourmand) |
 
-> **Hooks de fermeture automatique** : sessions auto-closed à la fin d'une task (`resolveTask`), à la suppression d'un Kin (`deleteKin` — qui supprime aussi les états sauvegardés), au SIGTERM/SIGINT du serveur, et par le GC d'inactivité toutes les 15 s.
+> **Hooks de fermeture automatique** : sessions auto-closed à la fin d'une task (`resolveTask`), à la suppression d'un Agent (`deleteAgent` — qui supprime aussi les états sauvegardés), au SIGTERM/SIGINT du serveur, et par le GC d'inactivité toutes les 15 s.
 
 ---
 
@@ -242,7 +242,7 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 | `MEMORY_CONTEXTUAL_REWRITE_THRESHOLD` | `80` | Seuil de tokens déclenchant la réécriture contextuelle des requêtes. |
 | `MEMORY_TOKEN_BUDGET` | `0` | Budget tokens max pour l'injection mémoire ; 0 = illimité. |
 | `MEMORY_RECENCY_BOOST` | `true` | Booste les souvenirs très récents dans le ranking. |
-| `MEMORY_CONSOLIDATION_MODEL` | — | Modèle pour la consolidation (format `providerId:modelId`) ; fallback sur celui du Kin. |
+| `MEMORY_CONSOLIDATION_MODEL` | — | Modèle pour la consolidation (format `providerId:modelId`) ; fallback sur celui du Agent. |
 | `MEMORY_MULTI_QUERY_MODEL` | — | Modèle pour l'expansion multi-query. |
 | `MEMORY_HYDE_MODEL` | — | Modèle pour le reranking HyDE. |
 | `MEMORY_RERANK_MODEL` | — | Modèle pour le reranking secondaire. |
@@ -279,7 +279,7 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `WEBHOOKS_MAX_PER_KIN` | `20` | Nombre max de webhooks par Kin. |
+| `WEBHOOKS_MAX_PER_KIN` | `20` | Nombre max de webhooks par Agent. |
 | `WEBHOOKS_MAX_PAYLOAD_BYTES` | `1_048_576` (1 Mo) | Payload max pour la livraison. |
 | `WEBHOOKS_LOG_RETENTION_DAYS` | `30` | Rétention des logs d'exécution. |
 | `WEBHOOKS_MAX_LOGS_PER_WEBHOOK` | `500` | Nombre max d'entrées de log retenues par webhook. |
@@ -289,16 +289,16 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `CHANNELS_MAX_PER_KIN` | `5` | Nombre max de channels connectés par Kin. |
+| `CHANNELS_MAX_PER_KIN` | `5` | Nombre max de channels connectés par Agent. |
 | `CHANNEL_PENDING_ORIGIN_TTL` | `300_000` (5 min) | TTL de la vérification d'origine en attente lors du setup. |
 
-## Tasks (sub-Kins)
+## Tasks (sub-Agents)
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `TASKS_MAX_REQUEST_INPUT` | `3` | Nombre max d'appels `request_input` par sub-Kin task. |
-| `TASKS_MAX_INTER_KIN_REQUESTS` | `3` | Nombre max d'appels inter-Kin par sub-Kin task. |
-| `TASKS_INTER_KIN_RESPONSE_TIMEOUT_MS` | `300_000` (5 min) | Timeout pour les réponses inter-Kin. |
+| `TASKS_MAX_REQUEST_INPUT` | `3` | Nombre max d'appels `request_input` par sub-Agent task. |
+| `TASKS_MAX_INTER_KIN_REQUESTS` | `3` | Nombre max d'appels inter-Agent par sub-Agent task. |
+| `TASKS_INTER_KIN_RESPONSE_TIMEOUT_MS` | `300_000` (5 min) | Timeout pour les réponses inter-Agent. |
 
 ## Crons & scheduling
 
@@ -313,7 +313,7 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 | `INVITATION_DEFAULT_EXPIRY_DAYS` | `7` | Expiration par défaut d'une invitation. |
 | `INVITATION_MAX_ACTIVE` | `50` | Nombre max d'invitations actives sur le serveur. |
 | `QUICK_SESSION_EXPIRATION_HOURS` | `24` | Durée de vie d'une quick session. |
-| `QUICK_SESSION_MAX_PER_USER_KIN` | `1` | Nombre max de quick-sessions par (user, Kin). |
+| `QUICK_SESSION_MAX_PER_USER_KIN` | `1` | Nombre max de quick-sessions par (user, Agent). |
 | `QUICK_SESSION_RETENTION_DAYS` | `7` | Rétention de l'historique quick-session. |
 | `QUICK_SESSION_CLEANUP_INTERVAL` | `60` (min) | Intervalle du job de purge. |
 
@@ -331,8 +331,8 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `WAKEUPS_MAX_PENDING_PER_KIN` | `20` | Nombre max de wakeups programmés par Kin. |
-| `HUMAN_PROMPTS_MAX_PENDING` | `5` | Nombre max de prompts humains en attente par Kin. |
+| `WAKEUPS_MAX_PENDING_PER_KIN` | `20` | Nombre max de wakeups programmés par Agent. |
+| `HUMAN_PROMPTS_MAX_PENDING` | `5` | Nombre max de prompts humains en attente par Agent. |
 
 ## Projects (Kanban & tickets)
 
@@ -347,7 +347,7 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `MINI_APPS_DIR` | `{dataDir}/mini-apps` | Répertoire des bundles mini-apps. |
-| `MINI_APPS_MAX_PER_KIN` | `20` | Nombre max de mini-apps déployables par Kin. |
+| `MINI_APPS_MAX_PER_KIN` | `20` | Nombre max de mini-apps déployables par Agent. |
 | `MINI_APPS_MAX_FILE_SIZE` | `5` (Mo) | Taille max d'un fichier individuel dans un bundle. |
 | `MINI_APPS_MAX_TOTAL_SIZE` | `50` (Mo) | Taille totale max d'un bundle mini-app. |
 | `MINI_APPS_BACKEND_ENABLED` | `true` | Active/désactive le serveur backend des mini-apps. |
@@ -366,4 +366,4 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 |---------|---------|-------------|
 | `MCP_REQUIRE_APPROVAL` | `true` | Demande approbation user avant d'exécuter un tool MCP. |
 
-> **Note** : la plupart de ces défauts sont production-tested et rarement à modifier. Les variables `MEMORY_*_MODEL` suivent le format `providerId:modelId` et fallback sur le modèle principal du Kin si non définies.
+> **Note** : la plupart de ces défauts sont production-tested et rarement à modifier. Les variables `MEMORY_*_MODEL` suivent le format `providerId:modelId` et fallback sur le modèle principal du Agent si non définies.

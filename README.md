@@ -23,13 +23,13 @@ Self-hosted. Persistent memory. Real collaboration.
 
 Most AI tools treat every conversation as **disposable**. You explain yourself Monday, they forget by Tuesday.
 
-Hivekeep is different. You create **Kins** — AI agents with:
+Hivekeep is different. You create **Agents** — AI agents with:
 
 | | |
 |---|---|
 | 🧠 **Persistent memory** | They remember every conversation. Forever. Vector search + full-text across months of interactions. |
 | 🎭 **Real identity** | Name, role, personality, avatar. They know who they are and who you are. |
-| 🤝 **Collaboration** | Kins talk to each other, delegate tasks, spawn workers. A team, not a chatbot. |
+| 🤝 **Collaboration** | Agents talk to each other, delegate tasks, spawn workers. A team, not a chatbot. |
 | ⚡ **Autonomy** | Cron jobs, webhooks, Telegram. They work while you sleep. |
 | 🏠 **Self-hosted** | One process. One SQLite file. Your data never leaves your server. |
 
@@ -41,7 +41,7 @@ Hivekeep is different. You create **Kins** — AI agents with:
 ## ✨ Features
 
 ### 🧠 Intelligence
-Persistent memory (vector + full-text) · Knowledge base / RAG · Session compacting · Sub-agents · Inter-Kin communication · Continuous sessions that never reset
+Persistent memory (vector + full-text) · Knowledge base / RAG · Session compacting · Sub-agents · Inter-Agent communication · Continuous sessions that never reset
 
 ### 🔧 Automation & Extensibility
 Cron jobs · Webhooks · HTTP requests · 6 channels (Telegram, Discord, Slack, WhatsApp, Signal, Matrix) · MCP servers · Custom tools · Mini Apps · **Plugin system** · Contacts · Notifications · Human-in-the-loop prompts · 23 AI providers (incl. Ollama) · Multi-provider auto-detection
@@ -55,24 +55,24 @@ AES-256-GCM vault · Auth with roles · Invitation system · 100% self-hosted ·
 <details>
 <summary><strong>Full feature list</strong></summary>
 
-#### Kins
-- **Persistent identity** — each Kin has a name, description, character, expertise domain, model, and avatar
-- **Continuous sessions** — one session per Kin, never resets
-- **Shared Kins** — all users on the instance interact with the same Kins; messages are tagged with sender identity
+#### Agents
+- **Persistent identity** — each Agent has a name, description, character, expertise domain, model, and avatar
+- **Continuous sessions** — one session per Agent, never resets
+- **Shared Agents** — all users on the instance interact with the same Agents; messages are tagged with sender identity
 
 #### Intelligence
 - **Long-term memory** — dual-channel: automatic extraction pipeline on every LLM turn + explicit `remember()` tool; hybrid search (vector similarity + full-text); query intent detection with category-aware score boosting; token-budgeted memory block in prompt
 - **Knowledge base / RAG** — upload documents and texts as reference material; hybrid search (vector + full-text) retrieves relevant chunks at query time
 - **Session compacting** — token-aware compaction with multi-summary accumulation and telescopic merge; original messages are always preserved
-- **Sub-Kins (tasks)** — Kins can delegate work to ephemeral sub-agents; `await` mode re-enters the parent queue with the result, `async` mode deposits it as informational
-- **Inter-Kin communication** — request/reply pattern with correlation IDs; rate-limited; replies are always informational (no ping-pong)
+- **Sub-Agents (tasks)** — Agents can delegate work to ephemeral sub-agents; `await` mode re-enters the parent queue with the result, `async` mode deposits it as informational
+- **Inter-Agent communication** — request/reply pattern with correlation IDs; rate-limited; replies are always informational (no ping-pong)
 
 #### Automation
-- **Cron jobs** — in-process scheduler (croner); Kins can create their own crons (with user approval); searchable/filterable cron list; cron results appear in the main session
-- **Webhooks** — inbound webhooks to trigger Kins from external systems; configurable per-Kin
+- **Cron jobs** — in-process scheduler (croner); Agents can create their own crons (with user approval); searchable/filterable cron list; cron results appear in the main session
+- **Webhooks** — inbound webhooks to trigger Agents from external systems; configurable per-Agent
 - **Channels** — 6 platforms: Telegram, Discord, Slack, WhatsApp, Signal, Matrix
-- **Notifications** — Kins can send push notifications to users via the `notify` tool
-- **Human-in-the-loop** — Kins can prompt users for approval before sensitive actions (cron creation, MCP server management, etc.)
+- **Notifications** — Agents can send push notifications to users via the `notify` tool
+- **Human-in-the-loop** — Agents can prompt users for approval before sensitive actions (cron creation, MCP server management, etc.)
 
 #### Security & Privacy
 - **Vault** — AES-256-GCM encrypted secrets; never exposed in prompts or logs; message redaction prevents leaking into compacted summaries
@@ -80,26 +80,26 @@ AES-256-GCM vault · Auth with roles · Invitation system · 100% self-hosted ·
 - **Self-hosted** — your data never leaves your server
 
 #### Extensibility
-- **MCP servers** — connect any Model Context Protocol server to extend Kins with external tools; Kins can manage their own MCP connections
+- **MCP servers** — connect any Model Context Protocol server to extend Agents with external tools; Agents can manage their own MCP connections
 - **Plugin system** — extend Hivekeep with third-party plugins; plugins can register tools, hooks, AI providers, and channels; discover and install from npm via the built-in marketplace (any package tagged with the `hivekeep-plugin` keyword); install from a Git URL for unpublished or private plugins; hot reload during development; managed via the UI with per-plugin configuration, encrypted secret storage, and enable/disable toggles; health monitoring with circuit breaker auto-disable; dependency management between plugins; version compatibility checking
-- **Custom tools** — Kins can create, register, and run their own scripts from their workspace
-- **Mini Apps** — Kins can build and deploy interactive web apps (HTML/CSS/JS) that live in the sidebar; auto-injected design system + JavaScript SDK with theme sync, toasts, inter-app navigation (`openApp`), dialogs (`confirm`/`prompt`), window title & badge control, persistent key-value storage (`get`/`set`/`delete`/`list`/`clear`), starter templates, parent-child event communication, and an App Gallery to browse and clone community apps
-- **Contacts** — manage contacts that Kins can reference and interact with
+- **Custom tools** — Agents can create, register, and run their own scripts from their workspace
+- **Mini Apps** — Agents can build and deploy interactive web apps (HTML/CSS/JS) that live in the sidebar; auto-injected design system + JavaScript SDK with theme sync, toasts, inter-app navigation (`openApp`), dialogs (`confirm`/`prompt`), window title & badge control, persistent key-value storage (`get`/`set`/`delete`/`list`/`clear`), starter templates, parent-child event communication, and an App Gallery to browse and clone community apps
+- **Contacts** — manage contacts that Agents can reference and interact with
 - **Multi-provider** — 23 providers: Anthropic, Anthropic OAuth, OpenAI, Gemini, Mistral, DeepSeek, Groq, Together AI, Fireworks AI, Ollama, OpenRouter, Cohere, xAI, Voyage AI, Jina AI, Nomic, Tavily, Serper, Perplexity, Replicate, Stability AI, FAL AI, Brave Search
 
 #### Experience
 - **8 color palettes** — Aurora, Ocean, Forest, Sunset, Monochrome, Sakura, Neon, Lavender
 - **Dark / Light / System** theme modes
 - **Internationalization** — English and French
-- **File uploads** — share files with Kins; image generation supported
-- **Real-time streaming** — SSE-based, multiplexed across all Kins on a single connection
-- **@mentions** — mention Kins and users in messages with autocomplete and styled pills; mentioned Kins receive notifications
+- **File uploads** — share files with Agents; image generation supported
+- **Real-time streaming** — SSE-based, multiplexed across all Agents on a single connection
+- **@mentions** — mention Agents and users in messages with autocomplete and styled pills; mentioned Agents receive notifications
 - **Responsive UI** — mobile-friendly settings, contextual info tips, suggestion chips in empty chat states
 - **System info** — version, uptime, and stats visible in settings
 
 #### Built-in Tools (120+)
 
-Kins have access to a rich set of native tools out of the box, no configuration needed:
+Agents have access to a rich set of native tools out of the box, no configuration needed:
 
 **Memory & Knowledge** — `recall`, `memorize`, `update_memory`, `forget`, `list_memories`, `review_memories`, `search_history`, `search_knowledge`, `list_knowledge_sources`
 
@@ -109,7 +109,7 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 
 **Vault & Secrets** — `get_secret`, `create_secret`, `update_secret`, `delete_secret`, `search_secrets`, `redact_message`, vault entries & attachments
 
-**Multi-Agent** — `spawn_self`, `spawn_kin`, `send_message`, `reply`, `list_kins`, `report_to_parent`, `request_input`, task management, `create_kin`, `update_kin`, `delete_kin`, `get_kin_details`
+**Multi-Agent** — `spawn_self`, `spawn_agent`, `send_message`, `reply`, `list_kins`, `report_to_parent`, `request_input`, task management, `create_agent`, `update_agent`, `delete_agent`, `get_agent_details`
 
 **Automation** — `create_cron`, `update_cron`, `delete_cron`, `list_crons`, `trigger_cron`, `get_cron_journal`, `wake_me_in`, `wake_me_every`, `cancel_wakeup`, `list_wakeups`, webhooks (CRUD)
 
@@ -117,7 +117,7 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 
 **Channels** — `list_channels`, `list_channel_conversations`, `send_channel_message`
 
-**Custom Tools** — `register_tool`, `run_custom_tool`, `list_custom_tools` (Kins write and run their own scripts)
+**Custom Tools** — `register_tool`, `run_custom_tool`, `list_custom_tools` (Agents write and run their own scripts)
 
 **Filesystem** — `read_file`, `write_file`, `edit_file`, `list_directory` (read, create, edit, and browse files in the workspace)
 
@@ -135,17 +135,17 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 
 ## 💡 What people build with Hivekeep
 
-**DevOps copilot** — A Kin connected to GitHub webhooks triages new issues, reviews PRs, runs CI checks, and creates releases. It remembers your codebase conventions and past decisions. Cron jobs monitor infrastructure and alert you on Telegram.
+**DevOps copilot** — A Agent connected to GitHub webhooks triages new issues, reviews PRs, runs CI checks, and creates releases. It remembers your codebase conventions and past decisions. Cron jobs monitor infrastructure and alert you on Telegram.
 
-**Home automation brain** — A Kin talks to Home Assistant via MCP, learns your routines over time, and adjusts lighting/heating based on context. Ask it "why was the heating on last night?" and it remembers.
+**Home automation brain** — A Agent talks to Home Assistant via MCP, learns your routines over time, and adjusts lighting/heating based on context. Ask it "why was the heating on last night?" and it remembers.
 
-**Personal knowledge base** — Upload docs, meeting notes, project specs. A Kin indexes everything with RAG and answers questions across months of accumulated context. Unlike ChatGPT, it never forgets previous conversations.
+**Personal knowledge base** — Upload docs, meeting notes, project specs. A Agent indexes everything with RAG and answers questions across months of accumulated context. Unlike ChatGPT, it never forgets previous conversations.
 
-**Multi-agent team** — A dispatcher Kin receives requests and delegates to specialists (one for code, one for sysadmin, one for writing). They collaborate, share context through memories, and report back.
+**Multi-agent team** — A dispatcher Agent receives requests and delegates to specialists (one for code, one for sysadmin, one for writing). They collaborate, share context through memories, and report back.
 
-**Business monitoring** — Webhooks feed sales data, support tickets, or server metrics into a Kin. It builds mini-app dashboards, sends daily Slack summaries, and flags anomalies before you notice them.
+**Business monitoring** — Webhooks feed sales data, support tickets, or server metrics into a Agent. It builds mini-app dashboards, sends daily Slack summaries, and flags anomalies before you notice them.
 
-**Family assistant** — Multiple users share the same instance. One Kin manages groceries via Telegram, another handles kids' schedules, another tracks household tasks. Each remembers everyone's preferences.
+**Family assistant** — Multiple users share the same instance. One Agent manages groceries via Telegram, another handles kids' schedules, another tracks household tasks. Each remembers everyone's preferences.
 
 ---
 
@@ -230,7 +230,7 @@ NODE_ENV=production bun run start
 │  ┌─▼────────┐┌─▼────────┐┌─▼────────┐┌─▼────────┐┌─▼──────┐ │
 │  │ Vercel   ││ Queue    ││ Croner   ││ Mini     ││Plugins │ │
 │  │ AI SDK   ││ (FIFO)   ││(Cron     ││ Apps     ││        │ │
-│  │ Kin      ││ per Kin  ││ jobs)    ││ + Tools  ││ tools  │ │
+│  │ Agent      ││ per Agent  ││ jobs)    ││ + Tools  ││ tools  │ │
 │  │ Engine   │└──────────┘└──────────┘└──────────┘│ hooks  │ │
 │  └────┬─────┘                                    │providers│ │
 │       │                                          │channels│ │
@@ -251,8 +251,8 @@ NODE_ENV=production bun run start
 ```
 
 **Key design principles:**
-- **Queue per Kin** — one message processed at a time per Kin; user messages have priority over automated ones
-- **Global SSE** — one SSE connection per browser tab, multiplexed by `kinId`; no per-Kin polling
+- **Queue per Agent** — one message processed at a time per Agent; user messages have priority over automated ones
+- **Global SSE** — one SSE connection per browser tab, multiplexed by `agentId`; no per-Agent polling
 - **No message deletion** — compacting compresses older messages into dated summaries that merge telescopically; original messages always preserved
 - **Secrets stay in the vault** — vault secrets are never exposed in prompts; redaction prevents leaking into summaries
 
@@ -323,7 +323,7 @@ src/
     routes/         # REST API routes (one file per resource)
     services/       # Business logic
     providers/      # AI provider implementations
-    tools/          # Native tools exposed to Kins
+    tools/          # Native tools exposed to Agents
     db/             # SQLite connection, Drizzle schema, migrations
     auth/           # Better Auth config + middleware
     sse/            # SSE manager
@@ -379,7 +379,7 @@ All settings have sensible defaults. Override only what you need.
 | `COMPACTING_KEEP_PERCENT` | `40` | % of context window preserved as raw messages |
 | `COMPACTING_SUMMARY_BUDGET_PERCENT` | `20` | Max % of context for summaries before telescopic merge |
 | `COMPACTING_MAX_SUMMARIES` | `10` | Max active summaries before telescopic merge |
-| `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Total summary retention per Kin (active + archived) |
+| `COMPACTING_MAX_SUMMARIES_PER_KIN` | `50` | Total summary retention per Agent (active + archived) |
 | `COMPACTING_MODEL` | Provider default | Override the model used for session compacting |
 | `MEMORY_EXTRACTION_MODEL` | Provider default | Override the model used for memory extraction |
 | `MEMORY_MAX_RELEVANT` | `10` | Max relevant memories injected into context |
@@ -422,19 +422,19 @@ All settings have sensible defaults. Override only what you need.
 | `CRONS_MAX_ACTIVE` | `50` | Max active cron jobs |
 | `CRONS_MAX_CONCURRENT_EXEC` | `5` | Max concurrent cron executions |
 
-#### Inter-Kin Communication
+#### Inter-Agent Communication
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `INTER_KIN_MAX_CHAIN_DEPTH` | `5` | Max chain depth for Kin-to-Kin messages |
-| `INTER_KIN_RATE_LIMIT` | `20` | Max inter-Kin messages per minute |
+| `INTER_KIN_MAX_CHAIN_DEPTH` | `5` | Max chain depth for Agent-to-Agent messages |
+| `INTER_KIN_RATE_LIMIT` | `20` | Max inter-Agent messages per minute |
 
 #### Channels & Webhooks
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CHANNELS_MAX_PER_KIN` | `5` | Max channel connections per Kin |
-| `WEBHOOKS_MAX_PER_KIN` | `20` | Max webhooks per Kin |
+| `CHANNELS_MAX_PER_KIN` | `5` | Max channel connections per Agent |
+| `WEBHOOKS_MAX_PER_KIN` | `20` | Max webhooks per Agent |
 | `WEBHOOKS_MAX_PAYLOAD_BYTES` | `1048576` | Max webhook payload size (1 MB) |
 | `WEBHOOKS_LOG_RETENTION_DAYS` | `30` | Webhook execution log retention period |
 | `WEBHOOKS_MAX_LOGS_PER_WEBHOOK` | `500` | Max stored execution logs per webhook |
@@ -448,7 +448,7 @@ All settings have sensible defaults. Override only what you need.
 | `UPLOAD_MAX_FILE_SIZE` | `50` | Max upload size in MB |
 | `UPLOAD_CHANNEL_RETENTION_DAYS` | `30` | Channel file retention period in days |
 | `UPLOAD_CHANNEL_CLEANUP_INTERVAL` | `60` | Channel file cleanup interval in minutes |
-| `FILE_STORAGE_DIR` | `{dataDir}/storage` | Kin file storage directory |
+| `FILE_STORAGE_DIR` | `{dataDir}/storage` | Agent file storage directory |
 | `FILE_STORAGE_MAX_SIZE` | `100` | Max file size in MB |
 | `FILE_STORAGE_CLEANUP_INTERVAL` | `60` | Cleanup interval in minutes |
 
@@ -464,9 +464,9 @@ All settings have sensible defaults. Override only what you need.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WORKSPACE_BASE_DIR` | `{dataDir}/workspaces` | Kin workspace base directory |
+| `WORKSPACE_BASE_DIR` | `{dataDir}/workspaces` | Agent workspace base directory |
 | `MINI_APPS_DIR` | `{dataDir}/mini-apps` | Mini apps storage directory |
-| `MINI_APPS_MAX_PER_KIN` | `20` | Max mini apps per Kin |
+| `MINI_APPS_MAX_PER_KIN` | `20` | Max mini apps per Agent |
 | `MINI_APPS_MAX_FILE_SIZE` | `5` | Max single file size in MB |
 | `MINI_APPS_MAX_TOTAL_SIZE` | `50` | Max total size per app in MB |
 | `MINI_APPS_BACKEND_ENABLED` | `true` | Enable mini app backend execution |
@@ -491,14 +491,14 @@ All settings have sensible defaults. Override only what you need.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MCP_REQUIRE_APPROVAL` | `true` | Require user approval for MCP server management |
-| `HUMAN_PROMPTS_MAX_PENDING` | `5` | Max pending human-in-the-loop prompts per Kin |
+| `HUMAN_PROMPTS_MAX_PENDING` | `5` | Max pending human-in-the-loop prompts per Agent |
 
 #### Sessions & Invitations
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `QUICK_SESSION_EXPIRATION_HOURS` | `24` | Quick session expiration time |
-| `QUICK_SESSION_MAX_PER_USER_KIN` | `1` | Max active quick sessions per user per Kin |
+| `QUICK_SESSION_MAX_PER_USER_KIN` | `1` | Max active quick sessions per user per Agent |
 | `QUICK_SESSION_RETENTION_DAYS` | `7` | Quick session data retention |
 | `QUICK_SESSION_CLEANUP_INTERVAL` | `60` | Cleanup interval in minutes |
 | `INVITATION_DEFAULT_EXPIRY_DAYS` | `7` | Default invitation link expiry |
@@ -518,7 +518,7 @@ All settings have sensible defaults. Override only what you need.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WAKEUPS_MAX_PENDING_PER_KIN` | `20` | Max pending wakeups per Kin |
+| `WAKEUPS_MAX_PENDING_PER_KIN` | `20` | Max pending wakeups per Agent |
 
 #### Version Check
 

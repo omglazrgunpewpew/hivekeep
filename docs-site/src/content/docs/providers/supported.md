@@ -23,14 +23,14 @@ Hivekeep ships with built-in providers across four families: language models (LL
 
 ## Capabilities
 
-- **LLM** — Chat and text completion models used for Kin conversations
+- **LLM** — Chat and text completion models used for Agent conversations
 - **Embedding** — Vector embedding models used for memory storage and retrieval
 - **Image** — Image generation models (used by `generate_image`)
 - **Search** — Web search APIs (used by `web_search` and discovered via `list_search_providers`)
 
 ## Search-provider capabilities at a glance
 
-Search providers declare static capability flags so a Kin can pick the right one for the job. `web_search` honors what each provider supports and emits a warning when the LLM asks for something the provider doesn't expose.
+Search providers declare static capability flags so a Agent can pick the right one for the job. `web_search` honors what each provider supports and emits a warning when the LLM asks for something the provider doesn't expose.
 
 | Provider | `answer` | `freshness` | `domains` | `lang` | `location` | Notes |
 |---|:---:|:---:|:---:|:---:|:---:|---|
@@ -43,7 +43,7 @@ Search providers declare static capability flags so a Kin can pick the right one
 
 Providers are configured in **Settings > Providers** in the Hivekeep UI. Each provider requires an **API key** (except those using OAuth).
 
-A configured search provider is automatically picked up by the `web_search` tool. To make it the default for all Kins, set it under **Settings > Models & Services > Default Search Provider** — otherwise `web_search` falls back to the first valid configured search provider.
+A configured search provider is automatically picked up by the `web_search` tool. To make it the default for all Agents, set it under **Settings > Models & Services > Default Search Provider** — otherwise `web_search` falls back to the first valid configured search provider.
 
 ## API Endpoints
 
@@ -65,7 +65,7 @@ Hivekeep exposes several provider management endpoints:
 
 To use Hivekeep, you need at minimum:
 
-1. **One LLM provider** — For Kin conversations (Anthropic, OpenAI, Gemini, or an OpenAI-compatible endpoint via a plugin)
+1. **One LLM provider** — For Agent conversations (Anthropic, OpenAI, Gemini, or an OpenAI-compatible endpoint via a plugin)
 2. **One embedding provider** — For memory to work (OpenAI's `text-embedding-3-small`, a plugin-contributed provider, or Ollama)
 
 Optional but recommended:
