@@ -336,7 +336,7 @@ export function registerAllTools(): void {
   toolRegistry.register('download_email_attachment', downloadEmailAttachmentTool, 'email')
 
   // Address-book tools — read-only EXTERNAL contacts (iCloud, …), distinct from
-  // KinBot's own contacts CRM. Resolved through a slug-based account.
+  // Hivekeep's own contacts CRM. Resolved through a slug-based account.
   toolRegistry.register('list_address_books', listAddressBooksTool, 'contacts')
   toolRegistry.register('list_address_book_contacts', listAddressBookContactsTool, 'contacts')
   toolRegistry.register('get_address_book_contact', getAddressBookContactTool, 'contacts')

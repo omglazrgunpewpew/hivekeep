@@ -1,9 +1,9 @@
 ---
 title: What are Kins?
-description: Understanding KinBot's persistent AI agents.
+description: Understanding Hivekeep's persistent AI agents.
 ---
 
-Kins are KinBot's core concept: **persistent AI agents** that live on your server, remember everything, and work as a team.
+Kins are Hivekeep's core concept: **persistent AI agents** that live on your server, remember everything, and work as a team.
 
 Unlike disposable chatbot sessions, a Kin has:
 
@@ -31,7 +31,7 @@ When you create a Kin, you define:
 ## How they work
 
 1. **Messages queue** — each Kin has its own priority queue. User messages are processed before automated ones (cron, webhooks, inter-Kin). Within the same priority, messages are processed in order.
-2. **System prompt** — KinBot builds a rich system prompt from the Kin's identity, relevant memories, contacts directory, Kin directory, active channels, and platform directives.
+2. **System prompt** — Hivekeep builds a rich system prompt from the Kin's identity, relevant memories, contacts directory, Kin directory, active channels, and platform directives.
 3. **Memory injection** — before each turn, relevant memories are retrieved via semantic search and injected into context.
 4. **Session compacting** — when the conversation gets too long for the model's context window, older messages are summarized into a snapshot. Original messages are always preserved in the database, so no data is lost.
 5. **Tool execution** — Kins have access to 100+ built-in tools plus MCP servers and custom tools.
@@ -46,6 +46,6 @@ You can designate one Kin as the **Hub** — a central coordinator that receives
 
 ## What's next?
 
-- [System Prompts](/kinbot/docs/kins/system-prompts/) — craft the perfect personality
-- [Tools](/kinbot/docs/kins/tools/) — give your Kins capabilities
-- [Memory](/kinbot/docs/kins/memory/) — how Kins remember
+- [System Prompts](/hivekeep/docs/kins/system-prompts/) — craft the perfect personality
+- [Tools](/hivekeep/docs/kins/tools/) — give your Kins capabilities
+- [Memory](/hivekeep/docs/kins/memory/) — how Kins remember

@@ -29,30 +29,30 @@ describe('generateManifest', () => {
     expect(manifest.description).toBe('A test plugin')
     expect(manifest.author).toBe('Tester')
     expect(manifest.main).toBe('index.ts')
-    expect(manifest.kinbot).toBe('>=0.41.0')
+    expect(manifest.hivekeep).toBe('>=0.41.0')
   })
 })
 
 describe('generatePackageJson', () => {
-  test('declares the kinbot-plugin keyword so the Browse tab discovers it', () => {
+  test('declares the hivekeep-plugin keyword so the Browse tab discovers it', () => {
     const pkg = JSON.parse(generatePackageJson(defaultOpts))
-    expect(pkg.keywords).toContain('kinbot-plugin')
-    // `kinbot` as a convenience second keyword.
-    expect(pkg.keywords).toContain('kinbot')
+    expect(pkg.keywords).toContain('hivekeep-plugin')
+    // `hivekeep` as a convenience second keyword.
+    expect(pkg.keywords).toContain('hivekeep')
   })
 
-  test('declares @kinbot-developer/sdk as a peerDependency, NOT a regular dependency', () => {
+  test('declares @hivekeep-developer/sdk as a peerDependency, NOT a regular dependency', () => {
     // Critical: a regular dependency would let bun install a SECOND
     // copy of the SDK and break instanceof checks across the
     // plugin/host boundary.
     const pkg = JSON.parse(generatePackageJson(defaultOpts))
-    expect(pkg.peerDependencies['@kinbot-developer/sdk']).toBeTruthy()
-    expect(pkg.dependencies['@kinbot-developer/sdk']).toBeUndefined()
+    expect(pkg.peerDependencies['@hivekeep-developer/sdk']).toBeTruthy()
+    expect(pkg.dependencies['@hivekeep-developer/sdk']).toBeUndefined()
   })
 
   test('lists the SDK in devDependencies so the plugin can compile against types in dev', () => {
     const pkg = JSON.parse(generatePackageJson(defaultOpts))
-    expect(pkg.devDependencies['@kinbot-developer/sdk']).toBeTruthy()
+    expect(pkg.devDependencies['@hivekeep-developer/sdk']).toBeTruthy()
   })
 
   test('files array limits what ships in the published tarball', () => {
@@ -84,7 +84,7 @@ describe('generatePackageJson', () => {
 describe('generateIndex', () => {
   test('includes tool boilerplate for tools type', () => {
     const code = generateIndex({ ...defaultOpts, types: ['tools'] })
-    expect(code).toContain("import { tool, z } from '@kinbot-developer/sdk'")
+    expect(code).toContain("import { tool, z } from '@hivekeep-developer/sdk'")
     expect(code).toContain('hello:')
     expect(code).toContain('inputSchema')
   })
@@ -95,7 +95,7 @@ describe('generateIndex', () => {
     // Hooks-only does not need any runtime import from the SDK (no tool() / no card.*)
     expect(code).not.toContain("import { tool")
     // But it DOES need the type imports for PluginContext / PluginExports.
-    expect(code).toContain("import type { PluginContext, PluginExports } from '@kinbot-developer/sdk'")
+    expect(code).toContain("import type { PluginContext, PluginExports } from '@hivekeep-developer/sdk'")
   })
 
   test('includes a native LLMProvider skeleton for providers type', () => {
@@ -150,7 +150,7 @@ describe('scaffold', () => {
   const testDirs: string[] = []
 
   function makeTempDir(): string {
-    const dir = join(tmpdir(), `kinbot-scaffold-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    const dir = join(tmpdir(), `hivekeep-scaffold-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
     testDirs.push(dir)
     return dir
   }
@@ -178,8 +178,8 @@ describe('scaffold', () => {
     scaffold(dir, defaultOpts)
     const raw = readFileSync(join(dir, 'package.json'), 'utf-8')
     const pkg = JSON.parse(raw)
-    expect(pkg.keywords).toContain('kinbot-plugin')
-    expect(pkg.peerDependencies['@kinbot-developer/sdk']).toBeTruthy()
+    expect(pkg.keywords).toContain('hivekeep-plugin')
+    expect(pkg.peerDependencies['@hivekeep-developer/sdk']).toBeTruthy()
   })
 
   test('plugin.json is valid JSON', () => {

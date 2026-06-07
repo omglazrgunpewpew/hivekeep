@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 /**
- * Generate the KinBot video voiceover with ElevenLabs, using your cloned voice.
+ * Generate the Hivekeep video voiceover with ElevenLabs, using your cloned voice.
  *
  * Usage:
- *   ELEVENLABS_API_KEY=xxxxx bun kinbot-video/generate-vo.mjs
+ *   ELEVENLABS_API_KEY=xxxxx bun hivekeep-video/generate-vo.mjs
  * Optional:
  *   ELEVENLABS_VOICE_ID=<id>   # skip auto-detect and use this exact voice
  *   ELEVENLABS_MODEL=eleven_multilingual_v2   # default
  *
  * Without ELEVENLABS_VOICE_ID it lists your voices and picks the first cloned one.
- * Output: kinbot-video/audio/scene-01..06.mp3 and full.mp3
+ * Output: hivekeep-video/audio/scene-01..06.mp3 and full.mp3
  */
 import { mkdir } from 'node:fs/promises';
 
@@ -19,7 +19,7 @@ const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
 const OUT = new URL('./audio/', import.meta.url);
 
 if (!KEY) {
-  console.error('Missing ELEVENLABS_API_KEY. Run: ELEVENLABS_API_KEY=... bun kinbot-video/generate-vo.mjs');
+  console.error('Missing ELEVENLABS_API_KEY. Run: ELEVENLABS_API_KEY=... bun hivekeep-video/generate-vo.mjs');
   process.exit(1);
 }
 
@@ -75,4 +75,4 @@ console.log('Generating full narration...');
 const full = script.lines.map((l) => l.vo).join('\n\n');
 await tts(voiceId, full, 'full.mp3');
 
-console.log('Done. Files in kinbot-video/audio/');
+console.log('Done. Files in hivekeep-video/audio/');

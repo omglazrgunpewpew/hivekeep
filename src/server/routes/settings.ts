@@ -615,7 +615,7 @@ settingsRoutes.put('/task-limits', async (c) => {
 // The dashboard checklist tracks which items the user has dismissed
 // ('Skip' button) so the UI doesn't keep nagging about features the
 // instance owner has consciously opted out of. Storage is global
-// app_settings (single shared state across all admins — KinBot is a
+// app_settings (single shared state across all admins — Hivekeep is a
 // small-group product, not multi-tenant per-user).
 
 // GET /api/settings/dismissed-setup-items

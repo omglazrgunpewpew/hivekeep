@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KinBot — Design reference (dark)</title>
+<title>Hivekeep — Design reference (dark)</title>
 <!--
   ════════════════════════════════════════════════════════════════════════
   DEV REFERENCE — "Foyer" dark, warm sans-serif. SITE LANGUAGE: ENGLISH.
-  Anti-AI-slop applied (see kinbot-1.0-anti-ai-slop.md):
+  Anti-AI-slop applied (see hivekeep-1.0-anti-ai-slop.md):
    • No ✨ sparkle accents. Kickers are mono with a small peach tick, not generic eyebrows.
    • Glows reduced & warmed (peach-led) to break the "purple-gradient" cliché. Accent word is warm (peach→coral).
    • Layouts varied — NOT 3× the same icon-in-rounded-square triplet. Mixed radii & shadows.
    • Human, varied copy. Real product shown via feathered screenshot placeholders.
-  Design rules (kinbot-1.0-site-dev-guidance):
+  Design rules (hivekeep-1.0-site-dev-guidance):
    • TYPO: all sans-serif. Headings = Plus Jakarta Sans 800 (app font). Labels = JetBrains Mono.
    • ICONS: lucide (= lucide-react). Channel/brand logos = simple-icons (= react-icons/si).
      Provider logos in prod = @lobehub/icons (color), see ProviderIcon.tsx.
@@ -252,8 +252,8 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
 
 <nav>
   <div class="wrap nav-in">
-    <div class="brand"><span class="dot"><i data-lucide="bot"></i></span>KinBot</div>
-    <div class="nav-links"><a href="#">Features</a><a href="#">Why KinBot</a><a href="#">Docs</a><a href="#">Community</a></div>
+    <div class="brand"><span class="dot"><i data-lucide="bot"></i></span>Hivekeep</div>
+    <div class="nav-links"><a href="#">Features</a><a href="#">Why Hivekeep</a><a href="#">Docs</a><a href="#">Community</a></div>
     <div class="nav-cta"><a class="gh" href="#"><i data-lucide="star"></i> 1.2k</a><a class="btn btn-primary btn-sm" href="#">Get started</a></div>
   </div>
 </nav>
@@ -353,7 +353,7 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
       <div class="bcard span2"><span class="gradline"></span>
         <h3><i data-lucide="package"></i> A single <span class="mono">docker run</span></h3>
         <p>No Postgres, Redis, Mongo, or message broker. Bun + SQLite, one binary, your data stays home.</p>
-        <div class="term mono"><div><span class="c">$</span> docker run -d -p 3000:3000 \</div><div>&nbsp;&nbsp;-v kinbot-data:/app/data <span class="p2">ghcr.io/.../kinbot</span></div><div class="cmt"># then open your browser — Sherpa takes it from there</div></div>
+        <div class="term mono"><div><span class="c">$</span> docker run -d -p 3000:3000 \</div><div>&nbsp;&nbsp;-v hivekeep-data:/app/data <span class="p2">ghcr.io/.../hivekeep</span></div><div class="cmt"># then open your browser — Sherpa takes it from there</div></div>
       </div>
       <div class="bcard"><span class="gradline warm"></span>
         <h3><i data-lucide="wrench"></i> Self-improving</h3>
@@ -423,7 +423,7 @@ footer{border-top:1px solid var(--line);background:oklch(0.125 0.026 312);}
   </div>
 </section>
 
-<footer><div class="wrap foot-in"><div class="brand" style="font-size:1rem"><span class="dot"><i data-lucide="bot"></i></span>KinBot</div><div>© 2026 KinBot · MIT · Built with Bun</div></div></footer>
+<footer><div class="wrap foot-in"><div class="brand" style="font-size:1rem"><span class="dot"><i data-lucide="bot"></i></span>Hivekeep</div><div>© 2026 Hivekeep · MIT · Built with Bun</div></div></footer>
 
 <script>
 /* Avatars. In prod: const KINS = await (await fetch('kins.json')).json();

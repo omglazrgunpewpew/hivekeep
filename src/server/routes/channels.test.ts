@@ -18,10 +18,10 @@ const mockTransferChannel = mock<(...args: any[]) => Promise<TransferResult>>(()
   Promise.resolve({
     ok: true,
     transferredAt: 1700000000000,
-    previousKinSlug: 'kinbot-master',
+    previousKinSlug: 'hivekeep-master',
     newKinSlug: 'kube-master',
     fromKinId: 'kin-source',
-    fromKinName: 'KinBot Master',
+    fromKinName: 'Hivekeep Master',
     toKinId: 'kin-target',
     toKinName: 'Kube Master',
   } as TransferResult),
@@ -137,10 +137,10 @@ beforeEach(() => {
   mockTransferChannel.mockResolvedValue({
     ok: true,
     transferredAt: 1700000000000,
-    previousKinSlug: 'kinbot-master',
+    previousKinSlug: 'hivekeep-master',
     newKinSlug: 'kube-master',
     fromKinId: 'kin-source',
-    fromKinName: 'KinBot Master',
+    fromKinName: 'Hivekeep Master',
     toKinId: 'kin-target',
     toKinName: 'Kube Master',
   })
@@ -273,7 +273,7 @@ describe('channelRoutes', () => {
       const body = await resp.json()
       expect(body.ok).toBe(true)
       expect(body.newKinSlug).toBe('kube-master')
-      expect(body.previousKinSlug).toBe('kinbot-master')
+      expect(body.previousKinSlug).toBe('hivekeep-master')
       expect(body.channel?.kinId).toBe('kin-target')
 
       expect(mockTransferChannel).toHaveBeenCalledTimes(1)

@@ -97,7 +97,7 @@ All major items from the task are done:
    - Hover scale + arrow lift animation
 
 2. **Announcement bar** — `Header.astro` now has a top banner:
-   - "KinBot is in early development" with pulsing dot + chevron link to landing site
+   - "Hivekeep is in early development" with pulsing dot + chevron link to landing site
    - Subtle Aurora gradient background, glass-style border
    - Responsive text sizing
 
@@ -269,7 +269,7 @@ All major items from the task are done:
    - Removed duplicate pagination CSS from custom.css
 
 4. **Footer redesign** — Simplified:
-   - "Back to KinBot site" link with chevron icon
+   - "Back to Hivekeep site" link with chevron icon
    - Copyright notice
    - Subtle top border
 

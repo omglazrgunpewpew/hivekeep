@@ -1,5 +1,5 @@
 {
-  "generator": "KinBot vanilla avatar pipeline (img2img edit mode)",
+  "generator": "Hivekeep vanilla avatar pipeline (img2img edit mode)",
   "model": "gemini-3-pro-image-preview (Nano Banana Pro)",
   "baseImage": "base-avatar.png (src/server/assets/base-avatar.png)",
   "mode": "edit",

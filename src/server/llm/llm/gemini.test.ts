@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'bun:test'
 import { geminiProvider } from '@/server/llm/llm/gemini'
-import type { ChatRequest, KinbotMessage } from '@/server/llm/llm/types'
+import type { ChatRequest, HivekeepMessage } from '@/server/llm/llm/types'
 
 // We test the provider through its public surface — for the
 // conversion logic we exercise a chat() call against a fetch that
@@ -233,7 +233,7 @@ describe('geminiProvider.chat — request shape', () => {
     expect(body.contents).toEqual([{ role: 'user', parts: [{ text: 'hi' }] }])
   })
 
-  it('maps KinbotTool[] into a single tools entry with functionDeclarations', async () => {
+  it('maps HivekeepTool[] into a single tools entry with functionDeclarations', async () => {
     const request: ChatRequest = {
       messages: [{ role: 'user', content: [{ type: 'text', text: 'q' }] }],
       tools: [
@@ -292,7 +292,7 @@ describe('geminiProvider.chat — request shape', () => {
   })
 
   it('round-trips tool-use → tool-result with the original tool name patched in', async () => {
-    const messages: KinbotMessage[] = [
+    const messages: HivekeepMessage[] = [
       { role: 'user', content: [{ type: 'text', text: 'what is the weather?' }] },
       {
         role: 'assistant',
@@ -353,7 +353,7 @@ describe('geminiProvider.chat — request shape', () => {
   })
 
   it('drops thinking blocks from the message history (input-only would 400)', async () => {
-    const messages: KinbotMessage[] = [
+    const messages: HivekeepMessage[] = [
       {
         role: 'assistant',
         content: [

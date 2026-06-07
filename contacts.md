@@ -1,18 +1,18 @@
-# KinBot — Address books (external contacts)
+# Hivekeep — Address books (external contacts)
 
 Read-only access to **external** address books (iCloud, Google, Microsoft, generic
 CardDAV) so Kins can look up a contact — typically a phone number to hand to
 `send_channel_message` (e.g. an SMS via the Twilio channel). These contacts are
-**never** copied into KinBot's own contacts CRM; they are fetched on demand.
+**never** copied into Hivekeep's own contacts CRM; they are fetched on demand.
 
-> Not to be confused with KinBot's internal contacts (`contact-tools.ts`,
+> Not to be confused with Hivekeep's internal contacts (`contact-tools.ts`,
 > `create_contact`/`get_contact`/…) which are the Kin's own writable address
 > book with per-channel platform links. The address-book feature is a separate,
 > read-only, provider-backed source.
 
 ## Provider family (SDK)
 
-`ContactsProvider` lives in `@kinbot-developer/sdk` (v0.8.0), alongside
+`ContactsProvider` lives in `@hivekeep-developer/sdk` (v0.8.0), alongside
 `EmailProvider`. The host detects the family by the presence of `listContacts`
 + `getContact` (`detectProviderFamily` in `plugins.ts`), so a plugin contributes
 a contacts provider exactly like any other provider.
@@ -85,7 +85,7 @@ distinct toolbox and distinct tool names.
 2. `send_channel_message(channel_id=<twilio>, chat_id="+336…", message=…)` →
    SMS sent via the `twilio-sms` channel plugin (already exists).
 
-No sync, no copy into KinBot's contacts — the address book is just a lookup
+No sync, no copy into Hivekeep's contacts — the address book is just a lookup
 source feeding `chat_id`.
 
 ## Unified accounts (one connection, several capabilities)

@@ -384,7 +384,7 @@ sidebar/
 - Phase 6 (Polish) : 2h
 
 ### Faut-il un cron dédié ?
-**Oui, recommandé.** Un cron dédié `kinbot-teams` (2h, Sonnet ou Opus) par phase, exécuté séquentiellement. Chaque phase est autonome et testable. Le cron peut s'appuyer sur ce document comme spec.
+**Oui, recommandé.** Un cron dédié `hivekeep-teams` (2h, Sonnet ou Opus) par phase, exécuté séquentiellement. Chaque phase est autonome et testable. Le cron peut s'appuyer sur ce document comme spec.
 
 ### Priorisation recommandée
 Phases 1→3 sont le **MVP** : teams visibles, Hub fonctionnel, routage intra-team. Livrable en 3 crons (6h).

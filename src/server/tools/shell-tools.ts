@@ -9,8 +9,8 @@ import { config } from '@/server/config'
 const log = createLogger('shell-tools')
 
 // Sourced from config so operators can raise the ceiling for tasks that run
-// genuinely long commands (large test suites, builds). Env: KINBOT_SHELL_TIMEOUT
-// (default 30s) and KINBOT_SHELL_MAX_TIMEOUT (default 10min). The Kin picks any
+// genuinely long commands (large test suites, builds). Env: HIVEKEEP_SHELL_TIMEOUT
+// (default 30s) and HIVEKEEP_SHELL_MAX_TIMEOUT (default 10min). The Kin picks any
 // value up to MAX_TIMEOUT per call via the `timeout` arg.
 const DEFAULT_TIMEOUT = config.shell.defaultTimeoutMs
 const MAX_TIMEOUT = config.shell.maxTimeoutMs
@@ -23,7 +23,7 @@ const MAX_OUTPUT_LENGTH = 30_000
 
 // ─── Bash-wrapper detection ──────────────────────────────────────────────────
 
-// Map binaries that have a dedicated KinBot tool to the tool they should use
+// Map binaries that have a dedicated Hivekeep tool to the tool they should use
 // instead. Sub-Kins have a strong incentive to fall back to `cat`/`head`/etc.
 // because they know the shell; the prompt alone hasn't fully prevented this.
 // Detect the pattern at execution time and refuse the call — the model retries
@@ -43,7 +43,7 @@ const WRAPPER_SUGGESTIONS: Record<string, string> = {
   awk: 'read_file (for inspection) or edit_file / multi_edit (for changes)',
 }
 
-// Banned commands. These either have a dedicated KinBot tool that performs
+// Banned commands. These either have a dedicated Hivekeep tool that performs
 // the same job with better integration (http_request, browse_url, …) or are
 // network/interactive operations that don't belong in a headless task. The
 // list is adapted from Claude Code's BashTool BANNED_COMMANDS.
@@ -160,7 +160,7 @@ function isCatWrapperPipelineStart(cmd: string): boolean {
 }
 
 /**
- * Detect a bare shell wrapper around a tool that has a dedicated KinBot
+ * Detect a bare shell wrapper around a tool that has a dedicated Hivekeep
  * equivalent, OR a banned network/browser command. Returns null when the
  * command looks like a legitimate pipeline / script / multi-step (in which
  * case the binary is being used as a filter rather than as an entrypoint).
@@ -311,13 +311,13 @@ export const runShellTool: ToolRegistration = {
             cwd: effectiveCwd,
             stdout: 'pipe',
             stderr: 'pipe',
-            // resolveToolEnv layers the per-task env (e.g. KINBOT_GH_TOKEN
+            // resolveToolEnv layers the per-task env (e.g. HIVEKEEP_GH_TOKEN
             // for worktree git ops) on top of the default base — the PAT
             // never appears as a literal here.
             env: resolveToolEnv(ctx, {
               ...process.env,
-              KINBOT_KIN_ID: ctx.kinId,
-              KINBOT_WORKSPACE: workspace,
+              HIVEKEEP_KIN_ID: ctx.kinId,
+              HIVEKEEP_WORKSPACE: workspace,
             }),
           })
 

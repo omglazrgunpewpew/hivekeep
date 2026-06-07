@@ -151,7 +151,7 @@ describe('getMiniAppDocsTool edge cases', () => {
   it('docs URLs all point to the same base', async () => {
     for (const section of KNOWN_SECTIONS) {
       const result = await execute(section)
-      expect(result.docsUrl).toContain('marlburrow.github.io/kinbot')
+      expect(result.docsUrl).toContain('marlburrow.github.io/hivekeep')
     }
   })
 
@@ -162,9 +162,9 @@ describe('getMiniAppDocsTool edge cases', () => {
     }
   })
 
-  it('hooks section mentions useKinBot', async () => {
+  it('hooks section mentions useHivekeep', async () => {
     const result = await execute('hooks')
-    expect(result.content).toContain('useKinBot')
+    expect(result.content).toContain('useHivekeep')
   })
 
   it('components section mentions Button', async () => {

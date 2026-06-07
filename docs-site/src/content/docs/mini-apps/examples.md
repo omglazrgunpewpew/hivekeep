@@ -12,11 +12,11 @@ A persistent todo app with add, complete, and delete functionality.
 <script type="text/jsx">
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { useKinBot, useStorage, toast } from "@kinbot/react";
-import { Card, Input, Button, List, Stack, EmptyState, Badge } from "@kinbot/components";
+import { useHivekeep, useStorage, toast } from "@hivekeep/react";
+import { Card, Input, Button, List, Stack, EmptyState, Badge } from "@hivekeep/components";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div className="p-4"><div className="spinner" /></div>;
   return <TodoApp />;
 }
@@ -90,11 +90,11 @@ A dashboard showing stats and charts with mock data.
 <div id="root"></div>
 <script type="text/jsx">
 import { createRoot } from "react-dom/client";
-import { useKinBot } from "@kinbot/react";
-import { Card, Stat, Grid, BarChart, LineChart, PieChart, Stack } from "@kinbot/components";
+import { useHivekeep } from "@hivekeep/react";
+import { Card, Stat, Grid, BarChart, LineChart, PieChart, Stack } from "@hivekeep/components";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div>Loading...</div>;
   return <Dashboard />;
 }
@@ -168,11 +168,11 @@ Using the compound Form component.
 <div id="root"></div>
 <script type="text/jsx">
 import { createRoot } from "react-dom/client";
-import { useKinBot, useStorage, toast } from "@kinbot/react";
-import { Card, Form, Input, Select, Textarea, Switch } from "@kinbot/components";
+import { useHivekeep, useStorage, toast } from "@hivekeep/react";
+import { Card, Form, Input, Select, Textarea, Switch } from "@hivekeep/components";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div>Loading...</div>;
   return <ContactForm />;
 }
@@ -230,11 +230,11 @@ Using hash-based routing for a settings app.
 <div id="root"></div>
 <script type="text/jsx">
 import { createRoot } from "react-dom/client";
-import { useKinBot, useStorage } from "@kinbot/react";
-import { Router, Route, NavLink, Card, Stack, Switch, Select, Input } from "@kinbot/components";
+import { useHivekeep, useStorage } from "@hivekeep/react";
+import { Router, Route, NavLink, Card, Stack, Switch, Select, Input } from "@hivekeep/components";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div>Loading...</div>;
 
   return (
@@ -292,7 +292,7 @@ createRoot(document.getElementById("root")).render(<App />);
 
 ## Templates
 
-KinBot includes built-in templates for common patterns. Ask a Kin:
+Hivekeep includes built-in templates for common patterns. Ask a Kin:
 
 > "Create a mini-app using the kanban template"
 

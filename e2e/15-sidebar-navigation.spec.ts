@@ -16,18 +16,18 @@ test.describe.serial('Sidebar navigation & layout', () => {
   test.beforeEach(async ({ page }) => {
     await mockProviderModels(page)
     await page.goto('/')
-    await expect(page.getByText('Sign in to your KinBot workspace')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
     await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
-  test('should display KinBot logo in sidebar header', async ({ page }) => {
+  test('should display Hivekeep logo in sidebar header', async ({ page }) => {
     const sidebar = page.locator('[data-slot="sidebar"]')
     await expect(sidebar).toBeVisible()
 
     // Logo image and text
-    await expect(sidebar.locator('img[src*="kinbot"]')).toBeVisible()
-    await expect(sidebar.getByText('KinBot')).toBeVisible()
+    await expect(sidebar.locator('img[src*="hivekeep"]')).toBeVisible()
+    await expect(sidebar.getByText('Hivekeep')).toBeVisible()
   })
 
   test('should display Kins section with create button', async ({ page }) => {
@@ -138,7 +138,7 @@ test.describe.serial('Sidebar navigation & layout', () => {
     await expect(kbButton).toBeVisible()
   })
 
-  test('should navigate to home when clicking KinBot logo', async ({ page }) => {
+  test('should navigate to home when clicking Hivekeep logo', async ({ page }) => {
     const sidebar = page.locator('[data-slot="sidebar"]')
 
     // Open settings first to move away from default view
@@ -147,7 +147,7 @@ test.describe.serial('Sidebar navigation & layout', () => {
     await page.getByRole('button', { name: 'Close' }).click()
 
     // Click logo — should navigate to /
-    const logoButton = sidebar.locator('button').filter({ hasText: 'KinBot' }).first()
+    const logoButton = sidebar.locator('button').filter({ hasText: 'Hivekeep' }).first()
     await logoButton.click()
 
     // Should remain on main page with Kins visible
@@ -163,7 +163,7 @@ test.describe('Sidebar responsive behavior', () => {
     await page.setViewportSize({ width: 375, height: 667 })
 
     await page.goto('/')
-    await expect(page.getByText('Sign in to your KinBot workspace')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
 
     // On mobile, wait for the toggle sidebar button (sidebar is hidden by default)
@@ -185,12 +185,12 @@ test.describe('Sidebar responsive behavior', () => {
     await page.setViewportSize({ width: 1280, height: 720 })
 
     await page.goto('/')
-    await expect(page.getByText('Sign in to your KinBot workspace')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
 
     // Wait for app to load — sidebar should be directly visible on desktop
     const sidebar = page.locator('[data-slot="sidebar"]')
     await expect(sidebar.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
-    await expect(sidebar.getByText('KinBot')).toBeVisible()
+    await expect(sidebar.getByText('Hivekeep')).toBeVisible()
   })
 })

@@ -3,7 +3,7 @@ title: Backend (_server.js)
 description: Add server-side logic to mini-apps with Hono.
 ---
 
-Mini-apps can have a backend by creating a `_server.js` file. The backend runs server-side in KinBot's process and is accessible via a scoped API.
+Mini-apps can have a backend by creating a `_server.js` file. The backend runs server-side in Hivekeep's process and is accessible via a scoped API.
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ export default function(ctx) {
 The file must default-export a function that receives a context object and returns a [Hono](https://hono.dev) app (or any object with a `.fetch()` method).
 
 :::note
-`_server.ts` is also supported. KinBot will use whichever exists.
+`_server.ts` is also supported. Hivekeep will use whichever exists.
 :::
 
 ## Backend Context
@@ -82,13 +82,13 @@ export default function(ctx) {
 From React, use the `useApi` hook:
 
 ```jsx
-import { useApi } from "@kinbot/react";
+import { useApi } from "@hivekeep/react";
 
 function ItemList() {
   const { data: items, loading, error, refetch } = useApi("/items");
 
   const addItem = async (name) => {
-    await KinBot.api.post("/items", { name });
+    await Hivekeep.api.post("/items", { name });
     refetch();
   };
 
@@ -102,18 +102,18 @@ Or use the raw API client directly:
 
 ```javascript
 // GET + parse JSON
-const items = await KinBot.api.get("/items");
+const items = await Hivekeep.api.get("/items");
 
 // POST JSON
-await KinBot.api.post("/items", { name: "New item" });
+await Hivekeep.api.post("/items", { name: "New item" });
 
 // PUT, PATCH, DELETE
-await KinBot.api.put("/items/123", { name: "Updated" });
-await KinBot.api.patch("/items/123", { name: "Patched" });
-await KinBot.api.delete("/items/123");
+await Hivekeep.api.put("/items/123", { name: "Updated" });
+await Hivekeep.api.patch("/items/123", { name: "Patched" });
+await Hivekeep.api.delete("/items/123");
 
 // Raw fetch (returns Response object)
-const response = await KinBot.api("/items", { method: "GET" });
+const response = await Hivekeep.api("/items", { method: "GET" });
 ```
 
 ## Real-Time Events (SSE)
@@ -152,14 +152,14 @@ export default function(ctx) {
 ### Frontend: Subscribe with Hook
 
 ```jsx
-import { useEventStream } from "@kinbot/react";
+import { useEventStream } from "@hivekeep/react";
 
 function ProcessMonitor() {
   const { messages, connected, clear } = useEventStream("progress");
 
   // Or with a callback (no accumulation):
   useEventStream("done", (data) => {
-    KinBot.toast(data.result, "success");
+    Hivekeep.toast(data.result, "success");
   });
 
   return (
@@ -179,20 +179,20 @@ Each message in `messages` has the shape `{ event, data, ts }`.
 
 ```javascript
 // Listen for a specific event
-KinBot.events.on("progress", (data) => {
+Hivekeep.events.on("progress", (data) => {
   console.log(`Step ${data.step}/${data.total}`);
 });
 
 // Listen for all events
-KinBot.events.subscribe(({ event, data }) => {
+Hivekeep.events.subscribe(({ event, data }) => {
   console.log(event, data);
 });
 
 // Check connection status
-console.log(KinBot.events.connected);
+console.log(Hivekeep.events.connected);
 
 // Disconnect
-KinBot.events.close();
+Hivekeep.events.close();
 ```
 
 ## Storage
@@ -222,7 +222,7 @@ const [config] = useStorage("config");
 
 ## Caching & Invalidation
 
-Backends are cached by version number. When you update `_server.js` via `write_mini_app_file`, the version increments and KinBot automatically reloads the backend on the next request. No manual restart needed.
+Backends are cached by version number. When you update `_server.js` via `write_mini_app_file`, the version increments and Hivekeep automatically reloads the backend on the next request. No manual restart needed.
 
 ## Logging
 
@@ -233,4 +233,4 @@ ctx.log.error("Something went wrong:", err.message);
 ctx.log.debug("Received data:", data);
 ```
 
-Logs appear in KinBot's server logs tagged with the app ID. The logger accepts simple string arguments (not structured objects like pino).
+Logs appear in Hivekeep's server logs tagged with the app ID. The logger accepts simple string arguments (not structured objects like pino).

@@ -47,14 +47,14 @@ import {
   InvalidRequestError,
   NetworkError,
   ProviderServerError,
-  KinbotProviderError,
+  HivekeepProviderError,
 } from '@/server/llm/core/types'
 import type {
   LLMProvider,
   LLMModel,
   ChatRequest,
   ChatChunk,
-  KinbotMessage,
+  HivekeepMessage,
   ThinkingEffort,
 } from '@/server/llm/llm/types'
 
@@ -156,8 +156,8 @@ export function inferImageInput(model: XaiLanguageModel): boolean {
 
 /**
  * Reasoning support: Grok reasoning families accept `reasoning_effort`
- * (`low | medium | high`; xAI also has `none`, expressed in KinBot as the
- * absence of an effort). KinBot's `max` downgrades to `high` at request time.
+ * (`low | medium | high`; xAI also has `none`, expressed in Hivekeep as the
+ * absence of an effort). Hivekeep's `max` downgrades to `high` at request time.
  *
  * @internal exported for tests.
  */
@@ -168,7 +168,7 @@ export function inferThinking(model: XaiLanguageModel): LLMModel['thinking'] | u
 }
 
 /**
- * A model is usable as a KinBot LLM iff it produces text output. The
+ * A model is usable as a Hivekeep LLM iff it produces text output. The
  * language-models endpoint only lists chat / image-understanding models, but
  * we still guard on `output_modalities` for forward compatibility.
  *
@@ -181,7 +181,7 @@ export function isTextOutputModel(model: XaiLanguageModel): boolean {
 }
 
 /**
- * Convert xAI pricing (USD cents per 100 million tokens) to KinBot's USD per
+ * Convert xAI pricing (USD cents per 100 million tokens) to Hivekeep's USD per
  * million tokens. `12500` → `1.25`. Drops absent / negative values.
  *
  * @internal exported for tests.
@@ -205,7 +205,7 @@ export function convertPricing(model: XaiLanguageModel): LLMModel['pricing'] | u
 }
 
 /**
- * Map an xAI language-model entry to a KinBot `LLMModel`, or null if it isn't
+ * Map an xAI language-model entry to a Hivekeep `LLMModel`, or null if it isn't
  * a text-output chat model. Classification is purely metadata-driven, with
  * context windows inferred from family naming.
  *
@@ -267,8 +267,8 @@ function mapFinishReason(
   }
 }
 
-function mapApiError(err: unknown): KinbotProviderError {
-  if (err instanceof KinbotProviderError) return err
+function mapApiError(err: unknown): HivekeepProviderError {
+  if (err instanceof HivekeepProviderError) return err
   if (err instanceof APIError) {
     const status = err.status
     const message = err.message
@@ -323,7 +323,7 @@ function uint8ToBase64(bytes: Uint8Array): string {
   return globalThis.btoa(binary)
 }
 
-// ─── Message conversion (kinbot → OpenAI-compatible) ─────────────────────────
+// ─── Message conversion (hivekeep → OpenAI-compatible) ─────────────────────────
 
 function systemPromptToMessage(
   system: ChatRequest['system'],
@@ -335,7 +335,7 @@ function systemPromptToMessage(
 }
 
 function userBlocksToContent(
-  blocks: KinbotMessage['content'],
+  blocks: HivekeepMessage['content'],
 ): ChatCompletionUserMessageParam['content'] | null {
   const parts: ChatCompletionContentPart[] = []
   for (const b of blocks) {
@@ -354,7 +354,7 @@ function userBlocksToContent(
 }
 
 function assistantMessage(
-  blocks: KinbotMessage['content'],
+  blocks: HivekeepMessage['content'],
 ): ChatCompletionAssistantMessageParam {
   let text = ''
   const toolCalls: ChatCompletionMessageToolCall[] = []
@@ -379,7 +379,7 @@ function assistantMessage(
 }
 
 function messagesToOpenAI(
-  messages: KinbotMessage[],
+  messages: HivekeepMessage[],
   system: ChatCompletionSystemMessageParam | undefined,
 ): ChatCompletionMessageParam[] {
   const out: ChatCompletionMessageParam[] = []

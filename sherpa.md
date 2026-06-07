@@ -2,7 +2,7 @@
 
 > **Statut** : spécification (non implémentée). Source de vérité pour la feature. Voir aussi `idea.md` (onboarding actuel), `prompt-system.md` (blocs du prompt), `api.md` / `sse.md` (contrats), `schema.md` (DB).
 >
-> **But** : rendre KinBot installable par n'importe qui d'un peu débrouillard. On remplace le wizard de configuration par une **conversation** avec un Kin configurateur nommé **Sherpa**, ouvert dans une modale au premier lancement. Sherpa configure la plateforme (providers, mémoire, génération d'images, channels, premier Kin) via du chat, en expliquant chaque notion. Il reste ensuite à demeure comme référent de configuration.
+> **But** : rendre Hivekeep installable par n'importe qui d'un peu débrouillard. On remplace le wizard de configuration par une **conversation** avec un Kin configurateur nommé **Sherpa**, ouvert dans une modale au premier lancement. Sherpa configure la plateforme (providers, mémoire, génération d'images, channels, premier Kin) via du chat, en expliquant chaque notion. Il reste ensuite à demeure comme référent de configuration.
 
 ---
 
@@ -17,7 +17,7 @@
 7. **Saisie sécurisée** : le secret va **UI → serveur → vault** ; le LLM ne voit jamais que des références non sensibles.
 8. **Admin-only** : l'onboarding (et le seed de Sherpa) n'existe que pour le **premier admin**. Les autres utilisateurs arrivent dans l'état courant et voient Sherpa + la conversation de l'admin dans la liste.
 9. **Pas de re-trigger** : l'onboarding est « techniquement complet » dès que compte + 1er LLM + Sherpa seedé existent. Le reste, c'est du dialogue.
-10. **Sherpa est aussi informateur** : il explique progressivement les capacités de KinBot (création d'outils à la demande, mini-apps, projets). Pédagogue, transparent, arrangeant, **une question à la fois**.
+10. **Sherpa est aussi informateur** : il explique progressivement les capacités de Hivekeep (création d'outils à la demande, mini-apps, projets). Pédagogue, transparent, arrangeant, **une question à la fois**.
 
 ---
 
@@ -121,19 +121,19 @@ Pour que Sherpa réponde avec autorité (et **ne botte jamais en touche**), il f
 - **Contenu à rédiger** (gros prompt — tâche 27.5.6) :
   - **Catalogue des fonctionnalités** avec, pour chacune, *à quoi ça sert / quand le proposer* : Kins & sous-Kins (tasks `await`/`async`), crons, mémoire (extraction auto + outils), vault/secrets, channels (Discord/Telegram…), mini-apps, projets & tickets, custom tools, MCP servers, providers & capacités (llm/embedding/image/search/tts/stt), recherche web, génération d'images, TTS/STT, compacting, communication inter-Kins, palettes/design.
   - **Architecture globale** (vulgarisée) : process unique, SQLite unique, conteneur unique, queue FIFO par Kin, SSE global, plugins.
-  - **Méta-projet** (faits figés) : produit **KinBot** (*« AI agents that actually remember you »*) ; créateur **marlburrow** (GitHub [@MarlBurroW](https://github.com/MarlBurroW)) ; repo `https://github.com/MarlBurroW/kinbot` ; site `https://marlburrow.github.io/kinbot/` ; docs `https://marlburrow.github.io/kinbot/docs/` ; licence **AGPL-3.0-only** ; aide via GitHub **Issues**/**Discussions** (pas de Discord) ; **open source, self-hosted, pas de SaaS prévu**.
+  - **Méta-projet** (faits figés) : produit **Hivekeep** (*« AI agents that actually remember you »*) ; créateur **marlburrow** (GitHub [@MarlBurroW](https://github.com/MarlBurroW)) ; repo `https://github.com/MarlBurroW/hivekeep` ; site `https://marlburrow.github.io/hivekeep/` ; docs `https://marlburrow.github.io/hivekeep/docs/` ; licence **AGPL-3.0-only** ; aide via GitHub **Issues**/**Discussions** (pas de Discord) ; **open source, self-hosted, pas de SaaS prévu**.
   - **Limites & garde-fous** : ce que Sherpa peut/doit ne pas faire (ne jamais demander un secret en clair, config globale réservée à l'admin, etc.).
 - **Posture proactive — quoi vendre, dans quel ordre.** Il n'y a pas *une* feature reine universelle ; la valeur est **segmentée selon le profil** (lu dans la fiche). Sherpa mène avec le **hero** puis amplifie selon ce que fait l'utilisateur :
   - **Hero (toujours)** : *une équipe d'IA qui se souvient vraiment de toi et s'améliore avec le temps* — mémoire persistante + Kins spécialisés par domaine/tâche. C'est le cœur, déjà amorcé par la fiche/les notes pendant l'onboarding.
   - **Amplificateurs (selon profil, par valeur perçue décroissante pour le grand public)** :
     1. **Channels (Discord/Telegram)** — parler à ses Kins depuis le téléphone, partout. Hook fort, immédiat (« tu peux carrément texter ton assistant »).
-    2. **Plateforme auto-améliorante : custom tools + mini-apps** — KinBot se dote d'outils/d'apps pour tes besoins récurrents. Gros effet « waouh » mais abstrait → **pitch contextuel** (« tu me redemandes souvent X, je te crée une mini-app pour ça ? »), pas en façade.
+    2. **Plateforme auto-améliorante : custom tools + mini-apps** — Hivekeep se dote d'outils/d'apps pour tes besoins récurrents. Gros effet « waouh » mais abstrait → **pitch contextuel** (« tu me redemandes souvent X, je te crée une mini-app pour ça ? »), pas en façade.
     3. **Automatisation : crons + sous-Kins/tasks** — déléguer et planifier. À proposer quand un besoin récurrent/planifié apparaît.
     4. **Projets & tickets** — gros chantiers long terme. À proposer **seulement** si l'utilisateur signale un projet ; sinon overkill et déroutant.
   - **Règle** : matcher au profil, jamais de pitch générique ; proposer + expliquer le bénéfice + lien doc, ne pas forcer.
 - **Ton par défaut** : chaleureux et accessible (tutoiement en FR), proche du ton du site (« AI agents that actually remember you ») — ajustable plus tard.
-- **Source canonique** : distiller depuis `idea.md`, `CLAUDE.md`, `schema.md`… Le doc est une **distillation orientée Sherpa**, à **maintenir** quand KinBot évolue (note de maintenance en tête du fichier).
-- *(Évolution future)* ce même doc pourrait alimenter une **knowledge base partagée** pour que tout Kin ait une awareness minimale de KinBot — hors périmètre.
+- **Source canonique** : distiller depuis `idea.md`, `CLAUDE.md`, `schema.md`… Le doc est une **distillation orientée Sherpa**, à **maintenir** quand Hivekeep évolue (note de maintenance en tête du fichier).
+- *(Évolution future)* ce même doc pourrait alimenter une **knowledge base partagée** pour que tout Kin ait une awareness minimale de Hivekeep — hors périmètre.
 
 ---
 
@@ -297,4 +297,4 @@ Namespace `sherpa.*` + clés des écrans d'onboarding et de la modale de secret,
 1. ✅ **Résolu** — modèle de seed : **défauts équilibrés** (milieu-de-gamme fiables en tool-use) par type natif, fallback `listModels`. Map `RECOMMENDED_CONFIGURATOR_MODELS` à curater au build (§4.2).
 2. *(décision build)* Garde-fou « config globale = admin only » : vérifier le rôle de l'utilisateur **du tour courant** dans les tools providers/channels — placement à trancher à l'implémentation.
 3. **Checklist** (non tranché) : proposé = retirer la grosse carte, **garder** les bannières inline aux points d'usage. À confirmer.
-4. ✅ **Résolu** — méta-projet figé (§4.6) : KinBot / marlburrow / repo `MarlBurroW/kinbot` / AGPL-3.0-only / open-source self-hosted. Priorité de pitch : hero (mémoire + Kins spécialisés) → channels → tools/mini-apps → automatisation → projets (§4.6).
+4. ✅ **Résolu** — méta-projet figé (§4.6) : Hivekeep / marlburrow / repo `MarlBurroW/hivekeep` / AGPL-3.0-only / open-source self-hosted. Priorité de pitch : hero (mémoire + Kins spécialisés) → channels → tools/mini-apps → automatisation → projets (§4.6).

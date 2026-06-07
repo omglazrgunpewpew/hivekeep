@@ -1,12 +1,12 @@
-# KinBot 1.0 — Catalogue maître des capacités
+# Hivekeep 1.0 — Catalogue maître des capacités
 
 > Document de référence interne. Source unique de vérité pour reconstruire le dépôt, le site GitHub Pages et la documentation. Synthèse de 16 dossiers de capacités extraits du code réel + veille concurrentielle.
 
-## Introduction — L'essence de KinBot
+## Introduction — L'essence de Hivekeep
 
-KinBot est une **plateforme auto-hébergée d'agents IA spécialisés** — les *Kins* — pensée pour les individus et les petits groupes. Tout tient dans **un seul processus, une seule base SQLite, un seul conteneur Docker**, sans aucune dépendance d'infrastructure externe (pas de Postgres, Redis, MongoDB, SearxNG ni broker de queue). `docker run kinbot`, on connecte une clé LLM, et c'est complet.
+Hivekeep est une **plateforme auto-hébergée d'agents IA spécialisés** — les *Kins* — pensée pour les individus et les petits groupes. Tout tient dans **un seul processus, une seule base SQLite, un seul conteneur Docker**, sans aucune dépendance d'infrastructure externe (pas de Postgres, Redis, MongoDB, SearxNG ni broker de queue). `docker run hivekeep`, on connecte une clé LLM, et c'est complet.
 
-Là où le marché s'est figé sur deux paradigmes — les *conversations* classiques (ChatGPT, LibreChat, Open WebUI) ou les *workflows* pour développeurs (Dify, n8n, Flowise) — KinBot propose une troisième voie : une **équipe d'agents persistants**. Chaque Kin a une identité stable, une expertise, une mémoire long terme et des outils. Les Kins partagent **une session continue unique** (jamais de « nouvelle conversation »), **collaborent entre eux**, **spawnent des sous-Kins** pour déléguer du travail, et **exécutent des tâches planifiées**. La plateforme **grandit avec l'utilisateur** : un onboarding entièrement conversationnel (Sherpa), des mini-apps construites par les Kins, un marketplace de plugins NPM, et une transparence radicale sur les coûts.
+Là où le marché s'est figé sur deux paradigmes — les *conversations* classiques (ChatGPT, LibreChat, Open WebUI) ou les *workflows* pour développeurs (Dify, n8n, Flowise) — Hivekeep propose une troisième voie : une **équipe d'agents persistants**. Chaque Kin a une identité stable, une expertise, une mémoire long terme et des outils. Les Kins partagent **une session continue unique** (jamais de « nouvelle conversation »), **collaborent entre eux**, **spawnent des sous-Kins** pour déléguer du travail, et **exécutent des tâches planifiées**. La plateforme **grandit avec l'utilisateur** : un onboarding entièrement conversationnel (Sherpa), des mini-apps construites par les Kins, un marketplace de plugins NPM, et une transparence radicale sur les coûts.
 
 Le positionnement est précis : *la simplicité d'un assistant grand public, en self-hosted souverain, sur votre serveur* — une intersection que personne d'autre n'occupe aujourd'hui.
 
@@ -18,7 +18,7 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 
 **Le pitch.** Plateforme monoprocess auto-hébergée où des Kins spécialisés à identité persistante partagent une session continue, mémorisent sur des mois, et orchestrent du travail asynchrone via une queue FIFO à priorité utilisateur.
 
-**Ce que c'est.** Le cœur de KinBot : un moteur Bun + SQLite servant des micro-agents collaboratifs. Chaque Kin possède une **session principale continue** (tous les utilisateurs conversent dans le même fil), une queue FIFO sérialisée (max 1 tour LLM à la fois), et s'appuie sur un compacting progressif + une mémoire hybride pour rester exploitable sur des mois de contexte. Un bus d'événements global et un système de hooks fondent l'extensibilité. Les sous-Kins (tâches éphémères) et la messagerie inter-Kins permettent l'orchestration autonome.
+**Ce que c'est.** Le cœur de Hivekeep : un moteur Bun + SQLite servant des micro-agents collaboratifs. Chaque Kin possède une **session principale continue** (tous les utilisateurs conversent dans le même fil), une queue FIFO sérialisée (max 1 tour LLM à la fois), et s'appuie sur un compacting progressif + une mémoire hybride pour rester exploitable sur des mois de contexte. Un bus d'événements global et un système de hooks fondent l'extensibilité. Les sous-Kins (tâches éphémères) et la messagerie inter-Kins permettent l'orchestration autonome.
 
 **Les capacités clés.**
 - **Identité et expertise persistantes** par Kin (nom, rôle, caractère, expertise, avatar, modèle), partagées entre tous les utilisateurs ; chaque message est tagué avec l'expéditeur ; réponse multilingue selon la langue du dernier locuteur (`schema.ts:88-118`, table `kins`).
@@ -75,7 +75,7 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 - **Création multi-langage** via `create_custom_tool` (slug immutable, entrypoint, schéma JSON) ; activation immédiate sous `custom_<slug>` (`custom-tools.ts:130-170`).
 - **Gestion des dépendances** : `run_custom_tool_setup` détecte `requirements.txt` → `.venv`+pip, ou `package.json` → bun install, isolé par outil.
 - **Exécution avec résolution d'interprète** (langage explicite → shebang → extension → Bun ; `.venv` préféré pour Python), args JSON sur stdin, timeout 1-300s, output capé.
-- **Renderers riches** : `renderer.tsx` bundlé via Bun.build, React mappé sur les globals de l'hôte (`window.__KINBOT_REACT__`), module ESM minifié (`custom-tool-renderer.ts:1-256`).
+- **Renderers riches** : `renderer.tsx` bundlé via Bun.build, React mappé sur les globals de l'hôte (`window.__HIVEKEEP_REACT__`), module ESM minifié (`custom-tool-renderer.ts:1-256`).
 - **Validation bi-phase** (build + SSR `renderToStaticMarkup`) avant sauvegarde, erreurs rapportées au Kin (`:344-384`).
 - **Livraison lazy + cache mtime-addressé** : URL `?v=<mtime>` cachée éternellement, busting auto sur édition ; cache module-level `slug:version` sans re-suspension.
 - **UI_KIT themé** (12 primitives sans dépendance externe : Card, Section, Badge, Stat, Table, Code…) auto-themé via tokens CSS.
@@ -91,12 +91,12 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 
 **Le pitch.** Les Kins construisent de vraies applications web complètes intégrées nativement, themées automatiquement, avec stockage persistant, backend optionnel et boucle de dev instantanée.
 
-**Ce que c'est.** Plateforme permettant aux Kins de bâtir, déployer et itérer des apps web réactives dans un iframe cloisonné, avec un SDK JS riche (KinBot SDK : storage, API, mémoire, conversation, thème, SSE), une bibliothèque React (24 hooks + 50+ composants pré-stylisés), un backend optionnel Hono (`_server.js`), versioning/snapshots, et 11 templates + showcase.
+**Ce que c'est.** Plateforme permettant aux Kins de bâtir, déployer et itérer des apps web réactives dans un iframe cloisonné, avec un SDK JS riche (Hivekeep SDK : storage, API, mémoire, conversation, thème, SSE), une bibliothèque React (24 hooks + 50+ composants pré-stylisés), un backend optionnel Hono (`_server.js`), versioning/snapshots, et 11 templates + showcase.
 
 **Les capacités clés.**
 - **Création en une instruction** (`create_mini_app` : HTML brut, template ou map de fichiers ; auto-`app.json`) (`mini-app-tools.ts:43-154`).
 - **SDK JS vanille (1203 LOC)** : thème réactif, storage cloisonné, `api()`/`http()` proxy CORS, send message au Kin, dialogs, notifications, `memory.search/store`, `conversation.history/send`, `share()` inter-app, SSE temps-réel, console interception.
-- **24 React hooks (1462 LOC)** : `useKinBot`, `useStorage`, `useForm`, `useMemory`, `useConversation`, `useEventStream`, `useInfiniteScroll`, `usePagination`, etc.
+- **24 React hooks (1462 LOC)** : `useHivekeep`, `useStorage`, `useForm`, `useMemory`, `useConversation`, `useEventStream`, `useInfiniteScroll`, `usePagination`, etc.
 - **50+ composants (5610 LOC)** : DataGrid sortable/filtrable, Modal, Drawer, BarChart/LineChart/PieChart/SparkLine, Kanban, Stepper, Calendar — tous themés via CSS variables.
 - **Backend optionnel** (`_server.js` factory Hono, storage namespaced, events SSE), compilé en cache avec cache-busting.
 - **Gestion des dépendances** (app.json shorthand, importmap, inline) + `.d.ts` TypeScript servis.
@@ -163,7 +163,7 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 - **Enrichissement automatisé** (`startTicketEnrichment`, agent `kind=enrich`, append-mode, guard rails).
 - **Contexte projet actif** par Kin (bloc volatile, 50 tickets non-done), **connaissances pinglées** (FTS + embeddings), **intégration GitHub** (clone background, worktree `repos/worktrees/<slug>-task-<hex>`, branche dédiée, PAT vault via credential helper jamais en URL), **repo picker UI**, **~25 outils Kin**, **API REST complète + SSE**, **historique tâches/commentaires**, **métriques temps-réel** (Kins courants, chrono), **UI multi-vue**.
 
-**Les prouesses techniques.** Optimistic + dnd-kit (pointerWithin+rectIntersection) ; séparation stable/volatile cache-aware ; numérotation monotone per-projet (index composé) ; worktrees isolés (PAT en `$KINBOT_GH_TOKEN`, git ops via Bun.spawn) ; mention resolution batchée (max 50/call) ; position gap-based.
+**Les prouesses techniques.** Optimistic + dnd-kit (pointerWithin+rectIntersection) ; séparation stable/volatile cache-aware ; numérotation monotone per-projet (index composé) ; worktrees isolés (PAT en `$HIVEKEEP_GH_TOKEN`, git ops via Bun.spawn) ; mention resolution batchée (max 50/call) ; position gap-based.
 
 **Wow factor : 4/5.**
 
@@ -179,7 +179,7 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 - **OAuth2 multi-fournisseur générique** (Google, Microsoft 365, Apple) — l'hôte gère le flux, chaque provider déclare endpoints+scopes (`oauth.ts`, `email-accounts.ts`).
 - **Accès mail** (Gmail, Outlook/365, IMAP/SMTP) : lire/lister/chercher/envoyer, HTML, pièces jointes, recherche structurée ou requête native (Gmail query, KQL).
 - **Événements calendrier** (Google, M365, iCloud CalDAV, CalDAV générique) : CRUD, all-day, fuseaux, participants.
-- **Recherche de contacts read-only** (iCloud, Google People, MS Graph, CardDAV) — jamais copiés dans KinBot.
+- **Recherche de contacts read-only** (iCloud, Google People, MS Graph, CardDAV) — jamais copiés dans Hivekeep.
 - **Caching tokens + cycle de vie OAuth** (refresh 1 min avant expiration, jamais vus par les Kins), **approbation humaine d'envoi** (mode direct/approval), **restriction par Kin** (allow-list), **chiffrement au repos** (`configEncrypted`), **architecture fournisseur pluggable** (SDK).
 
 **Les prouesses techniques.** OAuth2 agnostique (un plugin = un provider sans fork) ; cycle de vie multi-niveaux (refresh chiffré en DB, access caché en mémoire) ; résolution unifiée (slug → défaut → premier valide) ; IMAP/CalDAV via imapflow+nodemailer+tsdav+ical.js (pas de SDK géants) ; capacités unifiées (un provider = email+contacts+calendar).
@@ -195,13 +195,13 @@ Le positionnement est précis : *la simplicité d'un assistant grand public, en 
 **Ce que c'est.** Plugins déclaratifs (manifest JSON + index.ts) ajoutant outils, fournisseurs natifs (9 types), adaptateurs de channels, hooks et cartes interactives. Installation via npm, Git ou Settings → Plugins → Browse (recherche npm live). Permissions granulaires runtime-enforced.
 
 **Les capacités clés.**
-- **Marketplace NPM intégré** (keyword `kinbot-plugin`, recherche registry.npmjs.org live, cache 5 min, logo via unpkg, détection installés).
-- **SDK TypeScript** (`@kinbot-developer/sdk`) : helper `tool()` à inférence zod, hiérarchie d'erreurs, 9 interfaces natives.
+- **Marketplace NPM intégré** (keyword `hivekeep-plugin`, recherche registry.npmjs.org live, cache 5 min, logo via unpkg, détection installés).
+- **SDK TypeScript** (`@hivekeep-developer/sdk`) : helper `tool()` à inférence zod, hiérarchie d'erreurs, 9 interfaces natives.
 - **Installation multi-source** (npm/git) + mises à jour + topological sort des dépendances.
 - **Manifest déclaratif** strict (name, version, permissions `http:<host>`/`storage`/`vault`/`cron`/`kins`, config schema).
 - **Outils IA natifs** (factory `create` recevant ToolExecutionContext, flags readOnly/concurrencySafe/destructive, préfixe auto `plugin_<nom>_<outil>`).
 - **6+ fournisseurs natifs** (LLM, embedding, image, search, TTS, STT + email/contacts/calendar) à interface identique aux built-ins.
-- **Adaptateurs de channels** (config schema dynamique, secrets auto-vaultés), **hooks lifecycle** (beforeChat/afterChat/before/afterToolCall), **cartes interactives** à état persisté, **API storage par plugin**, **HTTP permission-controlled**, **vault namespacé**, **scaffold CLI** (`create-kinbot-plugin`), **config typée + UI dynamique**, **auto-disable on error**, **espaces de noms auto-préfixés**.
+- **Adaptateurs de channels** (config schema dynamique, secrets auto-vaultés), **hooks lifecycle** (beforeChat/afterChat/before/afterToolCall), **cartes interactives** à état persisté, **API storage par plugin**, **HTTP permission-controlled**, **vault namespacé**, **scaffold CLI** (`create-hivekeep-plugin`), **config typée + UI dynamique**, **auto-disable on error**, **espaces de noms auto-préfixés**.
 
 **Les prouesses techniques.** SDK lean (zod + types + 9 interfaces) ; NPM discovery pipeline ; context factory frais par tour ; permission model granulaire runtime ; hot reload via fs.watch ; topological sort avec détection de cycles ; PluginHealthStats auto-disable ; hook payload typing discriminé.
 
@@ -360,7 +360,7 @@ Les items les plus marquants à mettre en avant, par ordre d'impact :
 
 ## Différenciateurs transversaux
 
-Les thèmes récurrents qui définissent l'identité de KinBot, traversant tous les domaines :
+Les thèmes récurrents qui définissent l'identité de Hivekeep, traversant tous les domaines :
 
 ### Transparence radicale
 Présente dans le **contexte/tokens** (double barre estimate vs ground-truth, breakdown par section, cache live), le **compacting** (résume sans jamais supprimer les originaux), la **mémoire** (retrieval tracking, importance scoring visible), les **tasks** (roll-up tokens par job), les **plugins** (permissions explicites runtime), les **channels** (audit immuable). Rien n'est caché à l'utilisateur — il peut comprendre et maîtriser ses coûts et ses limites.
@@ -387,7 +387,7 @@ La métaphore d'**équipe de Kins** : session continue unique, inter-Kin messagi
 
 ## Honnêteté : limites & rough edges
 
-À garder en tête pour ne pas sur-vendre. KinBot 1.0 est **production-ready pour un usage individu / petite équipe**, avec des fondations solides et un polish UX en cours.
+À garder en tête pour ne pas sur-vendre. Hivekeep 1.0 est **production-ready pour un usage individu / petite équipe**, avec des fondations solides et un polish UX en cours.
 
 ### Maturité globale par domaine
 - **Solide / production-ready** : runtime core (queue, streaming, tool execution), compacting, mémoire (cœur), inter-Kin, sous-Kins, prompt builder + cache, custom tools, MCP, UI/design system (1289 tests passants), mini-apps (cœur), comptes connectés (e2e), vault, transparence tokens, channels, plateforme power-user, toolboxes.

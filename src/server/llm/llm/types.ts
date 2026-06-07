@@ -5,17 +5,17 @@
 export type {
   ThinkingEffort,
   LLMModel,
-  KinbotTool,
-  KinbotRole,
+  HivekeepTool,
+  HivekeepRole,
   TextBlock,
   ImageBlock,
   ToolUseBlock,
   ToolResultBlock,
   ThinkingBlock,
-  KinbotMessageBlock,
-  KinbotMessage,
+  HivekeepMessageBlock,
+  HivekeepMessage,
   SystemPrompt,
   ChatRequest,
   ChatChunk,
   LLMProvider,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'

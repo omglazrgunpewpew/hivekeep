@@ -1,14 +1,14 @@
 import { useId } from 'react'
 import { cn } from '@/client/lib/utils'
 import {
-  KINBOT_LOGO_GRADIENT_LINE,
-  KINBOT_LOGO_PATHS,
-  KINBOT_LOGO_VIEWBOX,
-} from '@/client/components/common/kinbot-logo-paths'
+  HIVEKEEP_LOGO_GRADIENT_LINE,
+  HIVEKEEP_LOGO_PATHS,
+  HIVEKEEP_LOGO_VIEWBOX,
+} from '@/client/components/common/hivekeep-logo-paths'
 
-export type KinbotLogoVariant = 'gradient' | 'white' | 'black' | 'mono'
+export type HivekeepLogoVariant = 'gradient' | 'white' | 'black' | 'mono'
 
-export interface KinbotLogoProps
+export interface HivekeepLogoProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'title'> {
   /** Mark height in px (the mark is square). Default 32. */
   size?: number
@@ -21,8 +21,8 @@ export interface KinbotLogoProps
    * - `white` / `black`: flat single colour, no gradient (footers, print, OG).
    * - `mono`: flat `currentColor`, so it inherits the surrounding text colour.
    */
-  variant?: KinbotLogoVariant
-  /** Render the "KinBot" wordmark next to the mark (Plus Jakarta Sans 800). */
+  variant?: HivekeepLogoVariant
+  /** Render the "Hivekeep" wordmark next to the mark (Plus Jakarta Sans 800). */
   withWordmark?: boolean
   /** Extra classes for the wordmark text (e.g. to override its colour). */
   wordmarkClassName?: string
@@ -30,31 +30,31 @@ export interface KinbotLogoProps
   title?: string | null
 }
 
-const MARK_FILL: Record<Exclude<KinbotLogoVariant, 'gradient'>, string> = {
+const MARK_FILL: Record<Exclude<HivekeepLogoVariant, 'gradient'>, string> = {
   white: '#ffffff',
   black: '#000000',
   mono: 'currentColor',
 }
 
 /**
- * KinBot logomark — a bee nested in a honeycomb cluster.
+ * Hivekeep logomark — a bee nested in a honeycomb cluster.
  *
  * One reusable, theme-aware lockup used everywhere the brand appears (app nav,
  * footers, marketing, OG). The mark is a set of flat shapes filled with a single
  * paint, so it recolours cleanly: a live theme gradient, or flat white/black for
- * single-colour contexts. Optionally pairs with the "KinBot" wordmark.
+ * single-colour contexts. Optionally pairs with the "Hivekeep" wordmark.
  */
-export function KinbotLogo({
+export function HivekeepLogo({
   size = 32,
   variant = 'gradient',
   withWordmark = false,
   wordmarkClassName,
-  title = 'KinBot',
+  title = 'Hivekeep',
   className,
   ...rest
-}: KinbotLogoProps) {
+}: HivekeepLogoProps) {
   const uid = useId()
-  const gradId = `kinbot-logo-grad-${uid}`
+  const gradId = `hivekeep-logo-grad-${uid}`
   const decorative = title == null
 
   const markFill = variant === 'gradient' ? `url(#${gradId})` : MARK_FILL[variant]
@@ -71,7 +71,7 @@ export function KinbotLogo({
       <svg
         width={size}
         height={size}
-        viewBox={KINBOT_LOGO_VIEWBOX}
+        viewBox={HIVEKEEP_LOGO_VIEWBOX}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="block shrink-0"
@@ -82,10 +82,10 @@ export function KinbotLogo({
             <linearGradient
               id={gradId}
               gradientUnits="userSpaceOnUse"
-              x1={KINBOT_LOGO_GRADIENT_LINE.x1}
-              y1={KINBOT_LOGO_GRADIENT_LINE.y1}
-              x2={KINBOT_LOGO_GRADIENT_LINE.x2}
-              y2={KINBOT_LOGO_GRADIENT_LINE.y2}
+              x1={HIVEKEEP_LOGO_GRADIENT_LINE.x1}
+              y1={HIVEKEEP_LOGO_GRADIENT_LINE.y1}
+              x2={HIVEKEEP_LOGO_GRADIENT_LINE.x2}
+              y2={HIVEKEEP_LOGO_GRADIENT_LINE.y2}
             >
               <stop stopColor="var(--color-gradient-start, #AE5AF9)" />
               <stop offset="0.52" stopColor="var(--color-gradient-mid, #FB5FCA)" />
@@ -94,7 +94,7 @@ export function KinbotLogo({
           </defs>
         )}
         <g fill={markFill}>
-          {KINBOT_LOGO_PATHS.map((d, i) => (
+          {HIVEKEEP_LOGO_PATHS.map((d, i) => (
             <path key={i} d={d} />
           ))}
         </g>
@@ -105,11 +105,11 @@ export function KinbotLogo({
           className={cn('font-extrabold', wordmarkClassName)}
           style={wordmarkStyle}
         >
-          KinBot
+          Hivekeep
         </span>
       )}
     </span>
   )
 }
 
-export default KinbotLogo
+export default HivekeepLogo

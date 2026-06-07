@@ -41,7 +41,7 @@ import { preloadTokenizer } from '@/shared/token-estimator'
 const log = createLogger('server')
 
 // ---------------------------------------------------------------------------
-// Last-resort process guards. KinBot is a single process: an uncaught error
+// Last-resort process guards. Hivekeep is a single process: an uncaught error
 // anywhere — a stray setInterval/setTimeout callback, a WebSocket/event
 // listener, or a floating promise without a .catch() — would otherwise
 // terminate the whole server and drop every connected client's SSE stream.
@@ -236,4 +236,4 @@ logStore.setOnEntry((entry) => {
   })
 })
 
-log.info({ port: config.port, env: process.env.NODE_ENV ?? 'development', dataDir: config.dataDir }, 'KinBot server started')
+log.info({ port: config.port, env: process.env.NODE_ENV ?? 'development', dataDir: config.dataDir }, 'Hivekeep server started')

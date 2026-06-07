@@ -1,17 +1,17 @@
 {
-  "name": "kinbot",
+  "name": "hivekeep",
   "version": "0.41.0",
   "type": "module",
   "description": "Self-hosted platform of specialized AI agents (Kins) with persistent identity, memory, tools, and collaboration",
   "license": "AGPL-3.0-only",
   "author": "marlburrow",
-  "homepage": "https://marlburrow.github.io/kinbot",
+  "homepage": "https://marlburrow.github.io/hivekeep",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MarlBurroW/kinbot.git"
+    "url": "https://github.com/MarlBurroW/hivekeep.git"
   },
   "bugs": {
-    "url": "https://github.com/MarlBurroW/kinbot/issues"
+    "url": "https://github.com/MarlBurroW/hivekeep/issues"
   },
   "keywords": [
     "ai-agents",
@@ -42,7 +42,7 @@
     "db:snapshot": "bun scripts/db-snapshot.ts create",
     "db:snapshot:list": "bun scripts/db-snapshot.ts list",
     "db:snapshot:restore": "bun scripts/db-snapshot.ts restore",
-    "test": "bun test ./src ./packages/sdk/src ./packages/create-kinbot-plugin ./plugins",
+    "test": "bun test ./src ./packages/sdk/src ./packages/create-hivekeep-plugin ./plugins",
     "test:e2e": "npx playwright test",
     "typecheck": "tsc --noEmit",
     "prepare": "husky"
@@ -83,7 +83,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hono/node-server": "^1.19.9",
     "@hookform/resolvers": "^5.2.2",
-    "@kinbot-developer/sdk": "workspace:*",
+    "@hivekeep-developer/sdk": "workspace:*",
     "@lobehub/icons": "^5.0.1",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@mozilla/readability": "^0.6.0",

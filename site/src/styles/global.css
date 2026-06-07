@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
-   KinBot site / design system
-   Direction: "app skin + editorial bones" (see kinbot-1.0-design-directions.md, tour 3)
-   Skin = KinBot app (aurora, glass, glow, Plus Jakarta). Bones = editorial.
+   Hivekeep site / design system
+   Direction: "app skin + editorial bones" (see hivekeep-1.0-design-directions.md, tour 3)
+   Skin = Hivekeep app (aurora, glass, glow, Plus Jakarta). Bones = editorial.
    ───────────────────────────────────────────────────────────── */
 :root{
   --bg: oklch(0.145 0.03 312);

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 
-const STORAGE_KEY = 'kinbot:input-history'
+const STORAGE_KEY = 'hivekeep:input-history'
 const MAX_HISTORY = 50
 
 /**

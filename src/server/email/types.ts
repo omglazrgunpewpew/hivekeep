@@ -16,4 +16,4 @@ export type {
   SendEmailResult,
   OAuthProfile,
   EmailProvider,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'

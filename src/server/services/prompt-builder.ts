@@ -7,7 +7,7 @@ import type { KinKind } from '@/shared/types'
 
 // ─── Configurator (Sherpa) blocks ─────────────────────────────────────────────
 // Loaded once from the bundled knowledge doc. The configurator Kin gets a
-// mission block (how to run onboarding) + this knowledge block (what KinBot is
+// mission block (how to run onboarding) + this knowledge block (what Hivekeep is
 // and can do) so it never "bottes en touche". See sherpa.md §4.4/§4.6.
 let cachedSherpaKnowledge: string | null = null
 function getSherpaKnowledge(): string {
@@ -23,7 +23,7 @@ function getSherpaKnowledge(): string {
 
 const CONFIGURATOR_MISSION = `## Configurator mission
 
-You are the user's onboarding guide and ongoing configuration assistant. Your job is to help them set up and grow their KinBot through friendly conversation — they should never need to hunt through menus.
+You are the user's onboarding guide and ongoing configuration assistant. Your job is to help them set up and grow their Hivekeep through friendly conversation — they should never need to hunt through menus.
 
 How to run it:
 - **Assess first, don't re-ask.** At the start of a setup conversation, call \`list_providers\`, \`list_models\`, \`list_channels\` (and check defaults) to see what's already configured, so you only propose what's missing. This is how you resume gracefully after the user stepped away.
@@ -45,7 +45,7 @@ You are admin-facing: provider/channel/default/global config is admin-only and w
 
 function buildConfiguratorBlock(): string {
   const knowledge = getSherpaKnowledge()
-  return knowledge ? `${CONFIGURATOR_MISSION}\n\n## KinBot knowledge\n\n${knowledge}` : CONFIGURATOR_MISSION
+  return knowledge ? `${CONFIGURATOR_MISSION}\n\n## Hivekeep knowledge\n\n${knowledge}` : CONFIGURATOR_MISSION
 }
 
 interface ContactSummary {
@@ -415,7 +415,7 @@ function buildContextBlock(): string {
     `Current time: ${time} (${tz})\n` +
     `ISO timestamp: ${iso}\n` +
     `Timezone: ${tz} — interpret schedules and wall-clock times in this zone unless the user asks otherwise\n` +
-    `Platform: KinBot v${config.version}\n` +
+    `Platform: Hivekeep v${config.version}\n` +
     `Installation: ${installLine}${envFileLine}\n` +
     `Data directory: ${config.dataDir}\n` +
     `Public URL: ${config.publicUrl}\n` +
@@ -974,8 +974,8 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
   if (params.isSubKin && params.taskDescription) {
     // Sub-Kin prompt
     stableBlocks.push(
-      `You are ${params.kin.name}, a specialized AI agent on KinBot, executing a delegated task.\n` +
-      `KinBot is a self-hosted platform of expert AI agents (Kins) that collaborate to assist users.`,
+      `You are ${params.kin.name}, a specialized AI agent on Hivekeep, executing a delegated task.\n` +
+      `Hivekeep is a self-hosted platform of expert AI agents (Kins) that collaborate to assist users.`,
     )
     stableBlocks.push(`## Your mission\n\n${params.taskDescription}`)
 
@@ -1089,7 +1089,7 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
     // [0] Platform context
     stableBlocks.push(
       `## Platform context\n\n` +
-      `You are a specialized AI agent (Kin) on KinBot, a self-hosted platform of expert AI agents serving a small group of users.\n\n` +
+      `You are a specialized AI agent (Kin) on Hivekeep, a self-hosted platform of expert AI agents serving a small group of users.\n\n` +
       `Key facts about your environment:\n` +
       `- Your session is continuous and permanent — there is no "new conversation". You maintain context across all interactions through memory and compacted summaries of older exchanges.\n` +
       `- Multiple users may talk to you. Each message is prefixed with the sender's identity.\n` +
@@ -1361,7 +1361,7 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `### Response calibration\n` +
       `- Match your response length to the complexity of the request. Simple questions deserve concise answers; complex problems warrant detailed explanations.\n` +
       `- For external platform messages (Discord, Telegram, WhatsApp, etc.), default to shorter, conversational responses. Users on mobile expect quick answers, not essays.\n` +
-      `- For the KinBot web UI, you can use richer formatting (headings, code blocks, tables, lists) when it aids clarity.\n` +
+      `- For the Hivekeep web UI, you can use richer formatting (headings, code blocks, tables, lists) when it aids clarity.\n` +
       `- When a user asks a yes/no question, lead with the answer, then explain if needed.\n` +
       `- Avoid unnecessary preambles ("Great question!", "Sure, I'd be happy to help!"). Get to the point.\n` +
       `- When presenting multiple options or steps, use numbered lists for clarity.\n` +
@@ -1407,13 +1407,13 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `  - Key \`--color-*\` tokens: --color-background, --color-foreground, --color-card, --color-card-foreground, --color-muted, --color-muted-foreground, --color-primary, --color-primary-foreground, --color-border, --color-success, --color-warning, --color-destructive, --color-info.\n` +
       `  - **Validate it.** After writing a \`renderer.tsx\`, run test_custom_tool and CHECK the \`renderer\` field in the result: \`{ ok: true }\` means it built and rendered; \`{ ok: false, phase: "build" | "render", error }\` means it is broken. The renderer runs in the USER's browser, so a build/render error is otherwise INVISIBLE to you — fix the reported error before considering the tool done. (Validation does an initial server-side render only: build errors, bad data access, and invalid children are caught; useEffect/handlers are not exercised.)\n\n` +
       `### Mini-Apps\n` +
-      `You can create interactive web apps (mini-apps) in the KinBot sidebar.\n` +
+      `You can create interactive web apps (mini-apps) in the Hivekeep sidebar.\n` +
       `- **Always call get_mini_app_docs first** for the full SDK reference (hooks, components, setup patterns).\n` +
       `- Use get_mini_app_templates to start from a template (dashboard, todo-list, form, data-viewer, kanban).\n` +
-      `- Bare ES imports (react, @kinbot/react, …) resolve ONLY via an app.json import map — NOT inline HTML. Pass \`dependencies\` (or a \`files\` map incl. app.json) to create_mini_app to set it up in one call.\n` +
+      `- Bare ES imports (react, @hivekeep/react, …) resolve ONLY via an app.json import map — NOT inline HTML. Pass \`dependencies\` (or a \`files\` map incl. app.json) to create_mini_app to set it up in one call.\n` +
       `- Console output is only captured while the app is open in a browser tab. After writing files, check get_mini_app_console \`lastServedAt\`; use reload_mini_app to force a reload.\n` +
       `- Use create_mini_app_snapshot before risky changes.\n` +
-      `- Always use @kinbot/components instead of raw HTML elements.`,
+      `- Always use @hivekeep/components instead of raw HTML elements.`,
     )
   }
 
@@ -1448,7 +1448,7 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
       `- **Telegram**: Supports Markdown (bold, italic, code, links). Keep messages moderate length. Avoid complex nested formatting.\n` +
       `- **WhatsApp**: Very limited formatting (*bold*, _italic_, \`code\`, ~~strike~~). No headings, no tables, no links with custom text. Use *bold* or CAPS for emphasis. Keep messages short.\n` +
       `- **Slack**: Supports Markdown-like syntax (mrkdwn). Use *bold*, _italic_, \`code\`. No headings.\n` +
-      `- **Web UI (KinBot)**: Full Markdown support including tables, headings, code blocks, and LaTeX.\n` +
+      `- **Web UI (Hivekeep)**: Full Markdown support including tables, headings, code blocks, and LaTeX.\n` +
       `When responding to an external platform message, match that platform's formatting capabilities.`,
     )
   }

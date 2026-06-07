@@ -33,9 +33,9 @@
 **What:** Added comprehensive `.d.ts` type definition files for all three SDK modules, served as downloadable references via the SDK routes.
 
 ### New Files
-- **`kinbot-sdk.d.ts`** (~250 lines) — Full types for the global `KinBot` object: all properties, methods, namespaces (storage, api, http, clipboard, events, apps, memory, conversation), and event types.
-- **`kinbot-react.d.ts`** (~300 lines) — Types for all 26 React hooks (useKinBot through usePagination) with full return type interfaces, plus all 23 convenience re-exports.
-- **`kinbot-components.d.ts`** (~420 lines) — Props interfaces for all 40+ React components including compound components (Card.*, Form.*, Grid.Item), charts, and the Stepper.
+- **`hivekeep-sdk.d.ts`** (~250 lines) — Full types for the global `Hivekeep` object: all properties, methods, namespaces (storage, api, http, clipboard, events, apps, memory, conversation), and event types.
+- **`hivekeep-react.d.ts`** (~300 lines) — Types for all 26 React hooks (useHivekeep through usePagination) with full return type interfaces, plus all 23 convenience re-exports.
+- **`hivekeep-components.d.ts`** (~420 lines) — Props interfaces for all 40+ React components including compound components (Card.*, Form.*, Grid.Item), charts, and the Stepper.
 
 ### Routes
 - Added a loop in `mini-apps.ts` serving all 3 `.d.ts` files at `/api/mini-apps/sdk/<name>.d.ts` with `Content-Type: application/typescript`.
@@ -50,38 +50,38 @@
 - Been the #1 priority for 3 consecutive runs
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.d.ts` — NEW (~250 lines)
-- `src/server/mini-app-sdk/kinbot-react.d.ts` — NEW (~300 lines)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — NEW (~420 lines)
+- `src/server/mini-app-sdk/hivekeep-sdk.d.ts` — NEW (~250 lines)
+- `src/server/mini-app-sdk/hivekeep-react.d.ts` — NEW (~300 lines)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — NEW (~420 lines)
 - `src/server/routes/mini-apps.ts` — added .d.ts serving routes
 - `src/server/tools/mini-app-tools.ts` — updated docs
 
 **Tests:** 1643 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
 **Next priorities:**
-1. `useLocalStorage` hook (persistent local state outside KinBot.storage)
+1. `useLocalStorage` hook (persistent local state outside Hivekeep.storage)
 2. Template showcasing TypeScript usage (`.tsx` file with type imports)
 3. Responsive design improvements for mini-app panel
-4. Consider `KinBot.print()` — trigger print dialog for mini-app iframe
+4. Consider `Hivekeep.print()` — trigger print dialog for mini-app iframe
 
-## 2026-03-03 (run 16) — KinBot.download() API
+## 2026-03-03 (run 16) — Hivekeep.download() API
 
-**What:** Added `KinBot.download(filename, content, mimeType?)` — enables mini-apps to trigger file downloads, essential for data export (CSV, JSON, reports, etc.).
+**What:** Added `Hivekeep.download(filename, content, mimeType?)` — enables mini-apps to trigger file downloads, essential for data export (CSV, JSON, reports, etc.).
 
 ### Implementation
-- **SDK (`kinbot-sdk.js` v1.16.0):** New `download()` function supporting string, object (auto-JSON), Blob, and ArrayBuffer content. Uses postMessage with base64-encoded data to bypass iframe sandbox.
+- **SDK (`hivekeep-sdk.js` v1.16.0):** New `download()` function supporting string, object (auto-JSON), Blob, and ArrayBuffer content. Uses postMessage with base64-encoded data to bypass iframe sandbox.
 - **Parent (`MiniAppViewer.tsx`):** New `download` case handler that decodes base64, creates a Blob URL, and triggers download via a temporary `<a>` element with proper cleanup.
-- **React hook (`kinbot-react.js`):** New `useDownload()` → `{ download, downloading }` with reactive loading state.
-- **Re-export:** `download` convenience re-export from `@kinbot/react`.
+- **React hook (`hivekeep-react.js`):** New `useDownload()` → `{ download, downloading }` with reactive loading state.
+- **Re-export:** `download` convenience re-export from `@hivekeep/react`.
 - **Tool docs:** Updated hook docs, re-exports, and vanilla SDK docs in `mini-app-tools.ts`.
 
 ### Usage Examples
 ```jsx
 // String content (CSV)
-await KinBot.download('report.csv', csvString, 'text/csv')
+await Hivekeep.download('report.csv', csvString, 'text/csv')
 
 // Object → auto-JSON
-await KinBot.download('data.json', { users: [...] })
+await Hivekeep.download('data.json', { users: [...] })
 
 // React hook
 const { download, downloading } = useDownload()
@@ -89,48 +89,48 @@ const { download, downloading } = useDownload()
 ```
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.js` — +60 lines (download function + public API)
-- `src/server/mini-app-sdk/kinbot-react.js` — +32 lines (useDownload hook + re-export)
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — +60 lines (download function + public API)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +32 lines (useDownload hook + re-export)
 - `src/client/components/mini-app/MiniAppViewer.tsx` — +30 lines (download handler)
 - `src/server/tools/mini-app-tools.ts` — updated docs (hook, re-export, vanilla API)
 
 **Tests:** 1515 pass, 0 fail. Build clean (pre-commit OOM'd, CI verified).
 
 **Hook inventory (19 total):**
-useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, **useDownload**
+useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, **useDownload**
 
 **Next priorities:**
 1. Update data-viewer template to include an "Export CSV" button using useDownload
-2. `KinBot.print()` — trigger print dialog for the mini-app iframe
-3. Consider `useLocalStorage` hook (persistent local state, separate from KinBot.storage)
+2. `Hivekeep.print()` — trigger print dialog for the mini-app iframe
+3. Consider `useLocalStorage` hook (persistent local state, separate from Hivekeep.storage)
 4. Responsive breakpoint CSS utilities if not already comprehensive
 
 ## 2026-03-01 (run 3) — SDK API Expansion: kin, user, resize, notification
 
-**What:** Added 4 new SDK APIs to `kinbot-sdk.js` (v1.12.0) and the corresponding parent-side handlers in `MiniAppViewer.tsx`.
+**What:** Added 4 new SDK APIs to `hivekeep-sdk.js` (v1.12.0) and the corresponding parent-side handlers in `MiniAppViewer.tsx`.
 
 **New APIs:**
-- **`KinBot.kin`** — getter returning `{id, name, avatarUrl}` about the parent Kin. Derived from app-meta (added `kinAvatarUrl` to the payload).
-- **`KinBot.user`** — getter returning `{id, name, pseudonym, locale, timezone, avatarUrl}` about the current user. Viewer now sends user profile from `useAuth()` in app-meta.
-- **`KinBot.resize(width?, height?)`** — request panel resize. Width clamped 320-1200px, height clamped 200-2000px. Works in side-panel mode.
-- **`KinBot.notification(title, body?)`** — request a browser notification via the parent window (which has Notification permission). Returns `Promise<boolean>`. Handles permission request flow.
+- **`Hivekeep.kin`** — getter returning `{id, name, avatarUrl}` about the parent Kin. Derived from app-meta (added `kinAvatarUrl` to the payload).
+- **`Hivekeep.user`** — getter returning `{id, name, pseudonym, locale, timezone, avatarUrl}` about the current user. Viewer now sends user profile from `useAuth()` in app-meta.
+- **`Hivekeep.resize(width?, height?)`** — request panel resize. Width clamped 320-1200px, height clamped 200-2000px. Works in side-panel mode.
+- **`Hivekeep.notification(title, body?)`** — request a browser notification via the parent window (which has Notification permission). Returns `Promise<boolean>`. Handles permission request flow.
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.js` — added internal state, app-meta extraction, resize/notification functions, public API entries
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — added internal state, app-meta extraction, resize/notification functions, public API entries
 - `src/client/components/mini-app/MiniAppViewer.tsx` — imports `useAuth`, sends user/kinAvatarUrl in app-meta, handles resize/notification messages
 - `src/server/tools/mini-app-tools.ts` — documented new APIs in tool descriptions
 
 **Next priorities:**
 1. Add Grid component for responsive layouts
 2. Add Breadcrumbs, Popover components
-3. `KinBot.memory.search()` / `KinBot.memory.store()` — requires new API routes
-4. `KinBot.conversation.history()` / `KinBot.conversation.send()` — requires new API routes
-5. `KinBot.shortcut(key, callback)` — keyboard shortcut registration
-6. `KinBot.share(data)` — inter-app data sharing
+3. `Hivekeep.memory.search()` / `Hivekeep.memory.store()` — requires new API routes
+4. `Hivekeep.conversation.history()` / `Hivekeep.conversation.send()` — requires new API routes
+5. `Hivekeep.shortcut(key, callback)` — keyboard shortcut registration
+6. `Hivekeep.share(data)` — inter-app data sharing
 
-## 2026-03-01 — React Component Library (@kinbot/components)
+## 2026-03-01 — React Component Library (@hivekeep/components)
 
-**What:** Created `kinbot-components.js` — a full React component library served as ES module.
+**What:** Created `hivekeep-components.js` — a full React component library served as ES module.
 
 **Components shipped (25):**
 - **Layout:** Stack, Divider
@@ -143,17 +143,17 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - **Containers:** Card (+ Header, Title, Description, Content, Footer sub-components)
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — NEW (780+ lines)
-- `src/server/routes/mini-apps.ts` — added route for `/kinbot-components.js`
-- `src/server/mini-app-sdk/kinbot-sdk.css` — added slide-in-left/right animations
-- `src/server/tools/mini-app-templates.ts` — added `@kinbot/components` to default importmap
+- `src/server/mini-app-sdk/hivekeep-components.js` — NEW (780+ lines)
+- `src/server/routes/mini-apps.ts` — added route for `/hivekeep-components.js`
+- `src/server/mini-app-sdk/hivekeep-sdk.css` — added slide-in-left/right animations
+- `src/server/tools/mini-app-templates.ts` — added `@hivekeep/components` to default importmap
 - `src/server/tools/mini-app-tools.ts` — documented all components in tool descriptions
 
 **Design decisions:**
 - Used `React.createElement` throughout (no JSX) since it's served as plain JS
-- All components use CSS variables from kinbot-sdk.css for theme integration
+- All components use CSS variables from hivekeep-sdk.css for theme integration
 - Components use existing CSS classes (.btn, .card, .input, etc.) where available
-- Modal/Drawer render inside the iframe (for parent-level dialogs, use KinBot.confirm/prompt)
+- Modal/Drawer render inside the iframe (for parent-level dialogs, use Hivekeep.confirm/prompt)
 - Card has compound component pattern (Card.Header, Card.Title, etc.)
 - All interactive elements have ARIA attributes and keyboard support
 
@@ -167,9 +167,9 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 3. Consider a `Form` compound component with validation
 4. Add Breadcrumbs component
 5. Add Popover component
-6. SDK API expansion (KinBot.kin, KinBot.user, KinBot.memory, etc.)
+6. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory, etc.)
 
-## 2026-03-01 (run 2) — Templates rewritten to use @kinbot/components
+## 2026-03-01 (run 2) — Templates rewritten to use @hivekeep/components
 
 **What:** Rewrote 3 templates (dashboard, data-viewer, form) to use the component library instead of raw HTML/CSS.
 
@@ -183,13 +183,13 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 
 **Next priorities:**
 1. Add Grid component for responsive layouts
-2. SDK API expansion (KinBot.kin, KinBot.user, KinBot.memory, etc.)
+2. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory, etc.)
 3. Add Breadcrumbs, Popover components
 4. Update tool descriptions with component usage examples
 
-## 2026-03-02 — Grid, Breadcrumbs, Popover + KinBot.shortcut()
+## 2026-03-02 — Grid, Breadcrumbs, Popover + Hivekeep.shortcut()
 
-**What:** Added 3 new React components to `kinbot-components.js` and 1 new SDK API.
+**What:** Added 3 new React components to `hivekeep-components.js` and 1 new SDK API.
 
 **New components (28 total):**
 - **`Grid`** — CSS Grid layout with responsive support. Props: `columns` (number or template string), `minChildWidth` (auto-fit responsive), `gap`, `rowGap`, `colGap`. Sub-component `Grid.Item` with `colSpan`/`rowSpan`.
@@ -197,31 +197,31 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - **`Popover`** — Click-triggered popover attached to a trigger element. Props: `trigger`, `content`, `placement` (top/bottom/left/right). Supports controlled mode (`open`/`onOpenChange`). Closes on outside click or Escape.
 
 **New SDK API (v1.13.0):**
-- **`KinBot.shortcut(key, callback)`** — Register keyboard shortcuts within mini-apps. Key combos like `"ctrl+k"`, `"meta+shift+p"`, `"escape"`. Returns unregister function. Pass `null` to remove.
+- **`Hivekeep.shortcut(key, callback)`** — Register keyboard shortcuts within mini-apps. Key combos like `"ctrl+k"`, `"meta+shift+p"`, `"escape"`. Returns unregister function. Pass `null` to remove.
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — added Grid, Grid.Item, Breadcrumbs, Popover (~160 lines)
-- `src/server/mini-app-sdk/kinbot-sdk.js` — added shortcut system (~30 lines), bumped to v1.13.0
+- `src/server/mini-app-sdk/hivekeep-components.js` — added Grid, Grid.Item, Breadcrumbs, Popover (~160 lines)
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — added shortcut system (~30 lines), bumped to v1.13.0
 - `src/server/tools/mini-app-tools.ts` — documented new components and shortcut API
 
 **Next priorities:**
-1. `KinBot.memory.search()` / `KinBot.memory.store()` — requires new API routes
-2. `KinBot.conversation.history()` / `KinBot.conversation.send()` — requires new API routes
+1. `Hivekeep.memory.search()` / `Hivekeep.memory.store()` — requires new API routes
+2. `Hivekeep.conversation.history()` / `Hivekeep.conversation.send()` — requires new API routes
 3. Form compound component with validation
-4. `KinBot.share(data)` — inter-app data sharing
-5. `KinBot.navigate(path)` — parent UI navigation
+4. `Hivekeep.share(data)` — inter-app data sharing
+5. `Hivekeep.navigate(path)` — parent UI navigation
 6. New templates: kanban board, chat interface, settings panel
 
 ## 2026-03-02 (run 2) — SDK API expansion: apps, conversation, share (v1.14.0)
 
-**What:** Added 3 new API namespaces to `kinbot-sdk.js` for richer mini-app capabilities.
+**What:** Added 3 new API namespaces to `hivekeep-sdk.js` for richer mini-app capabilities.
 
 **New SDK APIs:**
-- **`KinBot.apps.list()`** — List all mini-apps from the same Kin (returns {id, name, slug, description, icon, version}). Calls `/api/mini-apps?kinId=...` directly.
-- **`KinBot.apps.get(appId)`** — Get details of a specific mini-app by ID.
-- **`KinBot.conversation.history(limit?)`** — Fetch recent conversation messages (default 20, max 100). Returns {id, role, content, createdAt, sourceType}. Calls `/api/kins/:kinId/messages` directly.
-- **`KinBot.conversation.send(text, options?)`** — Send a message to the Kin's conversation (alias of sendMessage with same rate limiting).
-- **`KinBot.share(targetSlug, data)`** — Share JSON data with another mini-app. Stores data in sender's storage under `__share__<slug>` key, then opens the target app.
+- **`Hivekeep.apps.list()`** — List all mini-apps from the same Kin (returns {id, name, slug, description, icon, version}). Calls `/api/mini-apps?kinId=...` directly.
+- **`Hivekeep.apps.get(appId)`** — Get details of a specific mini-app by ID.
+- **`Hivekeep.conversation.history(limit?)`** — Fetch recent conversation messages (default 20, max 100). Returns {id, role, content, createdAt, sourceType}. Calls `/api/kins/:kinId/messages` directly.
+- **`Hivekeep.conversation.send(text, options?)`** — Send a message to the Kin's conversation (alias of sendMessage with same rate limiting).
+- **`Hivekeep.share(targetSlug, data)`** — Share JSON data with another mini-app. Stores data in sender's storage under `__share__<slug>` key, then opens the target app.
 
 **Design decisions:**
 - All new APIs use direct `fetch()` to existing server routes (same-origin) — no new postMessage types or server routes needed
@@ -230,18 +230,18 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - Version bumped to 1.14.0
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.js` — added apps, conversation, share (~90 lines)
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — added apps, conversation, share (~90 lines)
 - `src/server/tools/mini-app-tools.ts` — documented all new APIs in tool descriptions
 
 **Next priorities:**
 1. Form compound component with validation
-2. `KinBot.memory.search()` / `KinBot.memory.store()` — needs new server routes for memory access
+2. `Hivekeep.memory.search()` / `Hivekeep.memory.store()` — needs new server routes for memory access
 3. New templates: chat interface, settings panel
-4. Improve shared-data pattern (add `KinBot.on('shared-data')` event listener in SDK)
+4. Improve shared-data pattern (add `Hivekeep.on('shared-data')` event listener in SDK)
 
 ## 2026-03-02 (run 3) — Form compound component with validation
 
-**What:** Added a `Form` compound component with built-in validation to `kinbot-components.js`. This is the most requested missing piece for Kins building interactive apps.
+**What:** Added a `Form` compound component with built-in validation to `hivekeep-components.js`. This is the most requested missing piece for Kins building interactive apps.
 
 **New components (29 total):**
 - **`Form`** — Compound form component with validation orchestration. Props: `onSubmit` (receives values object), `initialValues`, `validateOnChange`, `validateOnBlur`. Children can be a render function `({values, errors, submitting, reset}) => ...`.
@@ -265,23 +265,23 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - ~230 lines of code, zero dependencies beyond React
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — added Form, Form.Field, Form.Actions, Form.Submit, Form.Reset, validators (~230 lines)
+- `src/server/mini-app-sdk/hivekeep-components.js` — added Form, Form.Field, Form.Actions, Form.Submit, Form.Reset, validators (~230 lines)
 - `src/server/tools/mini-app-tools.ts` — documented Form component and validation rules in tool descriptions
 
 **Next priorities:**
-1. `KinBot.memory.search()` / `KinBot.memory.store()` — needs new server routes for memory access
+1. `Hivekeep.memory.search()` / `Hivekeep.memory.store()` — needs new server routes for memory access
 2. New templates: chat interface, settings panel (good Form showcase)
 3. DataGrid component (sortable/filterable table)
-4. `KinBot.share(data)` improvements — add `KinBot.on('shared-data')` event
-5. `KinBot.navigate(path)` — parent UI navigation
+4. `Hivekeep.share(data)` improvements — add `Hivekeep.on('shared-data')` event
+5. `Hivekeep.navigate(path)` — parent UI navigation
 
-## 2026-03-02 (run 4) — SDK API: KinBot.memory (v1.15.0)
+## 2026-03-02 (run 4) — SDK API: Hivekeep.memory (v1.15.0)
 
-**What:** Added `KinBot.memory.search()` and `KinBot.memory.store()` APIs, allowing mini-apps to search and create memories for their parent Kin.
+**What:** Added `Hivekeep.memory.search()` and `Hivekeep.memory.store()` APIs, allowing mini-apps to search and create memories for their parent Kin.
 
 **New SDK APIs:**
-- **`KinBot.memory.search(query, limit?)`** — Hybrid semantic + full-text search across the Kin's memories. Returns `{id, content, category, subject, score, updatedAt}`. Default 20 results, max 50.
-- **`KinBot.memory.store(content, {category?, subject?})`** — Store a new memory. Categories: fact, preference, decision, knowledge (default: knowledge). Max 2000 chars. Returns the created memory.
+- **`Hivekeep.memory.search(query, limit?)`** — Hybrid semantic + full-text search across the Kin's memories. Returns `{id, content, category, subject, score, updatedAt}`. Default 20 results, max 50.
+- **`Hivekeep.memory.store(content, {category?, subject?})`** — Store a new memory. Categories: fact, preference, decision, knowledge (default: knowledge). Max 2000 chars. Returns the created memory.
 
 **Server routes added:**
 - `GET /api/mini-apps/:id/memories/search?q=...&limit=N` — delegates to `searchMemories()` (reciprocal rank fusion, temporal decay, importance weighting)
@@ -295,7 +295,7 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 
 **Files changed:**
 - `src/server/routes/mini-apps.ts` — added 2 new routes + import for memory service (~45 lines)
-- `src/server/mini-app-sdk/kinbot-sdk.js` — added memory namespace (~45 lines), bumped to v1.15.0
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — added memory namespace (~45 lines), bumped to v1.15.0
 - `src/server/tools/mini-app-tools.ts` — documented memory APIs
 
 **Note:** 3 pre-existing test failures (schema import issues) — not related to this change. Build passes clean.
@@ -303,8 +303,8 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 **Next priorities:**
 1. New templates: chat interface, settings panel (good showcase for memory + form)
 2. DataGrid component (sortable/filterable table)
-3. `KinBot.navigate(path)` — parent UI navigation
-4. `KinBot.share(data)` improvements — add `KinBot.on('shared-data')` event
+3. `Hivekeep.navigate(path)` — parent UI navigation
+4. `Hivekeep.share(data)` improvements — add `Hivekeep.on('shared-data')` event
 
 ## 2026-03-02 (run 5) — DataGrid component (30 total)
 
@@ -327,27 +327,27 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 **Props:** columns, data, pageSize (default 10), pageSizeOptions [5,10,25,50], selectable, onSelectionChange, onRowClick, searchable, searchPlaceholder, emptyText, striped, compact, stickyHeader, maxHeight, className, style
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — added DataGrid (~220 lines)
+- `src/server/mini-app-sdk/hivekeep-components.js` — added DataGrid (~220 lines)
 - `src/server/tools/mini-app-tools.ts` — added DataGrid to import list and documented all props
 
 **Next priorities:**
 1. New templates: chat interface, settings panel (showcase Form + DataGrid)
-2. `KinBot.navigate(path)` — parent UI navigation
-3. `KinBot.share(data)` improvements — add `KinBot.on('shared-data')` event
-4. CSS animations library in kinbot-sdk.css
+2. `Hivekeep.navigate(path)` — parent UI navigation
+3. `Hivekeep.share(data)` improvements — add `Hivekeep.on('shared-data')` event
+4. CSS animations library in hivekeep-sdk.css
 
 ## 2026-03-02 (run 6) — Chat Interface & Settings Panel templates
 
 **What:** Added 2 new templates (7 total), showcasing recent SDK features and components.
 
 **New templates:**
-- **Chat Interface** (`chat`) — Full conversational UI with `KinBot.sendMessage()` for Kin communication and `KinBot.memory.search()` for memory lookup. Uses `useStorage` for message persistence, auto-scroll, typing indicator, and memory results panel. Imports `Button`, `Badge`, `Spinner` from `@kinbot/components`.
+- **Chat Interface** (`chat`) — Full conversational UI with `Hivekeep.sendMessage()` for Kin communication and `Hivekeep.memory.search()` for memory lookup. Uses `useStorage` for message persistence, auto-scroll, typing indicator, and memory results panel. Imports `Button`, `Badge`, `Spinner` from `@hivekeep/components`.
 - **Settings Panel** (`settings`) — Preferences UI with `Switch`, `Select`, `Input`, `Card`, `Button`, `Badge` components. Storage-backed persistence, dirty state tracking, reset to defaults. Three sections: Appearance, Notifications, Profile.
 
 **Design decisions:**
 - Chat template demonstrates the new memory APIs (run 5) in a practical context
 - Settings template showcases the Form-adjacent components (Switch, Select, Input) without using the full Form component, showing both patterns are viable
-- Both templates use `@kinbot/react` hooks (`useKinBot`, `useStorage`, `toast`) and `@kinbot/components`
+- Both templates use `@hivekeep/react` hooks (`useHivekeep`, `useStorage`, `toast`) and `@hivekeep/components`
 - Full-viewport chat layout (height: 100vh, no body padding) vs scrollable settings layout
 
 **Files changed:**
@@ -356,14 +356,14 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 **Note:** 3 pre-existing test failures (schema import issues) required HUSKY=0 for commit. Not related to this change.
 
 **Next priorities:**
-1. CSS animations library in kinbot-sdk.css (fade, slide, scale transitions)
-2. `KinBot.navigate(path)` — parent UI navigation
-3. `KinBot.share(data)` improvements
+1. CSS animations library in hivekeep-sdk.css (fade, slide, scale transitions)
+2. `Hivekeep.navigate(path)` — parent UI navigation
+3. `Hivekeep.share(data)` improvements
 4. Fix the 3 pre-existing test failures
 
 ## 2026-03-02 (run 7) — CSS Animations & Transitions Library
 
-**What:** Expanded the animations section in `kinbot-sdk.css` from ~6 keyframes to 20+, added transition utilities, duration/delay modifiers, and reduced motion support.
+**What:** Expanded the animations section in `hivekeep-sdk.css` from ~6 keyframes to 20+, added transition utilities, duration/delay modifiers, and reduced motion support.
 
 **New keyframes:**
 - `fade-out`, `fade-in-down`, `fade-out-up`, `fade-out-down`
@@ -382,14 +382,14 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - `@media (prefers-reduced-motion: reduce)` — kills all animations/transitions for accessibility
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.css` — +155 lines in animations section
+- `src/server/mini-app-sdk/hivekeep-sdk.css` — +155 lines in animations section
 - `src/server/tools/mini-app-tools.ts` — documented all new animation/transition classes in tool descriptions
 
 **Note:** 3 pre-existing test failures (drizzle-orm schema import). HUSKY=0 for commit.
 
 **Next priorities:**
-1. `KinBot.navigate(path)` — parent UI navigation
-2. `KinBot.share(data)` improvements
+1. `Hivekeep.navigate(path)` — parent UI navigation
+2. `Hivekeep.share(data)` improvements
 3. Fix the 3 pre-existing test failures
 4. New template ideas: kanban board, form builder
 
@@ -402,7 +402,7 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 - Fix: added `.first()` to resolve the ambiguity
 - Root cause: dialog has both a `<button>Close</button>` and a `<button data-slot="dialog-close">` with X icon
 
-### 2. Inter-App Data Sharing (`KinBot.share()` rewrite)
+### 2. Inter-App Data Sharing (`Hivekeep.share()` rewrite)
 **Problem:** `share()` was storing data in the sender's storage with a `__share__` key, but each app has its own storage namespace, so the target app could never read it. The `shared-data` event documented in comments was never actually emitted.
 
 **Solution:** Proper postMessage-based sharing flow:
@@ -414,29 +414,29 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 **Usage:**
 ```js
 // Sender app:
-KinBot.share('other-app', { items: [1, 2, 3] })
+Hivekeep.share('other-app', { items: [1, 2, 3] })
 
 // Receiver app:
-KinBot.on('shared-data', ({ from, fromName, data, ts }) => {
+Hivekeep.on('shared-data', ({ from, fromName, data, ts }) => {
   console.log(`Received from ${fromName}:`, data)
 })
 ```
 
 **Files changed:**
 - `e2e/19-users-settings.spec.ts` — strict mode fix
-- `src/server/mini-app-sdk/kinbot-sdk.js` — share() rewrite + shared-data listener
+- `src/server/mini-app-sdk/hivekeep-sdk.js` — share() rewrite + shared-data listener
 - `src/client/components/mini-app/MiniAppViewer.tsx` — share message handler + pendingShareData forwarding
 - `src/server/tools/mini-app-tools.ts` — updated share docs
 
 **Next priorities:**
 1. Fix the 3 pre-existing test failures (drizzle-orm schema imports)
 2. New template ideas: form builder improvements
-3. `KinBot.shortcut(key, callback)` — keyboard shortcut registration
-4. `KinBot.apps.list()` — list other mini-apps from the same Kin
+3. `Hivekeep.shortcut(key, callback)` — keyboard shortcut registration
+4. `Hivekeep.apps.list()` — list other mini-apps from the same Kin
 
 ## 2026-03-02 (run 9) — DataGrid Component
 
-**What:** Implemented the `DataGrid` component in `kinbot-components.js` - an advanced data table with sorting, filtering, pagination, and row selection.
+**What:** Implemented the `DataGrid` component in `hivekeep-components.js` - an advanced data table with sorting, filtering, pagination, and row selection.
 
 **Features:**
 - **Sorting:** Click column headers to sort asc/desc with locale-aware comparison (strings + numbers)
@@ -451,14 +451,14 @@ KinBot.on('shared-data', ({ from, fromName, data, ts }) => {
 **Props:** `columns` (key, label, sortable?, filterable?, align?, width?, render?), `data`, `pageSize` (default 10), `selectable`, `onSelectionChange`, `onRowClick`, `stickyHeader`, `striped`, `emptyMessage`, `className`, `style`
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — +~280 lines (DataGrid + pagination helpers)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +~280 lines (DataGrid + pagination helpers)
 - `src/server/tools/mini-app-tools.ts` — updated DataGrid docs to match actual implementation
 
 **Tests:** 1282 pass, 0 fail. Build clean.
 
 **Next priorities:**
-1. `KinBot.notification(title, body?)` — browser notification via parent (check if already done)
-2. `KinBot.resize(width?, height?)` improvements
+1. `Hivekeep.notification(title, body?)` — browser notification via parent (check if already done)
+2. `Hivekeep.resize(width?, height?)` improvements
 3. New template: data table template using DataGrid
 4. Panel component (wrapper with title bar, collapsible?)
 
@@ -484,7 +484,7 @@ KinBot.on('shared-data', ({ from, fromName, data, ts }) => {
 - DataGrid docs updated to reflect enhanced version's extra props (pageSizeOptions, searchable, compact, maxHeight)
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — removed duplicate DataGrid (397 lines), added 4 components (+249 lines)
+- `src/server/mini-app-sdk/hivekeep-components.js` — removed duplicate DataGrid (397 lines), added 4 components (+249 lines)
 - `src/server/tools/mini-app-tools.ts` — updated component docs
 
 **Tests:** 1289 pass, 0 fail. Build clean.
@@ -494,7 +494,7 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 
 **Next priorities:**
 1. New template: settings/preferences page (using Panel, RadioGroup, Slider, Switch)
-2. `KinBot.navigate(path)` — verify parent-side handler exists in MiniAppViewer
+2. `Hivekeep.navigate(path)` — verify parent-side handler exists in MiniAppViewer
 3. Component docs/storybook mini-app (a mini-app that showcases all components)
 4. Chart components (BarChart, LineChart) using SVG
 
@@ -521,8 +521,8 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 - `@keyframes kb-pie-grow` (opacity+scale for pie slice entrance)
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — +~400 lines (4 chart components + helpers)
-- `src/server/mini-app-sdk/kinbot-sdk.css` — +10 lines (chart keyframes)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +~400 lines (4 chart components + helpers)
+- `src/server/mini-app-sdk/hivekeep-sdk.css` — +10 lines (chart keyframes)
 - `src/server/tools/mini-app-tools.ts` — updated import list + chart component docs
 
 **Tests:** 1314 pass, 0 fail. Build clean (pre-commit hook OOM'd but CI build verified clean).
@@ -533,8 +533,8 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 **Next priorities:**
 1. Component showcase mini-app (a mini-app that demos all 40 components)
 2. New template: dashboard template using charts + stats
-3. `KinBot.navigate(path)` — parent-side handler verification
-4. `KinBot.notification(title, body?)` — browser notifications via parent
+3. `Hivekeep.navigate(path)` — parent-side handler verification
+4. `Hivekeep.notification(title, body?)` — browser notifications via parent
 
 ## 2026-03-03 (run 12) — Dashboard Template Upgrade with Charts
 
@@ -546,7 +546,7 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 - **New Analytics tab** with:
   - **BarChart**: weekly signups (Mon-Sun) with values and grid
   - **PieChart**: traffic sources breakdown (donut mode with labels and legend)
-- Template now imports `LineChart, BarChart, PieChart, SparkLine` from `@kinbot/components`
+- Template now imports `LineChart, BarChart, PieChart, SparkLine` from `@hivekeep/components`
 - 3 tabs total: Overview, Analytics, Projects
 - Removed the old `.chart-placeholder` CSS class
 - Added `.charts-grid` (2-column) and `.stat-spark` (inline sparkline layout) styles
@@ -558,13 +558,13 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 
 **Next priorities:**
 1. Component showcase/storybook mini-app template
-2. `KinBot.notification(title, body?)` — browser notifications via parent
+2. `Hivekeep.notification(title, body?)` — browser notifications via parent
 3. Settings page template (using Panel, RadioGroup, Slider, Switch)
-4. `KinBot.navigate(path)` — verify parent-side handler
+4. `Hivekeep.navigate(path)` — verify parent-side handler
 
 ## 2026-03-03 (run 13) — Component Showcase Template
 
-**What:** Added a new "Component Showcase" template — an interactive storybook that demos all 40 @kinbot/components.
+**What:** Added a new "Component Showcase" template — an interactive storybook that demos all 40 @hivekeep/components.
 
 ### Template Details
 - **ID:** `component-showcase`
@@ -587,14 +587,14 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 **Component inventory:** 40 (unchanged). **Templates:** 8 total.
 
 **Next priorities:**
-1. `KinBot.notification(title, body?)` — browser notifications via parent
-2. `KinBot.navigate(path)` — verify parent-side handler
+1. `Hivekeep.notification(title, body?)` — browser notifications via parent
+2. `Hivekeep.navigate(path)` — verify parent-side handler
 3. Settings template using new components (RadioGroup, Slider, etc.)
 4. Form template demonstrating the Form component with validation
 
 ## 2026-03-03 (run 14) — React Hooks Library Expansion
 
-**What:** Added 9 new React hooks to `@kinbot/react` SDK + 7 new convenience re-exports.
+**What:** Added 9 new React hooks to `@hivekeep/react` SDK + 7 new convenience re-exports.
 
 ### New Hooks
 1. **`useKin()`** → `{ kin, loading }` — reactive access to parent Kin info (id, name, avatarUrl)
@@ -614,62 +614,62 @@ Stack, Divider, Card (+Header/Title/Description/Content/Footer), Button, ButtonG
 Updated `mini-app-tools.ts` with full documentation of all 12 hooks (3 existing + 9 new).
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-react.js` — +290 lines (9 hooks + 7 re-exports)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +290 lines (9 hooks + 7 re-exports)
 - `src/server/tools/mini-app-tools.ts` — updated hook documentation
 
 **Tests:** 1339 pass, 0 fail. Build clean.
 
 **Hook inventory (12 total):**
-useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation
+useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation
 
 **Next priorities:**
 1. Settings template could use useForm for demo
 2. Responsive breakpoint CSS utilities (sm:/md:/lg: prefixes)
 3. Form template update to showcase useForm hook
-4. `KinBot.shortcut(key, callback)` — keyboard shortcut registration
+4. `Hivekeep.shortcut(key, callback)` — keyboard shortcut registration
 
 ## 2026-03-03 (run 15) — 6 New React Hooks + Re-exports
 
-**What:** Added 6 new hooks to `@kinbot/react` and 2 new convenience re-exports, bridging SDK features that lacked React wrappers.
+**What:** Added 6 new hooks to `@hivekeep/react` and 2 new convenience re-exports, bridging SDK features that lacked React wrappers.
 
 ### New Hooks (18 total)
-1. **`useShortcut(key, callback)`** — Register keyboard shortcut with auto-cleanup on unmount. Wraps `KinBot.shortcut()`.
+1. **`useShortcut(key, callback)`** — Register keyboard shortcut with auto-cleanup on unmount. Wraps `Hivekeep.shortcut()`.
 2. **`useApps()`** → `{ apps, loading, refresh }` — List mini-apps from the same Kin. Fetches on mount, supports manual refresh.
-3. **`useSharedData(onData?)`** → `{ data, clear }` — Listen for data shared from another app via `KinBot.share()`. Stores last received payload.
+3. **`useSharedData(onData?)`** → `{ data, clear }` — Listen for data shared from another app via `Hivekeep.share()`. Stores last received payload.
 4. **`usePrevious(value)`** → previous render's value. Common React pattern useful for comparing state changes.
 5. **`useOnline()`** → `boolean` — Reactive network status (navigator.onLine + event listeners). Useful for offline-aware mini-apps.
 
 ### New Re-exports
-- `shortcut` — direct access to `KinBot.shortcut()`
-- `apps` — direct access to `KinBot.apps`
+- `shortcut` — direct access to `Hivekeep.shortcut()`
+- `apps` — direct access to `Hivekeep.apps`
 
 ### Tool Docs Updated
 - All 6 new hooks documented in tool descriptions
 - New re-exports listed
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-react.js` — +160 lines (6 hooks + 2 re-exports)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +160 lines (6 hooks + 2 re-exports)
 - `src/server/tools/mini-app-tools.ts` — updated hook + re-export documentation
 
 **Tests:** 1389 pass, 0 fail. Build clean.
 
 **Hook inventory (18 total):**
-useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, **useShortcut**, **useApps**, **useSharedData**, **usePrevious**, **useOnline**
+useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, **useShortcut**, **useApps**, **useSharedData**, **usePrevious**, **useOnline**
 
 **Next priorities:**
 1. New template: settings page using Panel, RadioGroup, Slider, Switch (update existing?)
-2. `KinBot.navigate(path)` docs — already implemented, ensure tool docs mention it
+2. `Hivekeep.navigate(path)` docs — already implemented, ensure tool docs mention it
 3. Component showcase template could demo useShortcut, useApps
-4. Consider `useClipboard` hook (wraps KinBot.clipboard with reactive state)
-5. Consider `useNotification` hook (wraps KinBot.notification with permission state)
+4. Consider `useClipboard` hook (wraps Hivekeep.clipboard with reactive state)
+5. Consider `useNotification` hook (wraps Hivekeep.notification with permission state)
 
 ## 2026-03-04 (run 16) — Data Fetching & Async Hooks
 
-**What:** Added 4 new React hooks to `@kinbot/react` SDK focused on data fetching and async operations — the most common boilerplate in mini-apps.
+**What:** Added 4 new React hooks to `@hivekeep/react` SDK focused on data fetching and async operations — the most common boilerplate in mini-apps.
 
 ### New Hooks (22 total)
-1. **`useFetch(url, options?)`** → `{ data, loading, error, refetch, status }` — fetch external data via `KinBot.http()` proxy with auto-fetch on mount, cancel on unmount, conditional fetching (pass null to skip), and manual refetch. Options: method, body, headers, json (default true), enabled.
-2. **`useApi(path, options?)`** → `{ data, loading, error, refetch }` — fetch from mini-app backend (`_server.js`) via `KinBot.api()`. Same ergonomics as useFetch but for backend API calls. Supports GET/POST/PUT/DELETE.
+1. **`useFetch(url, options?)`** → `{ data, loading, error, refetch, status }` — fetch external data via `Hivekeep.http()` proxy with auto-fetch on mount, cancel on unmount, conditional fetching (pass null to skip), and manual refetch. Options: method, body, headers, json (default true), enabled.
+2. **`useApi(path, options?)`** → `{ data, loading, error, refetch }` — fetch from mini-app backend (`_server.js`) via `Hivekeep.api()`. Same ergonomics as useFetch but for backend API calls. Supports GET/POST/PUT/DELETE.
 3. **`useAsync(asyncFn)`** → `{ run, data, loading, error, reset }` — wrap any async function with loading/error states. Unlike useFetch/useApi, doesn't auto-execute; call `run(...args)` manually. Perfect for mutations (POST, DELETE, form submissions).
 4. **`useEventStream(eventName?, callback?)`** → `{ messages, connected, clear }` — subscribe to real-time SSE events from backend. Auto-connects on mount, disconnects on unmount. With callback: no accumulation. Without: messages accumulate as `[{event, data, ts}]`.
 
@@ -684,13 +684,13 @@ Every mini-app that calls an API needs loading/error states. Previously Kins had
 Updated `mini-app-tools.ts` with full documentation of all 4 new hooks.
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-react.js` — +200 lines (4 hooks)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +200 lines (4 hooks)
 - `src/server/tools/mini-app-tools.ts` — updated hook documentation
 
 **Tests:** 1547 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
 **Hook inventory (22 total):**
-useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, **useFetch**, **useApi**, **useAsync**, **useEventStream**
+useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, **useFetch**, **useApi**, **useAsync**, **useEventStream**
 
 **Next priorities:**
 1. Template that demos useFetch + useApi (e.g., weather dashboard or API explorer template)
@@ -705,7 +705,7 @@ useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDeb
 ### Template Structure
 - **4 tabs**, each showcasing a different hook:
   1. **Backend API** (`useApi`) — fetches `/status` and `/items` from `_server.js`, shows server stats and item list with refetch
-  2. **External Fetch** (`useFetch`) — URL input field to fetch any external API via `KinBot.http()` proxy
+  2. **External Fetch** (`useFetch`) — URL input field to fetch any external API via `Hivekeep.http()` proxy
   3. **Mutations** (`useAsync`) — POST JSON payload to `/echo` endpoint, manual trigger with loading/error states
   4. **Real-time** (`useEventStream`) — SSE stream from `_server.js` with start/stop toggle and event log
 
@@ -734,7 +734,7 @@ No existing template used the data-fetching hooks (useFetch, useApi, useAsync, u
 **What:** Added 2 new React hooks for paginated data loading patterns.
 
 ### New Hooks (24 total)
-1. **`useInfiniteScroll(path, options?)`** → `{ items, loading, loadingMore, error, hasMore, loadMore, reset, sentinelRef }` — infinite scroll / "load more" pattern. Fetches pages from backend (KinBot.api) or external URLs (KinBot.http) and merges results. Supports auto-load via IntersectionObserver with `sentinelRef`. Options: source, pageSize, pageParam, limitParam, getItems, getHasMore, autoLoad, threshold.
+1. **`useInfiniteScroll(path, options?)`** → `{ items, loading, loadingMore, error, hasMore, loadMore, reset, sentinelRef }` — infinite scroll / "load more" pattern. Fetches pages from backend (Hivekeep.api) or external URLs (Hivekeep.http) and merges results. Supports auto-load via IntersectionObserver with `sentinelRef`. Options: source, pageSize, pageParam, limitParam, getItems, getHasMore, autoLoad, threshold.
 2. **`usePagination(path, options?)`** → `{ items, loading, error, page, totalPages, setPage, next, prev, refetch }` — traditional page-based pagination. Replaces items on each page change (vs. infinite scroll which appends). Supports total page count via `getTotal` callback. Options: source, pageSize, pageParam, limitParam, getItems, getTotal.
 
 ### Why These Hooks
@@ -749,20 +749,20 @@ Pagination is one of the most common patterns in data-heavy mini-apps. Previousl
 - `usePagination` prevents out-of-bounds navigation when totalPages is known
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-react.js` — +200 lines (2 hooks)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +200 lines (2 hooks)
 - `src/server/tools/mini-app-tools.ts` — updated hook documentation
 
 **Tests:** 1582 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
 **Hook inventory (24 total):**
-useKinBot, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, useFetch, useApi, useAsync, useEventStream, **useInfiniteScroll**, **usePagination**
+useHivekeep, useStorage, useTheme, useKin, useUser, useForm, useMediaQuery, useDebounce, useInterval, useClickOutside, useMemory, useConversation, useShortcut, useApps, useSharedData, usePrevious, useOnline, useClipboard, useNotification, useDownload, useFetch, useApi, useAsync, useEventStream, **useInfiniteScroll**, **usePagination**
 
 **Next priorities:**
 1. Template that demos useInfiniteScroll + usePagination (e.g., paginated data table)
 2. Form template update to showcase useForm + useAsync together
 3. Consider TypeScript type definitions (.d.ts) for SDK autocomplete
 4. Responsive breakpoint CSS utilities
-5. `useLocalStorage` hook (persistent state outside KinBot storage, for non-synced prefs)
+5. `useLocalStorage` hook (persistent state outside Hivekeep storage, for non-synced prefs)
 
 ## 2026-03-04 (run 19) — Data Browser Template
 
@@ -800,7 +800,7 @@ dashboard, todo-list, form, data-viewer, kanban, chat, settings, wizard, api-exp
 1. Form template update to showcase useForm + useAsync together
 2. TypeScript type definitions (.d.ts) for SDK autocomplete
 3. Responsive breakpoint CSS utilities
-4. `useLocalStorage` hook (persistent state outside KinBot storage)
+4. `useLocalStorage` hook (persistent state outside Hivekeep storage)
 
 ## 2026-03-04 (run 20) — Form Template Upgrade (useForm + useAsync)
 
@@ -818,7 +818,7 @@ dashboard, todo-list, form, data-viewer, kanban, chat, settings, wizard, api-exp
 - **EmptyState** when no submissions yet
 
 ### Hooks Demonstrated
-useKinBot, useForm, useAsync, useApi, toast
+useHivekeep, useForm, useAsync, useApi, toast
 
 ### Components Demonstrated
 Card, Input, Select, Textarea, Checkbox, Switch, RadioGroup, DatePicker, Button, Alert, Divider, Stack, Badge, Table, Tabs, Spinner, EmptyState, Stat
@@ -834,13 +834,13 @@ Previous form template only did synchronous client-side submission (console.log)
 **Next priorities:**
 1. TypeScript type definitions (.d.ts) for SDK autocomplete
 2. Responsive breakpoint CSS utilities
-3. `useLocalStorage` hook (persistent state outside KinBot storage)
+3. `useLocalStorage` hook (persistent state outside Hivekeep storage)
 
 ## 2026-03-04 (run 21) — Responsive Breakpoint CSS Utilities + useLocalStorage Hook
 
 **What:** Two additions covering the next priorities from run 20.
 
-### 1. Responsive Breakpoint CSS Utilities (kinbot-sdk.css)
+### 1. Responsive Breakpoint CSS Utilities (hivekeep-sdk.css)
 Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px).
 
 **Utility categories:**
@@ -854,18 +854,18 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 - **Justify/Align:** `.justify-{start,center,end,between}`, `.items-{start,center,end,stretch}`, `.self-{start,center,end}` (+ sm/md/lg variants)
 - **CSS variables:** `--breakpoint-sm/md/lg/xl` for JS access
 
-### 2. useLocalStorage Hook (kinbot-react.js)
+### 2. useLocalStorage Hook (hivekeep-react.js)
 - `useLocalStorage(key, defaultValue)` → `[value, set, remove]`
-- Uses browser localStorage (NOT KinBot storage API) — for non-synced UI preferences
+- Uses browser localStorage (NOT Hivekeep storage API) — for non-synced UI preferences
 - Auto-prefixes keys with `kb:` to avoid collisions
 - Syncs across tabs via `storage` event listener
 - Handles JSON serialization/deserialization and quota errors
-- TypeScript definitions added to `kinbot-react.d.ts`
+- TypeScript definitions added to `hivekeep-react.d.ts`
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-sdk.css` — +280 lines (responsive utilities)
-- `src/server/mini-app-sdk/kinbot-react.js` — +47 lines (useLocalStorage)
-- `src/server/mini-app-sdk/kinbot-react.d.ts` — +12 lines (type def)
+- `src/server/mini-app-sdk/hivekeep-sdk.css` — +280 lines (responsive utilities)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +47 lines (useLocalStorage)
+- `src/server/mini-app-sdk/hivekeep-react.d.ts` — +12 lines (type def)
 
 **Tests:** 1692 pass, 0 fail. Build clean (pre-commit OOM'd as usual, CI verified).
 
@@ -880,7 +880,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 
 ### Changes
 
-1. **`useBreakpoint()` hook** (kinbot-react.js + .d.ts):
+1. **`useBreakpoint()` hook** (hivekeep-react.js + .d.ts):
    - Returns current breakpoint: `'xs'|'sm'|'md'|'lg'|'xl'`
    - Reactive — updates on window resize
    - Breakpoints: xs (<640px), sm (≥640px), md (≥768px), lg (≥1024px), xl (≥1280px)
@@ -893,8 +893,8 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
    - Added example: `className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"`
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-react.js` — +29 lines (useBreakpoint)
-- `src/server/mini-app-sdk/kinbot-react.d.ts` — +7 lines (type def)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +29 lines (useBreakpoint)
+- `src/server/mini-app-sdk/hivekeep-react.d.ts` — +7 lines (type def)
 - `src/server/tools/mini-app-tools.ts` — +10 lines (docs)
 
 **Tests:** 1701 pass, 2 fail (pre-existing: formatCountdown + invitation export), 1 error (pre-existing). Build clean.
@@ -908,7 +908,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 
 ## 2026-03-04 (run 23) — 5 New Components: FileUpload, CodeBlock, Timeline, AvatarGroup, NumberInput
 
-**What:** Added 5 commonly-needed React components to `kinbot-components.js`.
+**What:** Added 5 commonly-needed React components to `hivekeep-components.js`.
 
 ### New Components
 
@@ -937,8 +937,8 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
    - Decrement/increment buttons, clamping, keyboard input support
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — +416 lines (5 components)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +73 lines (type definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +416 lines (5 components)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +73 lines (type definitions)
 - `src/server/tools/mini-app-tools.ts` — +5 lines (updated import list + component docs)
 
 **Tests:** 1776 pass, 1 fail (pre-existing onboarding mock ordering issue), 1 error (pre-existing). Build clean.
@@ -954,7 +954,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 
 **What:** Added hash-based routing primitives for multi-page mini-apps.
 
-### New Exports (kinbot-react.js)
+### New Exports (hivekeep-react.js)
 
 1. **`useHashRouter(defaultPath?)`** — Hash-based router hook
    - Returns `{ path, params, navigate, back }`
@@ -974,8 +974,8 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
    - Standard `<a>` tag with `href="#/path"`
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-react.js` — +92 lines (3 exports)
-- `src/server/mini-app-sdk/kinbot-react.d.ts` — +35 lines (type definitions)
+- `src/server/mini-app-sdk/hivekeep-react.js` — +92 lines (3 exports)
+- `src/server/mini-app-sdk/hivekeep-react.d.ts` — +35 lines (type definitions)
 - `src/server/tools/mini-app-tools.ts` — +3 lines (docs for router, Route, Link)
 
 **Tests:** 1793 pass, 1 fail (pre-existing), 1 error (pre-existing). Build clean.
@@ -996,7 +996,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 - Description updated to reflect 45 components across 8 categories
 
 ### 2. New "Multi-Page App" Template
-- New template `multi-page` demonstrating `useHashRouter`, `Route`, and `Link` from `@kinbot/react`
+- New template `multi-page` demonstrating `useHashRouter`, `Route`, and `Link` from `@hivekeep/react`
 - Features: nav bar with active state styling, 3 pages (Home, About, Settings), 404 fallback
 - Settings page uses Card, Stack, Switch, Select, Button components
 - Shows browser back/forward support and query params
@@ -1008,14 +1008,14 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 
 **Next priorities:**
 1. Consider `Combobox` (searchable select) and `TagInput` (multi-tag entry) components
-2. Add TypeScript declarations for routing exports in kinbot-react.d.ts if not already complete
+2. Add TypeScript declarations for routing exports in hivekeep-react.d.ts if not already complete
 3. Improve tool descriptions to document the routing primitives for Kins
 
 ## 2026-03-05 (run 26) — Combobox & TagInput Components
 
 **What:** Added two high-value form components to the component library.
 
-### New Exports (kinbot-components.js)
+### New Exports (hivekeep-components.js)
 
 1. **`Combobox`** — Searchable select dropdown with filtering
    - Props: `options` (value/label/icon/description/disabled), `value`, `onChange`, `placeholder`, `searchPlaceholder`, `label`, `error`, `disabled`, `clearable`, `emptyText`, `maxHeight`, `renderOption`
@@ -1035,8 +1035,8 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
    - Two visual variants: default (muted) and primary (accent color)
 
 **Files changed:**
-- `src/server/mini-app-sdk/kinbot-components.js` — +397 lines (Combobox + TagInput)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +35 lines (type definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +397 lines (Combobox + TagInput)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +35 lines (type definitions)
 - `src/server/tools/mini-app-tools.ts` — +3 lines (updated import list + component docs)
 
 **Tests:** 1792 pass, 4 fail (pre-existing), 4 errors (pre-existing). Build clean.
@@ -1084,7 +1084,7 @@ Added Tailwind-style responsive utility classes with breakpoints: sm (640px), md
 - **Form validation** both client-side (useForm) and server-side (duplicate email check)
 - Search bar filters by name/email/company
 - Role filter via Combobox dropdown
-- Delete with KinBot.confirm() dialog
+- Delete with Hivekeep.confirm() dialog
 - EmptyState when no results
 - Responsive layout
 
@@ -1122,8 +1122,8 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 - NavLink with `activeClassName`, `activeStyle`, `aria-current="page"`
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-components.js` — +152 lines (routing implementation)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +42 lines (TypeScript definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +152 lines (routing implementation)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +42 lines (TypeScript definitions)
 - `src/server/tools/mini-app-tools.ts` — updated import list + routing documentation
 
 **Tests:** 1875 pass, 0 fail. Build clean.
@@ -1150,8 +1150,8 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 - Accessible: ARIA labels, keyboard-navigable hex input
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-components.js` — +180 lines (ColorPicker + color utils)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +13 lines (TypeScript definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +180 lines (ColorPicker + color utils)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +13 lines (TypeScript definitions)
 - `src/server/tools/mini-app-tools.ts` — added ColorPicker to import list + documentation
 - `src/server/tools/mini-app-templates.ts` — added ColorPicker demo to component-showcase (48 components), updated Forms category
 
@@ -1179,8 +1179,8 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 - **Accessible:** ARIA labels, aria-selected, aria-disabled, keyboard-navigable buttons
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-components.js` — +280 lines (Calendar + helper functions)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +20 lines (TypeScript definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +280 lines (Calendar + helper functions)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +20 lines (TypeScript definitions)
 - `src/server/tools/mini-app-tools.ts` — added Calendar to import list + documentation
 - `src/server/tools/mini-app-templates.ts` — added Calendar demos to component-showcase (single + range mode)
 
@@ -1209,8 +1209,8 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 - Accessible: ARIA labels, keyboard dismissible (Escape)
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-components.js` — +230 lines (DateRangePicker)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +18 lines (TypeScript definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +230 lines (DateRangePicker)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +18 lines (TypeScript definitions)
 - `src/server/tools/mini-app-tools.ts` — added DateRangePicker to import list + documentation
 - `src/server/tools/mini-app-templates.ts` — added DateRangePicker with presets demo to component-showcase (Extra category)
 
@@ -1242,8 +1242,8 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 - Much cleaner and more maintainable
 
 ### Files changed
-- `src/server/mini-app-sdk/kinbot-components.js` — +290 lines (Kanban component)
-- `src/server/mini-app-sdk/kinbot-components.d.ts` — +30 lines (TypeScript definitions)
+- `src/server/mini-app-sdk/hivekeep-components.js` — +290 lines (Kanban component)
+- `src/server/mini-app-sdk/hivekeep-components.d.ts` — +30 lines (TypeScript definitions)
 - `src/server/tools/mini-app-tools.ts` — added Kanban to import list + documentation
 - `src/server/tools/mini-app-templates.ts` — refactored kanban template to use component, added to component-showcase (49 components)
 
@@ -1252,4 +1252,4 @@ Card, Stack, Button, Input, Combobox, TagInput, DataGrid, Modal, Badge, Stat, Di
 **Next priorities:**
 1. Consider `TreeView` component (hierarchical data)
 2. Add `Sortable` or `DragList` for vertical reordering within lists
-3. SDK API expansion (KinBot.kin, KinBot.user, KinBot.memory.search)
+3. SDK API expansion (Hivekeep.kin, Hivekeep.user, Hivekeep.memory.search)

@@ -1,14 +1,14 @@
-# KinBot
+# Hivekeep
 
 ## Description du projet
 
-KinBot est une plateforme d'**agents IA spécialisés** conçue pour assister une personne ou un petit groupe (famille, amis, colocation) dans leur quotidien.
+Hivekeep est une plateforme d'**agents IA spécialisés** conçue pour assister une personne ou un petit groupe (famille, amis, colocation) dans leur quotidien.
 
 Le principe : l'utilisateur crée des **Kins** — des agents experts dans un domaine précis (nutrition, finance personnelle, organisation de voyages, développement, rédaction, recherche...). Chaque Kin a sa personnalité, ses connaissances, ses outils, et une mémoire continue de toutes les interactions passées. Les Kins peuvent collaborer entre eux, déléguer des sous-tâches, et exécuter des tâches planifiées de manière autonome.
 
 Contrairement aux chatbots classiques ou chaque conversation repart de zéro, un Kin **connaît son contexte** : il sait qui lui parle, ce qui a été demandé précédemment, et peut agir de manière proactive. C'est un assistant permanent, pas un outil jetable.
 
-KinBot est une application web auto-hébergée (a domicile ou sur un VPS), multi-utilisateur, pensée pour rester **simple a déployer et a maintenir**.
+Hivekeep est une application web auto-hébergée (a domicile ou sur un VPS), multi-utilisateur, pensée pour rester **simple a déployer et a maintenir**.
 
 ---
 
@@ -39,7 +39,7 @@ A la sortie de l'écran 2, l'utilisateur arrive directement sur le dashboard pri
 
 Sur le dashboard, tant que la configuration n'est pas complète, une **checklist d'amorçage** suit l'utilisateur pour le guider. Elle se présente sous deux formes : un encart inline sur l'écran vide d'une conversation, et un popover compact accessible depuis la navbar.
 
-La checklist contient 7 items, chacun **skippable individuellement** (le skip est persisté globalement dans `app_settings.dismissed_setup_items` — pas per-user, car KinBot est un produit individuel ou petit groupe avec configuration partagée) :
+La checklist contient 7 items, chacun **skippable individuellement** (le skip est persisté globalement dans `app_settings.dismissed_setup_items` — pas per-user, car Hivekeep est un produit individuel ou petit groupe avec configuration partagée) :
 
 | ID | Description | Impact si absent |
 |---|---|---|
@@ -61,7 +61,7 @@ Restauration d'items dismissés : Settings → General → "Show setup checklist
 
 ### Direction design
 
-L'interface de KinBot doit être **clean et soignée**, tout en gardant un côté **chaleureux et ludique**. On ne cherche pas l'austérité d'un outil enterprise, ni le côté enfantin d'une app gamifiée. L'objectif est un équilibre entre professionnalisme et personnalité.
+L'interface de Hivekeep doit être **clean et soignée**, tout en gardant un côté **chaleureux et ludique**. On ne cherche pas l'austérité d'un outil enterprise, ni le côté enfantin d'une app gamifiée. L'objectif est un équilibre entre professionnalisme et personnalité.
 
 | Aspect | Direction |
 |---|---|
@@ -152,7 +152,7 @@ Aucune création de Kin n'est automatiquement déclenchée après l'onboarding �
 
 ## 4. Concept de Kin
 
-Un **Kin** dans KinBot est une entité autonome dotée d'une identité, d'une expertise et d'outils.
+Un **Kin** dans Hivekeep est une entité autonome dotée d'une identité, d'une expertise et d'outils.
 
 **Principe fondamental** : chaque Kin ne possède qu'une **seule session principale continue**. Il n'y a pas de concept de "nouvelle conversation". Les utilisateurs parlent tous dans le même fil, et le Kin garde en permanence le contexte de ce qui a été fait récemment grâce au compacting (voir section 5). Cela garantit une continuité de contexte : le Kin sait toujours ou il en est.
 
@@ -197,7 +197,7 @@ Pour accéder aux détails d'un contact, le Kin dispose d'outils dédiés :
 
 #### Outils auto-générés
 
-En plus des **outils MCP** assignés au Kin par l'utilisateur (voir "Attributs configurables"), l'utilisateur **et** les Kins peuvent créer de **vrais outils custom**, **globaux** et intégrés comme les outils natifs/MCP, pour étendre KinBot. Ils sont organisés dans des **domaines** (catégories icône/couleur/label, dont des domaines personnalisés créables) et accordés aux Kins via le système de **toolboxes**.
+En plus des **outils MCP** assignés au Kin par l'utilisateur (voir "Attributs configurables"), l'utilisateur **et** les Kins peuvent créer de **vrais outils custom**, **globaux** et intégrés comme les outils natifs/MCP, pour étendre Hivekeep. Ils sont organisés dans des **domaines** (catégories icône/couleur/label, dont des domaines personnalisés créables) et accordés aux Kins via le système de **toolboxes**.
 
 | Aspect | Description |
 |---|---|
@@ -209,7 +209,7 @@ En plus des **outils MCP** assignés au Kin par l'utilisateur (voir "Attributs c
 | **Domaines** | `create_tool_domain` / `list_tool_domains` / `update_tool_domain` / `delete_tool_domain` (UI dédiée aussi). 26 domaines built-in read-only + domaines custom. |
 | **Renderer de résultat (optionnel)** | Un outil custom peut embarquer un `renderer.tsx` (composant React) qui met en forme son résultat dans la vue détaillée du tool-call ; bundlé côté serveur, chargé à la volée, auto-thémé via les tokens `--color-*`. Absent → le résultat s'affiche en JSON comme aujourd'hui. |
 
-**Distinction MCP vs custom** : les outils MCP sont des serveurs externes configurés au niveau de la plateforme. Les outils custom sont des scripts globaux (n'importe quel langage) authored via l'UI ou les Kins, exécutés par l'hôte, et accordés via les toolboxes. **Sécurité** : un outil custom exécute du code arbitraire avec les privilèges du process KinBot (plateforme self-hosted) — garde-fous : toggle désactiver, sortie plafonnée, kill de l'arbre de process, accès filtré par toolbox.
+**Distinction MCP vs custom** : les outils MCP sont des serveurs externes configurés au niveau de la plateforme. Les outils custom sont des scripts globaux (n'importe quel langage) authored via l'UI ou les Kins, exécutés par l'hôte, et accordés via les toolboxes. **Sécurité** : un outil custom exécute du code arbitraire avec les privilèges du process Hivekeep (plateforme self-hosted) — garde-fous : toggle désactiver, sortie plafonnée, kill de l'arbre de process, accès filtré par toolbox.
 
 #### Workspace
 
@@ -585,7 +585,7 @@ Architecture monolithique en un seul process, conçue pour un déploiement simpl
 ### Vue d'ensemble
 
 ```
-KinBot
+Hivekeep
 ├── Frontend (React + Vite + Tailwind + shadcn/ui)
 │   └── Vercel AI SDK (ai/react)
 │
@@ -713,7 +713,7 @@ La seule contrainte sur les agents principaux est le rate limit du provider LLM.
 
 ## 13. Architecture extensible
 
-L'architecture de KinBot est conçue dès le départ pour être **pluggable**, **hookable** et **observable**, afin de faciliter l'ajout futur d'un système de plugins.
+L'architecture de Hivekeep est conçue dès le départ pour être **pluggable**, **hookable** et **observable**, afin de faciliter l'ajout futur d'un système de plugins.
 
 ### Interfaces standardisées (Providers)
 
@@ -826,7 +826,7 @@ Un bus d'événements central permet a n'importe quelle partie du système d'ém
 
 ```typescript
 interface EventBus {
-  emit(event: KinBotEvent): void
+  emit(event: HivekeepEvent): void
   on(eventType: string, handler: EventHandler): Unsubscribe
 }
 ```
@@ -870,7 +870,7 @@ Ces trois piliers (interfaces, event bus, hooks) sont les fondations du futur sy
 
 ## 14. Navigation web stateful
 
-Au-delà des outils one-shot historiques (`browse_url`, `extract_links`, `screenshot_url`, `http_request`) qui font une requête isolée, KinBot fournit une famille de **14 outils `browser_*`** qui opèrent sur une **session de navigateur persistante par Kin**. Pile sous-jacente : Playwright + Chromium, avec stealth plugin (`playwright-extra` + `puppeteer-extra-plugin-stealth`).
+Au-delà des outils one-shot historiques (`browse_url`, `extract_links`, `screenshot_url`, `http_request`) qui font une requête isolée, Hivekeep fournit une famille de **14 outils `browser_*`** qui opèrent sur une **session de navigateur persistante par Kin**. Pile sous-jacente : Playwright + Chromium, avec stealth plugin (`playwright-extra` + `puppeteer-extra-plugin-stealth`).
 
 ### Cas d'usage
 

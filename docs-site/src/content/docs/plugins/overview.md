@@ -1,9 +1,9 @@
 ---
 title: Plugins Overview
-description: Extend KinBot with custom tools, providers, channels, and hooks.
+description: Extend Hivekeep with custom tools, providers, channels, and hooks.
 ---
 
-KinBot's plugin system lets you extend functionality without modifying core code. Drop a folder into `plugins/` and get new capabilities instantly.
+Hivekeep's plugin system lets you extend functionality without modifying core code. Drop a folder into `plugins/` and get new capabilities instantly.
 
 ## What Plugins Can Do
 
@@ -51,20 +51,20 @@ Plugins have two levels of enablement:
 ### Hot Reload
 
 - **Config changes** — Applied immediately (no restart). Plugin deactivates, re-initializes with new config, then activates.
-- **Code changes** — Require clicking **Reload Plugins** or restarting KinBot.
+- **Code changes** — Require clicking **Reload Plugins** or restarting Hivekeep.
 - **Manifest changes** — Require reload.
 
 ## Installation Methods
 
 | Method | How | Use Case |
 |--------|-----|----------|
-| **npm marketplace** | Settings → Plugins → Browse → search → Install | Published plugins (any package tagged with the `kinbot-plugin` keyword) |
+| **npm marketplace** | Settings → Plugins → Browse → search → Install | Published plugins (any package tagged with the `hivekeep-plugin` keyword) |
 | **Git URL** | Settings → Plugins → Install from URL | Unpublished, private, or in-development plugins |
 | **Manual** | Drop a folder into `plugins/` | Local development; managed entirely by hand |
 
-See [Developing Plugins](/kinbot/docs/plugins/developing/) for the full development guide.
+See [Developing Plugins](/hivekeep/docs/plugins/developing/) for the full development guide.
 
 ## Next Steps
 
-- [Developing Plugins](/kinbot/docs/plugins/developing/) — Build your first plugin
-- [Plugin API](/kinbot/docs/plugins/api/) — Full API reference
+- [Developing Plugins](/hivekeep/docs/plugins/developing/) — Build your first plugin
+- [Plugin API](/hivekeep/docs/plugins/api/) — Full API reference

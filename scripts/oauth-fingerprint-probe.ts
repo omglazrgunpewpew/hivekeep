@@ -15,9 +15,9 @@
  * What this proves:
  *   - If this probe ALSO returns the "extra usage" warning → the OAuth token
  *     is flagged server-side; no amount of client-side spoofing can fix it.
- *   - If this probe is clean (no warning) but the KinBot dev server still
+ *   - If this probe is clean (no warning) but the Hivekeep dev server still
  *     warns → there's a fingerprint difference between this probe and what
- *     KinBot actually sends. Diff the two requests.
+ *     Hivekeep actually sends. Diff the two requests.
  */
 import {
   getOAuthAccessToken,
@@ -28,7 +28,7 @@ import {
 
 const args = process.argv.slice(2)
 const includeTools = !args.includes('--no-tools')
-const useKinbotTools = args.includes('--kinbot-tools')
+const useHivekeepTools = args.includes('--hivekeep-tools')
 const useStreaming = args.includes('--stream')
 const modelIdx = args.indexOf('--model')
 const model = modelIdx >= 0 ? args[modelIdx + 1] : 'claude-sonnet-4-6'
@@ -61,8 +61,8 @@ async function main() {
   }
 
   if (includeTools) {
-    if (useKinbotTools) {
-      // Real KinBot-style tool set — snake_case names, none of Claude Code's
+    if (useHivekeepTools) {
+      // Real Hivekeep-style tool set — snake_case names, none of Claude Code's
       // official tool names. If this flips the response to "extra usage",
       // tool-name fingerprinting is part of Anthropic's classifier.
       body.tools = [

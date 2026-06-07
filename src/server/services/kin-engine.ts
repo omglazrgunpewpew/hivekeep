@@ -1,6 +1,6 @@
 import type { ModelMessage, UserContent, JSONValue } from '@/server/tools/tool-helper'
 import type { Tool } from '@/server/tools/tool-helper'
-import type { KinbotMessage, KinbotMessageBlock } from '@/server/llm/llm/types'
+import type { HivekeepMessage, HivekeepMessageBlock } from '@/server/llm/llm/types'
 import { eq, and, isNull, ne, asc, desc } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db, sqlite } from '@/server/db/index'
@@ -610,7 +610,7 @@ function buildToolSchemaPayload(tools: Record<string, unknown>): Array<{ name: s
  */
 export function estimateContextTokens(
   systemPrompt: string,
-  messageHistory: KinbotMessage[],
+  messageHistory: HivekeepMessage[],
   tools: Record<string, unknown> | undefined,
   summaryTokens?: number,
 ): ContextTokenBreakdown {
@@ -1568,13 +1568,13 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     }
     activeKinStreams.set(kinId, kinStreamSnapshot)
 
-    // Convert tools to kinbot shape once (provider.chat() handles them natively).
-    // markLastKinbotToolCacheable adds the per-tool cache_control hint Anthropic
+    // Convert tools to hivekeep shape once (provider.chat() handles them natively).
+    // markLastHivekeepToolCacheable adds the per-tool cache_control hint Anthropic
     // uses to cache the whole tools block as a single prefix.
-    const { vercelToolsToKinbot, markLastKinbotToolCacheable } =
+    const { vercelToolsToHivekeep, markLastHivekeepToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
-    const kinbotTools = hasTools
-      ? markLastKinbotToolCacheable(await vercelToolsToKinbot(stripToolExecute(tools)))
+    const hivekeepTools = hasTools
+      ? markLastHivekeepToolCacheable(await vercelToolsToHivekeep(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
@@ -1599,14 +1599,14 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
     for (; step < maxSteps; step++) {
       if (abortController.signal.aborted) { wasAborted = true; break }
 
-      const { system: kinbotSystem, messages: kinbotMessages } =
+      const { system: hivekeepSystem, messages: hivekeepMessages } =
         buildSegmentedMessages(systemSegments, messageHistory)
       const stream = resolved.provider.chat(
         resolved.model,
         {
-          messages: kinbotMessages,
-          ...(kinbotSystem ? { system: kinbotSystem } : {}),
-          ...(kinbotTools ? { tools: kinbotTools } : {}),
+          messages: hivekeepMessages,
+          ...(hivekeepSystem ? { system: hivekeepSystem } : {}),
+          ...(hivekeepTools ? { tools: hivekeepTools } : {}),
           ...(thinkingEffort ? { thinkingEffort } : {}),
           signal: abortController.signal,
         },
@@ -1677,7 +1677,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       // precedes tool_use (tool results are external — the model can't reason
       // past a tool_use until the next step). Unsigned blocks are skipped: the
       // API drops them anyway, and non-Anthropic providers ignore them.
-      const assistantBlocks: KinbotMessageBlock[] = []
+      const assistantBlocks: HivekeepMessageBlock[] = []
       for (const tb of outcome.stepThinking) {
         if (tb.signature) assistantBlocks.push({ type: 'thinking', text: tb.text, signature: tb.signature })
       }
@@ -1698,7 +1698,7 @@ export async function processNextMessage(kinId: string): Promise<boolean> {
       if (batch.wasAborted) { wasAborted = true; break }
 
       // Append assistant message (with tool calls) + tool results to history
-      // for next step. Tool results live as a user-role message in kinbot's
+      // for next step. Tool results live as a user-role message in hivekeep's
       // shape (Anthropic-style).
       messageHistory.push({ role: 'assistant', content: assistantBlocks })
       messageHistory.push({
@@ -2201,7 +2201,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       .orderBy(asc(messages.createdAt))
       .all()
 
-    const messageHistory: KinbotMessage[] = []
+    const messageHistory: HivekeepMessage[] = []
     for (const msg of sessionMessages) {
       if (msg.role === 'user') {
         const text = msg.content ?? ''
@@ -2215,7 +2215,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
         // Sanitize defensively — see sanitizePersistedToolCalls for rationale (#355).
         const validToolCalls = toolCalls ? sanitizePersistedToolCalls(toolCalls, kinId) : []
         if (validToolCalls.length > 0) {
-          const assistantBlocks: KinbotMessageBlock[] = []
+          const assistantBlocks: HivekeepMessageBlock[] = []
           if (msg.content) assistantBlocks.push({ type: 'text', text: msg.content })
           for (const tc of validToolCalls) {
             assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
@@ -2272,11 +2272,11 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
     const abortController = new AbortController()
     quickAbortControllers.set(sessionId, abortController)
 
-    // Convert tools to kinbot shape once.
-    const { vercelToolsToKinbot: qsVercelToolsToKinbot, markLastKinbotToolCacheable: qsMarkLastKinbotToolCacheable } =
+    // Convert tools to hivekeep shape once.
+    const { vercelToolsToHivekeep: qsVercelToolsToHivekeep, markLastHivekeepToolCacheable: qsMarkLastHivekeepToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
-    const qsKinbotTools = hasTools
-      ? qsMarkLastKinbotToolCacheable(await qsVercelToolsToKinbot(stripToolExecute(tools)))
+    const qsHivekeepTools = hasTools
+      ? qsMarkLastHivekeepToolCacheable(await qsVercelToolsToHivekeep(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
@@ -2305,7 +2305,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
         {
           messages: qsMessages,
           ...(qsSystem ? { system: qsSystem } : {}),
-          ...(qsKinbotTools ? { tools: qsKinbotTools } : {}),
+          ...(qsHivekeepTools ? { tools: qsHivekeepTools } : {}),
           ...(qsThinkingEffort ? { thinkingEffort: qsThinkingEffort } : {}),
           signal: abortController.signal,
         },
@@ -2353,7 +2353,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       // precedes tool_use (tool results are external — the model can't reason
       // past a tool_use until the next step). Unsigned blocks are skipped: the
       // API drops them anyway, and non-Anthropic providers ignore them.
-      const assistantBlocks: KinbotMessageBlock[] = []
+      const assistantBlocks: HivekeepMessageBlock[] = []
       for (const tb of outcome.stepThinking) {
         if (tb.signature) assistantBlocks.push({ type: 'thinking', text: tb.text, signature: tb.signature })
       }
@@ -2375,7 +2375,7 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
       if (batch.wasAborted) { wasAborted = true; break }
 
       // Append assistant message (with tool calls) + tool results to history for next step.
-      // Tool results live as a user-role message in kinbot's shape (Anthropic-style).
+      // Tool results live as a user-role message in hivekeep's shape (Anthropic-style).
       messageHistory.push({ role: 'assistant', content: assistantBlocks })
       messageHistory.push({
         role: 'user',
@@ -2549,12 +2549,12 @@ export async function processQuickMessage(kinId: string): Promise<boolean> {
  */
 export interface ConversationParticipant {
   name: string
-  platform: string | null // null = KinBot web UI
+  platform: string | null // null = Hivekeep web UI
   messageCount: number
   lastSeenAt: Date
 }
 
-export async function buildMessageHistory(kinId: string): Promise<{ messages: KinbotMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number; trimmedUserContentCount: number; trimmedUserContentTokensSaved: number }> {
+export async function buildMessageHistory(kinId: string): Promise<{ messages: HivekeepMessage[]; compactingSummaries: Array<{ summary: string; firstMessageAt: Date; lastMessageAt: Date; depth: number }> | null; participants: ConversationParticipant[]; visibleMessageCount: number; totalMessageCount: number; hasCompactedHistory: boolean; oldestVisibleMessageAt?: Date; maskedToolGroups: number; observationCompactedCount: number; estimatedTokensSavedByMasking: number; emergencyTrimmedCount: number; trimmedToolResultsCount: number; trimmedToolResultsTokensSaved: number; trimmedToolCallArgsCount: number; trimmedToolCallArgsTokensSaved: number; trimmedAssistantContentCount: number; trimmedAssistantContentTokensSaved: number; trimmedUserContentCount: number; trimmedUserContentTokensSaved: number }> {
   const history: ModelMessage[] = []
 
   // Fetch all active (in-context) summaries, ordered oldest to newest
@@ -3020,7 +3020,7 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Ki
       }
     }
 
-    const key = `${platform ?? 'kinbot'}:${name}`
+    const key = `${platform ?? 'hivekeep'}:${name}`
     const existing = participantMap.get(key)
     const msgDate = msg.createdAt ? new Date(msg.createdAt as unknown as number) : new Date()
     if (existing) {
@@ -3051,11 +3051,11 @@ export async function buildMessageHistory(kinId: string): Promise<{ messages: Ki
   const SIZE_CAP_PLACEHOLDER_TOKENS = 50  // approx tokens of the trim placeholder message
   // Internal transformations (mask + caps) operate on the Vercel `ModelMessage`
   // shape — see `maskOldToolResults` and the SIZE_CAP/ARGS_CAP/CONTENT_CAP
-  // blocks above. At the boundary we convert to kinbot's native shape so
+  // blocks above. At the boundary we convert to hivekeep's native shape so
   // the loop callers don't need a bridge call.
-  const { modelMessagesToKinbot: bmhModelMessagesToKinbot } = await import('@/server/llm/core/vercel-bridge')
+  const { modelMessagesToHivekeep: bmhModelMessagesToHivekeep } = await import('@/server/llm/core/vercel-bridge')
   return {
-    messages: bmhModelMessagesToKinbot(maskedHistory),
+    messages: bmhModelMessagesToHivekeep(maskedHistory),
     compactingSummaries: summariesForPrompt,
     participants,
     visibleMessageCount,

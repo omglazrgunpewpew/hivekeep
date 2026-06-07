@@ -1,49 +1,49 @@
 /**
- * KinBot Mini-App SDK (JavaScript)
- * Auto-injected into mini-app iframes alongside kinbot-sdk.css.
+ * Hivekeep Mini-App SDK (JavaScript)
+ * Auto-injected into mini-app iframes alongside hivekeep-sdk.css.
  *
  * Provides:
- *   KinBot.theme   — current theme info (mode, palette)
- *   KinBot.app     — current app metadata (id, name, slug)
- *   KinBot.on()    — listen for events from the parent
- *   KinBot.emit()  — send events to the parent
- *   KinBot.toast() — show a toast notification in the parent UI
- *   KinBot.storage  — persistent key-value storage (get/set/delete/list/clear)
- *   KinBot.ready() — signal that the app has finished loading
- *   KinBot.fullpage(bool) — request full-page or side-panel mode
- *   KinBot.isFullPage — whether the app is currently in full-page mode
- *   KinBot.api(path, options) — call backend API (_server.js) routes (raw Response)
+ *   Hivekeep.theme   — current theme info (mode, palette)
+ *   Hivekeep.app     — current app metadata (id, name, slug)
+ *   Hivekeep.on()    — listen for events from the parent
+ *   Hivekeep.emit()  — send events to the parent
+ *   Hivekeep.toast() — show a toast notification in the parent UI
+ *   Hivekeep.storage  — persistent key-value storage (get/set/delete/list/clear)
+ *   Hivekeep.ready() — signal that the app has finished loading
+ *   Hivekeep.fullpage(bool) — request full-page or side-panel mode
+ *   Hivekeep.isFullPage — whether the app is currently in full-page mode
+ *   Hivekeep.api(path, options) — call backend API (_server.js) routes (raw Response)
  *     .json(path, options?) — shorthand: call and parse JSON
  *     .get(path, headers?) — shorthand: GET JSON
  *     .post(path, data) — shorthand: POST JSON
  *     .put(path, data) — shorthand: PUT JSON
  *     .patch(path, data) — shorthand: PATCH JSON
  *     .delete(path) — shorthand: DELETE and parse response
- *   KinBot.confirm(message, options) — show a confirmation dialog in the parent UI (returns Promise<boolean>)
- *   KinBot.prompt(message, options) — show a prompt dialog in the parent UI (returns Promise<string|null>)
- *   KinBot.setTitle(title) — dynamically update the panel header title
- *   KinBot.setBadge(value) — show a badge on the app in the sidebar (number, string, or null to clear)
- *   KinBot.openApp(slug) — open another mini-app from the same Kin by its slug
- *   KinBot.clipboard.write(text) — copy text to system clipboard (bypasses iframe restrictions)
- *   KinBot.clipboard.read() — read text from system clipboard (may require permission)
- *   KinBot.http(url, options) — fetch external URLs through server proxy (bypasses CORS)
+ *   Hivekeep.confirm(message, options) — show a confirmation dialog in the parent UI (returns Promise<boolean>)
+ *   Hivekeep.prompt(message, options) — show a prompt dialog in the parent UI (returns Promise<string|null>)
+ *   Hivekeep.setTitle(title) — dynamically update the panel header title
+ *   Hivekeep.setBadge(value) — show a badge on the app in the sidebar (number, string, or null to clear)
+ *   Hivekeep.openApp(slug) — open another mini-app from the same Kin by its slug
+ *   Hivekeep.clipboard.write(text) — copy text to system clipboard (bypasses iframe restrictions)
+ *   Hivekeep.clipboard.read() — read text from system clipboard (may require permission)
+ *   Hivekeep.http(url, options) — fetch external URLs through server proxy (bypasses CORS)
  *     .json(url, headers?) — shorthand: GET and parse JSON
  *     .post(url, data, headers?) — shorthand: POST JSON and parse response
- *   KinBot.sendMessage(text, options?) — send a message to the Kin's conversation (returns Promise<boolean>)
- *   KinBot.kin — info about the parent Kin (id, name, avatarUrl)
- *   KinBot.user — info about the current user (id, name, pseudonym, locale, timezone, avatarUrl)
- *   KinBot.resize(width?, height?) — request the parent panel to resize
- *   KinBot.notification(title, body?) — show a browser notification via the parent (returns Promise<boolean>)
- *   KinBot.apps.list() — list all mini-apps from the same Kin
- *   KinBot.apps.get(appId) — get details of a specific mini-app
- *   KinBot.memory.search(query, limit?) — semantic search the Kin's memories
- *   KinBot.memory.store(content, options?) — store a new memory for the Kin
- *   KinBot.conversation.history(limit?) — get recent conversation messages
- *   KinBot.conversation.send(text, options?) — send a message to the Kin's conversation
- *   KinBot.share(targetSlug, data) — share data with another mini-app and open it
- *   KinBot.locale — current UI language code (e.g. 'en', 'fr')
- *   KinBot.on('locale-changed', cb) — listen for language changes (cb receives {locale})
- *   KinBot.events — real-time event stream from backend (_server.js)
+ *   Hivekeep.sendMessage(text, options?) — send a message to the Kin's conversation (returns Promise<boolean>)
+ *   Hivekeep.kin — info about the parent Kin (id, name, avatarUrl)
+ *   Hivekeep.user — info about the current user (id, name, pseudonym, locale, timezone, avatarUrl)
+ *   Hivekeep.resize(width?, height?) — request the parent panel to resize
+ *   Hivekeep.notification(title, body?) — show a browser notification via the parent (returns Promise<boolean>)
+ *   Hivekeep.apps.list() — list all mini-apps from the same Kin
+ *   Hivekeep.apps.get(appId) — get details of a specific mini-app
+ *   Hivekeep.memory.search(query, limit?) — semantic search the Kin's memories
+ *   Hivekeep.memory.store(content, options?) — store a new memory for the Kin
+ *   Hivekeep.conversation.history(limit?) — get recent conversation messages
+ *   Hivekeep.conversation.send(text, options?) — send a message to the Kin's conversation
+ *   Hivekeep.share(targetSlug, data) — share data with another mini-app and open it
+ *   Hivekeep.locale — current UI language code (e.g. 'en', 'fr')
+ *   Hivekeep.on('locale-changed', cb) — listen for language changes (cb receives {locale})
+ *   Hivekeep.events — real-time event stream from backend (_server.js)
  *     .subscribe(callback) — receive all events from ctx.events.emit() in the backend
  *     .on(eventName, callback) — listen for a specific event name
  *     .close() — disconnect the event stream
@@ -73,7 +73,7 @@
     if (_consoleBuffer.length > CONSOLE_BUFFER_MAX) _consoleBuffer.shift()
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'console',
         level: entry.level,
         args: entry.args,
@@ -164,54 +164,54 @@
     var cbs = listeners[event]
     if (cbs) {
       cbs.forEach(function (cb) {
-        try { cb(data) } catch (e) { console.error('[KinBot SDK]', event, e) }
+        try { cb(data) } catch (e) { console.error('[Hivekeep SDK]', event, e) }
       })
     }
   }
 
   function emit(event, data) {
     try {
-      parent.postMessage({ source: 'kinbot-sdk', type: 'emit', event: event, data: data }, '*')
+      parent.postMessage({ source: 'hivekeep-sdk', type: 'emit', event: event, data: data }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] emit failed:', e)
+      console.warn('[Hivekeep SDK] emit failed:', e)
     }
   }
 
   // ─── Toast ──────────────────────────────────────────────────────────────
 
   /**
-   * Show a toast in the parent KinBot UI.
+   * Show a toast in the parent Hivekeep UI.
    * @param {string} message
    * @param {'info'|'success'|'warning'|'error'} [type='info']
    */
   function toast(message, type) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'toast',
         message: String(message).slice(0, 500),
         toastType: type || 'info',
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] toast failed:', e)
+      console.warn('[Hivekeep SDK] toast failed:', e)
     }
   }
 
   // ─── Navigate ───────────────────────────────────────────────────────────
 
   /**
-   * Navigate the parent KinBot app to a path.
+   * Navigate the parent Hivekeep app to a path.
    * @param {string} path — e.g. '/kins' or '/settings'
    */
   function navigate(path) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'navigate',
         path: String(path),
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] navigate failed:', e)
+      console.warn('[Hivekeep SDK] navigate failed:', e)
     }
   }
 
@@ -222,7 +222,7 @@
   /**
    * Signal that the app has finished loading and wait for app metadata.
    * Returns a Promise that resolves with app metadata once the parent responds.
-   * Can be called with `await KinBot.ready()` or fire-and-forget `KinBot.ready()`.
+   * Can be called with `await Hivekeep.ready()` or fire-and-forget `Hivekeep.ready()`.
    * If app-meta was already received, resolves immediately.
    * @returns {Promise<object>} — app metadata
    */
@@ -242,7 +242,7 @@
     })
 
     try {
-      parent.postMessage({ source: 'kinbot-sdk', type: 'ready' }, '*')
+      parent.postMessage({ source: 'hivekeep-sdk', type: 'ready' }, '*')
     } catch (e) {}
 
     return _readyPromise
@@ -255,9 +255,9 @@
   function fullpage(value) {
     _isFullPage = !!value
     try {
-      parent.postMessage({ source: 'kinbot-sdk', type: 'fullpage', value: _isFullPage }, '*')
+      parent.postMessage({ source: 'hivekeep-sdk', type: 'fullpage', value: _isFullPage }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] fullpage failed:', e)
+      console.warn('[Hivekeep SDK] fullpage failed:', e)
     }
   }
 
@@ -265,7 +265,7 @@
 
   window.addEventListener('message', function (ev) {
     var msg = ev.data
-    if (!msg || msg.source !== 'kinbot-parent') return
+    if (!msg || msg.source !== 'hivekeep-parent') return
 
     if (msg.type === 'dialog-result') {
       var pending = _pendingDialogs[msg.callbackId]
@@ -331,12 +331,12 @@
   /**
    * Persistent key-value storage per app, backed by the server.
    * Values can be any JSON-serializable type.
-   * All methods return Promises. Requires KinBot.ready() to have been called.
+   * All methods return Promises. Requires Hivekeep.ready() to have been called.
    */
   var storage = {
     /** Get a value by key. Returns parsed value or null if not found. */
     get: function (key) {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps/' + _appMeta.id + '/storage/' + encodeURIComponent(key))
         .then(function (r) {
           if (r.status === 404) return null
@@ -347,7 +347,7 @@
 
     /** Set a value for a key. Value must be JSON-serializable. */
     set: function (key, value) {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps/' + _appMeta.id + '/storage/' + encodeURIComponent(key), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -359,7 +359,7 @@
 
     /** Delete a key. Returns true if deleted, false if not found. */
     delete: function (key) {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps/' + _appMeta.id + '/storage/' + encodeURIComponent(key), {
         method: 'DELETE',
       }).then(function (r) {
@@ -371,7 +371,7 @@
 
     /** List all keys with their sizes. Returns [{key, size}]. */
     list: function () {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps/' + _appMeta.id + '/storage')
         .then(function (r) {
           if (!r.ok) return r.json().then(function (d) { throw new Error(d.error?.message || 'Storage error') })
@@ -381,7 +381,7 @@
 
     /** Clear all storage for this app. Returns number of keys cleared. */
     clear: function () {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps/' + _appMeta.id + '/storage', {
         method: 'DELETE',
       }).then(function (r) {
@@ -400,7 +400,7 @@
    * @returns {Promise<Response>} — the raw fetch Response
    */
   function api(path, options) {
-    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
     var url = '/api/mini-apps/' + _appMeta.id + '/api' + (path.startsWith('/') ? path : '/' + path)
     return fetch(url, options)
   }
@@ -486,7 +486,7 @@
   // ─── Confirm / Prompt Dialogs ─────────────────────────────────────────────
 
   /**
-   * Show a confirmation dialog in the parent KinBot UI.
+   * Show a confirmation dialog in the parent Hivekeep UI.
    * @param {string} message — dialog body text
    * @param {object} [options]
    * @param {string} [options.title] — dialog title (default: "Confirm")
@@ -500,7 +500,7 @@
     var opts = options || {}
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'confirm',
         callbackId: id,
         message: String(message).slice(0, 1000),
@@ -518,7 +518,7 @@
   }
 
   /**
-   * Show a prompt dialog in the parent KinBot UI.
+   * Show a prompt dialog in the parent Hivekeep UI.
    * @param {string} message — dialog body text
    * @param {object} [options]
    * @param {string} [options.title] — dialog title (default: "Input")
@@ -533,7 +533,7 @@
     var opts = options || {}
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'prompt',
         callbackId: id,
         message: String(message).slice(0, 1000),
@@ -560,12 +560,12 @@
   function setTitle(title) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'set-title',
         title: String(title).slice(0, 200),
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] setTitle failed:', e)
+      console.warn('[Hivekeep SDK] setTitle failed:', e)
     }
   }
 
@@ -578,12 +578,12 @@
   function setBadge(value) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'set-badge',
         value: value === null || value === 0 || value === '' ? null : String(value).slice(0, 20),
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] setBadge failed:', e)
+      console.warn('[Hivekeep SDK] setBadge failed:', e)
     }
   }
 
@@ -596,12 +596,12 @@
   function openApp(slug) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'open-app',
         slug: String(slug),
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] openApp failed:', e)
+      console.warn('[Hivekeep SDK] openApp failed:', e)
     }
   }
 
@@ -620,7 +620,7 @@
       var id = String(++_dialogCounter)
       try {
         parent.postMessage({
-          source: 'kinbot-sdk',
+          source: 'hivekeep-sdk',
           type: 'clipboard-write',
           callbackId: id,
           text: String(text),
@@ -641,7 +641,7 @@
       var id = String(++_dialogCounter)
       try {
         parent.postMessage({
-          source: 'kinbot-sdk',
+          source: 'hivekeep-sdk',
           type: 'clipboard-read',
           callbackId: id,
         }, '*')
@@ -682,18 +682,18 @@
 
           // Dispatch to all-event listeners
           _allEventListeners.forEach(function (cb) {
-            try { cb(eventName, data) } catch (e) { console.error('[KinBot SDK] events callback error:', e) }
+            try { cb(eventName, data) } catch (e) { console.error('[Hivekeep SDK] events callback error:', e) }
           })
 
           // Dispatch to specific event listeners
           var specific = _eventListeners[eventName]
           if (specific) {
             specific.forEach(function (cb) {
-              try { cb(data) } catch (e) { console.error('[KinBot SDK] events.' + eventName + ' callback error:', e) }
+              try { cb(data) } catch (e) { console.error('[Hivekeep SDK] events.' + eventName + ' callback error:', e) }
             })
           }
         } catch (e) {
-          console.warn('[KinBot SDK] Failed to parse event:', e)
+          console.warn('[Hivekeep SDK] Failed to parse event:', e)
         }
       })
 
@@ -705,7 +705,7 @@
         _eventsConnected = true
       }
     } catch (e) {
-      console.warn('[KinBot SDK] Failed to connect to event stream:', e)
+      console.warn('[Hivekeep SDK] Failed to connect to event stream:', e)
     }
   }
 
@@ -752,7 +752,7 @@
   // ─── HTTP Proxy ──────────────────────────────────────────────────────────
 
   /**
-   * Make HTTP requests to external URLs through the KinBot server proxy.
+   * Make HTTP requests to external URLs through the Hivekeep server proxy.
    * Bypasses CORS restrictions — mini-apps can fetch any public API.
    *
    * @param {string} url — the URL to fetch
@@ -763,7 +763,7 @@
    * @returns {Promise<{status: number, statusText: string, headers: Record<string,string>, body: string, isBase64: boolean, ok: boolean, json: function}>}
    */
   function http(url, options) {
-    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
 
     var opts = options || {}
     var reqBody = opts.body
@@ -855,7 +855,7 @@
     var opts = options || {}
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'send-message',
         callbackId: id,
         text: String(text).slice(0, 2000),
@@ -879,13 +879,13 @@
   function resize(width, height) {
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'resize',
         width: width != null ? Number(width) : undefined,
         height: height != null ? Number(height) : undefined,
       }, '*')
     } catch (e) {
-      console.warn('[KinBot SDK] resize failed:', e)
+      console.warn('[Hivekeep SDK] resize failed:', e)
     }
   }
 
@@ -901,7 +901,7 @@
     var id = String(++_dialogCounter)
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'notification',
         callbackId: id,
         title: String(title).slice(0, 200),
@@ -947,7 +947,7 @@
           var b64 = reader.result.split(',')[1] || ''
           try {
             parent.postMessage({
-              source: 'kinbot-sdk', type: 'download', callbackId: id,
+              source: 'hivekeep-sdk', type: 'download', callbackId: id,
               filename: String(filename).slice(0, 200), data: b64, mimeType: mime,
             }, '*')
           } catch (e) { resolve(false); return }
@@ -968,7 +968,7 @@
 
     try {
       parent.postMessage({
-        source: 'kinbot-sdk', type: 'download', callbackId: id,
+        source: 'hivekeep-sdk', type: 'download', callbackId: id,
         filename: String(filename).slice(0, 200), data: data, mimeType: mime,
       }, '*')
     } catch (e) {
@@ -1019,7 +1019,7 @@
      * @returns {Promise<Array<{id: string, name: string, slug: string, description: string, icon: string, version: number}>>}
      */
     list: function () {
-      if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       return fetch('/api/mini-apps?kinId=' + encodeURIComponent(_kinInfo.id))
         .then(function (r) {
           if (!r.ok) return r.json().then(function (d) { throw new Error(d.error?.message || 'Failed to list apps') })
@@ -1057,7 +1057,7 @@
      * @returns {Promise<Array<{id: string, content: string, category: string, subject: string|null, score: number, updatedAt: string}>>}
      */
     search: function (query, limit) {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       if (!query || typeof query !== 'string') return Promise.reject(new Error('query (string) is required'))
       var n = Math.min(Math.max(1, limit || 20), 50)
       return fetch('/api/mini-apps/' + encodeURIComponent(_appMeta.id) + '/memories/search?q=' + encodeURIComponent(query) + '&limit=' + n)
@@ -1075,7 +1075,7 @@
      * @returns {Promise<{id: string, content: string, category: string, subject: string|null, createdAt: string}>}
      */
     store: function (content, options) {
-      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       if (!content || typeof content !== 'string') return Promise.reject(new Error('content (string) is required'))
       var body = { content: content }
       if (options && options.category) body.category = options.category
@@ -1102,7 +1102,7 @@
      * @returns {Promise<Array<{id: string, role: string, content: string, createdAt: string, sourceType: string}>>}
      */
     history: function (limit) {
-      if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+      if (!_appMeta || !_kinInfo || !_kinInfo.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
       var n = Math.min(Math.max(1, limit || 20), 100)
       return fetch('/api/kins/' + encodeURIComponent(_kinInfo.id) + '/messages?limit=' + n)
         .then(function (r) {
@@ -1140,15 +1140,15 @@
   /**
    * Share data with another mini-app by slug. Data is stored in the sender's storage
    * under a special key and the target app is opened.
-   * The target app can read shared data via KinBot.on('shared-data', callback).
+   * The target app can read shared data via Hivekeep.on('shared-data', callback).
    * @param {string} targetSlug — slug of the target mini-app
    * @param {any} data — JSON-serializable data to share
    */
   function share(targetSlug, data) {
-    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call KinBot.ready() first'))
+    if (!_appMeta || !_appMeta.id) return Promise.reject(new Error('App not ready — call Hivekeep.ready() first'))
     try {
       parent.postMessage({
-        source: 'kinbot-sdk',
+        source: 'hivekeep-sdk',
         type: 'share',
         targetSlug: String(targetSlug),
         shareData: {
@@ -1166,7 +1166,7 @@
 
   // ─── Public API ─────────────────────────────────────────────────────────
 
-  window.KinBot = {
+  window.Hivekeep = {
     get theme() { return getTheme() },
     get app() { return _appMeta },
     get kin() { return _kinInfo },

@@ -1,29 +1,29 @@
 <div align="center">
 
-# KinBot
+# Hivekeep
 
 **AI agents that actually remember you.**
 
 Self-hosted. Persistent memory. Real collaboration.
 
-[![CI](https://github.com/MarlBurroW/kinbot/actions/workflows/ci.yml/badge.svg)](https://github.com/MarlBurroW/kinbot/actions/workflows/ci.yml)
-[![E2E Tests](https://github.com/MarlBurroW/kinbot/actions/workflows/e2e.yml/badge.svg)](https://github.com/MarlBurroW/kinbot/actions/workflows/e2e.yml)
-[![CodeQL](https://github.com/MarlBurroW/kinbot/actions/workflows/codeql.yml/badge.svg)](https://github.com/MarlBurroW/kinbot/actions/workflows/codeql.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/MarlBurroW/kinbot?style=flat-square&color=a855f7)](https://github.com/MarlBurroW/kinbot/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/MarlBurroW/kinbot?style=flat-square&color=ec4899)](https://github.com/MarlBurroW/kinbot)
+[![CI](https://github.com/MarlBurroW/hivekeep/actions/workflows/ci.yml/badge.svg)](https://github.com/MarlBurroW/hivekeep/actions/workflows/ci.yml)
+[![E2E Tests](https://github.com/MarlBurroW/hivekeep/actions/workflows/e2e.yml/badge.svg)](https://github.com/MarlBurroW/hivekeep/actions/workflows/e2e.yml)
+[![CodeQL](https://github.com/MarlBurroW/hivekeep/actions/workflows/codeql.yml/badge.svg)](https://github.com/MarlBurroW/hivekeep/actions/workflows/codeql.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/MarlBurroW/hivekeep?style=flat-square&color=a855f7)](https://github.com/MarlBurroW/hivekeep/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/MarlBurroW/hivekeep?style=flat-square&color=ec4899)](https://github.com/MarlBurroW/hivekeep)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg?style=flat-square)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://github.com/MarlBurroW/kinbot/pkgs/container/kinbot)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/MarlBurroW/kinbot/pulls)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://github.com/MarlBurroW/hivekeep/pkgs/container/hivekeep)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/MarlBurroW/hivekeep/pulls)
 
-[Website](https://marlburrow.github.io/kinbot/) · [Documentation](https://marlburrow.github.io/kinbot/docs/) · [Quick Start](#-quick-start) · [Features](#-features) · [Use Cases](#-what-people-build-with-kinbot) · [Architecture](#-architecture) · [E2E Report](https://marlburrow.github.io/kinbot/e2e-report/) · [Discussions](https://github.com/MarlBurroW/kinbot/discussions) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](https://marlburrow.github.io/kinbot/changelog) · [Contributing](#contributing)
+[Website](https://marlburrow.github.io/hivekeep/) · [Documentation](https://marlburrow.github.io/hivekeep/docs/) · [Quick Start](#-quick-start) · [Features](#-features) · [Use Cases](#-what-people-build-with-hivekeep) · [Architecture](#-architecture) · [E2E Report](https://marlburrow.github.io/hivekeep/e2e-report/) · [Discussions](https://github.com/MarlBurroW/hivekeep/discussions) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](https://marlburrow.github.io/hivekeep/changelog) · [Contributing](#contributing)
 
 </div>
 
-## Why KinBot?
+## Why Hivekeep?
 
 Most AI tools treat every conversation as **disposable**. You explain yourself Monday, they forget by Tuesday.
 
-KinBot is different. You create **Kins** — AI agents with:
+Hivekeep is different. You create **Kins** — AI agents with:
 
 | | |
 |---|---|
@@ -81,7 +81,7 @@ AES-256-GCM vault · Auth with roles · Invitation system · 100% self-hosted ·
 
 #### Extensibility
 - **MCP servers** — connect any Model Context Protocol server to extend Kins with external tools; Kins can manage their own MCP connections
-- **Plugin system** — extend KinBot with third-party plugins; plugins can register tools, hooks, AI providers, and channels; discover and install from npm via the built-in marketplace (any package tagged with the `kinbot-plugin` keyword); install from a Git URL for unpublished or private plugins; hot reload during development; managed via the UI with per-plugin configuration, encrypted secret storage, and enable/disable toggles; health monitoring with circuit breaker auto-disable; dependency management between plugins; version compatibility checking
+- **Plugin system** — extend Hivekeep with third-party plugins; plugins can register tools, hooks, AI providers, and channels; discover and install from npm via the built-in marketplace (any package tagged with the `hivekeep-plugin` keyword); install from a Git URL for unpublished or private plugins; hot reload during development; managed via the UI with per-plugin configuration, encrypted secret storage, and enable/disable toggles; health monitoring with circuit breaker auto-disable; dependency management between plugins; version compatibility checking
 - **Custom tools** — Kins can create, register, and run their own scripts from their workspace
 - **Mini Apps** — Kins can build and deploy interactive web apps (HTML/CSS/JS) that live in the sidebar; auto-injected design system + JavaScript SDK with theme sync, toasts, inter-app navigation (`openApp`), dialogs (`confirm`/`prompt`), window title & badge control, persistent key-value storage (`get`/`set`/`delete`/`list`/`clear`), starter templates, parent-child event communication, and an App Gallery to browse and clone community apps
 - **Contacts** — manage contacts that Kins can reference and interact with
@@ -133,7 +133,7 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 
 </details>
 
-## 💡 What people build with KinBot
+## 💡 What people build with Hivekeep
 
 **DevOps copilot** — A Kin connected to GitHub webhooks triages new issues, reviews PRs, runs CI checks, and creates releases. It remembers your codebase conventions and past decisions. Cron jobs monitor infrastructure and alert you on Telegram.
 
@@ -152,7 +152,7 @@ Kins have access to a rich set of native tools out of the box, no configuration 
 ## 🚀 Quick Start
 
 ```bash
-docker run -d --name kinbot -p 3000:3000 -v kinbot-data:/app/data ghcr.io/marlburrow/kinbot:latest
+docker run -d --name hivekeep -p 3000:3000 -v hivekeep-data:/app/data ghcr.io/marlburrow/hivekeep:latest
 ```
 
 Open `http://localhost:3000` — done. The onboarding wizard handles the rest.
@@ -163,30 +163,30 @@ Open `http://localhost:3000` — done. The onboarding wizard handles the rest.
 ### One-liner install (Linux / macOS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MarlBurroW/kinbot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/MarlBurroW/hivekeep/main/install.sh | bash
 ```
 
 This script will:
 1. Install [Bun](https://bun.sh) if not already present
-2. Clone the repository to `/opt/kinbot`
+2. Clone the repository to `/opt/hivekeep`
 3. Install dependencies and build the frontend
 4. Run database migrations
 5. Create a system service (systemd on Linux, launchd on macOS)
-6. Start KinBot on port **3000**
+6. Start Hivekeep on port **3000**
 
 **Customizable via env vars:**
 ```bash
-KINBOT_DIR=/home/me/kinbot \
-KINBOT_DATA_DIR=/home/me/kinbot-data \
-KINBOT_PORT=8080 \
-  bash <(curl -fsSL https://raw.githubusercontent.com/MarlBurroW/kinbot/main/install.sh)
+HIVEKEEP_DIR=/home/me/hivekeep \
+HIVEKEEP_DATA_DIR=/home/me/hivekeep-data \
+HIVEKEEP_PORT=8080 \
+  bash <(curl -fsSL https://raw.githubusercontent.com/MarlBurroW/hivekeep/main/install.sh)
 ```
 
 ### Docker Compose
 
 ```bash
-git clone https://github.com/MarlBurroW/kinbot.git
-cd kinbot/docker
+git clone https://github.com/MarlBurroW/hivekeep.git
+cd hivekeep/docker
 ENCRYPTION_KEY=$(openssl rand -hex 32) docker compose up -d
 ```
 
@@ -195,8 +195,8 @@ See [`docker/docker-compose.yml`](docker/docker-compose.yml) for full options.
 ### Manual
 
 ```bash
-git clone https://github.com/MarlBurroW/kinbot.git
-cd kinbot
+git clone https://github.com/MarlBurroW/hivekeep.git
+cd hivekeep
 bun install
 bun run build
 bun run db:migrate
@@ -217,7 +217,7 @@ NODE_ENV=production bun run start
                      └──────────────┬───────────────┘
                                     │
 ┌───────────────────────────────────┼───────────────────────────┐
-│                   KinBot  (single process)                    │
+│                   Hivekeep  (single process)                    │
 │                                    │                          │
 │  ┌──────────────────┐      ┌───────▼───────────────────────┐  │
 │  │  React + Vite    │      │        Hono REST API          │  │
@@ -278,7 +278,7 @@ Copy `.env.example` to `.env` and adjust as needed. All values have sensible def
 |---|---|---|
 | `PORT` | `3333` | HTTP server port |
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose on all interfaces) |
-| `KINBOT_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
+| `HIVEKEEP_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
 | `ENCRYPTION_KEY` | *(auto-generated)* | 64-char hex key for AES-256-GCM vault encryption. Auto-generated and persisted to `data/.encryption-key` on first run. |
 | `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
 | `PUBLIC_URL` | `http://localhost:3333` | Public-facing URL (used in webhooks, invitation links) |
@@ -297,8 +297,8 @@ See [`.env.example`](.env.example) for the complete list of all options (compact
 ### Setup
 
 ```bash
-git clone https://github.com/MarlBurroW/kinbot.git
-cd kinbot
+git clone https://github.com/MarlBurroW/hivekeep.git
+cd hivekeep
 bun install
 bun run dev    # Starts Vite dev server (port 5173) + Hono backend (port 3333)
 ```
@@ -366,10 +366,10 @@ All settings have sensible defaults. Override only what you need.
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose externally) |
 | `NODE_ENV` | `development` | Set to `production` for optimized builds |
 | `PUBLIC_URL` | `http://localhost:{PORT}` | Public-facing URL (for OAuth callbacks, webhooks) |
-| `KINBOT_DATA_DIR` | `./data` | Data directory (DB, uploads, workspaces) |
+| `HIVEKEEP_DATA_DIR` | `./data` | Data directory (DB, uploads, workspaces) |
 | `ENCRYPTION_KEY` | Auto-generated | AES-256 key for vault encryption. Auto-generated and persisted on first run. Must be preserved across restarts. |
 | `LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error` |
-| `DB_PATH` | `{dataDir}/kinbot.db` | SQLite database file path |
+| `DB_PATH` | `{dataDir}/hivekeep.db` | SQLite database file path |
 
 #### Memory & Compacting
 
@@ -478,7 +478,7 @@ All settings have sensible defaults. Override only what you need.
 | `WEB_BROWSING_PAGE_TIMEOUT` | `30000` | Page load timeout in ms |
 | `WEB_BROWSING_MAX_CONTENT_LENGTH` | `100000` | Max extracted content length |
 | `WEB_BROWSING_MAX_CONCURRENT` | `5` | Max concurrent fetches |
-| `WEB_BROWSING_USER_AGENT` | KinBot default | Custom User-Agent string |
+| `WEB_BROWSING_USER_AGENT` | Hivekeep default | Custom User-Agent string |
 | `WEB_BROWSING_BLOCKED_DOMAINS` | *(empty)* | Comma-separated blocked domains |
 | `WEB_BROWSING_PROXY` | *(none)* | HTTP proxy for web requests |
 | `WEB_BROWSING_HEADLESS_ENABLED` | `false` | Enable headless browser (Puppeteer) |
@@ -525,7 +525,7 @@ All settings have sensible defaults. Override only what you need.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VERSION_CHECK_ENABLED` | `false` | Enable automatic version checking |
-| `VERSION_CHECK_REPO` | `MarlBurroW/kinbot` | GitHub repo to check for new releases |
+| `VERSION_CHECK_REPO` | `MarlBurroW/hivekeep` | GitHub repo to check for new releases |
 | `VERSION_CHECK_INTERVAL_HOURS` | `12` | Hours between version checks |
 
 </details>
@@ -543,21 +543,21 @@ All settings have sensible defaults. Override only what you need.
 Error: listen EADDRINUSE :::3000
 ```
 
-Another process is using port 3000. Either stop it or change KinBot's port:
+Another process is using port 3000. Either stop it or change Hivekeep's port:
 
 ```bash
 PORT=3001 bun src/server/index.ts
 # or with Docker:
-docker run -d -p 3001:3000 ghcr.io/marlburrow/kinbot:latest
+docker run -d -p 3001:3000 ghcr.io/marlburrow/hivekeep:latest
 ```
 
 #### Database migration errors after update
 
-If you see migration errors after updating KinBot:
+If you see migration errors after updating Hivekeep:
 
 ```bash
 # Backup first
-cp data/kinbot.db data/kinbot.db.bak
+cp data/hivekeep.db data/hivekeep.db.bak
 
 # Re-run migrations
 bun run db:migrate
@@ -568,7 +568,7 @@ bun run db:migrate
 Check logs for details:
 
 ```bash
-docker logs kinbot
+docker logs hivekeep
 ```
 
 Common causes:
@@ -578,7 +578,7 @@ Common causes:
 #### Provider connection fails
 
 - Verify your API key is correct and has sufficient credits
-- For self-hosted providers (Ollama), ensure the base URL is reachable from the KinBot container (use `host.docker.internal` or the host's LAN IP, not `localhost`)
+- For self-hosted providers (Ollama), ensure the base URL is reachable from the Hivekeep container (use `host.docker.internal` or the host's LAN IP, not `localhost`)
 - Check provider status pages for outages
 
 #### Memory search returns no results
@@ -613,13 +613,13 @@ bash install.sh --doctor
 
 ## 💬 Community & Support
 
-- **Issues** — [Report bugs or request features](https://github.com/MarlBurroW/kinbot/issues)
-- **Discussions** — [Questions, ideas, and show & tell](https://github.com/MarlBurroW/kinbot/discussions)
+- **Issues** — [Report bugs or request features](https://github.com/MarlBurroW/hivekeep/issues)
+- **Discussions** — [Questions, ideas, and show & tell](https://github.com/MarlBurroW/hivekeep/discussions)
 - **Contributing** — [Read the guide](CONTRIBUTING.md) to get started
 - **Security** — [Report vulnerabilities responsibly](SECURITY.md)
-- **Changelog** — [See what's new](https://marlburrow.github.io/kinbot/changelog)
+- **Changelog** — [See what's new](https://marlburrow.github.io/hivekeep/changelog)
 
-If KinBot is useful to you, consider [starring the repo](https://github.com/MarlBurroW/kinbot) — it helps others discover the project.
+If Hivekeep is useful to you, consider [starring the repo](https://github.com/MarlBurroW/hivekeep) — it helps others discover the project.
 
 ## Contributing
 
@@ -647,9 +647,9 @@ The UI is built on a custom design system with 8 palettes and full dark/light mo
 
 ## License
 
-KinBot is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
+Hivekeep is licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
 
-You are free to use, modify, and distribute KinBot. However, if you deploy a modified version as a network service, you must also make your source code available under the same license. This protects against cloud-washing while keeping the project fully open.
+You are free to use, modify, and distribute Hivekeep. However, if you deploy a modified version as a network service, you must also make your source code available under the same license. This protects against cloud-washing while keeping the project fully open.
 
 For commercial use cases where the AGPL obligations are not compatible with your business, a commercial license is available — open an issue to discuss.
 

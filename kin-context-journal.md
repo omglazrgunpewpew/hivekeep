@@ -231,13 +231,13 @@ Also added a one-liner to sub-Kin constraints about honesty and using tools to v
 
 **Area:** System prompt quality / Context metadata
 
-**Problem:** The Context section at the end of the system prompt only contained a raw ISO timestamp and "Platform: KinBot". ISO timestamps like `2026-03-02T01:31:00.000Z` are hard for LLMs to reason about — they need to parse the day of week, time of day, etc. This makes Kins worse at time-sensitive reasoning ("Is it a weekday?", "Is it late at night?", "What day is it?").
+**Problem:** The Context section at the end of the system prompt only contained a raw ISO timestamp and "Platform: Hivekeep". ISO timestamps like `2026-03-02T01:31:00.000Z` are hard for LLMs to reason about — they need to parse the day of week, time of day, etc. This makes Kins worse at time-sensitive reasoning ("Is it a weekday?", "Is it late at night?", "What day is it?").
 
 **Change:** Created a `buildContextBlock()` helper that generates a richer context section:
 - `Current date: Monday, March 2, 2026` (human-readable with day of week)
 - `Current time: 01:31 UTC` (easy to read)
 - `ISO timestamp: 2026-03-02T01:31:00.000Z` (for precision when needed)
-- `Platform: KinBot`
+- `Platform: Hivekeep`
 
 The day of week is particularly useful — it helps Kins reason about schedules, business hours, weekends vs weekdays, etc.
 
@@ -259,7 +259,7 @@ The day of week is particularly useful — it helps Kins reason about schedules,
 **Change:** Added a "Response calibration" section to the internal instructions block with 7 rules:
 1. Match response length to request complexity
 2. Default to shorter responses for external platforms (mobile users)
-3. Use richer formatting on KinBot web UI when it aids clarity
+3. Use richer formatting on Hivekeep web UI when it aids clarity
 4. Lead with the answer for yes/no questions
 5. Avoid unnecessary preambles ("Great question!", etc.)
 6. Use numbered lists for options/steps

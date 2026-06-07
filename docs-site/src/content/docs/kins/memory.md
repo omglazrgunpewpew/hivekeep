@@ -3,13 +3,13 @@ title: Kin Memory
 description: How Kins remember and learn across conversations.
 ---
 
-KinBot gives every Kin **persistent long-term memory** — a dual-channel system that combines automatic extraction with explicit storage, searchable via hybrid vector + full-text search.
+Hivekeep gives every Kin **persistent long-term memory** — a dual-channel system that combines automatic extraction with explicit storage, searchable via hybrid vector + full-text search.
 
 ## How it works
 
 ### Automatic extraction
 
-After every LLM turn, KinBot runs an **extraction pipeline** that identifies important information from the conversation and saves it as memories. This happens silently in the background — the Kin doesn't need to do anything.
+After every LLM turn, Hivekeep runs an **extraction pipeline** that identifies important information from the conversation and saves it as memories. This happens silently in the background — the Kin doesn't need to do anything.
 
 Each extracted memory includes a **source context** — a brief description of the conversational context in which the fact was mentioned (e.g. *"While discussing weekend plans, user mentioned..."*). This gives memories episodic flavor, helping the Kin understand not just *what* was said but *when and why*.
 
@@ -38,7 +38,7 @@ Memories have an importance score from 1-10. Higher-importance memories are prio
 
 ## Retrieval
 
-Before each LLM turn, KinBot:
+Before each LLM turn, Hivekeep:
 
 1. Takes the current user message
 2. Optionally rewrites the query using recent conversation context for better semantic matching
@@ -77,7 +77,7 @@ Memories default to **private** (only the owning Kin can see them), but Kins can
 
 ## Session compacting
 
-When context usage exceeds the threshold (default: 75% of the model's context window), KinBot **compacts** older messages into dated summaries. Key points:
+When context usage exceeds the threshold (default: 75% of the model's context window), Hivekeep **compacts** older messages into dated summaries. Key points:
 
 - Original messages are **never deleted** — they're preserved in the database
 - Summaries **accumulate chronologically** — each compaction creates a new summary, not a single overwritten snapshot

@@ -23,7 +23,7 @@ import { getSearchProvider } from '@/server/llm/search/registry'
 import { getTTSProvider } from '@/server/llm/tts/registry'
 import { getSTTProvider } from '@/server/llm/stt/registry'
 import { PROVIDER_META } from '@/shared/provider-metadata'
-import type { ConfigField } from '@kinbot-developer/sdk'
+import type { ConfigField } from '@hivekeep-developer/sdk'
 import { createLogger } from '@/server/logger'
 import { sseManager } from '@/server/sse/index'
 import { generateProviderSlug } from '@/server/services/provider-slug'
@@ -306,7 +306,7 @@ providerRoutes.delete('/:id', async (c) => {
   // with capability X". The previous lock (PROVIDER_REQUIRED 409 on the
   // last llm/embedding row) made consolidating split rows into a single
   // multi-capability row impossible — the user had to delete the
-  // single-capability row first, which the lock refused. KinBot trusts
+  // single-capability row first, which the lock refused. Hivekeep trusts
   // the user to know whether memory/chat will still work after a
   // delete. We do emit a warning log so a future incident can be
   // reconstructed from the logs.

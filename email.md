@@ -1,4 +1,4 @@
-# KinBot — Email accounts
+# Hivekeep — Email accounts
 
 Connect email accounts so Kins can **read** (list / read / search) and **send**
 mail. Built-ins ship **Gmail** and **Microsoft / Outlook** (OAuth) plus a generic
@@ -25,7 +25,7 @@ access token, and hand the provider only what it needs.
 
 ## Provider family (SDK)
 
-`EmailProvider` lives in `@kinbot-developer/sdk`, alongside `LLMProvider` /
+`EmailProvider` lives in `@hivekeep-developer/sdk`, alongside `LLMProvider` /
 `SearchProvider`. The host detects the family by the presence of
 `sendMessage` + `listMessages` (`detectProviderFamily` in `plugins.ts`), so a
 plugin contributes an email provider exactly like any other provider.

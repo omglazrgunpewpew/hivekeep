@@ -3,7 +3,7 @@
 ## 2026-03-05 — Phase 1: Scaffold ✅
 
 - Created Starlight project in `docs-site/`
-- Configured `astro.config.mjs`: base `/kinbot/docs`, KinBot purple/pink theme, full sidebar
+- Configured `astro.config.mjs`: base `/hivekeep/docs`, Hivekeep purple/pink theme, full sidebar
 - Custom CSS with oklch purple→pink palette, gradient headings, dark mode defaults
 - SVG logo placeholders (purple→pink gradient circle with K)
 - Created 26 stub pages across all sidebar sections
@@ -39,11 +39,11 @@
   - `getting-started.md` — app.json setup, templates, persistence, backends, snapshots
   - `hooks.md` — All 30+ React hooks documented (core, data, memory, utility)
   - `components.md` — Full 50+ component catalog with props and examples
-  - `sdk-reference.md` — Low-level KinBot SDK API, CSS design system, animations
+  - `sdk-reference.md` — Low-level Hivekeep SDK API, CSS design system, animations
   - `backend.md` — _server.js guide: context, routes, SSE events, storage
   - `guidelines.md` — Dark/light mode, sidebar-aware design, component usage, performance
   - `examples.md` — 4 complete examples: todo list, dashboard, form, multi-page routing
-- Source material: `create_mini_app` tool description, `kinbot-components.d.ts`, `kinbot-sdk.js`, `kinbot-react.js`
+- Source material: `create_mini_app` tool description, `hivekeep-components.d.ts`, `hivekeep-sdk.js`, `hivekeep-react.js`
 - Build passes: 28 pages, search index built
 - Commit: `5261367` — pushed to main (--no-verify, pre-commit OOM on tsc)
 
@@ -246,33 +246,33 @@
 
 ## 2026-03-08 — Accuracy review: Mini-Apps hooks section ✅
 
-- Reviewed hooks.md against `kinbot-react.d.ts` source (v1.16.0 SDK)
-- **useKinBot()**: Fixed return type — was showing `{ app, ready, theme, locale, isFullPage, api }` but actual return is `{ kinbot, app, theme, ready }` where `ready` is a function (not boolean) and other properties are accessed via `kinbot` instance
+- Reviewed hooks.md against `hivekeep-react.d.ts` source (v1.16.0 SDK)
+- **useHivekeep()**: Fixed return type — was showing `{ app, ready, theme, locale, isFullPage, api }` but actual return is `{ hivekeep, app, theme, ready }` where `ready` is a function (not boolean) and other properties are accessed via `hivekeep` instance
 - **useStorage()**: Fixed destructuring — was `[value, setValue, loading]`, corrected to `[value, setValue, { loading, error, remove }]`
 - **useClipboard()**: Fixed API — was `{ copy, paste, copied, loading }`, corrected to `{ copy, read, copied }` (no `paste` method, no `loading` state)
 - **useNotification()**: Fixed API — was `{ notify, lastSent }`, corrected to `{ notify, sending }`
 - **useUser()**: Added missing `pseudonym` field to example comment
-- Components doc (components.md) verified accurate against `kinbot-components.d.ts` — all 60+ components documented correctly
+- Components doc (components.md) verified accurate against `hivekeep-components.d.ts` — all 60+ components documented correctly
 - Build passes: 34 pages
 - Commit: `0318679` — pushed to main (--no-verify)
 
 ### Next run priorities:
-1. Accuracy review: Mini-Apps SDK reference page (sdk-reference.md against kinbot-sdk.d.ts)
+1. Accuracy review: Mini-Apps SDK reference page (sdk-reference.md against hivekeep-sdk.d.ts)
 2. Accuracy review: Mini-Apps backend page (backend.md)
 3. Accuracy review: Kins overview page
 
 ## 2026-03-08 — Accuracy review: Mini-Apps SDK reference ✅
 
-- Reviewed `sdk-reference.md` against `kinbot-sdk.d.ts` (v1.16.0) and `kinbot-sdk.js`
-- **KinBot.ready**: Fixed from boolean property to `ready()` method call
-- **KinBot.app**: Fixed shape from `{ id, name, slug, description, icon, version }` to actual `KinBotAppMeta` (`{ id, name, slug, kinId, kinName, kinAvatarUrl, isFullPage, locale, user }`)
+- Reviewed `sdk-reference.md` against `hivekeep-sdk.d.ts` (v1.16.0) and `hivekeep-sdk.js`
+- **Hivekeep.ready**: Fixed from boolean property to `ready()` method call
+- **Hivekeep.app**: Fixed shape from `{ id, name, slug, description, icon, version }` to actual `HivekeepAppMeta` (`{ id, name, slug, kinId, kinName, kinAvatarUrl, isFullPage, locale, user }`)
 - **Events**: Fixed event names — was `"ready"`, `"theme"`, corrected to `"theme-changed"`, `"app-meta"`, `"locale-changed"`, `"fullpage-changed"`, `"shared-data"`
-- **KinBot.on/emit**: Added `emit()` method (was missing from doc)
+- **Hivekeep.on/emit**: Added `emit()` method (was missing from doc)
 - **storage.list()**: Fixed — was `list(prefix?) → string[]`, corrected to `list() → [{ key, size }]`
 - **clipboard**: Fixed return types — `write()` returns `Promise<void>` not boolean, `read()` returns `Promise<string>` not `string | null`
-- **Toast & Dialogs**: Moved from `@kinbot/react` import to `KinBot.toast()`, `KinBot.confirm()`, `KinBot.prompt()` methods. Fixed option names (`confirmText`/`cancelText` not `confirmLabel`/`variant`)
-- **KinBot.share()**: Fixed from async to synchronous (fire-and-forget)
-- **Added missing**: `KinBot.openApp(slug)`, `KinBot.locale`, `KinBot.version`, `KinBot.isFullPage`, `KinBot.emit()`, semantic color vars, glass/gradient/glow vars, radius/shadow/font vars
+- **Toast & Dialogs**: Moved from `@hivekeep/react` import to `Hivekeep.toast()`, `Hivekeep.confirm()`, `Hivekeep.prompt()` methods. Fixed option names (`confirmText`/`cancelText` not `confirmLabel`/`variant`)
+- **Hivekeep.share()**: Fixed from async to synchronous (fire-and-forget)
+- **Added missing**: `Hivekeep.openApp(slug)`, `Hivekeep.locale`, `Hivekeep.version`, `Hivekeep.isFullPage`, `Hivekeep.emit()`, semantic color vars, glass/gradient/glow vars, radius/shadow/font vars
 - Build passes: 34 pages
 - Commit: `c3a145d` — pushed to main (--no-verify)
 
@@ -286,7 +286,7 @@
 - Reviewed `backend.md` against `mini-app-backend.ts` source and SDK type definitions
 - **Context table**: Fixed `ctx.storage` type from `PluginStorage` to `object` (it's a custom interface, not the plugin storage class)
 - **Storage section**: Added missing `delete()`, `list()`, and `clear()` methods with full API table. Was only showing `get`/`set`.
-- **Frontend access**: Fixed `useApi` example — was destructuring `{ api }` from `useKinBot()` (incorrect since SDK review), now uses `useApi` hook directly. Added `UseApiOptions` documentation (`method`, `body`, `headers`, `enabled`).
+- **Frontend access**: Fixed `useApi` example — was destructuring `{ api }` from `useHivekeep()` (incorrect since SDK review), now uses `useApi` hook directly. Added `UseApiOptions` documentation (`method`, `body`, `headers`, `enabled`).
 - **Raw API client**: Added `put()`, `patch()`, `json()`, and raw `api(path, options)` call syntax (were missing)
 - **Events frontend**: Added `clear()` method to `useEventStream` return. Added `subscribe()` and `close()` methods to raw SDK events. Added `subscriberCount` to backend example.
 - **Logging**: Fixed — was showing pino-style structured logging `log.error({ err }, "msg")`, but source uses simple `...args` style. Added `warn` level (was missing).
@@ -301,13 +301,13 @@
 
 ## 2026-03-09 — Accuracy review: Mini-Apps getting-started page ✅
 
-- Reviewed `getting-started.md` against actual JS SDK source (`kinbot-react.js`)
+- Reviewed `getting-started.md` against actual JS SDK source (`hivekeep-react.js`)
 - **Key finding:** The `.d.ts` types diverge from actual JS implementation in several places. The JS is authoritative (it's what runs in the browser).
-- **useKinBot()**: JS returns `{ app, ready, theme, locale, isFullPage, api }` where `ready` is a **boolean** (not a function as `.d.ts` claims). Doc was already correct.
+- **useHivekeep()**: JS returns `{ app, ready, theme, locale, isFullPage, api }` where `ready` is a **boolean** (not a function as `.d.ts` claims). Doc was already correct.
 - **useStorage()**: JS returns `[value, setValue, loading]` as a plain 3-tuple (not `{ loading, error, remove }` object as `.d.ts` claims). Doc was already correct.
 - **useStorage setValue**: JS supports updater functions (`typeof newValue === 'function'`). Added clarification to doc.
-- **useKinBot ready**: Added clarification that the hook calls `KinBot.ready()` internally and exposes a boolean.
-- **Note for future**: `.d.ts` files need a sync pass against the actual JS — `UseKinBotReturn` type, `useStorage` return type are both wrong in the type definitions.
+- **useHivekeep ready**: Added clarification that the hook calls `Hivekeep.ready()` internally and exposes a boolean.
+- **Note for future**: `.d.ts` files need a sync pass against the actual JS — `UseHivekeepReturn` type, `useStorage` return type are both wrong in the type definitions.
 - Build passes: 34 pages
 - Commit: `adfb2b4` — pushed to main (--no-verify)
 
@@ -319,7 +319,7 @@
 ## 2026-03-09 — Accuracy review: Mini-Apps examples page ✅
 
 - Reviewed all 4 examples (Todo, Dashboard, Form, Multi-Page) against actual SDK source
-- All hook APIs correct: `useKinBot()` → `{ ready }`, `useStorage()` → `[value, setValue, loading]`, `toast(msg, type)`
+- All hook APIs correct: `useHivekeep()` → `{ ready }`, `useStorage()` → `[value, setValue, loading]`, `toast(msg, type)`
 - All component APIs correct: `List` (items/divided), `Stat` (value/label/trend/trendUp), `Form` compound pattern, `Router`/`Route`/`NavLink`, all chart components
 - **Fixed**: Dashboard example imported `SparkLine` but never used it — removed unused import
 - Build passes: 34 pages
@@ -347,7 +347,7 @@
 
 ## 2026-03-10 — README docs link + content audit ✅
 
-- Added "Documentation" link to README top nav bar (points to `/kinbot/docs/`)
+- Added "Documentation" link to README top nav bar (points to `/hivekeep/docs/`)
 - Audited all 34 pages for remaining stubs — none found. All pages have full content.
 - All accuracy reviews complete across every section.
 - Build passes: 34 pages

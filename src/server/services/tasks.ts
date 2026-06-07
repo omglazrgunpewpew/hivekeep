@@ -10,7 +10,7 @@ import { buildSystemPrompt } from '@/server/services/prompt-builder'
 import { getSystemContext } from '@/server/services/system-context'
 import { buildSegmentedMessages } from '@/server/services/llm-cache-hints'
 import { stringifyToolResultValue } from '@/server/llm/core/vercel-bridge'
-import type { KinbotMessage, KinbotMessageBlock } from '@/server/llm/llm/types'
+import type { HivekeepMessage, HivekeepMessageBlock } from '@/server/llm/llm/types'
 import { resolveThinkingConfig, isContextTooLargeError, sanitizePersistedToolCalls, getActiveKinStreamSnapshot } from '@/server/services/kin-engine'
 import { toolRegistry } from '@/server/tools/index'
 import { sseManager } from '@/server/sse/index'
@@ -1175,7 +1175,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
           })
           workspaceOverride = {
             path: wt.path,
-            env: { KINBOT_GH_TOKEN: wt.pat },
+            env: { HIVEKEEP_GH_TOKEN: wt.pat },
           }
           effectiveWorkspacePath = wt.path
           log.info(
@@ -1291,7 +1291,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
     //
     // `workspaceOverride` (set above for ticket-on-a-cloned-project tasks)
     // scopes every filesystem + shell tool to the per-task worktree and injects
-    // KINBOT_GH_TOKEN into spawned subprocesses for git auth.
+    // HIVEKEEP_GH_TOKEN into spawned subprocesses for git auth.
     const taskToolboxIds = await resolveTaskToolboxIds({
       toolboxIds: task.toolboxIds as string | null,
       toolPreset: task.toolPreset as string | null,
@@ -1363,7 +1363,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
       .orderBy(asc(messages.createdAt))
       .all()
 
-    // Reconstruct KinbotMessage[] from persisted rows. Mirrors the
+    // Reconstruct HivekeepMessage[] from persisted rows. Mirrors the
     // quick-session path in kin-engine.ts (~L2150): assistant rows with
     // persisted tool calls are expanded into an assistant message carrying
     // tool-use blocks plus a paired user-role message with the tool-result
@@ -1374,7 +1374,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
     // sub-Kin called `request_input` (only a tool call, no text) and the
     // response message arrived: the in-between assistant row had empty
     // content and was picked as the cross-turn cache anchor.
-    const messageHistory: KinbotMessage[] = []
+    const messageHistory: HivekeepMessage[] = []
     for (const msg of taskMessages) {
       if (msg.role === 'user') {
         const text = msg.content ?? ''
@@ -1387,7 +1387,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
         }
         const validToolCalls = parsedToolCalls ? sanitizePersistedToolCalls(parsedToolCalls, task.parentKinId) : []
         if (validToolCalls.length > 0) {
-          const assistantBlocks: KinbotMessageBlock[] = []
+          const assistantBlocks: HivekeepMessageBlock[] = []
           if (msg.content) assistantBlocks.push({ type: 'text', text: msg.content })
           for (const tc of validToolCalls) {
             assistantBlocks.push({ type: 'tool-use', id: tc.id, name: tc.name, args: tc.args })
@@ -1499,11 +1499,11 @@ async function executeSubKin(taskId: string, isNudge = false) {
     const abortController = new AbortController()
     activeTaskAbortControllers.set(taskId, abortController)
 
-    // Convert tools to kinbot shape once.
-    const { vercelToolsToKinbot: taskVercelToolsToKinbot, markLastKinbotToolCacheable: taskMarkLastKinbotToolCacheable } =
+    // Convert tools to hivekeep shape once.
+    const { vercelToolsToHivekeep: taskVercelToolsToHivekeep, markLastHivekeepToolCacheable: taskMarkLastHivekeepToolCacheable } =
       await import('@/server/llm/core/vercel-bridge')
-    const taskKinbotTools = hasTools
-      ? taskMarkLastKinbotToolCacheable(await taskVercelToolsToKinbot(stripToolExecute(tools)))
+    const taskHivekeepTools = hasTools
+      ? taskMarkLastHivekeepToolCacheable(await taskVercelToolsToHivekeep(stripToolExecute(tools)))
       : undefined
 
     const maxSteps = hasTools ? (config.tools.maxSteps > 0 ? config.tools.maxSteps : Infinity) : 1
@@ -1531,7 +1531,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
         {
           messages: taskMessages,
           ...(taskSystem ? { system: taskSystem } : {}),
-          ...(taskKinbotTools ? { tools: taskKinbotTools } : {}),
+          ...(taskHivekeepTools ? { tools: taskHivekeepTools } : {}),
           ...(taskThinkingEffort ? { thinkingEffort: taskThinkingEffort } : {}),
           signal: abortController.signal,
         },
@@ -1618,7 +1618,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
       // precedes tool_use (tool results are external — the model can't reason
       // past a tool_use until the next step). Unsigned blocks are skipped: the
       // API drops them anyway, and non-Anthropic providers ignore them.
-      const assistantBlocks: KinbotMessageBlock[] = []
+      const assistantBlocks: HivekeepMessageBlock[] = []
       for (const tb of outcome.stepThinking) {
         if (tb.signature) assistantBlocks.push({ type: 'thinking', text: tb.text, signature: tb.signature })
       }
@@ -1696,7 +1696,7 @@ async function executeSubKin(taskId: string, isNudge = false) {
       }
 
       // Append assistant message (with tool calls) + tool results to history
-      // for next step. Tool results live as a user-role message in kinbot's
+      // for next step. Tool results live as a user-role message in hivekeep's
       // shape (Anthropic-style).
       messageHistory.push({ role: 'assistant', content: assistantBlocks })
       messageHistory.push({

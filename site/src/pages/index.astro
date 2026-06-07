@@ -15,7 +15,7 @@ const channels = [
 
 // Honest comparison against the closest self-hosted peers. Marks are best-effort
 // from public docs (Jun 2026). Peers genuinely win/tie on several rows.
-const cmpCols = ['KinBot', 'OpenClaw', 'Hermes'];
+const cmpCols = ['Hivekeep', 'OpenClaw', 'Hermes'];
 const cmpRows = [
   ['Self-hosted, your data',                'yes', 'yes', 'yes'],
   ['Persistent memory',                     'yes', 'yes', 'yes'],
@@ -36,11 +36,11 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
 <Base>
   <!-- ===== top bar ===== -->
   <header class="topbar"><div class="wrap in">
-    <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="28" height="28" alt="" /> KinBot</div>
+    <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="28" height="28" alt="" /> Hivekeep</div>
     <nav>
       <a href="#memory">Features</a><a href="#household">The household</a>
-      <a href="#why">Why KinBot</a><a href="#docs">Docs</a>
-      <a href="https://github.com/MarlBurroW/kinbot">GitHub ↗</a>
+      <a href="#why">Why Hivekeep</a><a href="#docs">Docs</a>
+      <a href="https://github.com/MarlBurroW/hivekeep">GitHub ↗</a>
     </nav>
     <a class="btn btn-primary btn-sm" href="#start">Get started</a>
   </div></header>
@@ -48,7 +48,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   <!-- ===== hero ===== -->
   <section class="hero"><div class="hexfield fade-tr" style={`background-image:url(${base}/honeycomb.svg)`} aria-hidden="true"></div><div class="glow a"></div><div class="glow b"></div>
     <div class="wrap">
-      <span class="meta">KinBot v1.0 · self-hosted · MIT</span>
+      <span class="meta">Hivekeep v1.0 · self-hosted · MIT</span>
       <div class="hero-grid">
         <div>
           <span class="kicker">A hive of autonomous agents</span>
@@ -167,7 +167,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
         <div>
           <p>No Postgres, Redis, Mongo, or message broker. Bun and SQLite in a single binary. Your data, your keys, your machine.</p>
           <p>Secrets live in an encrypted vault. Kins reference a vault key to reach a service; they <b>never read the value</b>, so it <b>never reaches the LLM</b>.</p>
-          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 kinbot<br /><span class="cmt"># then open your browser. Sherpa does the rest.</span></div>
+          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br /><span class="cmt"># then open your browser. Sherpa does the rest.</span></div>
         </div>
         <dl class="specs">
           <div class="r"><dt>Footprint</dt><dd>1 process · 1 SQLite file</dd></div>
@@ -195,7 +195,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
           </div>
         </div>
         <div>
-          <p>Kins write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a <b>themed card, not raw JSON</b>. They build full mini-apps (dashboards, control panels) right inside KinBot, and can ship NPM plugins.</p>
+          <p>Kins write tools in the language they want, with their own dependencies, plus a renderer that shows the result as a <b>themed card, not raw JSON</b>. They build full mini-apps (dashboards, control panels) right inside Hivekeep, and can ship NPM plugins.</p>
           <p>Scope each Kin with <b>toolboxes</b> so a focused agent only sees the tools it needs, which keeps it sharp and lets lighter models do the job.</p>
           <div class="taglist">
             <span class="t"><Icon name="lucide:wrench" /> custom tools</span>
@@ -243,7 +243,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <h2 class="display">No black box. No cost surprises.</h2>
       <div class="split2">
         <div>
-          <p>See exactly what goes to the model: the system prompt broken down block by block, token cost <b>per Kin and per model</b>, and the prompt-cache read / write / fresh split with its hit rate. KinBot is unusually honest about what it sends and what it spends, across any provider.</p>
+          <p>See exactly what goes to the model: the system prompt broken down block by block, token cost <b>per Kin and per model</b>, and the prompt-cache read / write / fresh split with its hit rate. Hivekeep is unusually honest about what it sends and what it spends, across any provider.</p>
           <div class="taglist"><span class="t"><Icon name="lucide:gauge" /> per-Kin token cost</span><span class="t"><Icon name="lucide:layers" /> context preview</span></div>
         </div>
         <div class="figure glass">
@@ -302,7 +302,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="num display">07<small>Examples</small></div>
     <div class="body">
       <h2 class="display">Build a household for your life.</h2>
-      <p>KinBot ships with one Kin: <b>Sherpa</b>, your setup guide. You create the rest, or just ask Sherpa to build them for you. Each one gets its own name, domain, memory, tools, and an auto-generated avatar.</p>
+      <p>Hivekeep ships with one Kin: <b>Sherpa</b>, your setup guide. You create the rest, or just ask Sherpa to build them for you. Each one gets its own name, domain, memory, tools, and an auto-generated avatar.</p>
       <p class="examples-note mono">A few examples of what people build →</p>
       <div class="directory">
         {kins.map((k, i) => {
@@ -324,12 +324,12 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   <Providers />
   <hr class="rule" />
 
-  <!-- ===== why kinbot (comparison) ===== -->
+  <!-- ===== why hivekeep (comparison) ===== -->
   <div class="wrap" id="why"><section class="section" style="grid-template-columns:1fr;">
     <div class="body">
-      <span class="kicker">Why KinBot</span>
+      <span class="kicker">Why Hivekeep</span>
       <h2 class="display" style="margin-top:12px">Next to the closest projects.</h2>
-      <p>Self-hosted AI assistants like <b>OpenClaw</b> and <b>Hermes</b> are excellent: they win on memory, omnichannel reach and self-hosting too. Where KinBot pulls ahead is the <b>team</b>, the <b>polished product UI</b>, and <b>transparency</b>.</p>
+      <p>Self-hosted AI assistants like <b>OpenClaw</b> and <b>Hermes</b> are excellent: they win on memory, omnichannel reach and self-hosting too. Where Hivekeep pulls ahead is the <b>team</b>, the <b>polished product UI</b>, and <b>transparency</b>.</p>
       <div class="cmp-wrap"><table class="cmp">
         <thead><tr><th></th>{cmpCols.map((c, i) => <th class={'c' + (i === 0 ? ' kb' : '')}>{c}</th>)}</tr></thead>
         <tbody>
@@ -356,9 +356,9 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <span class="kicker" style="justify-content:center">Get started</span>
       <h2 class="display">Run your team in two minutes.</h2>
       <p>One command. No external services to provision. Open your browser and Sherpa walks you through the rest.</p>
-      <div class="cmd"><span><span class="c">$</span> docker run -d -p 3000:3000 -v kinbot-data:/app/data ghcr.io/marlburrow/kinbot</span><span class="cp"><Icon name="lucide:copy" /></span></div>
+      <div class="cmd"><span><span class="c">$</span> docker run -d -p 3000:3000 -v hivekeep-data:/app/data ghcr.io/marlburrow/hivekeep</span><span class="cp"><Icon name="lucide:copy" /></span></div>
       <div class="btns">
-        <a class="btn btn-primary" href="https://github.com/MarlBurroW/kinbot"><Icon name="lucide:github" /> Star on GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub</a>
         <a class="btn btn-ghost" href="#docs"><Icon name="lucide:book-open" /> Read the docs</a>
       </div>
     </div>
@@ -366,7 +366,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
 
   <!-- ===== footer ===== -->
   <footer class="footer" id="docs"><div class="wrap in">
-    <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="26" height="26" alt="" /> KinBot</div>
+    <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="26" height="26" alt="" /> Hivekeep</div>
     <span class="m">Open-source · MIT · Built with Bun · © 2026</span>
   </div></footer>
 </Base>

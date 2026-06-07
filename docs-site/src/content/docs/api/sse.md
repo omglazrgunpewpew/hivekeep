@@ -3,7 +3,7 @@ title: SSE Events
 description: Real-time Server-Sent Events for live UI updates.
 ---
 
-KinBot uses **Server-Sent Events (SSE)** to push real-time updates to the web UI. Connect to the SSE endpoint to receive live notifications about changes.
+Hivekeep uses **Server-Sent Events (SSE)** to push real-time updates to the web UI. Connect to the SSE endpoint to receive live notifications about changes.
 
 ## Endpoint
 
@@ -203,7 +203,7 @@ Real-time message streaming and conversation events.
 
 | Event | Description | Scope |
 |-------|-------------|-------|
-| `version:update-available` | New KinBot version available | Broadcast |
+| `version:update-available` | New Hivekeep version available | Broadcast |
 
 ### System
 

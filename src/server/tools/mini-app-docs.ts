@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { tool } from '@/server/tools/tool-helper'
 import type { ToolRegistration } from '@/server/tools/types'
 
-const DOCS_BASE_URL = 'https://marlburrow.github.io/kinbot/docs'
+const DOCS_BASE_URL = 'https://marlburrow.github.io/hivekeep/docs'
 
 const sections: Record<string, { title: string; url: string; content: string }> = {
   overview: {
@@ -10,9 +10,9 @@ const sections: Record<string, { title: string; url: string; content: string }> 
     url: `${DOCS_BASE_URL}/mini-apps/overview/`,
     content: `# Mini-Apps Overview
 
-Mini-apps are small web applications that live inside KinBot's sidebar. They use React with server-side JSX transpilation (no build step needed).
+Mini-apps are small web applications that live inside Hivekeep's sidebar. They use React with server-side JSX transpilation (no build step needed).
 
-**Architecture:** HTML + React (JSX transpiled server-side) → served via KinBot API → rendered in sidebar iframe.
+**Architecture:** HTML + React (JSX transpiled server-side) → served via Hivekeep API → rendered in sidebar iframe.
 
 **Key concepts:**
 - Use \`<script type="text/jsx">\` for inline JSX
@@ -30,14 +30,14 @@ Mini-apps are small web applications that live inside KinBot's sidebar. They use
 
 ## ⚠️ Import maps live in app.json — NOT in the HTML
 
-Bare ES imports (\`react\`, \`@kinbot/react\`, …) only resolve through an import map that
-KinBot builds from the app's \`app.json\` manifest. An inline \`<script type="importmap">\`
+Bare ES imports (\`react\`, \`@hivekeep/react\`, …) only resolve through an import map that
+Hivekeep builds from the app's \`app.json\` manifest. An inline \`<script type="importmap">\`
 or config tag in your HTML is **ignored**. Without \`app.json\` you get the runtime error
 \`Failed to resolve module specifier "react"\`.
 
 ## Recommended: create everything in one call
 
-Pass \`dependencies\` (an import-map shorthand) directly to \`create_mini_app\` — KinBot
+Pass \`dependencies\` (an import-map shorthand) directly to \`create_mini_app\` — Hivekeep
 writes \`app.json\` for you:
 \`\`\`js
 create_mini_app({
@@ -45,8 +45,8 @@ create_mini_app({
   dependencies: {
     "react": "https://esm.sh/react@19",
     "react-dom/client": "https://esm.sh/react-dom@19/client",
-    "@kinbot/react": "/api/mini-apps/sdk/kinbot-react.js",
-    "@kinbot/components": "/api/mini-apps/sdk/kinbot-components.js"
+    "@hivekeep/react": "/api/mini-apps/sdk/hivekeep-react.js",
+    "@hivekeep/components": "/api/mini-apps/sdk/hivekeep-components.js"
   },
   html: "<div id=\\"root\\"></div><script type=\\"text/jsx\\"> ... </script>"
 })
@@ -54,7 +54,7 @@ create_mini_app({
 Or pass a full \`files\` map: \`{ "index.html": "...", "app.json": "...", "_server.js": "..." }\`.
 
 If you provide HTML with bare imports but omit \`dependencies\`/\`app.json\`, a default
-\`app.json\` (react, react-dom/client, @kinbot/react, @kinbot/components) is created
+\`app.json\` (react, react-dom/client, @hivekeep/react, @hivekeep/components) is created
 automatically and reported back as a \`warning\`.
 
 ## Alternative: two steps
@@ -68,10 +68,10 @@ automatically and reported back as a \`warning\`.
 <script type="text/jsx">
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { useKinBot } from "@kinbot/react";
+import { useHivekeep } from "@hivekeep/react";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div>Loading...</div>;
   return <AppContent />;
 }
@@ -87,10 +87,10 @@ Use \`get_mini_app_templates\` to see built-in templates (dashboard, todo-list, 
   hooks: {
     title: 'React Hooks Reference',
     url: `${DOCS_BASE_URL}/mini-apps/hooks/`,
-    content: `# @kinbot/react Hooks
+    content: `# @hivekeep/react Hooks
 
 ## Core
-- \`useKinBot()\` → \`{ app, ready, theme, locale, isFullPage, api }\` — MUST call at root, wait for \`ready\`
+- \`useHivekeep()\` → \`{ app, ready, theme, locale, isFullPage, api }\` — MUST call at root, wait for \`ready\`
 - \`useTheme()\` → \`{ mode, palette }\` — lighter alternative when you only need theme
 - \`useKin()\` → \`{ kin, loading }\` — parent Kin info (id, name, avatarUrl)
 - \`useUser()\` → \`{ user, loading }\` — current user info
@@ -138,9 +138,9 @@ Use \`get_mini_app_templates\` to see built-in templates (dashboard, todo-list, 
   components: {
     title: 'Component Library',
     url: `${DOCS_BASE_URL}/mini-apps/components/`,
-    content: `# @kinbot/components
+    content: `# @hivekeep/components
 
-Add to app.json: \`"@kinbot/components": "/api/mini-apps/sdk/kinbot-components.js"\`
+Add to app.json: \`"@hivekeep/components": "/api/mini-apps/sdk/hivekeep-components.js"\`
 
 ## Typography
 Heading (standalone title, renders h1–h6 via \`as\`), Text (themed p/span). NOTE: there is no \`Title\` export — use Heading, or Card.Title inside a Card.
@@ -172,9 +172,9 @@ All components auto-adapt to light/dark theme. See full docs for props and examp
   sdk: {
     title: 'SDK Reference (Low-Level)',
     url: `${DOCS_BASE_URL}/mini-apps/sdk-reference/`,
-    content: `# KinBot SDK (Low-Level API)
+    content: `# Hivekeep SDK (Low-Level API)
 
-Direct SDK exports from @kinbot/react (use hooks when possible):
+Direct SDK exports from @hivekeep/react (use hooks when possible):
 
 ## UI
 - \`toast(message, type)\` — type: info|success|warning|error
@@ -197,12 +197,12 @@ Direct SDK exports from @kinbot/react (use hooks when possible):
 - \`download(filename, content, mimeType?)\`
 - \`shortcut(key, callback)\` — keyboard shortcuts
 - \`apps.list()\`, \`apps.get(id)\` — inter-app discovery
-- \`KinBot.sendMessage(text, options?)\` — send message to Kin conversation
-- \`KinBot.share(targetSlug, data)\` — share data with another app
-- \`KinBot.resize(width?, height?)\` — request panel resize
-- \`KinBot.notification(title, body?)\` — browser notification
-- \`KinBot.memory.search/store\` — Kin memory access
-- \`KinBot.conversation.history/send\` — conversation access`,
+- \`Hivekeep.sendMessage(text, options?)\` — send message to Kin conversation
+- \`Hivekeep.share(targetSlug, data)\` — share data with another app
+- \`Hivekeep.resize(width?, height?)\` — request panel resize
+- \`Hivekeep.notification(title, body?)\` — browser notification
+- \`Hivekeep.memory.search/store\` — Kin memory access
+- \`Hivekeep.conversation.history/send\` — conversation access`,
   },
 
   backend: {
@@ -230,7 +230,7 @@ export default function(ctx) {
 Served at \`/api/mini-apps/<appId>/api/*\`
 
 ## Frontend Access
-\`const { api } = useKinBot()\` then \`api.get("/path")\`, \`api.post("/path", data)\`
+\`const { api } = useHivekeep()\` then \`api.get("/path")\`, \`api.post("/path", data)\`
 
 ## Real-time Events (SSE)
 Backend: \`ctx.events.emit("update", {count: 42})\`
@@ -244,7 +244,7 @@ Frontend: \`events.on("update", (data) => ...)\` or \`useEventStream("update", c
 
 ## Dark/Light Mode
 - Always use CSS variables (--color-primary, --color-background, etc.) — never hardcode colors
-- Theme is auto-synced from KinBot settings
+- Theme is auto-synced from Hivekeep settings
 - Test both modes
 
 ## Sidebar-Aware Design
@@ -253,7 +253,7 @@ Frontend: \`events.on("update", (data) => ...)\` or \`useEventStream("update", c
 - Support fullpage mode via \`fullpage(true)\`
 
 ## Use Existing Components
-- Import from @kinbot/components — don't reinvent buttons, cards, forms
+- Import from @hivekeep/components — don't reinvent buttons, cards, forms
 - Components auto-adapt to theme and are accessible
 - Use DataGrid instead of Table+Pagination for data-heavy views
 

@@ -1,6 +1,6 @@
-# `hello-kin` — KinBot plugin reference example
+# `hello-kin` — Hivekeep plugin reference example
 
-A single-file plugin demonstrating every extension point KinBot supports:
+A single-file plugin demonstrating every extension point Hivekeep supports:
 
 - **Tool** — `greet`, takes a `name` argument, emits a card.
 - **Channel** — `echo-channel`, a no-op adapter that echoes outbound payloads.
@@ -9,15 +9,15 @@ A single-file plugin demonstrating every extension point KinBot supports:
 - **Card action handler** — `onCardAction`.
 - **Lifecycle** — `activate` / `deactivate`.
 
-Read `index.ts` for the full code. Read [Developing Plugins](https://marlburrow.github.io/kinbot/docs/plugins/developing/) for the conceptual guide.
+Read `index.ts` for the full code. Read [Developing Plugins](https://marlburrow.github.io/hivekeep/docs/plugins/developing/) for the conceptual guide.
 
 The example is exercised by `packages/sdk/src/example.test.ts` — every SDK change goes through that test, so this file is always loadable.
 
 ## Run it locally
 
-Drop the folder into a KinBot install:
+Drop the folder into a Hivekeep install:
 
 ```bash
-cp -r packages/sdk/examples/hello-kin <kinbot-checkout>/plugins/
-# restart KinBot and enable it in Settings → Plugins
+cp -r packages/sdk/examples/hello-kin <hivekeep-checkout>/plugins/
+# restart Hivekeep and enable it in Settings → Plugins
 ```

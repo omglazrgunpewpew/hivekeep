@@ -1,12 +1,12 @@
 # Troubleshooting
 
-Common issues and solutions when running KinBot.
+Common issues and solutions when running Hivekeep.
 
 ## Installation
 
 ### `better-sqlite3` build fails (node-gyp errors)
 
-KinBot uses `better-sqlite3` which requires native compilation. If the install fails with `node-gyp` errors:
+Hivekeep uses `better-sqlite3` which requires native compilation. If the install fails with `node-gyp` errors:
 
 **Linux (Debian/Ubuntu):**
 ```bash
@@ -39,7 +39,7 @@ bun install
 Don't run the installer with `sudo`. If you previously did:
 
 ```bash
-sudo chown -R $(whoami) /path/to/kinbot
+sudo chown -R $(whoami) /path/to/hivekeep
 bun install
 ```
 
@@ -59,7 +59,7 @@ PORT=4000 bun run start
 
 ### Database migration errors
 
-If KinBot fails to start with database errors after an update:
+If Hivekeep fails to start with database errors after an update:
 
 ```bash
 bun run db:migrate
@@ -69,14 +69,14 @@ If that fails, the database may be corrupted. Check if you have a backup in your
 
 ```bash
 # Back up first!
-cp data/kinbot.db data/kinbot.db.bak
+cp data/hivekeep.db data/hivekeep.db.bak
 # Then try migrating again
 bun run db:migrate
 ```
 
 ### `ENCRYPTION_KEY` warnings
 
-KinBot auto-generates an encryption key on first run and stores it in the database. If you see warnings about the encryption key:
+Hivekeep auto-generates an encryption key on first run and stores it in the database. If you see warnings about the encryption key:
 
 - **Don't change it** after initial setup, or vault entries become unreadable
 - If migrating to a new server, copy the entire `data/` directory
@@ -88,7 +88,7 @@ KinBot auto-generates an encryption key on first run and stores it in the databa
 
 Vector search (semantic memory) requires the `sqlite-vec` extension. If you see this warning:
 
-- KinBot still works, but memory recall falls back to full-text search only
+- Hivekeep still works, but memory recall falls back to full-text search only
 - The extension is bundled automatically on most platforms
 - On Alpine Linux or unusual architectures, it may not be available
 
@@ -120,7 +120,7 @@ If your Kin seems to forget things:
 
 ### WhatsApp webhook verification failing
 
-1. Ensure the **Verify Token** matches between Meta's webhook config and KinBot's channel settings
+1. Ensure the **Verify Token** matches between Meta's webhook config and Hivekeep's channel settings
 2. `PUBLIC_URL` must be HTTPS and reachable from Meta's servers
 3. Check logs for "Webhook verification token mismatch"
 
@@ -136,10 +136,10 @@ If your Kin seems to forget things:
 
 ```bash
 # Verify the container is running
-docker ps | grep kinbot
+docker ps | grep hivekeep
 
 # Check logs
-docker logs kinbot
+docker logs hivekeep
 
 # Ensure you're mapping the port correctly
 docker run -p 3000:3000 ...
@@ -150,7 +150,7 @@ docker run -p 3000:3000 ...
 Always mount a volume for the data directory:
 
 ```bash
-docker run -v kinbot-data:/app/data ...
+docker run -v hivekeep-data:/app/data ...
 ```
 
 Without this, all data (database, uploads, workspaces) is lost when the container is removed.
@@ -161,7 +161,7 @@ The multi-arch image supports `linux/amd64` and `linux/arm64`. For Raspberry Pi:
 
 ```bash
 # Pull the arm64 image
-docker pull ghcr.io/marlburrow/kinbot:latest
+docker pull ghcr.io/marlburrow/hivekeep:latest
 
 # Or build locally
 docker build -f docker/Dockerfile .
@@ -198,7 +198,7 @@ docker run -e LOG_LEVEL=debug ...
 
 ## Diagnostic Report
 
-The installer includes a `--doctor` command that generates a comprehensive diagnostic report covering your system, KinBot installation, runtime, providers, and database health:
+The installer includes a `--doctor` command that generates a comprehensive diagnostic report covering your system, Hivekeep installation, runtime, providers, and database health:
 
 ```bash
 bash install.sh --doctor
@@ -213,7 +213,7 @@ bash install.sh --doctor > report.md
 The report includes:
 - System info (OS, kernel, memory, disk, container detection)
 - Bun and Git versions
-- KinBot installation status, version, and configuration
+- Hivekeep installation status, version, and configuration
 - Service health (systemd/launchd/Docker)
 - Database integrity and stats
 - Provider configuration summary
@@ -221,19 +221,19 @@ The report includes:
 
 ## Viewing Logs
 
-The installer also provides a cross-platform way to tail KinBot logs:
+The installer also provides a cross-platform way to tail Hivekeep logs:
 
 ```bash
 bash install.sh --logs
 ```
 
-This works whether KinBot is running via systemd, launchd, or Docker.
+This works whether Hivekeep is running via systemd, launchd, or Docker.
 
 ## Still stuck?
 
 - Run `bash install.sh --doctor` and include the output
-- Check [existing issues](https://github.com/MarlBurroW/kinbot/issues) for similar problems
-- Open a [new issue](https://github.com/MarlBurroW/kinbot/issues/new/choose) with:
+- Check [existing issues](https://github.com/MarlBurroW/hivekeep/issues) for similar problems
+- Open a [new issue](https://github.com/MarlBurroW/hivekeep/issues/new/choose) with:
   - Diagnostic report (`bash install.sh --doctor`)
   - Steps to reproduce
   - Any additional log output

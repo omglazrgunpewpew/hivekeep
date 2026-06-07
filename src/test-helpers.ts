@@ -14,13 +14,13 @@
 export const fullMockConfig = {
   version: '0.0.0-test',
   port: 3333,
-  dataDir: '/tmp/kinbot-test',
+  dataDir: '/tmp/hivekeep-test',
   encryptionKey: 'test-key-0000000000000000000000000000000000000000000000000000000000000000',
   logLevel: 'error' as const,
   isDocker: false,
   publicUrl: 'http://localhost:3333',
 
-  db: { path: '/tmp/kinbot-test/kinbot.db' },
+  db: { path: '/tmp/hivekeep-test/hivekeep.db' },
 
   compacting: {
     model: undefined,
@@ -79,22 +79,22 @@ export const fullMockConfig = {
 
   vault: {
     algorithm: 'aes-256-gcm' as const,
-    attachmentDir: '/tmp/kinbot-test/vault',
+    attachmentDir: '/tmp/hivekeep-test/vault',
     maxAttachmentSizeMb: 50,
     maxAttachmentsPerEntry: 10,
   },
 
-  workspace: { baseDir: '/tmp/kinbot-test/workspaces' },
+  workspace: { baseDir: '/tmp/hivekeep-test/workspaces' },
 
   upload: {
-    dir: '/tmp/kinbot-test/uploads',
+    dir: '/tmp/hivekeep-test/uploads',
     maxFileSizeMb: 50,
     channelFileRetentionDays: 30,
     channelFileCleanupIntervalMin: 60,
   },
 
   fileStorage: {
-    dir: '/tmp/kinbot-test/storage',
+    dir: '/tmp/hivekeep-test/storage',
     maxFileSizeMb: 100,
     cleanupIntervalMin: 60,
   },
@@ -123,7 +123,7 @@ export const fullMockConfig = {
     pageTimeout: 30_000,
     maxContentLength: 100_000,
     maxConcurrentFetches: 5,
-    userAgent: 'Mozilla/5.0 (compatible; KinBot/test)',
+    userAgent: 'Mozilla/5.0 (compatible; Hivekeep/test)',
     blockedDomains: [] as string[],
     proxy: undefined,
     headless: {
@@ -153,7 +153,7 @@ export const fullMockConfig = {
   },
 
   miniApps: {
-    dir: '/tmp/kinbot-test/mini-apps',
+    dir: '/tmp/hivekeep-test/mini-apps',
     maxAppsPerKin: 20,
     maxFileSizeMb: 5,
     maxTotalSizeMbPerApp: 50,
@@ -162,7 +162,7 @@ export const fullMockConfig = {
 
   versionCheck: {
     enabled: false,
-    repo: 'MarlBurroW/kinbot',
+    repo: 'MarlBurroW/hivekeep',
     intervalHours: 12,
   },
 
@@ -170,7 +170,7 @@ export const fullMockConfig = {
     installationType: 'manual' as const,
     envFilePath: null,
     serviceFilePath: null,
-    workingDir: '/tmp/kinbot-test',
+    workingDir: '/tmp/hivekeep-test',
     user: 'test-user',
   },
 } as const

@@ -545,7 +545,7 @@ export function KinFormModal({
                   <input
                     ref={importFileRef}
                     type="file"
-                    accept=".json,.kinbot.json"
+                    accept=".json,.hivekeep.json"
                     className="hidden"
                     onChange={handleImportFile}
                   />

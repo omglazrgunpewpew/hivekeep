@@ -1,0 +1,15 @@
+{
+  "name": "create-hivekeep-plugin",
+  "version": "1.0.0",
+  "description": "Scaffold a new Hivekeep plugin with best-practice boilerplate.",
+  "license": "AGPL-3.0",
+  "author": "Hivekeep Team",
+  "bin": {
+    "create-hivekeep-plugin": "./index.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {}
+}

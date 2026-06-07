@@ -1,15 +1,15 @@
-# KinBot — Structure du projet
+# Hivekeep — Structure du projet
 
 Monorepo avec frontend, backend, SDK plugin et plugins de référence dans le même dépôt, servi par un seul process Bun (pour le runtime) et un seul workspace `bun` (pour le tooling). Le résultat se déploie en un container Docker unique.
 
-> **À jour pour KinBot 2.0** (post-refactor providers/SDK/plugins). Si une partie de l'arborescence diffère de la réalité, c'est ce fichier qui est obsolète — la réalité fait foi.
+> **À jour pour Hivekeep 2.0** (post-refactor providers/SDK/plugins). Si une partie de l'arborescence diffère de la réalité, c'est ce fichier qui est obsolète — la réalité fait foi.
 
 ---
 
 ## Arborescence
 
 ```
-kinbot/
+hivekeep/
 ├── package.json                       # Workspaces Bun (packages/*, plugins/*)
 ├── tsconfig.json
 ├── drizzle.config.ts
@@ -20,12 +20,12 @@ kinbot/
 │   └── docker-compose.yml
 │
 ├── packages/                          # Packages npm publiés
-│   ├── sdk/                           # @kinbot-developer/sdk
+│   ├── sdk/                           # @hivekeep-developer/sdk
 │   │   ├── src/index.ts               # Surface publique (tools, channels, providers,
 │   │   │                              #  hooks, cards, plugin context)
 │   │   ├── README.md
 │   │   └── examples/hello-kin/        # Plugin minimal de référence
-│   └── create-kinbot-plugin/          # Scaffolder `bunx create-kinbot-plugin`
+│   └── create-hivekeep-plugin/          # Scaffolder `bunx create-hivekeep-plugin`
 │
 ├── plugins/                           # Plugins maintenus dans le repo
 │   ├── replicate/                     # Pilot — provider LLM/Image/Embedding via SDK
@@ -61,7 +61,7 @@ kinbot/
 │   │   │   └── app-settings.ts        # Paramètres globaux persistants
 │   │   │
 │   │   ├── channels/                  # ChannelAdapters built-in
-│   │   │   ├── adapter.ts             # Interface (cf. @kinbot-developer/sdk)
+│   │   │   ├── adapter.ts             # Interface (cf. @hivekeep-developer/sdk)
 │   │   │   ├── telegram.ts, discord.ts, slack.ts, whatsapp.ts, signal.ts, matrix.ts
 │   │   │
 │   │   ├── llm/                       # Providers IA natifs (post-Vercel SDK)
@@ -132,7 +132,7 @@ kinbot/
 ├── site/                              # Site marketing
 │
 └── data/                              # Données persistantes (gitignored)
-    ├── kinbot.db (+ -shm / -wal)
+    ├── hivekeep.db (+ -shm / -wal)
     ├── uploads/                       # Pièces jointes utilisateur
     ├── workspaces/                    # Workspaces des Kins (filesystem isolé)
     ├── mini-apps/                     # Fichiers des mini-apps
@@ -143,7 +143,7 @@ kinbot/
 
 ## Conventions
 
-- **Imports** : alias absolus `@/server/...`, `@/client/...`, `@/shared/...`. Plugins consomment uniquement `@kinbot-developer/sdk`.
+- **Imports** : alias absolus `@/server/...`, `@/client/...`, `@/shared/...`. Plugins consomment uniquement `@hivekeep-developer/sdk`.
 - **Naming** : `kebab-case.ts` pour les modules, `PascalCase.tsx` pour les composants React, `snake_case` pour les tables SQL.
 - **Tests** : co-localisés (`foo.test.ts` à côté de `foo.ts`). Lancés via `bun run test`.
 - **Provider agnostic core** : le core (tout sauf `src/server/llm/{provider}/` et `plugins/`) ne doit jamais brancher sur un nom de provider. Les capacités spécifiques sont déclarées par le provider lui-même (cf. `LLMProvider.defaultMaxTools`, `LLMProvider.billing`, `ImageProvider.describeModel`).

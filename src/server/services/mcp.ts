@@ -57,7 +57,7 @@ async function connectToServer(serverId: string): Promise<MCPConnection | null> 
     })
 
     const client = new Client({
-      name: 'kinbot',
+      name: 'hivekeep',
       version: '1.0.0',
     })
 

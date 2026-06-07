@@ -1,4 +1,4 @@
-# KinBot — System prompt construction
+# Hivekeep — System prompt construction
 
 This document specifies how context is assembled before each LLM call for a Kin (main agent or sub-Kin).
 
@@ -97,7 +97,7 @@ When a tool call depends on the result of a previous one, you MUST call them one
 When a tool returns an image URL (screenshot, generated image, or any fileUrl with image/* mime type), embed it inline using markdown image syntax: `![short description](url)`. The chat renderer displays these inline with click-to-zoom. Do NOT use plain link syntax `[text](url)` for images — that produces a clickable text link instead of the image itself. Plain links remain correct for non-image URLs.
 ```
 
-> **Rationale**: this is a verbatim port of the strategy used by Claude Code (Anthropic's official CLI) in [`claude-code-sourcemap/src/constants/prompts.ts`](claude-code-sourcemap/src/constants/prompts.ts). Claude Code does not use any UI-level filtering or special streaming logic — it relies entirely on aggressive `IMPORTANT:` markers and explicit forbidden-phrase examples. The same approach works in KinBot. The "Embedding images" sub-block was added when [MarkdownContent.tsx](src/client/components/chat/MarkdownContent.tsx) gained inline `<img>` rendering with click-to-zoom — the chat now renders `![]()` markdown so Kins should prefer that syntax for any image they want the user to see.
+> **Rationale**: this is a verbatim port of the strategy used by Claude Code (Anthropic's official CLI) in [`claude-code-sourcemap/src/constants/prompts.ts`](claude-code-sourcemap/src/constants/prompts.ts). Claude Code does not use any UI-level filtering or special streaming logic — it relies entirely on aggressive `IMPORTANT:` markers and explicit forbidden-phrase examples. The same approach works in Hivekeep. The "Embedding images" sub-block was added when [MarkdownContent.tsx](src/client/components/chat/MarkdownContent.tsx) gained inline `<img>` rendering with click-to-zoom — the chat now renders `![]()` markdown so Kins should prefer that syntax for any image they want the user to see.
 
 ### [2] Character
 
@@ -327,11 +327,11 @@ Gives the Kin spatial awareness of its dedicated workspace directory. Includes t
 
 Your workspace directory is your dedicated storage area. Use it to organize files, clone repos, create scripts, and store any persistent data.
 
-Path: /home/user/.local/share/kinbot/workspaces/6b2aec62-.../
+Path: /home/user/.local/share/hivekeep/workspaces/6b2aec62-.../
 Contents:
 ├── tools/
 │   └── my_script.sh
-├── kinbot-dev/
+├── hivekeep-dev/
 │   ├── src/
 │   ├── package.json
 │   └── ...
@@ -395,7 +395,7 @@ Title: {project.title}
 ## Context
 
 Current date and time: {datetime}
-Platform: KinBot
+Platform: Hivekeep
 ```
 
 ### [8.5] Final reminder (tool calling discipline, repeated)
@@ -499,7 +499,7 @@ Available tools depend on the **context**:
 The `prompt-builder.ts` service builds a **different prompt** for sub-Kins (tasks):
 
 ```
-You are {parent_kin_name}, a specialized AI agent on KinBot, executing a delegated task.
+You are {parent_kin_name}, a specialized AI agent on Hivekeep, executing a delegated task.
 
 ## Your mission
 {task_description}

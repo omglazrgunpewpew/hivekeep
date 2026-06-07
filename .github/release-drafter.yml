@@ -2,7 +2,7 @@
 # Auto-generates draft release notes from merged PRs
 # https://github.com/release-drafter/release-drafter
 
-name-template: 'KinBot v$RESOLVED_VERSION'
+name-template: 'Hivekeep v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 
 categories:

@@ -1,6 +1,6 @@
-# KinBot Plugin Development Guide
+# Hivekeep Plugin Development Guide
 
-This guide explains how to create, test, and publish plugins for KinBot.
+This guide explains how to create, test, and publish plugins for Hivekeep.
 
 ## Quick Start
 
@@ -14,10 +14,10 @@ cat > plugin.json << 'EOF'
 {
   "name": "my-plugin",
   "version": "1.0.0",
-  "description": "My awesome KinBot plugin",
+  "description": "My awesome Hivekeep plugin",
   "author": "Your Name",
   "main": "index.js",
-  "kinbot": ">=0.10.0",
+  "hivekeep": ">=0.10.0",
   "permissions": [],
   "config": {}
 }
@@ -75,11 +75,11 @@ plugins/my-plugin/
   "version": "1.0.0",
   "description": "Short description of your plugin",
   "author": "Your Name",
-  "homepage": "https://github.com/user/kinbot-plugin-my-plugin",
+  "homepage": "https://github.com/user/hivekeep-plugin-my-plugin",
   "license": "MIT",
   "main": "index.js",
   "icon": "🔧",
-  "kinbot": ">=0.10.0",
+  "hivekeep": ">=0.10.0",
   "permissions": [
     "http:api.example.com"
   ],
@@ -113,7 +113,7 @@ plugins/my-plugin/
 | `homepage` | ❌ | Project URL |
 | `license` | ❌ | SPDX license |
 | `icon` | ❌ | Emoji icon |
-| `kinbot` | ❌ | Compatible KinBot version range |
+| `hivekeep` | ❌ | Compatible Hivekeep version range |
 | `permissions` | ❌ | Required permissions |
 | `config` | ❌ | Configuration schema |
 
@@ -205,7 +205,7 @@ Tools are automatically namespaced as `plugin_<name>_<tool>` and are opt-in (dis
 
 #### Tool concurrency flags (optional)
 
-KinBot partitions the tool calls within a single LLM step into batches.
+Hivekeep partitions the tool calls within a single LLM step into batches.
 Consecutive `concurrencySafe` tools run in parallel; everything else runs
 serially in its own isolated batch. By default a tool is treated as
 unsafe (serial, isolated), which is conservative but slower when an
@@ -240,12 +240,12 @@ Guidance:
   prompts) and does not affect batching today.
 - When in doubt, leave the flag unset. Correctness over throughput.
 
-The cap on parallelism is `KINBOT_MAX_TOOL_USE_CONCURRENCY` (env var,
+The cap on parallelism is `HIVEKEEP_MAX_TOOL_USE_CONCURRENCY` (env var,
 default 10).
 
 ### Hooks
 
-Intercept KinBot lifecycle events:
+Intercept Hivekeep lifecycle events:
 
 ```javascript
 return {
@@ -364,19 +364,19 @@ return {
 Drop your plugin folder into `plugins/`:
 
 ```bash
-cp -r my-plugin /path/to/kinbot/plugins/
+cp -r my-plugin /path/to/hivekeep/plugins/
 ```
 
 ### npm (preferred)
 
-Published plugins are discovered and installed via the npm registry — any package tagged with the `kinbot-plugin` keyword shows up in **Settings → Plugins → Browse**.
+Published plugins are discovered and installed via the npm registry — any package tagged with the `hivekeep-plugin` keyword shows up in **Settings → Plugins → Browse**.
 
 ```bash
 # Via the UI: Settings → Plugins → Browse → search → Install
 # Or via API:
 curl -X POST http://localhost:3000/api/plugins/install \
   -H 'Content-Type: application/json' \
-  -d '{"source": "npm", "package": "kinbot-plugin-xxx"}'
+  -d '{"source": "npm", "package": "hivekeep-plugin-xxx"}'
 ```
 
 ### Git URL (for unpublished or private plugins)
@@ -388,33 +388,33 @@ Useful while developing or to install a plugin that isn't on npm yet:
 # Or via API:
 curl -X POST http://localhost:3000/api/plugins/install \
   -H 'Content-Type: application/json' \
-  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-xxx.git"}'
+  -d '{"source": "git", "url": "https://github.com/user/hivekeep-plugin-xxx.git"}'
 ```
 
 ## Publishing to npm
 
-KinBot's marketplace queries the public npm registry for packages with `keywords: ["kinbot-plugin"]`. Publishing your plugin makes it discoverable to every KinBot instance.
+Hivekeep's marketplace queries the public npm registry for packages with `keywords: ["hivekeep-plugin"]`. Publishing your plugin makes it discoverable to every Hivekeep instance.
 
-1. **Create your plugin** following this guide (or scaffold with `bun create kinbot-plugin <name>`)
+1. **Create your plugin** following this guide (or scaffold with `bun create hivekeep-plugin <name>`)
 2. **Host on GitHub** (public repository — the marketplace links to it for trust/inspection)
 3. **`package.json` essentials**:
    ```json
    {
-     "name": "kinbot-plugin-xxx",
+     "name": "hivekeep-plugin-xxx",
      "version": "0.1.0",
      "description": "What it does",
      "author": "Your Name",
      "license": "MIT",
-     "repository": { "type": "git", "url": "git+https://github.com/user/kinbot-plugin-xxx.git" },
-     "homepage": "https://github.com/user/kinbot-plugin-xxx#readme",
-     "bugs": { "url": "https://github.com/user/kinbot-plugin-xxx/issues" },
+     "repository": { "type": "git", "url": "git+https://github.com/user/hivekeep-plugin-xxx.git" },
+     "homepage": "https://github.com/user/hivekeep-plugin-xxx#readme",
+     "bugs": { "url": "https://github.com/user/hivekeep-plugin-xxx/issues" },
      "main": "index.ts",
      "files": ["index.ts", "plugin.json", "README.md"],
-     "keywords": ["kinbot-plugin", "kinbot"],
-     "peerDependencies": { "@kinbot-developer/sdk": "^0.2.0" }
+     "keywords": ["hivekeep-plugin", "hivekeep"],
+     "peerDependencies": { "@hivekeep-developer/sdk": "^0.2.0" }
    }
    ```
-   The `kinbot-plugin` keyword is **required** for marketplace discovery. `peerDependencies` (not `dependencies`) ensures the SDK module identity matches the host's, so `instanceof` checks and shared types work.
+   The `hivekeep-plugin` keyword is **required** for marketplace discovery. `peerDependencies` (not `dependencies`) ensures the SDK module identity matches the host's, so `instanceof` checks and shared types work.
 4. **Sanity check the tarball** before publishing:
    ```bash
    npm publish --dry-run
@@ -428,8 +428,8 @@ KinBot's marketplace queries the public npm registry for packages with `keywords
 
 ## Tips
 
-- **Hot Reload**: KinBot watches the `plugins/` directory. Save a file and your plugin reloads automatically.
-- **Debugging**: Use `ctx.log.debug()` and check KinBot logs.
+- **Hot Reload**: Hivekeep watches the `plugins/` directory. Save a file and your plugin reloads automatically.
+- **Debugging**: Use `ctx.log.debug()` and check Hivekeep logs.
 - **Config Changes**: When config is updated via the UI, your plugin is automatically deactivated and re-activated with new config values.
 - **Namespacing**: Tool names are prefixed with `plugin_<name>_` to avoid conflicts.
 - **Security**: Only declared HTTP hosts are accessible. Undeclared hosts throw an error.

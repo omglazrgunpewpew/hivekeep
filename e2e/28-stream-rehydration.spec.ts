@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { loginAs, mockProviderModels } from './helpers/auth'
 
 /**
- * Regression spec for ticket kinbot#19 — "Problème de reprise de streaming
+ * Regression spec for ticket hivekeep#19 — "Problème de reprise de streaming
  * sur le main thread".
  *
  * Scenario:

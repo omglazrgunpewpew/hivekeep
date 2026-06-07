@@ -1,11 +1,11 @@
-# KinBot — Calendar
+# Hivekeep — Calendar
 
 Read **and write** access to calendars (Google, Outlook, iCloud, generic CalDAV)
 so Kins can answer "what's on my week?" and create / move / cancel events.
 
 ## Provider family (SDK)
 
-`CalendarProvider` lives in `@kinbot-developer/sdk` (v0.9.0), alongside
+`CalendarProvider` lives in `@hivekeep-developer/sdk` (v0.9.0), alongside
 `EmailProvider` / `ContactsProvider`. The host detects the family by the presence
 of `listEvents` + `listCalendars` (`detectProviderFamily`), so a plugin
 contributes a calendar provider like any other.

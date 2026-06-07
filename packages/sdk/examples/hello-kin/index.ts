@@ -1,7 +1,7 @@
 /**
- * @kinbot-developer/sdk — `hello-kin` reference example.
+ * @hivekeep-developer/sdk — `hello-kin` reference example.
  *
- * Demonstrates every plugin extension point KinBot supports:
+ * Demonstrates every plugin extension point Hivekeep supports:
  *   - tools         (LLM-callable function with typed args)
  *   - channels      (a tiny stub channel adapter)
  *   - providers     (a tiny stub LLMProvider)
@@ -23,7 +23,7 @@ import {
   type LLMProvider,
   type PluginContext,
   type PluginExports,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'
 
 interface HelloKinConfig {
   greeting?: string

@@ -3,10 +3,10 @@ import tailwind from '@astrojs/tailwind';
 import icon from 'astro-icon';
 import react from '@astrojs/react';
 
-// Project Pages: served at https://marlburrow.github.io/kinbot/
+// Project Pages: served at https://marlburrow.github.io/hivekeep/
 export default defineConfig({
   site: 'https://marlburrow.github.io',
-  base: '/kinbot',
+  base: '/hivekeep',
   integrations: [
     tailwind({ applyBaseStyles: false }), // we ship our own reset + tokens in global.css
     icon(),

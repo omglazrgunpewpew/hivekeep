@@ -1,7 +1,7 @@
 /**
  * llm-capture-diff.ts — compare two captures produced by llm-capture-proxy.ts.
  *
- *   bun scripts/llm-capture-diff.ts claude-code kinbot
+ *   bun scripts/llm-capture-diff.ts claude-code hivekeep
  *
  * Prints a side-by-side of the FIRST request from each (the discriminating
  * config: thinking, betas, temperature, max_tokens, system size, tool count),
@@ -44,7 +44,7 @@ function load(label: string): Fp[] {
     .map((l) => JSON.parse(l) as Fp)
 }
 
-const [labelA, labelB] = [process.argv[2] ?? 'claude-code', process.argv[3] ?? 'kinbot']
+const [labelA, labelB] = [process.argv[2] ?? 'claude-code', process.argv[3] ?? 'hivekeep']
 const a = load(labelA)
 const b = load(labelB)
 

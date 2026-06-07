@@ -5,7 +5,7 @@ import { createLogger } from '@/server/logger'
 import { getEmailProvider, listEmailProviders } from '@/server/email/registry'
 import { getContactsProvider } from '@/server/contacts/registry'
 import { getCalendarProvider } from '@/server/calendar/registry'
-import type { OAuthProfile } from '@kinbot-developer/sdk'
+import type { OAuthProfile } from '@hivekeep-developer/sdk'
 import {
   getOAuthClient,
   setOAuthClient,

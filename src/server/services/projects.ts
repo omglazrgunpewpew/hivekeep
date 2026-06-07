@@ -326,7 +326,7 @@ export interface UpdateProjectInput {
   /** Override the default branch. */
   defaultBranch?: string
   /** New slug. Editable only while the project has zero tickets (avoids
-   *  breaking any external reference like `kinbot#42`). */
+   *  breaking any external reference like `hivekeep#42`). */
   slug?: string
   /** Default model for sub-Kin tasks of this project. Pass null to clear
    *  (fall back to each Kin's own model). Must be paired with providerId. */

@@ -92,7 +92,7 @@ export type ProviderType = 'anthropic' | 'anthropic-oauth' | 'openai' | 'openai-
 // with plugin authors). The SDK version includes the forward-looking
 // 'rerank' family which the host doesn't yet implement but new
 // provider plugins might.
-export type { ProviderCapability } from '@kinbot-developer/sdk'
+export type { ProviderCapability } from '@hivekeep-developer/sdk'
 
 export type MessageSource = 'user' | 'kin' | 'task' | 'cron' | 'system' | 'webhook' | 'channel'
 
@@ -181,7 +181,7 @@ export type ToolLabel = string | Record<string, string>
 
 /** Where a catalog tool originates. Drives the source grouping/badges in the
  *  toolbox editor and the unified resolver's universe:
- *   - native : built into KinBot (toolRegistry, name has no special prefix)
+ *   - native : built into Hivekeep (toolRegistry, name has no special prefix)
  *   - plugin : contributed by an installed plugin (name `plugin_<plugin>_*`)
  *   - mcp    : exposed by a global MCP server (name `mcp_<server>_<tool>`)
  *   - custom : per-Kin user script (name `custom_<name>`)
@@ -542,7 +542,7 @@ export type ChannelUserMappingStatus = 'pending'
 // ChannelConfigField + ChannelConfigSchema live in the SDK now (single
 // source of truth shared with plugin authors). Re-exported here so
 // existing imports from `@/shared/types` keep working unchanged.
-export type { ChannelConfigField, ChannelConfigSchema } from '@kinbot-developer/sdk'
+export type { ChannelConfigField, ChannelConfigSchema } from '@hivekeep-developer/sdk'
 
 /** Channel summary as returned by GET /api/channels */
 export interface ChannelSummary {
@@ -884,7 +884,7 @@ export interface ProjectTag {
 export interface ProjectSummary {
   id: string
   /** Stable, human-readable identifier used to qualify ticket numbers (e.g.
-   *  `kinbot#42`). Empty string ('') for legacy rows pre-dating the backfill. */
+   *  `hivekeep#42`). Empty string ('') for legacy rows pre-dating the backfill. */
   slug: string
   title: string
   githubUrl: string | null

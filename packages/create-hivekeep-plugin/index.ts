@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /**
- * create-kinbot-plugin — scaffold a new KinBot plugin.
+ * create-hivekeep-plugin — scaffold a new Hivekeep plugin.
  *
  * Usage:
- *   bunx create-kinbot-plugin
- *   bunx create-kinbot-plugin --yes            # non-interactive with defaults
- *   bunx create-kinbot-plugin --name my-plugin  # partial overrides
+ *   bunx create-hivekeep-plugin
+ *   bunx create-hivekeep-plugin --yes            # non-interactive with defaults
+ *   bunx create-hivekeep-plugin --name my-plugin  # partial overrides
  */
 
 import { mkdirSync, writeFileSync, existsSync } from 'fs'
@@ -27,7 +27,7 @@ const ALL_PLUGIN_TYPES: PluginType[] = ['tools', 'providers', 'channels', 'hooks
 
 const DEFAULTS: ScaffoldOptions = {
   name: 'my-plugin',
-  description: 'A KinBot plugin',
+  description: 'A Hivekeep plugin',
   author: 'Your Name',
   types: ['tools'],
 }
@@ -94,12 +94,12 @@ async function gatherOptions(yes: boolean, overrides: Partial<ScaffoldOptions>):
 
 export function generateManifest(opts: ScaffoldOptions): string {
   const manifest: Record<string, any> = {
-    $schema: 'https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json',
+    $schema: 'https://unpkg.com/@hivekeep-developer/sdk/schemas/plugin-manifest.schema.json',
     name: opts.name,
     version: '0.1.0',
     description: opts.description,
     author: opts.author,
-    kinbot: '>=0.41.0',
+    hivekeep: '>=0.41.0',
     main: 'index.ts',
     permissions: [],
     config: {},
@@ -127,9 +127,9 @@ export function generateIndex(opts: ScaffoldOptions): string {
 
   const lines: string[] = []
   if (importParts.length > 0) {
-    lines.push(`import { ${importParts.join(', ')} } from '@kinbot-developer/sdk'`)
+    lines.push(`import { ${importParts.join(', ')} } from '@hivekeep-developer/sdk'`)
   }
-  lines.push(`import type { ${typeImports.join(', ')} } from '@kinbot-developer/sdk'`)
+  lines.push(`import type { ${typeImports.join(', ')} } from '@hivekeep-developer/sdk'`)
   lines.push('')
 
   // ─── Channel adapter skeleton ────────────────────────────────────────────
@@ -235,7 +235,7 @@ export function generateIndex(opts: ScaffoldOptions): string {
   if (opts.types.includes('hooks')) {
     lines.push(`    hooks: {`)
     lines.push(`      // Each hook handler receives the typed payload for its hook name —`)
-    lines.push(`      // see HookPayloadMap in @kinbot-developer/sdk.`)
+    lines.push(`      // see HookPayloadMap in @hivekeep-developer/sdk.`)
     lines.push(`      afterChat: (h) => {`)
     lines.push(`        ctx.log.info({ kinId: h.kinId, responseLen: h.response.length }, 'afterChat')`)
     lines.push(`      },`)
@@ -272,7 +272,7 @@ ${opts.description}
 
 ## Installation
 
-Copy this folder into your KinBot \`plugins/\` directory:
+Copy this folder into your Hivekeep \`plugins/\` directory:
 
 \`\`\`bash
 git clone <your-repo-url> plugins/${opts.name}
@@ -282,7 +282,7 @@ Then go to **Settings → Plugins** and enable it.
 
 ## Configuration
 
-Edit the plugin settings in the KinBot UI under **Settings → Plugins → ${opts.name}**.
+Edit the plugin settings in the Hivekeep UI under **Settings → Plugins → ${opts.name}**.
 
 ## Plugin Types
 
@@ -290,7 +290,7 @@ This plugin provides: ${opts.types.join(', ')}
 
 ## Development
 
-See the [KinBot Plugin Development Guide](https://github.com/MarlBurroW/kinbot/blob/main/PLUGIN-DEVELOPMENT.md) for details.
+See the [Hivekeep Plugin Development Guide](https://github.com/MarlBurroW/hivekeep/blob/main/PLUGIN-DEVELOPMENT.md) for details.
 
 ## License
 
@@ -307,22 +307,22 @@ export function generateGitignore(): string {
 
 /**
  * Generate a `package.json` so the plugin is publishable on npm with
- * the `kinbot-plugin` keyword. KinBot's Browse tab (Settings →
+ * the `hivekeep-plugin` keyword. Hivekeep's Browse tab (Settings →
  * Plugins → npm) discovers packages via the npm search API filtered
  * on that exact keyword — without it, the plugin stays invisible.
  *
  * Key choices:
- * - **peerDependencies on @kinbot-developer/sdk**: the SDK MUST come
+ * - **peerDependencies on @hivekeep-developer/sdk**: the SDK MUST come
  *   from the host. If a plugin declares it as a regular `dependencies`,
  *   npm/bun installs a SECOND copy and `instanceof` checks across
  *   plugin/host break (the two SDK modules export DIFFERENT class
  *   identities even when the file content is identical).
  * - **files**: only the bits that should ship in the published
  *   tarball. Bundled output is preferred; the scaffold defaults to
- *   shipping `index.ts` + `plugin.json` so KinBot can dynamic-import
+ *   shipping `index.ts` + `plugin.json` so Hivekeep can dynamic-import
  *   the TS directly under Bun.
- * - **keywords ["kinbot-plugin", "kinbot"]**: `kinbot-plugin` is the
- *   discovery keyword; `kinbot` is a convention.
+ * - **keywords ["hivekeep-plugin", "hivekeep"]**: `hivekeep-plugin` is the
+ *   discovery keyword; `hivekeep` is a convention.
  */
 export function generatePackageJson(opts: ScaffoldOptions): string {
   const pkg = {
@@ -333,16 +333,16 @@ export function generatePackageJson(opts: ScaffoldOptions): string {
     license: 'MIT',
     main: 'index.ts',
     files: ['index.ts', 'plugin.json', 'README.md'],
-    keywords: ['kinbot-plugin', 'kinbot'],
+    keywords: ['hivekeep-plugin', 'hivekeep'],
     peerDependencies: {
-      '@kinbot-developer/sdk': '^0.2.0',
+      '@hivekeep-developer/sdk': '^0.2.0',
     },
     // Empty by default. Add real dependencies (axios, ws, …) as needed.
     // Bun runs `bun install --production` after a git-clone install so
     // these resolve at activation time.
     dependencies: {},
     devDependencies: {
-      '@kinbot-developer/sdk': '^0.2.0',
+      '@hivekeep-developer/sdk': '^0.2.0',
     },
   }
   return JSON.stringify(pkg, null, 2) + '\n'
@@ -366,7 +366,7 @@ export function scaffold(targetDir: string, opts: ScaffoldOptions): void {
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('\n🔌 Create KinBot Plugin\n')
+  console.log('\n🔌 Create Hivekeep Plugin\n')
 
   const { yes, overrides } = parseArgs(process.argv.slice(2))
   const opts = await gatherOptions(yes, overrides)
@@ -382,19 +382,19 @@ async function main() {
   console.log(``)
   console.log(`Distribute it:`)
   console.log(`  • Publish on npm:`)
-  console.log(`      npm publish              # makes it discoverable in KinBot's Browse → npm tab`)
+  console.log(`      npm publish              # makes it discoverable in Hivekeep's Browse → npm tab`)
   console.log(`  • Or push to a public git repo:`)
   console.log(`      git init && git add . && git commit -m "init"`)
   console.log(`      git push <your-remote>   # admin installs via Settings → Plugins → Install from git`)
   console.log(``)
   console.log(`Test locally:`)
-  console.log(`  • Drop the directory into KinBot's plugins/ folder and reload`)
-  console.log(`  • Or run: bunx kinbot install ${opts.name} (when published)\n`)
+  console.log(`  • Drop the directory into Hivekeep's plugins/ folder and reload`)
+  console.log(`  • Or run: bunx hivekeep install ${opts.name} (when published)\n`)
 }
 
 // Only run main when executed directly (not imported for tests)
-const isDirectRun = process.argv[1]?.endsWith('create-kinbot-plugin/index.ts') ||
-                    process.argv[1]?.endsWith('create-kinbot-plugin')
+const isDirectRun = process.argv[1]?.endsWith('create-hivekeep-plugin/index.ts') ||
+                    process.argv[1]?.endsWith('create-hivekeep-plugin')
 
 if (isDirectRun) {
   main().catch((err) => {

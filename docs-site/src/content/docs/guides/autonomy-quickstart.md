@@ -3,9 +3,9 @@ title: Autonomy Quickstart
 description: Get a Kin running autonomously in 15–30 minutes — crons, webhooks, and sub-tasks explained.
 ---
 
-KinBot Kins aren't just chatbots — they can work autonomously on schedules, react to external events, and delegate work to sub-agents. This guide takes you from zero to a working autonomous Kin.
+Hivekeep Kins aren't just chatbots — they can work autonomously on schedules, react to external events, and delegate work to sub-agents. This guide takes you from zero to a working autonomous Kin.
 
-## What "autonomy" means in KinBot
+## What "autonomy" means in Hivekeep
 
 Three mechanisms make Kins autonomous:
 
@@ -21,13 +21,13 @@ These can be combined. A cron job can spawn sub-tasks. A webhook can trigger a c
 
 Before starting, make sure you have:
 
-- A working KinBot installation ([Installation guide](/kinbot/docs/getting-started/installation/))
-- At least one **LLM provider** configured (Anthropic recommended — see [Model Selection](/kinbot/docs/guides/model-selection/))
+- A working Hivekeep installation ([Installation guide](/hivekeep/docs/getting-started/installation/))
+- At least one **LLM provider** configured (Anthropic recommended — see [Model Selection](/hivekeep/docs/guides/model-selection/))
 - At least one **embedding provider** configured (for memory)
-- A Kin created ([Your First Kin](/kinbot/docs/getting-started/first-kin/))
+- A Kin created ([Your First Kin](/hivekeep/docs/getting-started/first-kin/))
 
 :::caution[Model choice matters]
-Autonomous Kins **must** use a model with strong tool-calling capabilities. Claude Sonnet 4 or Claude Sonnet 3.5 are strongly recommended. Models that default to "text mode" (describing actions instead of executing them) will fail silently. See [Model Selection](/kinbot/docs/guides/model-selection/) for details.
+Autonomous Kins **must** use a model with strong tool-calling capabilities. Claude Sonnet 4 or Claude Sonnet 3.5 are strongly recommended. Models that default to "text mode" (describing actions instead of executing them) will fail silently. See [Model Selection](/hivekeep/docs/guides/model-selection/) for details.
 :::
 
 ## Step 1: Create an autonomy-ready Kin
@@ -46,7 +46,7 @@ You always use tools to accomplish tasks. You never simulate or roleplay tool us
 
 ```
 You are an expert at task automation, data processing, and systematic workflows.
-You know how to use all KinBot tools: web search, file operations, memory, HTTP requests.
+You know how to use all Hivekeep tools: web search, file operations, memory, HTTP requests.
 When a task is complete, you summarize what was done and what the results were.
 ```
 
@@ -88,7 +88,7 @@ Common cron schedules:
 
 ### What happens when a cron fires
 
-1. KinBot spawns a **sub-Kin** (a temporary copy of your Kin)
+1. Hivekeep spawns a **sub-Kin** (a temporary copy of your Kin)
 2. The sub-Kin receives the `task_description` as its mission
 3. The sub-Kin executes using all available tools
 4. Results are saved — the sub-Kin **must** call `update_task_status("completed", result)` when done
@@ -132,7 +132,7 @@ This runs the cron right now without affecting the regular schedule.
 - **Status**: The task should end with `completed` status and a result summary
 
 :::caution
-If you see the sub-task producing only text (no tool calls), your model is running in "text mode." Switch to Claude Sonnet or see [Model Selection](/kinbot/docs/guides/model-selection/) for fixes.
+If you see the sub-task producing only text (no tool calls), your model is running in "text mode." Switch to Claude Sonnet or see [Model Selection](/hivekeep/docs/guides/model-selection/) for fixes.
 :::
 
 ## Step 4: Add webhook reactions (optional)
@@ -163,10 +163,10 @@ Task mode supports **concurrency control** — you can limit how many webhook-sp
 After creating the webhook, the Kin returns a URL like:
 
 ```
-https://your-kinbot-instance/api/webhooks/incoming/<token>
+https://your-hivekeep-instance/api/webhooks/incoming/<token>
 ```
 
-Point your external service (GitHub, GitLab, Linear, etc.) to this URL. KinBot accepts any JSON payload via POST.
+Point your external service (GitHub, GitLab, Linear, etc.) to this URL. Hivekeep accepts any JSON payload via POST.
 
 ## Step 5: Design self-contained tasks
 
@@ -208,7 +208,7 @@ A good task description includes:
 ### 1. Wrong model
 
 **Symptom**: Cron tasks produce text responses instead of tool calls.
-**Fix**: Use Claude Sonnet 4 or Claude Sonnet 3.5. See [Model Selection](/kinbot/docs/guides/model-selection/).
+**Fix**: Use Claude Sonnet 4 or Claude Sonnet 3.5. See [Model Selection](/hivekeep/docs/guides/model-selection/).
 
 ### 2. Missing `update_task_status`
 
@@ -232,6 +232,6 @@ A good task description includes:
 
 ## Next steps
 
-- **[GitHub Issue Processor](/kinbot/docs/guides/blueprints/github-issue-processor/)** — A complete, production-tested blueprint
-- **[Daily Digest](/kinbot/docs/guides/blueprints/daily-digest/)** — Automated tech watch and reporting
-- **[Model Selection](/kinbot/docs/guides/model-selection/)** — Deep dive into model choice and troubleshooting
+- **[GitHub Issue Processor](/hivekeep/docs/guides/blueprints/github-issue-processor/)** — A complete, production-tested blueprint
+- **[Daily Digest](/hivekeep/docs/guides/blueprints/daily-digest/)** — Automated tech watch and reporting
+- **[Model Selection](/hivekeep/docs/guides/model-selection/)** — Deep dive into model choice and troubleshooting

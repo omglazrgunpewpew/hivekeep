@@ -214,14 +214,14 @@ describe('config', () => {
       expect(c.port).toBe(9999)
     })
 
-    it('KINBOT_DATA_DIR overrides dataDir and dependent paths', async () => {
-      const c = await loadConfigWithEnv({ KINBOT_DATA_DIR: '/tmp/kinbot-test-data' })
-      expect(c.dataDir).toBe('/tmp/kinbot-test-data')
-      expect(c.db.path).toBe('/tmp/kinbot-test-data/kinbot.db')
-      expect(c.vault.attachmentDir).toBe('/tmp/kinbot-test-data/vault')
-      expect(c.workspace.baseDir).toBe('/tmp/kinbot-test-data/workspaces')
-      expect(c.upload.dir).toBe('/tmp/kinbot-test-data/uploads')
-      expect(c.fileStorage.dir).toBe('/tmp/kinbot-test-data/storage')
+    it('HIVEKEEP_DATA_DIR overrides dataDir and dependent paths', async () => {
+      const c = await loadConfigWithEnv({ HIVEKEEP_DATA_DIR: '/tmp/hivekeep-test-data' })
+      expect(c.dataDir).toBe('/tmp/hivekeep-test-data')
+      expect(c.db.path).toBe('/tmp/hivekeep-test-data/hivekeep.db')
+      expect(c.vault.attachmentDir).toBe('/tmp/hivekeep-test-data/vault')
+      expect(c.workspace.baseDir).toBe('/tmp/hivekeep-test-data/workspaces')
+      expect(c.upload.dir).toBe('/tmp/hivekeep-test-data/uploads')
+      expect(c.fileStorage.dir).toBe('/tmp/hivekeep-test-data/storage')
     })
 
     it('LOG_LEVEL override', async () => {
@@ -263,8 +263,8 @@ describe('config', () => {
     })
 
     it('PUBLIC_URL override', async () => {
-      const c = await loadConfigWithEnv({ PUBLIC_URL: 'https://kinbot.example.com' })
-      expect(c.publicUrl).toBe('https://kinbot.example.com')
+      const c = await loadConfigWithEnv({ PUBLIC_URL: 'https://hivekeep.example.com' })
+      expect(c.publicUrl).toBe('https://hivekeep.example.com')
     })
   })
 
@@ -325,7 +325,7 @@ describe('config', () => {
     })
 
     it('versionCheck defaults', () => {
-      expect(config.versionCheck.repo).toBe('MarlBurroW/kinbot')
+      expect(config.versionCheck.repo).toBe('MarlBurroW/hivekeep')
       expect(config.versionCheck.intervalHours).toBe(1)
     })
 

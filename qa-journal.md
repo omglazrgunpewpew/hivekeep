@@ -1,4 +1,4 @@
-# KinBot QA Journal
+# Hivekeep QA Journal
 
 ## 2026-03-03 04:40 UTC
 ### Area tested: (none - blocked)
@@ -36,7 +36,7 @@
 ### Area tested: Kin Management (Create, Edit, Delete)
 - **Pages visited:** Main dashboard (`/`), New Kin dialog, Edit Kin dialog (General, Tools, Memory tabs), Delete confirmation dialog, Kin chat view (`/kin/test-qa-kin`)
 - **Browser:** `openclaw` profile (headless Chromium), logged in as existing user
-- **Login:** Credentials from `e2e/helpers/auth.ts` (test@kinbot.local)
+- **Login:** Credentials from `e2e/helpers/auth.ts` (test@hivekeep.local)
 - **Bugs found:** 1 (issue created: #30)
   - **#30 (bug):** Import button in "New Kin" dialog does nothing when clicked. No file picker, no UI change, no error. Either the feature is broken or unimplemented without any user feedback.
 - **UX suggestions:** 2 (issues created: #29, #31)
@@ -103,7 +103,7 @@
 ### Area tested: Scheduled Jobs (Area 4 - partial) + Tasks sidebar
 - **Pages visited:** Main dashboard (`/`), Create scheduled job dialog, Job detail dialog, Edit job dialog, Delete confirmation dialog
 - **Browser:** `openclaw` profile (headless Chromium), host target
-- **Login:** qa@kinbot.local (password reset via DB to bypass auth)
+- **Login:** qa@hivekeep.local (password reset via DB to bypass auth)
 - **Bugs found:** 0
 - **UX suggestions:** 3 (issues created: #38, #39, #40)
   - **#38 (enhancement):** Schedule field shows no validation feedback for invalid cron expressions. The human-readable description disappears silently, no error message or red border.
@@ -128,7 +128,7 @@
   - Task search in sidebar works (filters tasks by name, shows "No tasks found" empty state)
   - Collapsible sidebar sections (Tasks, Scheduled Jobs, Mini-Apps) toggle correctly
   - Jobs search bar appears when jobs exist
-- **Note:** Browser automation continues to be challenging with KinBot. The `type` action does not reliably fill React controlled inputs (Name field). CodeMirror editor (Task instructions) requires `document.execCommand` to properly update state. Kin pages still cause browser timeouts. Auth required resetting the QA user password via DB because the test@kinbot.local user from E2E helpers doesn't exist in the live instance.
+- **Note:** Browser automation continues to be challenging with Hivekeep. The `type` action does not reliably fill React controlled inputs (Name field). CodeMirror editor (Task instructions) requires `document.execCommand` to properly update state. Kin pages still cause browser timeouts. Auth required resetting the QA user password via DB because the test@hivekeep.local user from E2E helpers doesn't exist in the live instance.
 
 ### Next run
 - Area 3: Conversations (send messages, chat UI, scroll behavior) - requires navigating to a Kin page which causes browser hangs
@@ -232,7 +232,7 @@
 ### Area tested: Conversations (Area 3)
 - **Pages visited:** / (home), /kin/dispatcher (Dispatcher conversation)
 - **Browser:** `openclaw` profile (headless Chromium), host target
-- **Login:** Existing session (qa@kinbot.local)
+- **Login:** Existing session (qa@hivekeep.local)
 
 #### Findings
 
@@ -254,7 +254,7 @@
 - Users could accidentally select an incompatible model
 
 **Other observations (not filed):**
-- User avatar shows "??" for qa@kinbot.local (likely because no display name is configured - works as designed)
+- User avatar shows "??" for qa@hivekeep.local (likely because no display name is configured - works as designed)
 - Model selector UI works well: provider grouping, search filter, nice layout
 - Message actions (Copy, Edit & resend, React, Read aloud, Regenerate) are well placed
 - Tool call panel on the right side works and shows timestamps
@@ -1025,7 +1025,7 @@
 - Kin search filter in sidebar (appears when >= 5 Kins)
 - Kin form: tabbed layout (General, Tools, Memory) with left sidebar navigation
 - AI wizard: describe -> generate -> refine flow, clean UX
-- Wizard: Import from .kinbot.json file with proper error handling
+- Wizard: Import from .hivekeep.json file with proper error handling
 - Avatar picker: upload with crop, AI generation (auto/prompt), per-provider image model selection
 - Avatar generation runs in background during wizard, cancellable via AbortController
 - Slug generation: auto from name, unique collision handling (-2, -3 suffix)
@@ -1038,7 +1038,7 @@
 - Unsaved changes guard with confirmation dialog
 - Model unavailable warning with visual indicators (dimmed card, alert icon)
 - Kin deletion: comprehensive cascade delete with SSE notifications for all affected entities
-- Export: full .kinbot.json with version metadata, downloadable
+- Export: full .hivekeep.json with version metadata, downloadable
 
 ### Next run
 - Area 3 (revisit): Conversations

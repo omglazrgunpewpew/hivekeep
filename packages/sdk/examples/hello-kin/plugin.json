@@ -1,12 +1,12 @@
 {
-  "$schema": "https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json",
+  "$schema": "https://unpkg.com/@hivekeep-developer/sdk/schemas/plugin-manifest.schema.json",
   "name": "hello-kin",
   "version": "0.1.0",
-  "description": "Reference example demonstrating every plugin extension point KinBot supports: tools, channels, providers, hooks, cards, and the typed plugin context.",
-  "author": "KinBot Team",
+  "description": "Reference example demonstrating every plugin extension point Hivekeep supports: tools, channels, providers, hooks, cards, and the typed plugin context.",
+  "author": "Hivekeep Team",
   "license": "AGPL-3.0-only",
   "main": "index.ts",
-  "kinbot": ">=0.41.0",
+  "hivekeep": ">=0.41.0",
   "icon": "👋",
   "permissions": [
     "http:api.example.com"
@@ -22,7 +22,7 @@
     "apiKey": {
       "type": "password",
       "label": "Fake API key",
-      "description": "Used to demonstrate ctx.vault read of a kinbot-managed credential.",
+      "description": "Used to demonstrate ctx.vault read of a hivekeep-managed credential.",
       "secret": true
     }
   },

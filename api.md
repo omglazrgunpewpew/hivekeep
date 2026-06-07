@@ -1,4 +1,4 @@
-# KinBot — Contrats API
+# Hivekeep — Contrats API
 
 > ⚠️ **Partiellement obsolète.** Ce document décrit les contrats REST tels qu'imaginés avant le refactor providers/plugins/images. Routes qui ont changé depuis :
 > - `POST/PATCH /api/providers` : payload `families[]` au lieu de `family`, capacité multiple par row (`capabilities[]`)
@@ -910,7 +910,7 @@ CRUD des outils custom globaux. Création via l'UI → `created_by='user'`, acti
 Lire / écrire un fichier dans le dossier géré de l'outil (`{ path, content }`).
 
 ### `GET /api/custom-tools/:slug/renderer.js`
-Module ESM bundlé côté serveur du **renderer de résultat** optionnel de l'outil (export par défaut = composant React). Source : `renderer.tsx` (fallback `renderer.jsx`/`renderer.js`) dans le dossier de l'outil, bundlé via Bun (JSX classique, react/react-dom mappés sur l'instance React de l'hôte `window.__KINBOT_REACT__`). Le client le charge à la volée (`React.lazy(import(url))`) dans la vue détaillée du tool-call. Cache mémoire côté serveur (clé slug + mtime) ; réponse avec `ETag` (revalidation `304`). `404 NO_RENDERER` si l'outil n'a pas de renderer ; `500` (module qui throw au chargement, avec le message de build) en cas d'échec de bundling — le client retombe alors sur l'affichage JSON via son ErrorBoundary. Authentifié comme toutes les routes `/api/*`. Contexte hôte (privilèges complets, pas d'isolation) : acceptable car les outils custom sont de confiance (self-hosted) et le renderer ne sert qu'à l'affichage.
+Module ESM bundlé côté serveur du **renderer de résultat** optionnel de l'outil (export par défaut = composant React). Source : `renderer.tsx` (fallback `renderer.jsx`/`renderer.js`) dans le dossier de l'outil, bundlé via Bun (JSX classique, react/react-dom mappés sur l'instance React de l'hôte `window.__HIVEKEEP_REACT__`). Le client le charge à la volée (`React.lazy(import(url))`) dans la vue détaillée du tool-call. Cache mémoire côté serveur (clé slug + mtime) ; réponse avec `ETag` (revalidation `304`). `404 NO_RENDERER` si l'outil n'a pas de renderer ; `500` (module qui throw au chargement, avec le message de build) en cas d'échec de bundling — le client retombe alors sur l'affichage JSON via son ErrorBoundary. Authentifié comme toutes les routes `/api/*`. Contexte hôte (privilèges complets, pas d'isolation) : acceptable car les outils custom sont de confiance (self-hosted) et le renderer ne sert qu'à l'affichage.
 
 ### `POST /api/custom-tools/:slug/setup`
 Installe les dépendances (`requirements.txt` → `.venv` + pip ; `package.json` → `bun install`).
@@ -1168,7 +1168,7 @@ The current default is read from `GET /api/settings/default-models` (see `defaul
 
 ### `GET /api/settings/dismissed-setup-items`
 
-Liste des item IDs de la setup checklist que l'utilisateur a explicitement skippés. Stockage **global** (pas per-user) sous `app_settings.dismissed_setup_items` — KinBot est un produit individuel ou petit groupe avec configuration partagée.
+Liste des item IDs de la setup checklist que l'utilisateur a explicitement skippés. Stockage **global** (pas per-user) sous `app_settings.dismissed_setup_items` — Hivekeep est un produit individuel ou petit groupe avec configuration partagée.
 
 ```typescript
 // Response 200

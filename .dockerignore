@@ -59,7 +59,7 @@ C:*
 
 # Launch/marketing media + generated assets (not needed to build the app)
 design-preview/
-kinbot-specialist-avatars/
-kinbot-video/
+hivekeep-specialist-avatars/
+hivekeep-video/
 install.sh
 logo.svg

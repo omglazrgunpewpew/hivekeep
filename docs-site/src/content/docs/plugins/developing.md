@@ -1,27 +1,27 @@
 ---
 title: Developing Plugins
-description: Build, test, and publish KinBot plugins with the @kinbot-developer/sdk package.
+description: Build, test, and publish Hivekeep plugins with the @hivekeep-developer/sdk package.
 ---
 
-This is the canonical guide for writing KinBot plugins. Every plugin imports everything it needs from `@kinbot-developer/sdk` — there are no KinBot-internal imports a plugin should reach into.
+This is the canonical guide for writing Hivekeep plugins. Every plugin imports everything it needs from `@hivekeep-developer/sdk` — there are no Hivekeep-internal imports a plugin should reach into.
 
 > The legacy plugin-store-specific `docs/plugins.md` and `PLUGIN-SPEC.md` are pointers to this page. If you're consulting them and they disagree with this guide, this guide wins.
 
 ## Quickstart
 
 ```bash
-bunx create-kinbot-plugin --name hello-kin --type tools
+bunx create-hivekeep-plugin --name hello-kin --type tools
 cd hello-kin
 ```
 
-The scaffolder generates a `plugin.json` manifest, an `index.ts` entry point, and a `README.md`. Drop the folder into your KinBot install's `plugins/` directory and KinBot picks it up at startup.
+The scaffolder generates a `plugin.json` manifest, an `index.ts` entry point, and a `README.md`. Drop the folder into your Hivekeep install's `plugins/` directory and Hivekeep picks it up at startup.
 
 Or write it by hand:
 
 ```typescript
 // plugins/hello-kin/index.ts
-import { tool, z } from '@kinbot-developer/sdk'
-import type { PluginContext, PluginExports } from '@kinbot-developer/sdk'
+import { tool, z } from '@hivekeep-developer/sdk'
+import type { PluginContext, PluginExports } from '@hivekeep-developer/sdk'
 
 export default function (ctx: PluginContext): PluginExports {
   ctx.log.info('hello-kin plugin loaded')
@@ -49,16 +49,16 @@ export default function (ctx: PluginContext): PluginExports {
 ```json
 // plugins/hello-kin/plugin.json
 {
-  "$schema": "https://unpkg.com/@kinbot-developer/sdk/schemas/plugin-manifest.schema.json",
+  "$schema": "https://unpkg.com/@hivekeep-developer/sdk/schemas/plugin-manifest.schema.json",
   "name": "hello-kin",
   "version": "0.1.0",
   "description": "Greet users by name.",
   "main": "index.ts",
-  "kinbot": ">=0.40.0"
+  "hivekeep": ">=0.40.0"
 }
 ```
 
-That's it. Restart KinBot, enable the plugin in Settings → Plugins, and Kins can call `greet({name:'Marl'})`.
+That's it. Restart Hivekeep, enable the plugin in Settings → Plugins, and Kins can call `greet({name:'Marl'})`.
 
 ## Manifest (`plugin.json`)
 
@@ -68,7 +68,7 @@ That's it. Restart KinBot, enable the plugin in Settings → Plugins, and Kins c
 | `version` | string | Semver. |
 | `description` | string | Surfaced in the Plugins UI. |
 | `main` | string | Entry file. Usually `index.ts`. |
-| `kinbot` | semver range | KinBot host versions this plugin is compatible with. |
+| `hivekeep` | semver range | Hivekeep host versions this plugin is compatible with. |
 | `author` | string? | Optional. |
 | `license` | string? | Optional. |
 | `homepage` | string? | Optional. |
@@ -78,12 +78,12 @@ That's it. Restart KinBot, enable the plugin in Settings → Plugins, and Kins c
 | `config` | `Record<string, PluginConfigField>` | Plugin-level config schema (renders the per-plugin settings form). |
 | `channels.<platform>.configSchema` | `ChannelConfigSchema` | Optional channel config form schema declared at manifest level. |
 
-KinBot validates the manifest at load time. A bad field fails fast and the plugin doesn't get activated.
+Hivekeep validates the manifest at load time. A bad field fails fast and the plugin doesn't get activated.
 
 ## The Plugin Context
 
 ```ts
-import type { PluginContext } from '@kinbot-developer/sdk'
+import type { PluginContext } from '@hivekeep-developer/sdk'
 
 interface PluginContext<Config = Record<string, unknown>> {
   config:   Config            // <Config> generic for typed config
@@ -109,7 +109,7 @@ export default function (ctx: PluginContext<MyConfig>) {
 }
 ```
 
-The runtime never validates against the generic — KinBot already validated the values against the manifest's `config` schema before instantiating the context. The generic is purely a type-side convenience.
+The runtime never validates against the generic — Hivekeep already validated the values against the manifest's `config` schema before instantiating the context. The generic is purely a type-side convenience.
 
 ### `ctx.log`
 
@@ -149,7 +149,7 @@ await ctx.vault.deleteSecret(key)                  // scoped
 await ctx.vault.listKeys()                         // your plugin's keys, unprefixed
 ```
 
-Read is permissive: you read the key your config gave you (e.g. an `authTokenVaultKey` reference KinBot persisted from a channel password field). Write / delete / list are strictly scoped to a `plugin:<your-plugin-name>:` namespace — you cannot touch another plugin's secrets or KinBot's own.
+Read is permissive: you read the key your config gave you (e.g. an `authTokenVaultKey` reference Hivekeep persisted from a channel password field). Write / delete / list are strictly scoped to a `plugin:<your-plugin-name>:` namespace — you cannot touch another plugin's secrets or Hivekeep's own.
 
 ### `ctx.cards`
 
@@ -160,7 +160,7 @@ See the [Cards](#cards) section below.
 Tools are AI-callable functions Kins can invoke during a turn. Declare them with `tool()` from the SDK — `inputSchema` is a zod schema, the `execute` callback's argument is inferred from it.
 
 ```ts
-import { tool, z } from '@kinbot-developer/sdk'
+import { tool, z } from '@hivekeep-developer/sdk'
 
 return {
   tools: {
@@ -194,13 +194,13 @@ Available `ToolRegistration` flags:
 | `availability` | required | Which agents see the tool — `'main'`, `'sub-kin'`, or both. |
 | `defaultDisabled` | `false` | If true, Kins must explicitly opt in to enable the tool. |
 | `readOnly` | `false` | Declares the tool doesn't mutate state. Used by UI confirmations. |
-| `concurrencySafe` | `false` | Allows KinBot to invoke this tool in parallel with other safe tools in the same step. |
+| `concurrencySafe` | `false` | Allows Hivekeep to invoke this tool in parallel with other safe tools in the same step. |
 | `destructive` | `false` | Marks the tool as performing irreversible operations. UI may confirm before firing. |
 | `condition` | — | Predicate evaluated at resolve time. Return false to omit. |
 
 ## Channels
 
-A channel adapter is an instance of `ChannelAdapter` exported under `channels.<platform-name>`. It owns the transport with an external messaging platform (Telegram, Discord, Twilio, custom WebSocket bot…) and translates between that platform and KinBot's `IncomingMessage` / `OutboundMessageParams` shapes.
+A channel adapter is an instance of `ChannelAdapter` exported under `channels.<platform-name>`. It owns the transport with an external messaging platform (Telegram, Discord, Twilio, custom WebSocket bot…) and translates between that platform and Hivekeep's `IncomingMessage` / `OutboundMessageParams` shapes.
 
 ```ts
 import type {
@@ -209,7 +209,7 @@ import type {
   OutboundMessageParams,
   OutboundMessageResult,
   PluginContext,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'
 
 export default function (ctx: PluginContext) {
   const adapter: ChannelAdapter = {
@@ -234,13 +234,13 @@ export default function (ctx: PluginContext) {
 }
 ```
 
-Webhook-driven adapters implement `handleInboundWebhook`. KinBot routes `POST /api/channels/plugin/<platform>/webhook/<channelId>` to it — the adapter verifies the request signature, returns the `IncomingMessage` to inject (or `null` to drop the event) plus the HTTP `Response` to send back to the platform.
+Webhook-driven adapters implement `handleInboundWebhook`. Hivekeep routes `POST /api/channels/plugin/<platform>/webhook/<channelId>` to it — the adapter verifies the request signature, returns the `IncomingMessage` to inject (or `null` to drop the event) plus the HTTP `Response` to send back to the platform.
 
-Identity-switch behaviour (when a channel is transferred to a different Kin) is controlled by `identitySwitchMode`: `'native'` (adapter implements `onIdentityChange`), `'prefix'` (default — KinBot prefixes outbound messages with the new Kin's name), or `'none'`.
+Identity-switch behaviour (when a channel is transferred to a different Kin) is controlled by `identitySwitchMode`: `'native'` (adapter implements `onIdentityChange`), `'prefix'` (default — Hivekeep prefixes outbound messages with the new Kin's name), or `'none'`.
 
 ## Providers (LLM, Embedding, Image, Search)
 
-Plugin providers implement the **same** native interfaces as KinBot's built-in Anthropic / OpenAI / Brave / Tavily providers. Streaming, prompt caching, thinking effort, tool calls — all of it. There is no second, simplified shape for plugins.
+Plugin providers implement the **same** native interfaces as Hivekeep's built-in Anthropic / OpenAI / Brave / Tavily providers. Streaming, prompt caching, thinking effort, tool calls — all of it. There is no second, simplified shape for plugins.
 
 ```ts
 import type {
@@ -248,7 +248,7 @@ import type {
   ChatRequest,
   ChatChunk,
   PluginContext,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'
 
 class MistralProvider implements LLMProvider {
   readonly type = 'mistral'
@@ -293,7 +293,7 @@ import type {
   SearchRequest,
   SearchResult,
   PluginContext,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'
 
 class KagiSearchProvider implements SearchProvider {
   readonly type = 'kagi-search'
@@ -348,7 +348,7 @@ For the `answer` capability: when the LLM requests `answer: true` and the provid
 Hook handlers receive a typed payload keyed by hook name — autocomplete on `ctx.message`, `ctx.toolResult`, etc.
 
 ```ts
-import type { PluginExports, HookHandler } from '@kinbot-developer/sdk'
+import type { PluginExports, HookHandler } from '@hivekeep-developer/sdk'
 
 const auditAfterTool: HookHandler<'afterToolCall'> = (ctx) => {
   // ctx.toolName, ctx.toolArgs, ctx.toolResult are all typed
@@ -372,7 +372,7 @@ Handlers may return a modified payload — it's passed to the next handler in th
 Plugin cards are declarative UI primitives that show up in the chat as rich live-updating messages. Useful for long-running tasks, structured data, action buttons.
 
 ```ts
-import { card } from '@kinbot-developer/sdk'
+import { card } from '@hivekeep-developer/sdk'
 
 const { messageId, cardInstanceId } = await ctx.cards.emit({
   kinId: execCtx.kinId,
@@ -425,11 +425,11 @@ return {
 }
 ```
 
-Hot reload: editing your plugin's code triggers a full re-import; KinBot calls `deactivate()` on the old instance, instantiates the new one, then `activate()`s it.
+Hot reload: editing your plugin's code triggers a full re-import; Hivekeep calls `deactivate()` on the old instance, instantiates the new one, then `activate()`s it.
 
 ## Local testing
 
-Inside the KinBot tree, plugins under `plugins/<name>/` are discovered automatically — your unit tests can import them like any other module:
+Inside the Hivekeep tree, plugins under `plugins/<name>/` are discovered automatically — your unit tests can import them like any other module:
 
 ```ts
 import { describe, it, expect } from 'bun:test'
@@ -442,7 +442,7 @@ it('greets', async () => {
 })
 ```
 
-For real end-to-end testing, drop your plugin folder into a KinBot install and exercise it via the chat.
+For real end-to-end testing, drop your plugin folder into a Hivekeep install and exercise it via the chat.
 
 ## Publishing
 
@@ -450,10 +450,10 @@ Plugins can ship through three paths:
 
 1. **In-tree** — drop the folder in `plugins/`. Simplest, fits internal/private plugins.
 2. **Git** — push to a repo, install via the Plugins UI (`Install from Git URL`).
-3. **npm** — publish under the `@your-org/` scope, install via `Install from npm`. Your `package.json` should declare `@kinbot-developer/sdk` as a peer dep so KinBot's installed version is used.
+3. **npm** — publish under the `@your-org/` scope, install via `Install from npm`. Your `package.json` should declare `@hivekeep-developer/sdk` as a peer dep so Hivekeep's installed version is used.
 
 Either way, the plugin's runtime contract is the same: a default-exported function returning `PluginExports`.
 
 ## Migration
 
-If you're moving from a plugin written against the pre-0.2 SDK (legacy `ProviderDefinition`, loose `HookContext`, `import { tool } from 'ai'`…), see [Migrating from 0.1](/kinbot/docs/plugins/migrating-from-0.1/).
+If you're moving from a plugin written against the pre-0.2 SDK (legacy `ProviderDefinition`, loose `HookContext`, `import { tool } from 'ai'`…), see [Migrating from 0.1](/hivekeep/docs/plugins/migrating-from-0.1/).

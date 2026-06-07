@@ -2,7 +2,7 @@
 
 ## Concept
 
-A KinBot channel (Telegram, Discord, Slack, WhatsApp, Signal, Matrix, TeamSpeak,
+A Hivekeep channel (Telegram, Discord, Slack, WhatsApp, Signal, Matrix, TeamSpeak,
 or any plugin-provided platform) is bound to exactly one Kin at a time via
 `channels.kinId`. Before v0.40.x, that binding was effectively immutable: to
 hand a conversation over to a different Kin you had to either run everything
@@ -12,7 +12,7 @@ dedicated channel per Kin.
 Starting with the transferable-binding work, **the binding is mutable at
 runtime**. Any Kin can call the `transfer_channel` tool to re-bind a channel
 to another Kin. The bot identity on the platform side does not switch yet
-(that is Issue 2, see Future work); only the KinBot routing changes.
+(that is Issue 2, see Future work); only the Hivekeep routing changes.
 
 Key invariants:
 
@@ -52,7 +52,7 @@ transfer_channel({
 
 ### Parameters
 
-- **`channelId`** (optional). The channel to transfer. When omitted, KinBot
+- **`channelId`** (optional). The channel to transfer. When omitted, Hivekeep
   infers it from the current turn's `channelOriginId` (the causal-chain
   pointer set by the channel adapter when it enqueued the inbound that
   triggered the current turn). When the inference fails (e.g. the Kin is
@@ -104,8 +104,8 @@ message metadata is enriched with a one-shot `channelTransfer` blob:
 ```json
 {
   "fromKinId": "uuid-of-previous-kin",
-  "fromKinSlug": "kinbot-master",
-  "fromKinName": "KinBot Master",
+  "fromKinSlug": "hivekeep-master",
+  "fromKinName": "Hivekeep Master",
   "reason": "Nicolas wants to talk to Kube Master about the cluster",
   "at": 1778534324654
 }
@@ -117,7 +117,7 @@ JSON envelope:
 
 ```
 <channel-context>
-{"channel": {...}, "channelTransfer": {"fromKinSlug": "kinbot-master", "fromKinName": "KinBot Master", "reason": "...", "at": 1778534324654}}
+{"channel": {...}, "channelTransfer": {"fromKinSlug": "hivekeep-master", "fromKinName": "Hivekeep Master", "reason": "...", "at": 1778534324654}}
 </channel-context>
 ```
 
@@ -234,7 +234,7 @@ messages (empty content) are also skipped.
 On these platforms, the bot identity is a single global property of the
 bot user / bot account. There is no per-chat or per-room identity API.
 Transferring a channel on a multi-instance bot (e.g. the same Telegram
-bot serving several humans, with each human having their own KinBot
+bot serving several humans, with each human having their own Hivekeep
 Kin) flips the displayed name **for everyone**, not just the user who
 triggered the transfer. This is a platform limitation that the owner
 explicitly accepted when designing the feature; document it for your

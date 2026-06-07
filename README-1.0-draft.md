@@ -1,6 +1,6 @@
 <p align="center">
-  <!-- TODO: remplacer par le logo officiel KinBot (SVG/PNG, fond transparent, ~320px de large) — alt="Logo KinBot" -->
-  <img src="docs/assets/logo.png" alt="Logo KinBot" width="320" />
+  <!-- TODO: remplacer par le logo officiel Hivekeep (SVG/PNG, fond transparent, ~320px de large) — alt="Logo Hivekeep" -->
+  <img src="docs/assets/logo.png" alt="Logo Hivekeep" width="320" />
 </p>
 
 <h1 align="center">Votre équipe d'IA, chez vous.</h1>
@@ -14,13 +14,13 @@
   <!-- Licence -->
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-22c55e?style=flat-square" alt="Licence MIT" /></a>
   <!-- Version / Release -->
-  <a href="https://github.com/MarlBurroW/kinbot/releases"><img src="https://img.shields.io/github/v/release/MarlBurroW/kinbot?style=flat-square&color=a855f7" alt="Dernière release" /></a>
+  <a href="https://github.com/MarlBurroW/hivekeep/releases"><img src="https://img.shields.io/github/v/release/MarlBurroW/hivekeep?style=flat-square&color=a855f7" alt="Dernière release" /></a>
   <!-- Build / CI -->
-  <a href="https://github.com/MarlBurroW/kinbot/actions/workflows/ci.yml"><img src="https://github.com/MarlBurroW/kinbot/actions/workflows/ci.yml/badge.svg" alt="Build CI" /></a>
+  <a href="https://github.com/MarlBurroW/hivekeep/actions/workflows/ci.yml"><img src="https://github.com/MarlBurroW/hivekeep/actions/workflows/ci.yml/badge.svg" alt="Build CI" /></a>
   <!-- Docker pulls -->
-  <a href="https://github.com/MarlBurroW/kinbot/pkgs/container/kinbot"><img src="https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Image Docker" /></a>
+  <a href="https://github.com/MarlBurroW/hivekeep/pkgs/container/hivekeep"><img src="https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Image Docker" /></a>
   <!-- Stars -->
-  <a href="https://github.com/MarlBurroW/kinbot"><img src="https://img.shields.io/github/stars/MarlBurroW/kinbot?style=flat-square&color=ec4899" alt="GitHub Stars" /></a>
+  <a href="https://github.com/MarlBurroW/hivekeep"><img src="https://img.shields.io/github/stars/MarlBurroW/hivekeep?style=flat-square&color=ec4899" alt="GitHub Stars" /></a>
   <!-- Discord -->
   <a href="#-communauté--support"><img src="https://img.shields.io/badge/Discord-rejoindre-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
   <!-- Made with Bun -->
@@ -32,26 +32,26 @@
 </p>
 
 <p align="center">
-  <a href="https://marlburrow.github.io/kinbot/">Site</a> ·
-  <a href="https://marlburrow.github.io/kinbot/docs/">Documentation</a> ·
+  <a href="https://marlburrow.github.io/hivekeep/">Site</a> ·
+  <a href="https://marlburrow.github.io/hivekeep/docs/">Documentation</a> ·
   <a href="#-démarrer-en-2-minutes">Quickstart</a> ·
   <a href="#-fonctionnalités">Fonctionnalités</a> ·
-  <a href="#-pourquoi-kinbot">Comparatif</a> ·
+  <a href="#-pourquoi-hivekeep">Comparatif</a> ·
   <a href="#-architecture">Architecture</a>
 </p>
 
 ---
 
 <p align="center">
-  <!-- TODO: GIF hero unique et fort — la collaboration inter-Kin OU l'onboarding Sherpa (~10-15s, boucle propre). alt="Démo KinBot : des agents qui collaborent en temps réel" -->
-  <img src="docs/assets/hero.gif" alt="Démo KinBot : des agents qui collaborent en temps réel" width="100%" />
+  <!-- TODO: GIF hero unique et fort — la collaboration inter-Kin OU l'onboarding Sherpa (~10-15s, boucle propre). alt="Démo Hivekeep : des agents qui collaborent en temps réel" -->
+  <img src="docs/assets/hero.gif" alt="Démo Hivekeep : des agents qui collaborent en temps réel" width="100%" />
 </p>
 
 ---
 
 ## Le pitch en 30 secondes
 
-KinBot n'est pas un énième front de chat. C'est une **équipe d'agents IA autonomes** — les *Kins* — qui vivent sur votre serveur, gardent leur mémoire, et travaillent ensemble.
+Hivekeep n'est pas un énième front de chat. C'est une **équipe d'agents IA autonomes** — les *Kins* — qui vivent sur votre serveur, gardent leur mémoire, et travaillent ensemble.
 
 - 🧠 **Des agents qui se souviennent** — une session continue unique (jamais de « nouvelle conversation »), une mémoire hybride qui accumule des mois de contexte, jamais de reset.
 - 🤝 **Une équipe, pas un chatbot** — vos Kins collaborent (`request`/`reply`) et délèguent à des sous-agents pour abattre le travail en parallèle.
@@ -68,28 +68,28 @@ Une seule commande. Pas de `docker-compose`, pas de YAML, pas de base de donnée
 
 ```bash
 docker run -d \
-  --name kinbot \
+  --name hivekeep \
   -p 3000:3000 \
-  -v kinbot-data:/app/data \
-  ghcr.io/marlburrow/kinbot:latest
+  -v hivekeep-data:/app/data \
+  ghcr.io/marlburrow/hivekeep:latest
 ```
 
 Puis **ouvrez votre navigateur sur [http://localhost:3000](http://localhost:3000) — Sherpa s'occupe du reste.**
 
 Pas d'étape de config manuelle : trois écrans rapides (identité, langue, une clé LLM), puis **Sherpa**, votre agent configurateur, prend le relais *par conversation*. Il branche vos providers, sécurise vos secrets dans le coffre (jamais transmis au LLM), et crée vos premiers Kins. Il reste accessible à vie.
 
-> 💡 Pour exposer KinBot sur votre réseau ou derrière un reverse proxy, ajoutez `-e HOST=0.0.0.0` et `-e PUBLIC_URL=https://votre-domaine`. Voir [la doc de configuration](https://marlburrow.github.io/kinbot/docs/) pour toutes les variables d'environnement.
+> 💡 Pour exposer Hivekeep sur votre réseau ou derrière un reverse proxy, ajoutez `-e HOST=0.0.0.0` et `-e PUBLIC_URL=https://votre-domaine`. Voir [la doc de configuration](https://marlburrow.github.io/hivekeep/docs/) pour toutes les variables d'environnement.
 
 <p align="center">
-  <!-- TODO: capture d'écran de l'UI — fil de chat + sidebar des Kins, palette claire et soignée. alt="Interface KinBot : chat et sidebar des Kins" -->
-  <img src="docs/assets/screenshot-ui.png" alt="Interface KinBot : chat et sidebar des Kins" width="100%" />
+  <!-- TODO: capture d'écran de l'UI — fil de chat + sidebar des Kins, palette claire et soignée. alt="Interface Hivekeep : chat et sidebar des Kins" -->
+  <img src="docs/assets/screenshot-ui.png" alt="Interface Hivekeep : chat et sidebar des Kins" width="100%" />
 </p>
 
 ---
 
 ## ✨ Fonctionnalités
 
-Toutes les capacités sont détaillées sur le **[site](https://marlburrow.github.io/kinbot/)** et la **[documentation](https://marlburrow.github.io/kinbot/docs/)**. Le cœur, en bref :
+Toutes les capacités sont détaillées sur le **[site](https://marlburrow.github.io/hivekeep/)** et la **[documentation](https://marlburrow.github.io/hivekeep/docs/)**. Le cœur, en bref :
 
 **🧠 Des agents persistants qui collaborent**
 - Identité, expertise et **mémoire long terme** stables par Kin
@@ -102,7 +102,7 @@ Toutes les capacités sont détaillées sur le **[site](https://marlburrow.githu
 - Monoprocess **Bun + SQLite**, un seul conteneur, **zéro infra externe**
 - **Custom tools** multi-langage (Python, Node, Bun, TS, Bash, Deno) avec **renderers React riches** — vos outils s'affichent comme les natifs, pas en JSON brut
 - **Mini-apps** intégrées construites par vos Kins (SDK JS + 24 hooks React + 50+ composants themés + backend optionnel)
-- **Plugins NPM** via SDK TypeScript typé (`@kinbot-developer/sdk`) + **marketplace** décentralisé
+- **Plugins NPM** via SDK TypeScript typé (`@hivekeep-developer/sdk`) + **marketplace** décentralisé
 - **MCP** dynamique · **toolboxes** composables pour scoper finement les capacités par rôle
 
 **🎨 Une IA d'agents enfin belle et fluide**
@@ -127,11 +127,11 @@ Toutes les capacités sont détaillées sur le **[site](https://marlburrow.githu
 
 ---
 
-## 📊 Pourquoi KinBot
+## 📊 Pourquoi Hivekeep
 
-KinBot se compare aux **plateformes d'agents autonomes**, pas aux simples fronts de chat LLM. Voici les dimensions où il est **uniquement fort** :
+Hivekeep se compare aux **plateformes d'agents autonomes**, pas aux simples fronts de chat LLM. Voici les dimensions où il est **uniquement fort** :
 
-| Dimension | KinBot | OpenClaw | GPTs / Assistants | LibreChat | Dify |
+| Dimension | Hivekeep | OpenClaw | GPTs / Assistants | LibreChat | Dify |
 |---|:---:|:---:|:---:|:---:|:---:|
 | Déploiement 1 conteneur, zéro infra externe | ✅ | ⚠️ daemon | n/a | ❌ Mongo | ❌ lourd |
 | Session continue unique (pas de « new chat ») | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -144,7 +144,7 @@ KinBot se compare aux **plateformes d'agents autonomes**, pas aux simples fronts
 
 Légende : ✅ fort/natif · ⚠️ partiel/dépendances · ❌ absent.
 
-> KinBot est **production-ready pour un usage individu / petite équipe**, avec des fondations solides et un polish UX qui continue d'avancer. Nous assumons une maturité honnête (~80%) plutôt que la survente — voir la [roadmap](https://marlburrow.github.io/kinbot/) pour les arêtes connues.
+> Hivekeep est **production-ready pour un usage individu / petite équipe**, avec des fondations solides et un polish UX qui continue d'avancer. Nous assumons une maturité honnête (~80%) plutôt que la survente — voir la [roadmap](https://marlburrow.github.io/hivekeep/) pour les arêtes connues.
 
 ---
 
@@ -153,8 +153,8 @@ Légende : ✅ fort/natif · ⚠️ partiel/dépendances · ❌ absent.
 Un process, une base SQLite, un conteneur. Tout est là — rien d'externe à brancher.
 
 <p align="center">
-  <!-- TODO: schéma d'architecture en une image — runtime Bun + SQLite, queue par Kin, mémoire hybride, SSE global, channels, vault, providers pluggables. alt="Architecture KinBot : un seul conteneur, runtime Bun, base SQLite, channels et providers" -->
-  <img src="docs/assets/architecture.png" alt="Architecture KinBot : un seul conteneur, runtime Bun, base SQLite, channels et providers" width="100%" />
+  <!-- TODO: schéma d'architecture en une image — runtime Bun + SQLite, queue par Kin, mémoire hybride, SSE global, channels, vault, providers pluggables. alt="Architecture Hivekeep : un seul conteneur, runtime Bun, base SQLite, channels et providers" -->
+  <img src="docs/assets/architecture.png" alt="Architecture Hivekeep : un seul conteneur, runtime Bun, base SQLite, channels et providers" width="100%" />
 </p>
 
 - **Queue par Kin** : une FIFO sérialisée par agent, priorité aux messages utilisateur — zéro race condition sur le contexte partagé.
@@ -162,7 +162,7 @@ Un process, une base SQLite, un conteneur. Tout est là — rien d'externe à br
 - **Mémoire dual-channel** : extraction automatique post-compacting + outils explicites, recherche hybride vecteurs + FTS5.
 - **Providers pluggables** : un config par provider, capacités (`llm`, `embedding`, `image`, `search`, `stt`, `tts`) auto-détectées.
 
-Détails complets dans la [documentation technique](https://marlburrow.github.io/kinbot/docs/).
+Détails complets dans la [documentation technique](https://marlburrow.github.io/hivekeep/docs/).
 
 ---
 
@@ -171,26 +171,26 @@ Détails complets dans la [documentation technique](https://marlburrow.github.io
 Les contributions sont bienvenues — code, plugins, mini-apps, traductions, doc, retours.
 
 1. Lisez le **[guide de contribution](CONTRIBUTING.md)** et le **[code de conduite](CODE_OF_CONDUCT.md)**.
-2. Pour développer une extension, voir **[PLUGIN-DEVELOPMENT.md](PLUGIN-DEVELOPMENT.md)** et le SDK `@kinbot-developer/sdk`.
+2. Pour développer une extension, voir **[PLUGIN-DEVELOPMENT.md](PLUGIN-DEVELOPMENT.md)** et le SDK `@hivekeep-developer/sdk`.
 3. Avant de pousser : `bun run typecheck` et `bun run test` (lancés aussi par le hook pre-commit).
 
 ```bash
-git clone https://github.com/MarlBurroW/kinbot.git
-cd kinbot
+git clone https://github.com/MarlBurroW/hivekeep.git
+cd hivekeep
 bun install
 bun run dev
 ```
 
-- 🐛 **Bugs / idées** → [Issues](https://github.com/MarlBurroW/kinbot/issues)
-- 💬 **Questions / show & tell** → [Discussions](https://github.com/MarlBurroW/kinbot/discussions) · [Discord](#-communauté--support)
-- 🔌 **Plugins** → publiez sur npm avec le mot-clé `kinbot-plugin` pour apparaître dans le marketplace
+- 🐛 **Bugs / idées** → [Issues](https://github.com/MarlBurroW/hivekeep/issues)
+- 💬 **Questions / show & tell** → [Discussions](https://github.com/MarlBurroW/hivekeep/discussions) · [Discord](#-communauté--support)
+- 🔌 **Plugins** → publiez sur npm avec le mot-clé `hivekeep-plugin` pour apparaître dans le marketplace
 
 ---
 
 ## 💬 Communauté & support
 
 - **Discord** — <!-- TODO: lien d'invitation Discord -->[rejoindre la communauté](#)
-- **Discussions** — [github.com/MarlBurroW/kinbot/discussions](https://github.com/MarlBurroW/kinbot/discussions)
+- **Discussions** — [github.com/MarlBurroW/hivekeep/discussions](https://github.com/MarlBurroW/hivekeep/discussions)
 - **Troubleshooting** — [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 - **Sécurité** — voir [SECURITY.md](SECURITY.md) pour signaler une vulnérabilité
 
@@ -198,8 +198,8 @@ bun run dev
 
 ## 📄 Licence
 
-KinBot est distribué sous licence **[MIT](LICENSE)**. Faites-en ce que vous voulez — vos données, vos clés, votre serveur, sans lock-in.
+Hivekeep est distribué sous licence **[MIT](LICENSE)**. Faites-en ce que vous voulez — vos données, vos clés, votre serveur, sans lock-in.
 
 <p align="center">
-  <sub>Construit avec ❤️ et <a href="https://bun.sh">Bun</a> · <a href="https://marlburrow.github.io/kinbot/">Site</a> · <a href="https://marlburrow.github.io/kinbot/docs/">Docs</a></sub>
+  <sub>Construit avec ❤️ et <a href="https://bun.sh">Bun</a> · <a href="https://marlburrow.github.io/hivekeep/">Site</a> · <a href="https://marlburrow.github.io/hivekeep/docs/">Docs</a></sub>
 </p>

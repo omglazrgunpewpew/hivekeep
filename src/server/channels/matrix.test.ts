@@ -371,7 +371,7 @@ describe('MatrixAdapter', () => {
         sentRequests.push({ url, method: init?.method ?? 'GET' })
         if (url.includes('/account/whoami')) return jsonResponse({ user_id: '@bot:matrix.org' })
         if (url.includes('/displayname')) return jsonResponse({})
-        if (url.startsWith('https://kinbot.example.com/api/uploads/')) {
+        if (url.startsWith('https://hivekeep.example.com/api/uploads/')) {
           return new Response(new Uint8Array([1, 2, 3]), { headers: { 'Content-Type': 'image/png' } })
         }
         if (url.includes('/_matrix/media/v3/upload')) {
@@ -387,7 +387,7 @@ describe('MatrixAdapter', () => {
         {
           kinSlug: 'kube-master',
           kinName: 'Kube Master',
-          avatarUrl: 'https://kinbot.example.com/api/uploads/kins/abc/avatar.png',
+          avatarUrl: 'https://hivekeep.example.com/api/uploads/kins/abc/avatar.png',
         },
       )
 

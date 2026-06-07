@@ -1,9 +1,9 @@
 ---
 title: Configuration
-description: Environment variables and settings for KinBot.
+description: Environment variables and settings for Hivekeep.
 ---
 
-KinBot uses environment variables for configuration. Copy `.env.example` to `.env` and adjust as needed. All values have sensible defaults — you can start with an empty `.env`.
+Hivekeep uses environment variables for configuration. Copy `.env.example` to `.env` and adjust as needed. All values have sensible defaults — you can start with an empty `.env`.
 
 ## Core settings
 
@@ -11,8 +11,8 @@ KinBot uses environment variables for configuration. Copy `.env.example` to `.en
 |---|---|---|
 | `PORT` | `3333` (`3000` in Docker) | HTTP server port |
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose on all interfaces) |
-| `KINBOT_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
-| `DB_PATH` | `$KINBOT_DATA_DIR/kinbot.db` | SQLite database file path |
+| `HIVEKEEP_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
+| `DB_PATH` | `$HIVEKEEP_DATA_DIR/hivekeep.db` | SQLite database file path |
 | `ENCRYPTION_KEY` | *(auto-generated)* | 64-char hex key for AES-256-GCM vault encryption. Auto-generated and persisted to `data/.encryption-key` on first run. |
 | `BETTER_AUTH_SECRET` | *(uses ENCRYPTION_KEY)* | Secret for session signing. Falls back to `ENCRYPTION_KEY` if not set. |
 | `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
@@ -21,7 +21,7 @@ KinBot uses environment variables for configuration. Copy `.env.example` to `.en
 
 ## Data directory
 
-KinBot stores everything in a single directory (`KINBOT_DATA_DIR`):
+Hivekeep stores everything in a single directory (`HIVEKEEP_DATA_DIR`):
 
 - **SQLite database** — messages, kins, settings, memories
 - **File uploads** — user-uploaded files and generated images
@@ -42,8 +42,8 @@ When using Docker, mount a volume to `/app/data` to persist data across containe
 
 | Variable | Default | Description |
 |---|---|---|
-| `KINBOT_CUSTOM_TOOL_TIMEOUT` | `30000` | Default execution timeout for custom tools (ms) |
-| `KINBOT_CUSTOM_TOOL_MAX_TIMEOUT` | `300000` | Maximum allowed timeout for custom tools (ms). Per-invocation values are capped to this limit |
+| `HIVEKEEP_CUSTOM_TOOL_TIMEOUT` | `30000` | Default execution timeout for custom tools (ms) |
+| `HIVEKEEP_CUSTOM_TOOL_MAX_TIMEOUT` | `300000` | Maximum allowed timeout for custom tools (ms). Per-invocation values are capped to this limit |
 
 ## Webhooks
 
@@ -64,14 +64,14 @@ When using Docker, mount a volume to `/app/data` to persist data across containe
 
 | Variable | Default | Description |
 |---|---|---|
-| `KINBOT_VERSION` | *(auto-detected)* | Explicit version override. Read from `package.json` by default. In Docker, automatically set by the entrypoint. Only needed if version detection fails. |
+| `HIVEKEEP_VERSION` | *(auto-detected)* | Explicit version override. Read from `package.json` by default. In Docker, automatically set by the entrypoint. Only needed if version detection fails. |
 | `VERSION_CHECK_ENABLED` | `false` | Enable automatic version checking against GitHub releases |
-| `VERSION_CHECK_REPO` | `MarlBurroW/kinbot` | GitHub repo to check for new releases |
+| `VERSION_CHECK_REPO` | `MarlBurroW/hivekeep` | GitHub repo to check for new releases |
 | `VERSION_CHECK_INTERVAL_HOURS` | `12` | Hours between version checks |
 
 ## Advanced options
 
-See [`.env.example`](https://github.com/MarlBurroW/kinbot/blob/main/.env.example) for the complete list of all options including:
+See [`.env.example`](https://github.com/MarlBurroW/hivekeep/blob/main/.env.example) for the complete list of all options including:
 
 - Compacting threshold (`COMPACTING_THRESHOLD_PERCENT`, default 75%)
 - Memory tuning (extraction, vector dimensions, search pipeline)

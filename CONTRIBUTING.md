@@ -1,6 +1,6 @@
-# Contributing to KinBot
+# Contributing to Hivekeep
 
-Thanks for considering contributing to KinBot! Whether it's a bug fix, new provider, feature, or docs improvement, every contribution helps.
+Thanks for considering contributing to Hivekeep! Whether it's a bug fix, new provider, feature, or docs improvement, every contribution helps.
 
 ## Getting Started
 
@@ -13,8 +13,8 @@ Thanks for considering contributing to KinBot! Whether it's a bug fix, new provi
 ### Local Development Setup
 
 ```bash
-git clone https://github.com/MarlBurroW/kinbot.git
-cd kinbot
+git clone https://github.com/MarlBurroW/hivekeep.git
+cd hivekeep
 bun install
 bun run db:migrate
 bun run dev
@@ -49,14 +49,14 @@ site/                # Landing page (React + Vite + Tailwind v4)
 
 ### Reporting Bugs
 
-Use the [bug report template](https://github.com/MarlBurroW/kinbot/issues/new?template=bug_report.yml). Include:
+Use the [bug report template](https://github.com/MarlBurroW/hivekeep/issues/new?template=bug_report.yml). Include:
 - Steps to reproduce
 - Expected vs actual behavior
-- Browser, OS, and KinBot version
+- Browser, OS, and Hivekeep version
 
 ### Requesting Features
 
-Use the [feature request template](https://github.com/MarlBurroW/kinbot/issues/new?template=feature_request.yml). Describe the problem you're solving, not just the solution you want.
+Use the [feature request template](https://github.com/MarlBurroW/hivekeep/issues/new?template=feature_request.yml). Describe the problem you're solving, not just the solution you want.
 
 ### Submitting Code
 
@@ -90,7 +90,7 @@ Channel adapters live in `src/server/channels/` and implement the `ChannelAdapte
 
 ## Writing a Plugin
 
-Plugins live in the `plugins/` directory and ship with KinBot. The three reference implementations are:
+Plugins live in the `plugins/` directory and ship with Hivekeep. The three reference implementations are:
 
 - `plugins/teamspeak/` — channel adapter + tools (WebSocket-based external service)
 - `plugins/twilio-sms/` — channel adapter (HTTP-based + signed webhook)
@@ -99,21 +99,21 @@ Plugins live in the `plugins/` directory and ship with KinBot. The three referen
 ### Scaffold a new plugin
 
 ```bash
-bunx create-kinbot-plugin
+bunx create-hivekeep-plugin
 ```
 
 This generates a `plugin.json` manifest, an `index.ts` entry point, and a `README.md`.
 
 ### Plugin SDK
 
-Plugin authors should import everything they need from `@kinbot-developer/sdk`:
+Plugin authors should import everything they need from `@hivekeep-developer/sdk`:
 
 ```ts
-import { tool, z } from '@kinbot-developer/sdk'
-import type { ChannelAdapter, PluginContext, PluginExports } from '@kinbot-developer/sdk'
+import { tool, z } from '@hivekeep-developer/sdk'
+import type { ChannelAdapter, PluginContext, PluginExports } from '@hivekeep-developer/sdk'
 ```
 
-The SDK exposes `tool()`, `asSchema()`, `z` (re-export of zod), and the full type surface needed for tools, channels, providers, and hooks. Plugins should NOT import from `@/server/*` — that path is reserved for KinBot internals.
+The SDK exposes `tool()`, `asSchema()`, `z` (re-export of zod), and the full type surface needed for tools, channels, providers, and hooks. Plugins should NOT import from `@/server/*` — that path is reserved for Hivekeep internals.
 
 ### Tips
 
@@ -158,4 +158,4 @@ By contributing, you agree that your contributions will be licensed under the [A
 
 ## Questions?
 
-Open a [discussion](https://github.com/MarlBurroW/kinbot/discussions) or an issue. We're happy to help!
+Open a [discussion](https://github.com/MarlBurroW/hivekeep/discussions) or an issue. We're happy to help!

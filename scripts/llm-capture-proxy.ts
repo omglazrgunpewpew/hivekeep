@@ -3,26 +3,26 @@
  * body of every `/v1/messages` request, then forwards it untouched (streaming
  * preserved) to the real Anthropic endpoint.
  *
- * Goal: compare what Claude Code sends vs what KinBot sends to the SAME endpoint,
+ * Goal: compare what Claude Code sends vs what Hivekeep sends to the SAME endpoint,
  * field-by-field, WITHOUT drowning in the multi-MB message history (which is
  * ~identical across steps and cached). We never write the message content —
  * only its size — and we dedupe the big stable blobs (system prompt, tool
  * defs) by hash so a 40-step task produces a handful of small files.
  *
  * Both clients honor ANTHROPIC_BASE_URL (the Anthropic SDK reads it; neither
- * Claude Code nor KinBot's createClient pins a baseURL), so routing them through
+ * Claude Code nor Hivekeep's createClient pins a baseURL), so routing them through
  * here requires ZERO code change — just an env var at launch.
  *
  *   # terminal 1 — capture Claude Code
  *   bun scripts/llm-capture-proxy.ts --port 8788 --label claude-code
  *   ANTHROPIC_BASE_URL=http://localhost:8788 claude   # run your task
  *
- *   # terminal 2 — capture KinBot
- *   bun scripts/llm-capture-proxy.ts --port 8789 --label kinbot
+ *   # terminal 2 — capture Hivekeep
+ *   bun scripts/llm-capture-proxy.ts --port 8789 --label hivekeep
  *   ANTHROPIC_BASE_URL=http://localhost:8789 bun run dev   # run the same task
  *
  *   # then diff the two captures
- *   bun scripts/llm-capture-diff.ts claude-code kinbot
+ *   bun scripts/llm-capture-diff.ts claude-code hivekeep
  *
  * Output lands in:  data/llm-capture/<label>/
  *   fingerprints.jsonl   one compact line per request (diffable)
@@ -50,7 +50,7 @@ const UPSTREAM = (arg('upstream', 'https://api.anthropic.com') ?? '').replace(/\
 // --force-thinking <budget>     → force thinking enabled with that budget_tokens
 // Safe to rewrite: the OAuth billing signature only covers the FIRST user
 // message text, never thinking/max_tokens/temperature. Lets you equalize the
-// "effort budget" across both harnesses, OR run a single-variable A/B on KinBot
+// "effort budget" across both harnesses, OR run a single-variable A/B on Hivekeep
 // (same task, thinking on vs off) without touching any code.
 const FORCE_THINKING_RAW = arg('force-thinking')
 const FORCE_THINKING: 'off' | number | null =

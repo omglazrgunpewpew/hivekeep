@@ -1,4 +1,4 @@
-# KinBot — Plan de développement
+# Hivekeep — Plan de développement
 
 > ⚠️ **Document historique.** Ce plan a guidé le développement initial (Phases 0-9, architecture provider monolithique avec Vercel AI SDK). Depuis, plusieurs gros refactors ont eu lieu :
 > - Suppression de Vercel AI SDK, primitives natives `LLMProvider`/`EmbeddingProvider`/`ImageProvider`
@@ -11,7 +11,7 @@
 >
 > Les noms de fichiers, structures de dossiers et certaines interfaces décrits ci-dessous ne reflètent plus la réalité. **Pour l'état actuel**, voir : [`structure.md`](./structure.md), [`packages/sdk/src/index.ts`](./packages/sdk/src/index.ts) (surface publique), [`src/server/llm/llm/registry.ts`](./src/server/llm/llm/registry.ts) (LLM providers), [`src/server/providers/index.ts`](./src/server/providers/index.ts) (dispatcher). Les sections ci-dessous restent utiles pour comprendre les décisions originales et le séquencement des phases ; suivre les checkboxes sans recouper avec le code actuel mènera à l'erreur.
 
-Ce document sert de feuille de route pour le développement de KinBot. Chaque phase est conçue pour être autonome et testable. Les phases doivent être suivies dans l'ordre car chacune dépend des précédentes.
+Ce document sert de feuille de route pour le développement de Hivekeep. Chaque phase est conçue pour être autonome et testable. Les phases doivent être suivies dans l'ordre car chacune dépend des précédentes.
 
 **Convention** : chaque tâche est marquée `[ ]` (à faire), `[~]` (en cours), ou `[x]` (terminé).
 
@@ -68,7 +68,7 @@ Création d'une page showcase présentant tous les éléments visuels de base. L
   - [x] **0.5.15** Tabs, Dropdown menu, Tooltip
   - [x] **0.5.16** Avatar : différentes tailles, avec image, avec initiales, avec indicateur de statut (online/offline/busy)
 
-  **Patterns spécifiques KinBot**
+  **Patterns spécifiques Hivekeep**
   - [x] **0.5.17** Bulle de message : variante utilisateur (alignée à droite, couleur A), variante Kin (alignée à gauche, couleur B), variante système/tâche/cron (neutre) — avec avatar, nom, timestamp
   - [x] **0.5.18** Carte de Kin : aperçu d'un Kin dans la sidebar (avatar, nom, rôle, badge queue)
   - [x] **0.5.19** Indicateur de typing / streaming en cours
@@ -104,7 +104,7 @@ Définition complète du schéma Drizzle et création de la base SQLite.
 - [x] **1.6** Générer et exécuter la première migration Drizzle
 - [ ] **1.7** (Optionnel) Créer `src/server/db/seed.ts` pour le développement
 
-**Critère de validation** : `bun run db:push` crée la base avec toutes les tables. Vérifiable via `sqlite3 data/kinbot.db ".tables"`.
+**Critère de validation** : `bun run db:push` crée la base avec toutes les tables. Vérifiable via `sqlite3 data/hivekeep.db ".tables"`.
 
 ---
 
@@ -469,7 +469,7 @@ Permettre aux Kins de créer et gérer leurs propres outils.
 - [x] **25.4** Vérifier que les extensions SQLite (sqlite-vec, FTS5) fonctionnent dans le conteneur
 - [x] **25.5** Générer automatiquement `ENCRYPTION_KEY` si absente au premier lancement
 
-**Critère de validation** : `docker run -v ./data:/app/data -p 3000:3000 kinbot` lance l'application complète, fonctionnelle et persistante.
+**Critère de validation** : `docker run -v ./data:/app/data -p 3000:3000 hivekeep` lance l'application complète, fonctionnelle et persistante.
 
 ---
 

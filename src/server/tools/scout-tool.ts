@@ -79,7 +79,7 @@ export const scoutTool: ToolRegistration = {
         if (model && !provider_id) {
           return {
             error:
-              'When overriding the scout model you must pass provider_id too — the same model name can be served by several providers, and kinbot cannot guess which one you mean.',
+              'When overriding the scout model you must pass provider_id too — the same model name can be served by several providers, and hivekeep cannot guess which one you mean.',
           }
         }
 

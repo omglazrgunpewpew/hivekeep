@@ -27,7 +27,7 @@ Every mini-app needs:
   "dependencies": {
     "react": "https://esm.sh/react@19",
     "react-dom/client": "https://esm.sh/react-dom@19/client",
-    "@kinbot/react": "/api/mini-apps/sdk/kinbot-react.js"
+    "@hivekeep/react": "/api/mini-apps/sdk/hivekeep-react.js"
   }
 }
 ```
@@ -39,8 +39,8 @@ Add the component library (optional but recommended):
   "dependencies": {
     "react": "https://esm.sh/react@19",
     "react-dom/client": "https://esm.sh/react-dom@19/client",
-    "@kinbot/react": "/api/mini-apps/sdk/kinbot-react.js",
-    "@kinbot/components": "/api/mini-apps/sdk/kinbot-components.js"
+    "@hivekeep/react": "/api/mini-apps/sdk/hivekeep-react.js",
+    "@hivekeep/components": "/api/mini-apps/sdk/hivekeep-components.js"
   }
 }
 ```
@@ -52,10 +52,10 @@ Add the component library (optional but recommended):
 <script type="text/jsx">
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { useKinBot } from "@kinbot/react";
+import { useHivekeep } from "@hivekeep/react";
 
 function App() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   if (!ready) return <div>Loading...</div>;
   return <h1>Hello, Mini-App!</h1>;
 }
@@ -64,7 +64,7 @@ createRoot(document.getElementById("root")).render(<App />);
 </script>
 ```
 
-**Important:** Always call `useKinBot()` at the root of your app and wait for `ready` before rendering content. The hook calls `KinBot.ready()` internally and sets `ready` to `true` once the SDK bridge is initialized.
+**Important:** Always call `useHivekeep()` at the root of your app and wait for `ready` before rendering content. The hook calls `Hivekeep.ready()` internally and sets `ready` to `true` once the SDK bridge is initialized.
 
 ## Using Templates
 
@@ -83,10 +83,10 @@ Use `get_mini_app_templates` to see all templates with descriptions.
 Use `useStorage` to persist data across sessions:
 
 ```jsx
-import { useKinBot, useStorage } from "@kinbot/react";
+import { useHivekeep, useStorage } from "@hivekeep/react";
 
 function TodoApp() {
-  const { ready } = useKinBot();
+  const { ready } = useHivekeep();
   const [todos, setTodos, loading] = useStorage("todos", []);
 
   if (!ready || loading) return <div>Loading...</div>;
@@ -99,7 +99,7 @@ function TodoApp() {
 }
 ```
 
-`useStorage` works like `useState` but persists to KinBot's key-value storage. It returns `[value, setValue, loading]`. The `loading` flag is `true` while fetching the initial value. `setValue` accepts either a direct value or an updater function (like React's `useState`).
+`useStorage` works like `useState` but persists to Hivekeep's key-value storage. It returns `[value, setValue, loading]`. The `loading` flag is `true` while fetching the initial value. `setValue` accepts either a direct value or an updater function (like React's `useState`).
 
 ## Adding a Backend
 
@@ -121,7 +121,7 @@ export default function(ctx) {
 Access it from the frontend:
 
 ```jsx
-import { useApi } from "@kinbot/react";
+import { useApi } from "@hivekeep/react";
 
 function Stats() {
   const { data, loading } = useApi("/stats");
@@ -130,7 +130,7 @@ function Stats() {
 }
 ```
 
-See [Backend](/kinbot/docs/mini-apps/backend/) for the full backend guide.
+See [Backend](/hivekeep/docs/mini-apps/backend/) for the full backend guide.
 
 ## Multi-File Apps
 
@@ -173,7 +173,7 @@ Max 20 snapshots per app (oldest are auto-pruned).
 
 ## Next Steps
 
-- [Components](/kinbot/docs/mini-apps/components/) — Browse 50+ themed components
-- [Hooks](/kinbot/docs/mini-apps/hooks/) — All available React hooks
-- [SDK Reference](/kinbot/docs/mini-apps/sdk-reference/) — Complete API
-- [Guidelines](/kinbot/docs/mini-apps/guidelines/) — Best practices
+- [Components](/hivekeep/docs/mini-apps/components/) — Browse 50+ themed components
+- [Hooks](/hivekeep/docs/mini-apps/hooks/) — All available React hooks
+- [SDK Reference](/hivekeep/docs/mini-apps/sdk-reference/) — Complete API
+- [Guidelines](/hivekeep/docs/mini-apps/guidelines/) — Best practices

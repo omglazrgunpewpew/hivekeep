@@ -3,7 +3,7 @@ title: "Blueprint: GitHub Issue Processor"
 description: A complete, copy-paste-ready blueprint for a Kin that triages, diagnoses, and processes GitHub issues autonomously.
 ---
 
-This blueprint sets up a Kin that autonomously processes GitHub issues — triaging new issues, diagnosing bugs, implementing fixes, and managing the issue lifecycle. This pattern is **running in production** on the KinBot repository itself.
+This blueprint sets up a Kin that autonomously processes GitHub issues — triaging new issues, diagnosing bugs, implementing fixes, and managing the issue lifecycle. This pattern is **running in production** on the Hivekeep repository itself.
 
 ## Use case
 
@@ -46,7 +46,7 @@ Your GitHub PAT needs `repo` scope for full read/write access. For read-only tri
 
 Your Kin needs a workspace with the repository cloned:
 
-1. Set a **workspace directory** in the Kin settings (e.g. `/home/user/.local/share/kinbot/workspaces/<kin-id>`)
+1. Set a **workspace directory** in the Kin settings (e.g. `/home/user/.local/share/hivekeep/workspaces/<kin-id>`)
 2. Tell the Kin to clone the repo:
 
 > Clone https://github.com/your-org/your-repo.git into your workspace directory.
@@ -182,7 +182,7 @@ Your codebase is at: /path/to/workspace/my-repo
 ### Connecting GitHub to the webhook
 
 1. In your GitHub repo, go to **Settings > Webhooks > Add webhook**
-2. Set the **Payload URL** to the webhook URL returned by KinBot
+2. Set the **Payload URL** to the webhook URL returned by Hivekeep
 3. Set **Content type** to `application/json`
 4. Select **Let me select individual events** and check **Issues**
 5. Click **Add webhook**
@@ -232,7 +232,7 @@ I've implemented a fix in branch `fix/issue-42` — see commit abc1234.
 
 ### Kin writes text instead of calling tools
 
-This is the "text mode" problem. See [Model Selection](/kinbot/docs/guides/model-selection/) — the fix is usually switching to Claude Sonnet.
+This is the "text mode" problem. See [Model Selection](/hivekeep/docs/guides/model-selection/) — the fix is usually switching to Claude Sonnet.
 
 ### Tasks stay "in progress" forever
 

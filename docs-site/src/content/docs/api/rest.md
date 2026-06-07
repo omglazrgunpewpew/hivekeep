@@ -1,9 +1,9 @@
 ---
 title: REST API
-description: KinBot REST API endpoint reference.
+description: Hivekeep REST API endpoint reference.
 ---
 
-KinBot exposes a REST API used by the web UI and available for external integrations. All endpoints are under `/api/` and require authentication unless noted otherwise.
+Hivekeep exposes a REST API used by the web UI and available for external integrations. All endpoints are under `/api/` and require authentication unless noted otherwise.
 
 ## Authentication
 
@@ -182,10 +182,10 @@ Platform-specific webhook endpoints (no auth required, verified by platform sign
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/mini-apps/sdk/kinbot-sdk.js` | SDK JavaScript |
-| `GET` | `/api/mini-apps/sdk/kinbot-react.js` | React bindings |
-| `GET` | `/api/mini-apps/sdk/kinbot-components.js` | Component library |
-| `GET` | `/api/mini-apps/sdk/kinbot-sdk.css` | SDK stylesheet |
+| `GET` | `/api/mini-apps/sdk/hivekeep-sdk.js` | SDK JavaScript |
+| `GET` | `/api/mini-apps/sdk/hivekeep-react.js` | React bindings |
+| `GET` | `/api/mini-apps/sdk/hivekeep-components.js` | Component library |
+| `GET` | `/api/mini-apps/sdk/hivekeep-sdk.css` | SDK stylesheet |
 | `GET` | `/api/mini-apps/sdk/*.d.ts` | TypeScript declarations |
 
 ## Quick Sessions
@@ -233,7 +233,7 @@ Sub-tasks spawned by Kins (inter-Kin delegation, subtasks). Tasks support **conc
 | `PATCH` | `/api/plugins/:id` | Update plugin config |
 | `DELETE` | `/api/plugins/:id` | Uninstall a plugin |
 
-See [Plugin API](/kinbot/docs/plugins/api/) for the full plugin store and registry routes.
+See [Plugin API](/hivekeep/docs/plugins/api/) for the full plugin store and registry routes.
 
 ## Providers
 
@@ -245,7 +245,7 @@ See [Plugin API](/kinbot/docs/plugins/api/) for the full plugin store and regist
 | `DELETE` | `/api/providers/:id` | Remove provider config |
 | `POST` | `/api/providers/:id/test` | Test provider connection |
 
-See [Providers](/kinbot/docs/providers/supported/) for the full provider reference.
+See [Providers](/hivekeep/docs/providers/supported/) for the full provider reference.
 
 ## Contacts
 
@@ -464,4 +464,4 @@ Token usage tracking for all LLM calls. All routes require admin role.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/sse` | SSE event stream (see [SSE Events](/kinbot/docs/api/sse/)) |
+| `GET` | `/api/sse` | SSE event stream (see [SSE Events](/hivekeep/docs/api/sse/)) |

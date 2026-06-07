@@ -1,12 +1,12 @@
-# KinBot 1.0 — Messaging & voix de marque
+# Hivekeep 1.0 — Messaging & voix de marque
 
-> Socle de communication. Découle des décisions validées (licence MIT, ton grand-public-rassurant, cible power-user solo, substance d'abord + polish remonté tôt) et du recadrage de catégorie : **KinBot est une plateforme d'agents IA autonomes personnels**, pas un front de chat. Toute la copy (site, README, doc, stores) s'aligne sur ce document.
+> Socle de communication. Découle des décisions validées (licence MIT, ton grand-public-rassurant, cible power-user solo, substance d'abord + polish remonté tôt) et du recadrage de catégorie : **Hivekeep est une plateforme d'agents IA autonomes personnels**, pas un front de chat. Toute la copy (site, README, doc, stores) s'aligne sur ce document.
 
 ---
 
 ## 1. La big idea (positionnement)
 
-> **KinBot, c'est votre propre équipe d'agents IA — qui se souviennent, collaborent et vous répondent partout — installée sur votre serveur en un seul conteneur.**
+> **Hivekeep, c'est votre propre équipe d'agents IA — qui se souviennent, collaborent et vous répondent partout — installée sur votre serveur en un seul conteneur.**
 
 Trois mots-clés portent tout : **équipe d'agents persistants** (pas un chatbot) · **mémoire** (qui vous connaissent) · **souveraineté simple** (chez vous, un conteneur). Le quatrième, plus subtil, est l'angle qui surprend : la plateforme **s'améliore elle-même** (les agents créent leurs propres outils, mini-apps et plugins).
 
@@ -28,7 +28,7 @@ Trois mots-clés portent tout : **équipe d'agents persistants** (pas un chatbot
 |---|---|---|
 | **« Votre équipe d'IA, chez vous. »** | Hero principal, README | Grand-public, chaleureux *(reco)* |
 | **« La simplicité de ChatGPT. La souveraineté de votre serveur. »** | Pub, accroche réseaux, A/B test | Grand-public, comparatif direct |
-| **« Des agents qui se souviennent, collaborent, et ne quittent jamais votre serveur. »** | Audience tech/privacy, Hacker News, /why-kinbot | Technique, dense |
+| **« Des agents qui se souviennent, collaborent, et ne quittent jamais votre serveur. »** | Audience tech/privacy, Hacker News, /why-hivekeep | Technique, dense |
 | **« Une équipe d'IA qui grandit avec vous. »** | Angle self-improving, blog | Émotionnel, évolutif |
 
 > **Note nom « Kin » :** en surface marketing on parle d'« agents » (compris immédiatement) ; « Kin » est révélé juste après le hook comme terme propriétaire (effet de marque sans friction). Ne pas ouvrir le hero avec « Kin ».
@@ -38,7 +38,7 @@ Trois mots-clés portent tout : **équipe d'agents persistants** (pas un chatbot
 ## 3. Bloc hero (structure type)
 
 ```
-[Logo KinBot]
+[Logo Hivekeep]
 
 H1   Votre équipe d'IA, chez vous.
 P    La simplicité d'un assistant grand public, la souveraineté de votre

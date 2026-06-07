@@ -44,7 +44,7 @@ test.describe.serial('Search provider management', () => {
     await mockSearchProviderApis(page)
 
     await page.goto('/')
-    await expect(page.getByText('Sign in to your KinBot workspace')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({ timeout: 10_000 })
     await loginAs(page)
     await expect(page.getByText('Kins', { exact: true })).toBeVisible({ timeout: 10_000 })
   })

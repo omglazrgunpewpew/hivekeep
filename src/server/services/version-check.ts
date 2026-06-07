@@ -42,7 +42,7 @@ async function fetchLatestRelease(repo: string): Promise<GitHubRelease | null> {
       {
         headers: {
           Accept: 'application/vnd.github.v3+json',
-          'User-Agent': 'KinBot-VersionCheck',
+          'User-Agent': 'Hivekeep-VersionCheck',
         },
         signal: AbortSignal.timeout(10_000),
       },

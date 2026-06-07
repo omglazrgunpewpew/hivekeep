@@ -91,7 +91,7 @@ export const spawnSelfTool: ToolRegistration = {
           throw new Error(
             'When overriding the parent Kin\'s model, you must pass provider_id too. ' +
               'Use list_models to find the right (model, providerId) pair — the same model name can be served by several providers ' +
-              '(e.g. an OpenAI API key and a Codex CLI subscription), and kinbot cannot guess which one you mean.',
+              '(e.g. an OpenAI API key and a Codex CLI subscription), and hivekeep cannot guess which one you mean.',
           )
         }
         const toolboxIds = await resolveToolboxNamesToIds(toolboxes, tool_preset)
@@ -160,7 +160,7 @@ export const spawnKinTool: ToolRegistration = {
             error:
               'When overriding the spawned Kin\'s model, you must pass provider_id too. ' +
               'Use list_models to find the right (model, providerId) pair — the same model name can be served by several providers ' +
-              '(e.g. an OpenAI API key and a Codex CLI subscription), and kinbot cannot guess which one you mean.',
+              '(e.g. an OpenAI API key and a Codex CLI subscription), and hivekeep cannot guess which one you mean.',
           }
         }
         const kinId = resolveKinId(kin_slug)

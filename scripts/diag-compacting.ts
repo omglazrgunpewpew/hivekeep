@@ -20,7 +20,7 @@ if (!arg) {
 }
 
 // Adjust if your prod DB is at a different path
-const DB_PATH = process.env.KINBOT_DB ?? resolve('./data/kinbot.db')
+const DB_PATH = process.env.HIVEKEEP_DB ?? resolve('./data/hivekeep.db')
 const db = new Database(DB_PATH, { readonly: true })
 
 // chars/4 is a fast rough estimate (gpt-tokenizer would be more accurate

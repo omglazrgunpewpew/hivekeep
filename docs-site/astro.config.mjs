@@ -5,7 +5,7 @@ import starlight from '@astrojs/starlight';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://marlburrow.github.io',
-	base: '/kinbot/docs',
+	base: '/hivekeep/docs',
 	integrations: [
 		starlight({
 			expressiveCode: {
@@ -19,13 +19,13 @@ export default defineConfig({
 					},
 				},
 			},
-			title: 'KinBot Docs',
+			title: 'Hivekeep Docs',
 			editLink: {
-				baseUrl: 'https://github.com/MarlBurroW/kinbot/edit/main/docs-site/',
+				baseUrl: 'https://github.com/MarlBurroW/hivekeep/edit/main/docs-site/',
 			},
 			lastUpdated: true,
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/MarlBurroW/kinbot' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/MarlBurroW/hivekeep' },
 			],
 			customCss: ['./src/styles/custom.css'],
 			components: {

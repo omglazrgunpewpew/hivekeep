@@ -147,7 +147,7 @@ test.describe.serial('Settings — Notifications', () => {
 
     // Help panel should be present (collapsed or expanded)
     // Look for the help content text
-    const helpContent = dialog.getByText('Notifications keep you informed about important events in KinBot')
+    const helpContent = dialog.getByText('Notifications keep you informed about important events in Hivekeep')
     // It may be collapsed - if there's a toggle, click it
     const helpToggle = dialog.locator('button:has(.lucide-circle-help)')
     if (await helpToggle.isVisible()) {

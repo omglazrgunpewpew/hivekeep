@@ -24,10 +24,10 @@ const mockTransferChannel = mock<(...args: any[]) => Promise<TransferResult>>(()
   Promise.resolve({
     ok: true,
     transferredAt: 1700000000000,
-    previousKinSlug: 'kinbot-master',
+    previousKinSlug: 'hivekeep-master',
     newKinSlug: 'kube-master',
     fromKinId: 'kin-source',
-    fromKinName: 'KinBot Master',
+    fromKinName: 'Hivekeep Master',
     toKinId: 'kin-target',
     toKinName: 'Kube Master',
   } as TransferResult),
@@ -174,10 +174,10 @@ beforeEach(() => {
   mockTransferChannel.mockResolvedValue({
     ok: true,
     transferredAt: 1700000000000,
-    previousKinSlug: 'kinbot-master',
+    previousKinSlug: 'hivekeep-master',
     newKinSlug: 'kube-master',
     fromKinId: 'kin-source',
-    fromKinName: 'KinBot Master',
+    fromKinName: 'Hivekeep Master',
     toKinId: 'kin-target',
     toKinName: 'Kube Master',
   } as TransferResult)
@@ -196,7 +196,7 @@ describe('transferChannelTool (wrapper around transferChannel service)', () => {
     })
 
     expect(result.ok).toBe(true)
-    expect(result.previousKinSlug).toBe('kinbot-master')
+    expect(result.previousKinSlug).toBe('hivekeep-master')
     expect(result.newKinSlug).toBe('kube-master')
 
     expect(mockTransferChannel).toHaveBeenCalledTimes(1)

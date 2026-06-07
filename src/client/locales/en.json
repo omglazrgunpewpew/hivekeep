@@ -98,7 +98,7 @@
   },
   "login": {
     "title": "Welcome back",
-    "subtitle": "Sign in to your KinBot workspace",
+    "subtitle": "Sign in to your Hivekeep workspace",
     "email": "Email",
     "emailPlaceholder": "you@example.com",
     "password": "Password",
@@ -110,7 +110,7 @@
     "startOnboarding": "Set up your workspace"
   },
   "onboarding": {
-    "title": "Welcome to KinBot",
+    "title": "Welcome to Hivekeep",
     "subtitle": "Let's set up your workspace",
     "step": "Step {{current}} of {{total}}",
     "bootstrap": {
@@ -878,10 +878,10 @@
     "thinkingEnable": "Enable extended thinking for this Kin",
     "thinkingDisable": "Disable extended thinking for this Kin",
     "welcome": {
-      "title": "Welcome to KinBot",
+      "title": "Welcome to Hivekeep",
       "description": "Kins are AI personalities you create and customize. Each Kin has its own character, expertise, tools, and memory. Create your first one to get started!",
       "createFirst": "Create your first Kin",
-      "checklistIntro": "Get started in a few simple steps. KinBot will guide you through setting up your AI team.",
+      "checklistIntro": "Get started in a few simple steps. Hivekeep will guide you through setting up your AI team.",
       "step1Title": "Connect a provider",
       "step1Desc": "Add an AI provider (OpenAI, Anthropic, Google, etc.) with your API key. This powers your Kins’ intelligence.",
       "step1Action": "Add provider",
@@ -1192,7 +1192,7 @@
       "renderAfterRun": "Run a test first to preview the renderer."
     },
     "help": {
-      "content": "Custom tools let you extend KinBot with your own scripts.",
+      "content": "Custom tools let you extend Hivekeep with your own scripts.",
       "bullet1": "Each tool is a script in its own folder; it reads arguments as JSON on stdin and prints its result to stdout.",
       "bullet2": "Add a requirements.txt (Python) or package.json (Node/Bun) and click Install to set up dependencies.",
       "bullet3": "Grant a tool to a Kin by adding custom_<slug> to one of its toolboxes."
@@ -1400,7 +1400,7 @@
       "emptyDescription": "Add an AI provider like OpenAI, Anthropic, or Gemini to power your Kins.",
       "modelsModal": {
         "title": "Browse {{name}}",
-        "description": "Models and voices the provider exposes right now (fetched live from its API). Use this list to verify what is available without leaving KinBot.",
+        "description": "Models and voices the provider exposes right now (fetched live from its API). Use this list to verify what is available without leaving Hivekeep.",
         "loading": "Loading…",
         "fetchError": "Could not load",
         "allCapabilities": "All",
@@ -1771,13 +1771,13 @@
       "typeOrSearch": "Type or search...",
       "revokePlatformIdConfirm": "Revoke this platform access? The contact will no longer be able to interact via this platform.",
       "deleteNoteConfirm": "Permanently delete this note?",
-      "linkToUserTip": "Link this contact to an existing KinBot user account. Lets Kins recognize them across channels.",
+      "linkToUserTip": "Link this contact to an existing Hivekeep user account. Lets Kins recognize them across channels.",
       "identifiersTip": "Custom contact fields (email, mobile, Twitter, LinkedIn, Telegram ID, etc.) so Kins can recognize this contact on different platforms.",
       "help": {
         "content": "The contact registry lets your Kins recognize the people they interact with across different platforms and personalize their responses.",
         "bullet1": "Link platform identifiers (Telegram, Discord, etc.) so the Kin automatically recognizes users",
         "bullet2": "Kins can add private notes on each contact to remember context",
-        "bullet3": "Link a contact to a KinBot user account to unify identity across all channels",
+        "bullet3": "Link a contact to a Hivekeep user account to unify identity across all channels",
         "bullet4": "Add multiple nicknames so the Kin recognizes a contact by any name they go by"
       }
     },
@@ -1907,7 +1907,7 @@
       },
       "emptyDescription": "Invite others to collaborate and use your Kins.",
       "help": {
-        "content": "Manage users who have access to your KinBot instance. Invite friends or colleagues so they can chat with your Kins.",
+        "content": "Manage users who have access to your Hivekeep instance. Invite friends or colleagues so they can chat with your Kins.",
         "bullet1": "Create invitation links with a configurable expiration time",
         "bullet2": "Each user has their own account and conversations",
         "bullet3": "Invitations can be revoked at any time before they are used"
@@ -1918,7 +1918,7 @@
       "subtitle": "Connect external address books so your Kins can look up contacts (read-only).",
       "add": "Add address book",
       "addTitle": "Add an address book",
-      "addDescription": "Connect an external contacts source. Read-only — these never enter KinBot's own contacts.",
+      "addDescription": "Connect an external contacts source. Read-only — these never enter Hivekeep's own contacts.",
       "provider": "Provider",
       "connect": "Connect {{provider}}",
       "connected": "{{provider}} address book connected",
@@ -1929,7 +1929,7 @@
       "emptyTitle": "No address book connected",
       "emptyDescription": "Connect iCloud (or another CardDAV source) so your Kins can look up a contact's phone or email.",
       "help": {
-        "content": "Connect an external address book (e.g. iCloud via an app-specific password). Kins can then look up contacts read-only — for example to find a phone number before sending an SMS. These contacts are never copied into KinBot's own contacts."
+        "content": "Connect an external address book (e.g. iCloud via an app-specific password). Kins can then look up contacts read-only — for example to find a phone number before sending an SMS. These contacts are never copied into Hivekeep's own contacts."
       }
     },
     "emailAccounts": {
@@ -1944,7 +1944,7 @@
       "configureAppFirst": "Configure the {{provider}} app above before connecting an account.",
       "help": {
         "content": "Connect a Gmail account via OAuth. First configure a Google Cloud OAuth app (client ID + secret), then click Connect and authorize access.",
-        "bullet1": "Create an OAuth app in Google Cloud Console with the Gmail scopes, and register the redirect URI shown by your KinBot host (…/api/email-accounts/oauth/callback).",
+        "bullet1": "Create an OAuth app in Google Cloud Console with the Gmail scopes, and register the redirect URI shown by your Hivekeep host (…/api/email-accounts/oauth/callback).",
         "bullet2": "Paste the client ID and secret below, then Connect to authorize the mailbox.",
         "bullet3": "Grant a Kin the \"email\" toolbox to let it list, read, search and send mail through connected accounts."
       },
@@ -2115,7 +2115,7 @@
       "labelTip": "A friendly name to identify this delivery channel in the list.",
       "noChannelsDescription": "Add a delivery channel to receive notifications on Telegram, Discord, email, or other platforms.",
       "help": {
-        "content": "Notifications keep you informed about important events in KinBot. You can toggle individual notification types on or off, and set up external delivery channels to receive them on platforms like Telegram, Discord, or email.",
+        "content": "Notifications keep you informed about important events in Hivekeep. You can toggle individual notification types on or off, and set up external delivery channels to receive them on platforms like Telegram, Discord, or email.",
         "bullet1": "Toggle notification types to control what you see in the notification bell",
         "bullet2": "External delivery channels forward notifications to your preferred platforms",
         "bullet3": "Each delivery channel can filter by notification type for fine-grained control",
@@ -2146,7 +2146,7 @@
     },
     "plugins": {
       "title": "Plugins",
-      "description": "Manage plugins that extend KinBot with new tools, hooks, and integrations.",
+      "description": "Manage plugins that extend Hivekeep with new tools, hooks, and integrations.",
       "reload": "Reload",
       "reloaded": "Plugins reloaded",
       "checkUpdates": "Check for updates",
@@ -2196,7 +2196,7 @@
     },
     "marketplace": {
       "title": "Browse Plugins",
-      "description": "Plugins published to npm with the `kinbot-plugin` keyword. Anyone can publish — review the package author and source repository before installing.",
+      "description": "Plugins published to npm with the `hivekeep-plugin` keyword. Anyone can publish — review the package author and source repository before installing.",
       "refresh": "Refresh",
       "searchPlaceholder": "Search npm...",
       "allTags": "All",
@@ -2762,7 +2762,7 @@
     }
   },
   "invite": {
-    "title": "Join KinBot",
+    "title": "Join Hivekeep",
     "subtitle": "You've been invited to join this workspace",
     "invalidToken": "This invitation link is invalid or has expired.",
     "backToLogin": "Go to login",

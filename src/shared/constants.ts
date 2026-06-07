@@ -1,5 +1,5 @@
 // Shared constants used by both client and server
-// 🤖 KinBot — Where AI agents collaborate!
+// 🤖 Hivekeep — Where AI agents collaborate!
 
 export const SUPPORTED_LANGUAGES = ['en', 'fr'] as const
 
@@ -19,8 +19,8 @@ export const MAX_MESSAGE_LENGTH = 32_000
 
 /** Default maximum number of concurrency-safe tools that can run in parallel
  *  within a single step batch. Override at runtime with the
- *  KINBOT_MAX_TOOL_USE_CONCURRENCY env var. */
-export const KINBOT_MAX_TOOL_USE_CONCURRENCY_DEFAULT = 10
+ *  HIVEKEEP_MAX_TOOL_USE_CONCURRENCY env var. */
+export const HIVEKEEP_MAX_TOOL_USE_CONCURRENCY_DEFAULT = 10
 
 // ---------------------------------------------------------------------------
 // Provider constants — all derived from PROVIDER_META (single source of truth)
@@ -379,7 +379,7 @@ export const TICKET_STATUSES = ['backlog', 'todo', 'in_progress', 'blocked', 'do
  *  - starts with a letter
  *  - 2-32 chars total
  *  - no leading hyphen (handled by leading-letter rule)
- *  Examples: `kinbot`, `soupcon-de-magie`, `x-1`. */
+ *  Examples: `hivekeep`, `soupcon-de-magie`, `x-1`. */
 export const PROJECT_SLUG_REGEX = /^[a-z][a-z0-9-]{1,31}$/
 
 /** Regex to capture a ticket reference in free text. Two shapes:

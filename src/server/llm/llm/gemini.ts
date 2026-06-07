@@ -30,17 +30,17 @@ import {
   InvalidRequestError,
   NetworkError,
   ProviderServerError,
-  KinbotProviderError,
+  HivekeepProviderError,
 } from '@/server/llm/core/types'
 import type {
   LLMProvider,
   LLMModel,
   ChatRequest,
   ChatChunk,
-  KinbotMessage,
-  KinbotMessageBlock,
+  HivekeepMessage,
+  HivekeepMessageBlock,
   SystemPrompt,
-  KinbotTool,
+  HivekeepTool,
   ThinkingEffort,
 } from '@/server/llm/llm/types'
 
@@ -174,7 +174,7 @@ function authHeaders(apiKey: string): Record<string, string> {
   }
 }
 
-function errorFromResponse(status: number, body: string): KinbotProviderError {
+function errorFromResponse(status: number, body: string): HivekeepProviderError {
   // Gemini error envelope: { error: { code, message, status } }
   let message = body
   try {
@@ -188,13 +188,13 @@ function errorFromResponse(status: number, body: string): KinbotProviderError {
   return new ProviderServerError(message, status)
 }
 
-function wrapError(err: unknown): KinbotProviderError {
-  if (err instanceof KinbotProviderError) return err
+function wrapError(err: unknown): HivekeepProviderError {
+  if (err instanceof HivekeepProviderError) return err
   if (err instanceof Error) return new NetworkError(err.message, err)
   return new NetworkError(String(err))
 }
 
-// ─── KinBot → Gemini conversions ─────────────────────────────────────────────
+// ─── Hivekeep → Gemini conversions ─────────────────────────────────────────────
 
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = ''
@@ -202,7 +202,7 @@ function uint8ToBase64(bytes: Uint8Array): string {
   return globalThis.btoa(binary)
 }
 
-function blockToParts(block: KinbotMessageBlock): GeminiPart[] {
+function blockToParts(block: HivekeepMessageBlock): GeminiPart[] {
   switch (block.type) {
     case 'text':
       return block.text ? [{ text: block.text }] : []
@@ -240,11 +240,11 @@ function blockToParts(block: KinbotMessageBlock): GeminiPart[] {
 }
 
 /**
- * Convert KinBot's messages into Gemini's `contents` array. Gemini
+ * Convert Hivekeep's messages into Gemini's `contents` array. Gemini
  * uses `model` instead of `assistant` for the role, and tool results
  * need their `name` patched in from the preceding `tool-use` block.
  */
-function messagesToGemini(messages: KinbotMessage[]): GeminiContent[] {
+function messagesToGemini(messages: HivekeepMessage[]): GeminiContent[] {
   // Build an id → name map for tool-use blocks so we can label the
   // matching tool-result functionResponse on the way out.
   const toolNameById = new Map<string, string>()
@@ -282,7 +282,7 @@ function systemToGemini(system: SystemPrompt | undefined): GeminiContent | undef
   return { role: 'user', parts: [{ text }] }
 }
 
-function toolsToGemini(tools: KinbotTool[] | undefined): GeminiToolDeclaration[] | undefined {
+function toolsToGemini(tools: HivekeepTool[] | undefined): GeminiToolDeclaration[] | undefined {
   if (!tools || tools.length === 0) return undefined
   return [{
     functionDeclarations: tools.map((t) => ({
@@ -294,7 +294,7 @@ function toolsToGemini(tools: KinbotTool[] | undefined): GeminiToolDeclaration[]
 }
 
 /**
- * Translate KinBot's discrete thinking effort into Gemini's
+ * Translate Hivekeep's discrete thinking effort into Gemini's
  * `thinkingBudget` token count. Gemini accepts -1 (auto), 0
  * (disabled), or a positive integer. Mapping is approximate — the
  * exact budget that maps to "high" varies per model, so we pick
@@ -452,7 +452,7 @@ async function* streamGemini(
  * Fetch the catalogue from `GET /v1beta/models`, paginated under a
  * `pageToken` query. We keep only models that support
  * `streamGenerateContent` (the chat path) and strip the `models/`
- * URI prefix to leave the bare id KinBot uses everywhere.
+ * URI prefix to leave the bare id Hivekeep uses everywhere.
  */
 async function listGeminiModels(apiKey: string): Promise<LLMModel[]> {
   const out: LLMModel[] = []

@@ -30,7 +30,7 @@ const mockCheckForUpdates = mock(() =>
     currentVersion: '1.0.0',
     latestVersion: '1.1.0',
     isUpdateAvailable: true,
-    releaseUrl: 'https://github.com/MarlBurroW/kinbot/releases/tag/v1.1.0',
+    releaseUrl: 'https://github.com/MarlBurroW/hivekeep/releases/tag/v1.1.0',
     releaseNotes: 'Bug fixes',
     publishedAt: '2026-01-01T00:00:00Z',
     lastCheckedAt: new Date().toISOString(),

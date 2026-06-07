@@ -1,8 +1,8 @@
-# KinBot Plugin Spec
+# Hivekeep Plugin Spec
 
 This document used to be the canonical plugin specification. It has been **superseded by the developer guide on the docs site**:
 
-→ **[Developing Plugins](https://marlburrow.github.io/kinbot/docs/plugins/developing/)**
+→ **[Developing Plugins](https://marlburrow.github.io/hivekeep/docs/plugins/developing/)**
 
 That page covers everything a plugin author needs:
 

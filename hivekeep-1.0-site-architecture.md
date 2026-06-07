@@ -1,6 +1,6 @@
-# KinBot 1.0 — Architecture du site & wireframes
+# Hivekeep 1.0 — Architecture du site & wireframes
 
-> Document de conception du site GitHub Pages. Découle des décisions validées (licence MIT, ton grand-public-rassurant, cible primaire power-user solo / homelabbers, **substance d'abord + polish UI remonté tôt**, recadrage de catégorie « plateforme d'agents IA autonomes »). Source : `kinbot-1.0-messaging.md`, `kinbot-1.0-strategie-communication.md` (§5 et §6), `kinbot-1.0-catalogue-capacites.md`. Toute la copy de référence ci-dessous reprend le messaging validé, jamais d'invention de feature.
+> Document de conception du site GitHub Pages. Découle des décisions validées (licence MIT, ton grand-public-rassurant, cible primaire power-user solo / homelabbers, **substance d'abord + polish UI remonté tôt**, recadrage de catégorie « plateforme d'agents IA autonomes »). Source : `hivekeep-1.0-messaging.md`, `hivekeep-1.0-strategie-communication.md` (§5 et §6), `hivekeep-1.0-catalogue-capacites.md`. Toute la copy de référence ci-dessous reprend le messaging validé, jamais d'invention de feature.
 
 ---
 
@@ -17,7 +17,7 @@
 
 ## 1. Arborescence raffinée
 
-Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres home explicites, regroupement `/features` clarifié (les 5 sous-pages = les 5 piliers), `/why-kinbot` re-cadré « comparatif catégorie agents autonomes », `/roadmap` érigé en page de confiance à part entière, fusion `/blog`↔`/changelog` tranchée en `/changelog` (plus honnête pour un 1.0), `/showcase` rapproché de la communauté.
+Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres home explicites, regroupement `/features` clarifié (les 5 sous-pages = les 5 piliers), `/why-hivekeep` re-cadré « comparatif catégorie agents autonomes », `/roadmap` érigé en page de confiance à part entière, fusion `/blog`↔`/changelog` tranchée en `/changelog` (plus honnête pour un 1.0), `/showcase` rapproché de la communauté.
 
 ```
 /                         Home — hero + 5 sections héros pleine largeur + bande "preuves légères"
@@ -29,7 +29,7 @@ Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres
   /features/channels        Pilier 5 — omnicanal 6 plateformes, transfert de canal temps réel, livraison causal-chain
   /features/automation      Crons, webhooks, human-in-the-loop, scout, tasks (rattaché au socle runtime)
   /features/security        Pilier + confiance — vault jamais-au-LLM, comptes connectés, transparence tokens, multi-user isolé
-/why-kinbot               Comparatif détaillé dans l'arène des AGENTS AUTONOMES + gaps de marché + "mauvaise catégorie" (fronts de chat)
+/why-hivekeep               Comparatif détaillé dans l'arène des AGENTS AUTONOMES + gaps de marché + "mauvaise catégorie" (fronts de chat)
 /quickstart               docker run copiable, prérequis, première connexion, passage de relais à Sherpa
 /showcase                 Galerie : mini-apps construites par les Kins, custom tools communautaires, captures UI multi-palettes
 /roadmap                  Maturité ~80% assumée par domaine, rough edges honnêtes, priorités post-1.0
@@ -41,7 +41,7 @@ Point de départ : §6 de la stratégie. Raffinements apportés : ajout d'ancres
 ### Nav principale (réduite — réflexe homelab : aller vite à l'install et au code)
 
 ```
-[Logo KinBot]   Features   Why KinBot   Docs   Roadmap   ★ GitHub      [ Démarrer en 2 min ]
+[Logo Hivekeep]   Features   Why Hivekeep   Docs   Roadmap   ★ GitHub      [ Démarrer en 2 min ]
 ```
 
 - 5 entrées max + bouton CTA + lien GitHub avec compteur d'étoiles. `Roadmap` est dans la nav (pas relégué au footer) : c'est un **signal de confiance assumé**, pas une note de bas de page.
@@ -110,7 +110,7 @@ Reprend exactement le bloc hero validé (`messaging.md` §3).
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│  [Logo KinBot]      Features  Why KinBot  Docs  Roadmap  ★GitHub  [▶ 2 min] │
+│  [Logo Hivekeep]      Features  Why Hivekeep  Docs  Roadmap  ★GitHub  [▶ 2 min] │
 ├──────────────────────────────────────────────────────────────────────┤
 │                                                                        │
 │   H1   Votre équipe d'IA, chez vous.                                   │
@@ -124,7 +124,7 @@ Reprend exactement le bloc hero validé (`messaging.md` §3).
 │   100% open-source (MIT) · self-hosted · zéro infra externe            │
 │                                                                        │
 │   ┌──────────────── média hero ────────────────┐                       │
-│   │  GIF en boucle : chat KinBot, sidebar Kins   │  ← un seul GIF qui   │
+│   │  GIF en boucle : chat Hivekeep, sidebar Kins   │  ← un seul GIF qui   │
 │   │  + un transfert/collab visible (avatars)     │     claque           │
 │   └──────────────────────────────────────────────┘                     │
 └──────────────────────────────────────────────────────────────────────┘
@@ -329,7 +329,7 @@ Grille de cartes compactes (1 ligne / 1 visuel mini / 1 lien). Reprend les « se
 
 ### [9] COMPARATIF CONDENSÉ (catégorie agents autonomes)
 
-Version courte du tableau §4 stratégie, **framée explicitement sur la bonne arène**. Décision : on met au centre les lignes où KinBot est seul en ✅.
+Version courte du tableau §4 stratégie, **framée explicitement sur la bonne arène**. Décision : on met au centre les lignes où Hivekeep est seul en ✅.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -340,7 +340,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 │    pas des plateformes d'agents persistants. Mauvaise catégorie.       │
 │    La vraie arène : agents autonomes (GPTs/Assistants, OpenClaw, …).   │
 │                                                                        │
-│  Dimension                              KinBot   Autres plateformes    │
+│  Dimension                              Hivekeep   Autres plateformes    │
 │  ───────────────────────────────────────────────────────────────     │
 │  Session continue unique (pas de "new chat")  ✅        ❌             │
 │  Collaboration inter-agents + sous-agents     ✅        ⚠️ / ❌        │
@@ -349,12 +349,12 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 │  Vault secrets jamais exposé au LLM            ✅        ❌             │
 │  Transparence tokens/contexte fine             ✅        ❌            │
 │                                                                        │
-│            [ Voir le comparatif complet → /why-kinbot ]               │
+│            [ Voir le comparatif complet → /why-hivekeep ]               │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Framing validé :** se positionner contre les plateformes d'agents autonomes ; ne **jamais** se laisser comparer aux fronts de chat (l'encart ⓘ le dit explicitement et désamorce la mauvaise comparaison).
-- Sur la home : 6 lignes max (celles où KinBot est seul en ✅). Tableau complet 8 colonnes → `/why-kinbot`.
+- Sur la home : 6 lignes max (celles où Hivekeep est seul en ✅). Tableau complet 8 colonnes → `/why-hivekeep`.
 - Note interne respectée : ne pas mettre les émergents (Hermes Agent, QwenPaw) dans le public ; OpenClaw nommé seulement comme exemple d'arène.
 
 ---
@@ -377,7 +377,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 ┌──────────────────────────────────────────────────────────────────────┐
 │            Votre équipe d'IA vous attend. En un docker run.            │
 │                                                                        │
-│   $ docker run -p 3000:3000 -v ./data:/data kinbot/kinbot   [copier]   │
+│   $ docker run -p 3000:3000 -v ./data:/data hivekeep/hivekeep   [copier]   │
 │                                                                        │
 │         [ ▶ Démarrer en 2 min ]      [ Lire la doc → ]                 │
 └──────────────────────────────────────────────────────────────────────┘
@@ -451,12 +451,12 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 ---
 
-### `/why-kinbot`
+### `/why-hivekeep`
 - **But :** comparatif détaillé dans l'**arène des agents autonomes** + gaps de marché. Désamorce explicitement la « mauvaise catégorie ». **Audience :** évaluateurs techniques, Hacker News, sceptiques.
 - **Sections :**
-  1. **Recadrage de catégorie** : « KinBot est une plateforme d'agents autonomes personnels, pas un front de chat. » Encart « pourquoi Open WebUI / Lobe Chat / LibreChat ne sont pas la bonne comparaison ».
+  1. **Recadrage de catégorie** : « Hivekeep est une plateforme d'agents autonomes personnels, pas un front de chat. » Encart « pourquoi Open WebUI / Lobe Chat / LibreChat ne sont pas la bonne comparaison ».
   2. **Tableau complet** (les 13 dimensions / 8 colonnes de §4 stratégie) avec légende ✅/⚠️/❌.
-  3. **Les angles d'attaque** : lignes où KinBot est seul en ✅ (session continue, inter-agents, vault jamais-au-LLM, transparence tokens, onboarding conversationnel).
+  3. **Les angles d'attaque** : lignes où Hivekeep est seul en ✅ (session continue, inter-agents, vault jamais-au-LLM, transparence tokens, onboarding conversationnel).
   4. **L'intersection vide** : narratif veille (personne ne réunit UX grand public + agents persistants + omnicanal + onboarding conversationnel en un conteneur ; OpenClaw fait l'omnicanal mais CLI mono-user).
   5. CTA quickstart + lien `/roadmap` (honnêteté).
 - Respect note interne : émergents en veille interne, pas dans le tableau public.
@@ -467,13 +467,13 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 ### `/showcase`
 - **But :** preuve sociale + inspiration (ce que les Kins construisent). **Audience :** devs, curieux. 
-- **Sections :** Galerie mini-apps (dashboards, Kanban, charts — clonables) · Custom tools communautaires avec renderers · Captures UI à travers plusieurs palettes/light-dark · « Construit avec KinBot ». Lien `/community` pour contribuer.
+- **Sections :** Galerie mini-apps (dashboards, Kanban, charts — clonables) · Custom tools communautaires avec renderers · Captures UI à travers plusieurs palettes/light-dark · « Construit avec Hivekeep ». Lien `/community` pour contribuer.
 
 ### `/roadmap` — la page qui assume les ~80%
 - **But :** **honnêteté radicale** sur la maturité, transformer le risque early-adopter en signal de confiance. **Audience :** homelabbers exigeants, contributeurs.
 - **Cadre validé :** assumer publiquement (« les self-hosters respectent l'honnêteté », ADN transparence). Ton du messaging : « production-ready pour un usage individu / petite équipe, fondations solides, polish UX en cours ».
 - **Sections :**
-  1. **« Où en est KinBot : ~80%, et on vous dit où sont les arêtes. »** Promesse d'honnêteté.
+  1. **« Où en est Hivekeep : ~80%, et on vous dit où sont les arêtes. »** Promesse d'honnêteté.
   2. **Maturité par domaine** (tableau 3 niveaux, repris du catalogue) :
      - *Solide / production-ready* : runtime core, compacting, mémoire (cœur), inter-Kin, sous-Kins, prompt builder + cache, custom tools, MCP, UI/design system (1289 tests), mini-apps (cœur), comptes connectés (e2e), vault, transparence tokens, channels, plateforme power-user, toolboxes.
      - *Stable mais récent* : scout, hooks lifecycle plugins, enrichment agent.
@@ -487,7 +487,7 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 - **But :** rediriger vers la doc Starlight. **Sections :** mini-sommaire (Getting Started, Core Concepts, Extending, Channels, Security, Reference) + bouton « Ouvrir la doc ». Principe : chaque feature héros du site a une page doc dédiée (cohérence marketing↔doc).
 
 ### `/community`
-- **But :** activer les évangélistes (devs/tinkerers, audience #2). **Sections :** Discord/Matrix · « Écrire un plugin » (SDK, scaffold `create-kinbot-plugin`) · Contribuer (issues, PR) · Code de conduite · Licence MIT.
+- **But :** activer les évangélistes (devs/tinkerers, audience #2). **Sections :** Discord/Matrix · « Écrire un plugin » (SDK, scaffold `create-hivekeep-plugin`) · Contribuer (issues, PR) · Code de conduite · Licence MIT.
 
 ### `/changelog`
 - **But :** annonces, releases, deep-dives techniques. **Sections :** flux daté des releases · deep-dives (mémoire hybride, transfert de canal, compacting) · abonnement RSS/GitHub Releases. (Choix : `/changelog` plutôt que `/blog` — plus honnête et soutenable pour un 1.0.)
@@ -496,11 +496,11 @@ Version courte du tableau §4 stratégie, **framée explicitement sur la bonne a
 
 ## 6. Récap des décisions structurantes
 
-- **Nav :** Features · Why KinBot · Docs · Roadmap · ★GitHub + CTA primaire. Reste en footer. **Roadmap promu en nav** = signal de confiance.
+- **Nav :** Features · Why Hivekeep · Docs · Roadmap · ★GitHub + CTA primaire. Reste en footer. **Roadmap promu en nav** = signal de confiance.
 - **CTA :** un primaire unique « Démarrer en 2 min » → `/quickstart`, secondaire « Voir la démo », tertiaire « Star on GitHub ». Un seul CTA rempli par pli.
 - **Home :** ordre = pilier order validé, **5 sections héros pleine largeur** (Collaboration+Mémoire · Sherpa · UI · Self-improving · Vault+Transparence), Sherpa **proéminent** (CTA dupliqué), UI/polish **présenté tôt**.
 - **Les 8 héros :** 5 en pleine largeur sur la home ; **les 8** en pleine largeur sur `/features` (ajout : Omnicanal+transfert, Mini-apps détachée, Transparence tokens détachée). Les 6 « preuves légères » (avatars, palettes, projets/Kanban, crons, comptes connectés, PWA) en bande de cartes + sous-pages.
-- **Comparatif :** framé sur la catégorie **agents autonomes** ; encart explicite « les fronts de chat ne sont pas la bonne comparaison » ; 6 lignes sur la home, tableau complet sur `/why-kinbot` ; émergents en veille interne.
+- **Comparatif :** framé sur la catégorie **agents autonomes** ; encart explicite « les fronts de chat ne sont pas la bonne comparaison » ; 6 lignes sur la home, tableau complet sur `/why-hivekeep` ; émergents en veille interne.
 - **`/roadmap` :** assume les ~80% par domaine + rough edges honnêtes + priorités post-1.0, cadré « connu et documenté » — cohérent avec le ton honnête et la cible homelab.
 
-Fichier source produit : ce document est destiné à `/Users/nicolasvarrot/projects/kinbot/kinbot-1.0-site-architecture.md` (à créer par l'orchestrateur si souhaité ; non écrit ici car la consigne demande le markdown verbatim en sortie).
+Fichier source produit : ce document est destiné à `/Users/nicolasvarrot/projects/hivekeep/hivekeep-1.0-site-architecture.md` (à créer par l'orchestrateur si souhaité ; non écrit ici car la consigne demande le markdown verbatim en sortie).

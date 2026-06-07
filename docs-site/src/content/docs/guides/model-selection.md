@@ -39,7 +39,7 @@ These Kins primarily chat with users and occasionally use tools. Most capable mo
 | **Llama 3.x (70B+)** | Groq/Together/Ollama | ✅ Good for self-hosted |
 
 :::tip
-When in doubt, start with **Claude Sonnet 4** or **Claude Sonnet 3.5**. They have the most consistent tool-calling behavior across all KinBot features.
+When in doubt, start with **Claude Sonnet 4** or **Claude Sonnet 3.5**. They have the most consistent tool-calling behavior across all Hivekeep features.
 :::
 
 ## The "text mode" problem
@@ -102,27 +102,27 @@ This pattern tells the model unambiguously that it should execute tool calls, no
 
 #### 4. Check tool call indicators
 
-In the KinBot UI, each message shows whether tool calls were made. Look for the tool call indicators (collapsible sections showing the tool name and parameters). If a response has no tool calls, the Kin operated in text mode.
+In the Hivekeep UI, each message shows whether tool calls were made. Look for the tool call indicators (collapsible sections showing the tool name and parameters). If a response has no tool calls, the Kin operated in text mode.
 
 ## Provider setup tips
 
 ### Anthropic (recommended)
 
 1. Get an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys)
-2. In KinBot, go to **Settings > Providers > Add Provider**
+2. In Hivekeep, go to **Settings > Providers > Add Provider**
 3. Select **Anthropic**, paste your API key
 4. The connection test will verify models are accessible
 
 Anthropic also supports **OAuth via Claude Max** — no API key needed if you have a Claude Max subscription.
 
 :::note
-Anthropic models are the most thoroughly tested with KinBot's tool system. The platform's core principles prompt and tool-call discipline instructions are optimized for Claude models.
+Anthropic models are the most thoroughly tested with Hivekeep's tool system. The platform's core principles prompt and tool-call discipline instructions are optimized for Claude models.
 :::
 
 ### OpenAI
 
 1. Get an API key from [platform.openai.com](https://platform.openai.com/api-keys)
-2. Add as a provider in KinBot
+2. Add as a provider in Hivekeep
 3. For autonomous Kins, use `gpt-4o` (not `gpt-4o-mini`)
 
 :::caution
@@ -132,7 +132,7 @@ OpenAI models occasionally fall into "text mode" on complex multi-step tool chai
 ### Ollama (self-hosted)
 
 1. Install [Ollama](https://ollama.ai) and pull a model: `ollama pull llama3.3:70b`
-2. In KinBot, add Ollama as a provider with base URL `http://localhost:11434`
+2. In Hivekeep, add Ollama as a provider with base URL `http://localhost:11434`
 3. From Docker, use `http://host.docker.internal:11434`
 
 :::caution
@@ -142,7 +142,7 @@ Local models through Ollama are great for conversational use but often struggle 
 ### OpenRouter (access to many models)
 
 1. Get an API key from [openrouter.ai](https://openrouter.ai/keys)
-2. Add as a provider in KinBot
+2. Add as a provider in Hivekeep
 3. You can access Claude, GPT-4o, Gemini, and many other models through a single provider
 
 OpenRouter is convenient if you want to test different models without setting up multiple providers.
@@ -161,7 +161,7 @@ A working Kin will call `web_search` and return real, current data. A text-mode 
 
 ### Cron test
 
-1. Create a simple cron job: "Search the web for 'KinBot' and summarize what you find"
+1. Create a simple cron job: "Search the web for 'Hivekeep' and summarize what you find"
 2. Trigger it manually
 3. Check the task result — does it contain actual search results or fabricated content?
 4. Look at the task detail for tool call indicators

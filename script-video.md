@@ -1,4 +1,4 @@
-# Script vidéo — Présentation KinBot
+# Script vidéo — Présentation Hivekeep
 
 **Format** : Screencast + voix off
 **Durée cible** : 5-7 minutes
@@ -9,9 +9,9 @@
 
 ## 1. ACCROCHE (0:00 — 0:25)
 
-**[Écran : on ouvre KinBot en thème dark (palette Aurora). Le Hub est sélectionné dans la sidebar, on voit 4-5 Kins listés avec leurs avatars colorés. Un message est envoyé au Hub et la réponse stream en temps réel.]**
+**[Écran : on ouvre Hivekeep en thème dark (palette Aurora). Le Hub est sélectionné dans la sidebar, on voit 4-5 Kins listés avec leurs avatars colorés. Un message est envoyé au Hub et la réponse stream en temps réel.]**
 
-> T'as déjà eu l'impression de devoir tout ré-expliquer à chaque fois que tu ouvres une nouvelle conversation avec une IA ? Ton contexte, tes préférences, tes projets en cours… Et si à la place, t'avais une équipe d'assistants IA qui te connaissent vraiment — qui se souviennent de tout, qui bossent ensemble, et qui tournent chez toi ? C'est KinBot.
+> T'as déjà eu l'impression de devoir tout ré-expliquer à chaque fois que tu ouvres une nouvelle conversation avec une IA ? Ton contexte, tes préférences, tes projets en cours… Et si à la place, t'avais une équipe d'assistants IA qui te connaissent vraiment — qui se souviennent de tout, qui bossent ensemble, et qui tournent chez toi ? C'est Hivekeep.
 
 ---
 
@@ -21,9 +21,9 @@
 
 > Aujourd'hui les chatbots IA ont un gros problème : chaque conversation est une page blanche. Tu dois te répéter. "Je suis développeur, je bosse sur tel projet, j'aime les réponses courtes." À chaque fois.
 
-**[Écran : revenir sur KinBot, montrer une conversation longue avec des messages de dates différentes — les séparateurs de date montrent que c'est la même session continue]**
+**[Écran : revenir sur Hivekeep, montrer une conversation longue avec des messages de dates différentes — les séparateurs de date montrent que c'est la même session continue]**
 
-> Et puis il y a la question des données. Tes conversations, tes fichiers, tes secrets — tout passe par des serveurs que tu ne contrôles pas. KinBot, c'est l'inverse : une plateforme open-source que tu héberges sur ta propre machine, avec des agents IA qui ont une vraie mémoire à long terme.
+> Et puis il y a la question des données. Tes conversations, tes fichiers, tes secrets — tout passe par des serveurs que tu ne contrôles pas. Hivekeep, c'est l'inverse : une plateforme open-source que tu héberges sur ta propre machine, avec des agents IA qui ont une vraie mémoire à long terme.
 
 ---
 
@@ -31,7 +31,7 @@
 
 **[Écran : cliquer sur "Create new Kin" dans la sidebar. Le formulaire de création s'ouvre avec les champs : nom, rôle, personnalité, expertise, modèle LLM.]**
 
-> Le cœur de KinBot, c'est le Kin. Un Kin, c'est un agent IA spécialisé avec sa propre identité. Tu lui donnes un nom, un rôle, une personnalité, un domaine d'expertise. Par exemple : "Atlas, expert en développement web, ton direct et concis."
+> Le cœur de Hivekeep, c'est le Kin. Un Kin, c'est un agent IA spécialisé avec sa propre identité. Tu lui donnes un nom, un rôle, une personnalité, un domaine d'expertise. Par exemple : "Atlas, expert en développement web, ton direct et concis."
 
 **[Écran : montrer le sélecteur de modèle LLM — on voit la liste des modèles disponibles (Claude Sonnet, GPT-4o, Gemini, modèles Ollama locaux…)]**
 
@@ -83,7 +83,7 @@
 
 **[Écran : montrer une longue conversation avec beaucoup de messages. Un indicateur "Compacting" apparaît.]**
 
-> Tu te demandes sûrement comment un Kin gère des mois de conversation sans exploser la fenêtre de contexte. C'est le compacting. Quand la conversation dépasse un certain seuil, KinBot résume automatiquement les anciens messages en gardant tous les détails importants.
+> Tu te demandes sûrement comment un Kin gère des mois de conversation sans exploser la fenêtre de contexte. C'est le compacting. Quand la conversation dépasse un certain seuil, Hivekeep résume automatiquement les anciens messages en gardant tous les détails importants.
 
 **[Écran : montrer la CompactingCard dans le chat qui indique qu'un résumé a été créé + X mémoires extraites]**
 
@@ -139,7 +139,7 @@
 
 **[Écran : aller dans l'onglet Apps de la sidebar. Montrer une mini-app créée par un Kin — par exemple un tracker de budget ou un dashboard. Cliquer dessus, l'app s'ouvre dans un panneau latéral.]**
 
-> Et les Kins vont encore plus loin avec les mini-apps. Un Kin peut construire une petite application web interactive — un tracker, un dashboard, un formulaire — qui vit directement dans l'interface de KinBot. Tu lui demandes, il le code, et c'est prêt à utiliser.
+> Et les Kins vont encore plus loin avec les mini-apps. Un Kin peut construire une petite application web interactive — un tracker, un dashboard, un formulaire — qui vit directement dans l'interface de Hivekeep. Tu lui demandes, il le code, et c'est prêt à utiliser.
 
 ---
 
@@ -159,7 +159,7 @@
 
 **[Écran : montrer Settings → Users avec plusieurs utilisateurs listés (admin + membres). Puis montrer un message dans le chat préfixé par un autre prénom — le Kin s'adresse à la bonne personne.]**
 
-> KinBot est multi-utilisateur. Invite ta famille, tes colocs, tes collègues. Tout le monde partage les mêmes Kins, mais chaque personne est identifiée. Le Kin sait à qui il parle et adapte sa réponse.
+> Hivekeep est multi-utilisateur. Invite ta famille, tes colocs, tes collègues. Tout le monde partage les mêmes Kins, mais chaque personne est identifiée. Le Kin sait à qui il parle et adapte sa réponse.
 
 **[Écran : montrer Settings → Channels avec Telegram, Discord, Slack connectés]**
 
@@ -171,7 +171,7 @@
 
 **[Écran : retour sur la vue principale. Interaction fluide avec un Kin — message envoyé, réponse qui stream en temps réel, tool calls qui s'affichent, tout est smooth. Zoom arrière pour montrer l'interface complète avec les palettes de couleurs (basculer entre Aurora, Ocean, Sakura en 2 secondes).]**
 
-> KinBot, c'est l'assistant IA que j'ai toujours voulu construire. Open-source, self-hosted, avec de vrais agents qui te connaissent, qui collaborent, et qui s'améliorent avec le temps. Le lien est dans la description. Star le repo, déploie-le en un docker run, et dis-moi ce que t'en penses.
+> Hivekeep, c'est l'assistant IA que j'ai toujours voulu construire. Open-source, self-hosted, avec de vrais agents qui te connaissent, qui collaborent, et qui s'améliorent avec le temps. Le lien est dans la description. Star le repo, déploie-le en un docker run, et dis-moi ce que t'en penses.
 
 ---
 
@@ -210,6 +210,6 @@
 - 7:00 — Conclusion
 
 ### Thumbnail
-- Interface KinBot en dark mode avec plusieurs Kins dans la sidebar
+- Interface Hivekeep en dark mode avec plusieurs Kins dans la sidebar
 - Texte accrocheur : "Vos propres agents IA — Self-hosted"
 - Avatar d'un Kin en gros plan à droite

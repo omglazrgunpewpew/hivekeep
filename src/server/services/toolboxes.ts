@@ -156,7 +156,7 @@ export const BUILTIN_TOOLBOXES: readonly BuiltinToolboxDef[] = [
   {
     name: 'address-book',
     description:
-      "Read-only EXTERNAL address books (iCloud, …): list and search contacts (names, phones, emails). Separate from KinBot's own contacts.",
+      "Read-only EXTERNAL address books (iCloud, …): list and search contacts (names, phones, emails). Separate from Hivekeep's own contacts.",
     toolNames: [
       'list_address_books',
       'list_address_book_contacts',

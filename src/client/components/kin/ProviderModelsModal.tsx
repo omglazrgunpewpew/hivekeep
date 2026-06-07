@@ -219,7 +219,7 @@ export function ProviderModelsModal({
           <DialogDescription>
             {t(
               'settings.providers.modelsModal.description',
-              'Models and voices the provider exposes right now (fetched live from its API). Use this list to verify what is available without leaving KinBot.',
+              'Models and voices the provider exposes right now (fetched live from its API). Use this list to verify what is available without leaving Hivekeep.',
             )}
           </DialogDescription>
         </DialogHeader>

@@ -1,19 +1,19 @@
 /**
- * KinBot Mini-App SDK — TypeScript Definitions
+ * Hivekeep Mini-App SDK — TypeScript Definitions
  * @version 1.16.0
  *
- * These types describe the global `KinBot` object auto-injected into mini-app iframes.
- * Import type reference: `/// <reference path="kinbot-sdk.d.ts" />`
+ * These types describe the global `Hivekeep` object auto-injected into mini-app iframes.
+ * Import type reference: `/// <reference path="hivekeep-sdk.d.ts" />`
  */
 
 // ─── Core Types ─────────────────────────────────────────────────────────────
 
-export interface KinBotTheme {
+export interface HivekeepTheme {
   mode: 'light' | 'dark';
   palette: string;
 }
 
-export interface KinBotAppMeta {
+export interface HivekeepAppMeta {
   id: string;
   name: string;
   slug: string;
@@ -22,16 +22,16 @@ export interface KinBotAppMeta {
   kinAvatarUrl: string | null;
   isFullPage: boolean;
   locale: string;
-  user: KinBotUser;
+  user: HivekeepUser;
 }
 
-export interface KinBotKin {
+export interface HivekeepKin {
   id: string | null;
   name: string | null;
   avatarUrl: string | null;
 }
 
-export interface KinBotUser {
+export interface HivekeepUser {
   id: string | null;
   name: string | null;
   pseudonym: string | null;
@@ -92,7 +92,7 @@ export type EventName =
 
 // ─── Storage ────────────────────────────────────────────────────────────────
 
-export interface KinBotStorage {
+export interface HivekeepStorage {
   /** Get a value by key. Returns parsed value or null if not found. */
   get<T = unknown>(key: string): Promise<T | null>;
   /** Set a value for a key. Value must be JSON-serializable. */
@@ -107,7 +107,7 @@ export interface KinBotStorage {
 
 // ─── Backend API ────────────────────────────────────────────────────────────
 
-export interface KinBotApi {
+export interface HivekeepApi {
   /** Call a backend API route. Returns raw Response. */
   (path: string, options?: RequestInit): Promise<Response>;
   /** GET and parse JSON. */
@@ -126,7 +126,7 @@ export interface KinBotApi {
 
 // ─── HTTP Proxy ─────────────────────────────────────────────────────────────
 
-export interface KinBotHttp {
+export interface HivekeepHttp {
   /** Fetch an external URL through server proxy (bypasses CORS). Returns raw Response. */
   (url: string, options?: RequestInit): Promise<Response>;
   /** GET external URL and parse JSON. */
@@ -137,7 +137,7 @@ export interface KinBotHttp {
 
 // ─── Clipboard ──────────────────────────────────────────────────────────────
 
-export interface KinBotClipboard {
+export interface HivekeepClipboard {
   /** Copy text to system clipboard (bypasses iframe restrictions). */
   write(text: string): Promise<void>;
   /** Read text from system clipboard (may require permission). */
@@ -146,7 +146,7 @@ export interface KinBotClipboard {
 
 // ─── Events (SSE) ───────────────────────────────────────────────────────────
 
-export interface KinBotEvents {
+export interface HivekeepEvents {
   /** Receive all SSE events from backend ctx.events.emit(). */
   subscribe(callback: (event: { event: string; data: unknown }) => void): void;
   /** Listen for a specific event name from backend. */
@@ -159,7 +159,7 @@ export interface KinBotEvents {
 
 // ─── Apps ───────────────────────────────────────────────────────────────────
 
-export interface KinBotApps {
+export interface HivekeepApps {
   /** List all mini-apps from the same Kin. */
   list(): Promise<MiniAppInfo[]>;
   /** Get details of a specific mini-app by ID. */
@@ -168,7 +168,7 @@ export interface KinBotApps {
 
 // ─── Memory ─────────────────────────────────────────────────────────────────
 
-export interface KinBotMemory {
+export interface HivekeepMemory {
   /** Semantic search the Kin's memories. */
   search(query: string, limit?: number): Promise<MemoryResult[]>;
   /** Store a new memory for the Kin. */
@@ -177,24 +177,24 @@ export interface KinBotMemory {
 
 // ─── Conversation ───────────────────────────────────────────────────────────
 
-export interface KinBotConversation {
+export interface HivekeepConversation {
   /** Get recent conversation messages. */
   history(limit?: number): Promise<ConversationMessage[]>;
   /** Send a message to the Kin's conversation. */
   send(text: string, options?: { silent?: boolean }): Promise<boolean>;
 }
 
-// ─── Main KinBot Object ────────────────────────────────────────────────────
+// ─── Main Hivekeep Object ────────────────────────────────────────────────────
 
-export interface KinBot {
+export interface Hivekeep {
   /** Current theme (mode + palette). */
-  readonly theme: KinBotTheme;
+  readonly theme: HivekeepTheme;
   /** Current app metadata. */
-  readonly app: KinBotAppMeta | null;
+  readonly app: HivekeepAppMeta | null;
   /** Info about the parent Kin. */
-  readonly kin: KinBotKin;
+  readonly kin: HivekeepKin;
   /** Info about the current user. */
-  readonly user: KinBotUser;
+  readonly user: HivekeepUser;
   /** Whether the app is in full-page mode. */
   readonly isFullPage: boolean;
   /** Current UI language code (e.g. 'en', 'fr'). */
@@ -221,7 +221,7 @@ export interface KinBot {
   setBadge(value: string | number | null): void;
   /** Open another mini-app from the same Kin by slug. */
   openApp(slug: string): void;
-  /** Navigate the parent KinBot UI to a path. */
+  /** Navigate the parent Hivekeep UI to a path. */
   navigate(path: string): void;
 
   // ─── Lifecycle ──────────────────────────────────────────────────────
@@ -234,15 +234,15 @@ export interface KinBot {
 
   // ─── Data ───────────────────────────────────────────────────────────
   /** Persistent key-value storage per app. */
-  storage: KinBotStorage;
+  storage: HivekeepStorage;
   /** Call backend API routes (_server.js). */
-  api: KinBotApi;
+  api: HivekeepApi;
   /** Fetch external URLs through server proxy (bypasses CORS). */
-  http: KinBotHttp;
+  http: HivekeepHttp;
   /** System clipboard access. */
-  clipboard: KinBotClipboard;
+  clipboard: HivekeepClipboard;
   /** Real-time SSE events from backend. */
-  events: KinBotEvents;
+  events: HivekeepEvents;
 
   // ─── Communication ──────────────────────────────────────────────────
   /** Send a message to the Kin's conversation. */
@@ -252,11 +252,11 @@ export interface KinBot {
 
   // ─── Namespaces ─────────────────────────────────────────────────────
   /** List and get mini-apps from the same Kin. */
-  apps: KinBotApps;
+  apps: HivekeepApps;
   /** Search and store Kin memories. */
-  memory: KinBotMemory;
+  memory: HivekeepMemory;
   /** Read and send conversation messages. */
-  conversation: KinBotConversation;
+  conversation: HivekeepConversation;
 
   // ─── Advanced ───────────────────────────────────────────────────────
   /** Register a keyboard shortcut. Returns unregister function. Pass null callback to remove. */
@@ -269,7 +269,7 @@ export interface KinBot {
 
 declare global {
   interface Window {
-    KinBot: KinBot;
+    Hivekeep: Hivekeep;
   }
-  const KinBot: KinBot;
+  const Hivekeep: Hivekeep;
 }

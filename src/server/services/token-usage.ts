@@ -10,7 +10,7 @@ const log = createLogger('token-usage')
 // ─── Step Usage Aggregation ────────────────────────────────────────────────
 
 /**
- * Aggregate already-resolved per-step `Usage` objects (kinbot LLMProvider
+ * Aggregate already-resolved per-step `Usage` objects (hivekeep LLMProvider
  * shape) into a single `MessageTokenUsage` with a `peakStepInputTokens`
  * extra. Sync version of `aggregateStepUsage` for the new abstraction.
  */

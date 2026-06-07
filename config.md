@@ -1,4 +1,4 @@
-# KinBot — Configuration centralisée
+# Hivekeep — Configuration centralisée
 
 Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces valeurs sont définies dans `src/server/config.ts` et peuvent être surchargées via variables d'environnement.
 
@@ -10,10 +10,10 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 |---|---|---|---|
 | `port` | `PORT` | `3333` | Port du serveur HTTP |
 | `maxRequestBodyBytes` | `MAX_REQUEST_BODY_MB` | `0` (illimité) | Taille max du corps d'une requête HTTP (Mo) acceptée par `Bun.serve`. Bun applique sinon un cap par défaut (~128 Mo) qui bloque silencieusement les gros uploads. `0` = illimité (`Number.MAX_SAFE_INTEGER`) |
-| `dataDir` | `KINBOT_DATA_DIR` | `./data` | Répertoire des données persistantes (DB, uploads, workspaces) |
+| `dataDir` | `HIVEKEEP_DATA_DIR` | `./data` | Répertoire des données persistantes (DB, uploads, workspaces) |
 | `encryptionKey` | `ENCRYPTION_KEY` | auto-generated | Clé de chiffrement pour les secrets du Vault et les configs provider. Auto-générée et persistée dans le répertoire data si absente |
 | `logLevel` | `LOG_LEVEL` | `info` | Niveau de log : 'debug', 'info', 'warn', 'error' |
-| `appVersion` | `KINBOT_VERSION` | *(auto-detected)* | Version de l'application. Lue depuis `package.json` par défaut. Peut être explicitement définie pour surcharger la détection. En Docker, automatiquement extraite par l'entrypoint |
+| `appVersion` | `HIVEKEEP_VERSION` | *(auto-detected)* | Version de l'application. Lue depuis `package.json` par défaut. Peut être explicitement définie pour surcharger la détection. En Docker, automatiquement extraite par l'entrypoint |
 | — | `TRUSTED_ORIGINS` | *(aucun)* | Liste d'origines supplémentaires autorisées pour le CORS, séparées par des virgules (ex: `https://app.example.com`). Le `PUBLIC_URL` est toujours inclus automatiquement. Lu directement dans `app.ts` |
 
 ---
@@ -22,7 +22,7 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `dbPath` | `DB_PATH` | `{dataDir}/kinbot.db` | Chemin du fichier SQLite |
+| `dbPath` | `DB_PATH` | `{dataDir}/hivekeep.db` | Chemin du fichier SQLite |
 
 ---
 
@@ -73,8 +73,8 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 |---|---|---|---|
 | `tools.maxSteps` | `TOOLS_MAX_STEPS` | `0` | Nombre max d'étapes de tool-calling par tour LLM. 0 = illimité (plafonné a 100 en interne) |
 | `tools.concurrencyCap` | `TOOLS_CONCURRENCY_CAP` | `5` | Nombre max d'exécutions parallèles d'outils en lecture seule. Quand toutes les tool calls d'un step sont read-only, elles s'exécutent en parallèle (limité a cette valeur). Les batches mixtes avec au moins un outil mutant restent séquentiels |
-| `shell.defaultTimeoutMs` | `KINBOT_SHELL_TIMEOUT` | `30000` | Timeout par défaut d'une commande `run_shell` (ms), utilisé quand le Kin ne fournit pas de `timeout` |
-| `shell.maxTimeoutMs` | `KINBOT_SHELL_MAX_TIMEOUT` | `600000` | Timeout maximum qu'un Kin peut demander par appel `run_shell` (ms). Le paramètre `timeout` de l'outil est plafonné à cette valeur (10 min par défaut, à relever pour des suites de tests/builds plus longs) |
+| `shell.defaultTimeoutMs` | `HIVEKEEP_SHELL_TIMEOUT` | `30000` | Timeout par défaut d'une commande `run_shell` (ms), utilisé quand le Kin ne fournit pas de `timeout` |
+| `shell.maxTimeoutMs` | `HIVEKEEP_SHELL_MAX_TIMEOUT` | `600000` | Timeout maximum qu'un Kin peut demander par appel `run_shell` (ms). Le paramètre `timeout` de l'outil est plafonné à cette valeur (10 min par défaut, à relever pour des suites de tests/builds plus longs) |
 
 ---
 
@@ -82,11 +82,11 @@ Toutes les valeurs configurables de la plateforme, regroupées par domaine. Ces 
 
 | Clé | Env var | Default | Description |
 |---|---|---|---|
-| `customTools.baseDir` | `KINBOT_CUSTOM_TOOLS_DIR` | `${dataDir}/custom-tools` | Répertoire racine des outils custom globaux (`<baseDir>/<slug>/` = entrypoint + deps) |
-| `customTools.defaultTimeoutMs` | `KINBOT_CUSTOM_TOOL_TIMEOUT` | `30000` | Timeout par défaut pour l'exécution d'un custom tool (ms) |
-| `customTools.maxTimeoutMs` | `KINBOT_CUSTOM_TOOL_MAX_TIMEOUT` | `300000` | Timeout maximum autorisé pour un custom tool (ms). Les valeurs sont plafonnées à cette limite |
-| `customTools.maxOutputBytes` | `KINBOT_CUSTOM_TOOL_MAX_OUTPUT_BYTES` | `262144` | Plafond de la sortie capturée (stdout+stderr) d'un custom tool, pour protéger la fenêtre de contexte |
-| `customTools.setupTimeoutMs` | `KINBOT_CUSTOM_TOOL_SETUP_TIMEOUT` | `600000` | Timeout pour l'installation des dépendances (`pip`/`bun install`) (ms) |
+| `customTools.baseDir` | `HIVEKEEP_CUSTOM_TOOLS_DIR` | `${dataDir}/custom-tools` | Répertoire racine des outils custom globaux (`<baseDir>/<slug>/` = entrypoint + deps) |
+| `customTools.defaultTimeoutMs` | `HIVEKEEP_CUSTOM_TOOL_TIMEOUT` | `30000` | Timeout par défaut pour l'exécution d'un custom tool (ms) |
+| `customTools.maxTimeoutMs` | `HIVEKEEP_CUSTOM_TOOL_MAX_TIMEOUT` | `300000` | Timeout maximum autorisé pour un custom tool (ms). Les valeurs sont plafonnées à cette limite |
+| `customTools.maxOutputBytes` | `HIVEKEEP_CUSTOM_TOOL_MAX_OUTPUT_BYTES` | `262144` | Plafond de la sortie capturée (stdout+stderr) d'un custom tool, pour protéger la fenêtre de contexte |
+| `customTools.setupTimeoutMs` | `HIVEKEEP_CUSTOM_TOOL_SETUP_TIMEOUT` | `600000` | Timeout pour l'installation des dépendances (`pip`/`bun install`) (ms) |
 
 ---
 
@@ -357,7 +357,7 @@ Paramètres de réglage interne — la plupart des déploiements n'y touchent ja
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `VERSION_CHECK_ENABLED` | `true` | Active les vérifications périodiques de nouvelle version. |
-| `VERSION_CHECK_REPO` | `MarlBurroW/kinbot` | Repo cible pour les vérifications. |
+| `VERSION_CHECK_REPO` | `MarlBurroW/hivekeep` | Repo cible pour les vérifications. |
 | `VERSION_CHECK_INTERVAL_HOURS` | `1` | Intervalle de vérification. |
 
 ## MCP

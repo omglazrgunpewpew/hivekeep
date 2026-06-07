@@ -1,4 +1,4 @@
-# KinBot — Schéma de base de données
+# Hivekeep — Schéma de base de données
 
 Schéma SQLite détaillé, conçu pour Drizzle ORM. Toutes les tables utilisent des UUID (text) comme clés primaires et des timestamps Unix (integer) pour les dates.
 
@@ -53,11 +53,11 @@ Table interne Better Auth pour les tokens de vérification email, reset password
 
 ---
 
-## Tables custom KinBot
+## Tables custom Hivekeep
 
 ### `user_profiles`
 
-Extension du `user` Better Auth avec les champs spécifiques KinBot.
+Extension du `user` Better Auth avec les champs spécifiques Hivekeep.
 
 | Colonne | Type | Contraintes | Description |
 |---|---|---|---|

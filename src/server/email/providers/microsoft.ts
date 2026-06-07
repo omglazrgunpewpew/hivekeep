@@ -18,7 +18,7 @@ import type {
   SendEmailParams,
   SendEmailResult,
 } from '@/server/email/types'
-import type { ProviderConfig, AuthResult } from '@kinbot-developer/sdk'
+import type { ProviderConfig, AuthResult } from '@hivekeep-developer/sdk'
 
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 

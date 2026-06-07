@@ -1,15 +1,15 @@
 ---
 title: System Prompts
-description: How KinBot builds system prompts and how to craft effective Kin personalities.
+description: How Hivekeep builds system prompts and how to craft effective Kin personalities.
 ---
 
-Every Kin's behavior is shaped by its **system prompt**, which KinBot assembles automatically from several sources. Understanding this helps you write better Kin configurations.
+Every Kin's behavior is shaped by its **system prompt**, which Hivekeep assembles automatically from several sources. Understanding this helps you write better Kin configurations.
 
 ## Prompt architecture
 
-KinBot builds the system prompt from these blocks (in order):
+Hivekeep builds the system prompt from these blocks (in order):
 
-1. **Platform context** — explains that the Kin lives on KinBot, has a continuous session, and sees multiple users
+1. **Platform context** — explains that the Kin lives on Hivekeep, has a continuous session, and sees multiple users
 2. **Identity** — name, slug, and role
 3. **Core principles** — universal baseline behaviors (genuine helpfulness, resourcefulness, privacy, calibrated responses, tool-call discipline). Includes instructions to never narrate or predict tool results before execution, and to never batch dependent tool calls — each must be called one at a time across separate steps. Injected for all main Kins, not sub-Kins or quick sessions
 4. **Personality** — the `character` field you define

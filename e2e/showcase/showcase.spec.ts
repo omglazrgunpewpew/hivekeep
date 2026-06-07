@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { mockProviderModels } from '../helpers/auth'
 
 /**
- * Showcase test — records a smooth visual walkthrough of KinBot.
+ * Showcase test — records a smooth visual walkthrough of Hivekeep.
  *
  * This is NOT a functional test. Its purpose is to produce a polished video
  * for the landing site hero. It uses deliberate pauses and visible typing
@@ -25,7 +25,7 @@ async function typeSlowly(
   await page.locator(selector).pressSequentially(text, { delay })
 }
 
-test('KinBot showcase walkthrough', async ({ page }) => {
+test('Hivekeep showcase walkthrough', async ({ page }) => {
   await mockProviderModels(page)
   await page.goto('/')
 

@@ -1,10 +1,10 @@
 /**
  * External plugin fixture — simulates a third-party plugin published on
- * npm. The whole module imports from `@kinbot-developer/sdk` only;
- * nothing from KinBot internals (no `@/server/...`, no `@/shared/...`).
+ * npm. The whole module imports from `@hivekeep-developer/sdk` only;
+ * nothing from Hivekeep internals (no `@/server/...`, no `@/shared/...`).
  *
  * Loaded by `src/server/services/plugins-e2e.test.ts` to prove the SDK
- * contract works end-to-end for plugins that don't live in the kinbot
+ * contract works end-to-end for plugins that don't live in the hivekeep
  * tree.
  */
 
@@ -19,7 +19,7 @@ import {
   type PluginContext,
   type PluginExports,
   type ProviderConfig,
-} from '@kinbot-developer/sdk'
+} from '@hivekeep-developer/sdk'
 
 interface ExternalConfig {
   greeting?: string

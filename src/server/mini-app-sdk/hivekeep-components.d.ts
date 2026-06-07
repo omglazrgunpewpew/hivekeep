@@ -1,6 +1,6 @@
 /**
- * @kinbot/components — TypeScript Definitions
- * React component library for KinBot mini-apps.
+ * @hivekeep/components — TypeScript Definitions
+ * React component library for Hivekeep mini-apps.
  */
 
 import * as React from 'react';

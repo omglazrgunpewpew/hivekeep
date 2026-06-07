@@ -1,11 +1,11 @@
 ---
 title: Plugin API Reference
-description: Complete API reference for KinBot plugin development.
+description: Complete API reference for Hivekeep plugin development.
 ---
 
 ## Plugin Context
 
-The `PluginContext` object is passed to your plugin's entry function. It provides access to KinBot services.
+The `PluginContext` object is passed to your plugin's entry function. It provides access to Hivekeep services.
 
 ```typescript
 interface PluginContext {
@@ -117,7 +117,7 @@ interface ToolRegistration {
 }
 ```
 
-Tools use the `tool()` helper exported by [`@kinbot-developer/sdk`](https://www.npmjs.com/package/@kinbot-developer/sdk) with [Zod](https://zod.dev/) schemas for parameters.
+Tools use the `tool()` helper exported by [`@hivekeep-developer/sdk`](https://www.npmjs.com/package/@hivekeep-developer/sdk) with [Zod](https://zod.dev/) schemas for parameters.
 
 ### Hook Names
 
@@ -143,7 +143,7 @@ interface PluginManifest {
   author?: string
   homepage?: string
   license?: string
-  kinbot?: string
+  hivekeep?: string
   main: string
   icon?: string
   permissions?: string[]
@@ -192,12 +192,12 @@ Plugin management is also available via the REST API:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/plugins/registry/npm-search` | Search the public npm registry for packages tagged with the `kinbot-plugin` keyword (`?q=<query>`). Results are tagged with `installed: boolean`. Server-side cache: 5 min per query. |
-| `GET` | `/api/plugins/version` | Get KinBot version for compatibility checks |
+| `GET` | `/api/plugins/registry/npm-search` | Search the public npm registry for packages tagged with the `hivekeep-plugin` keyword (`?q=<query>`). Results are tagged with `installed: boolean`. Server-side cache: 5 min per query. |
+| `GET` | `/api/plugins/version` | Get Hivekeep version for compatibility checks |
 
 ## Plugin Health Monitoring
 
-KinBot tracks error statistics for each plugin. If a plugin's hooks or tools throw errors repeatedly, it is automatically disabled to protect system stability.
+Hivekeep tracks error statistics for each plugin. If a plugin's hooks or tools throw errors repeatedly, it is automatically disabled to protect system stability.
 
 **Health stats** are included in every plugin summary (`GET /api/plugins`):
 
@@ -225,7 +225,7 @@ curl -X POST http://localhost:3000/api/plugins/my-plugin/health/reset
 ```bash
 curl -X POST http://localhost:3000/api/plugins/install \
   -H 'Content-Type: application/json' \
-  -d '{"source": "npm", "package": "kinbot-plugin-weather"}'
+  -d '{"source": "npm", "package": "hivekeep-plugin-weather"}'
 ```
 
 ### Install from Git URL (unpublished / private plugins)
@@ -233,5 +233,5 @@ curl -X POST http://localhost:3000/api/plugins/install \
 ```bash
 curl -X POST http://localhost:3000/api/plugins/install \
   -H 'Content-Type: application/json' \
-  -d '{"source": "git", "url": "https://github.com/user/kinbot-plugin-weather"}'
+  -d '{"source": "git", "url": "https://github.com/user/hivekeep-plugin-weather"}'
 ```

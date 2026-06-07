@@ -1,6 +1,6 @@
 /**
  * Tests for `resolveMentions` — the batch ticket reference resolver used by
- * the chat client to turn `#42` / `kinbot#42` patterns into clickable badges.
+ * the chat client to turn `#42` / `hivekeep#42` patterns into clickable badges.
  *
  * We mock drizzle-orm, the DB schema and `@/server/db/index` so we can drive
  * the query results from the test. This isolates the resolution logic (dedup,
@@ -193,19 +193,19 @@ describe('resolveMentions', () => {
   })
 
   it('resolves a qualified ref via slug + number', async () => {
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
     fakeTickets.push({ id: 't1', projectId: 'p1', number: 42, title: 'Hello', status: 'in_progress' })
 
-    const out = await resolveMentions(['kinbot#42'])
-    expect(out['kinbot#42']).toEqual({
+    const out = await resolveMentions(['hivekeep#42'])
+    expect(out['hivekeep#42']).toEqual({
       found: true,
       id: 't1',
       number: 42,
       title: 'Hello',
       status: 'in_progress',
       projectId: 'p1',
-      projectSlug: 'kinbot',
-      projectName: 'KinBot',
+      projectSlug: 'hivekeep',
+      projectName: 'Hivekeep',
     })
   })
 
@@ -215,13 +215,13 @@ describe('resolveMentions', () => {
   })
 
   it('returns TICKET_NOT_FOUND when the project exists but the number does not', async () => {
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
-    const out = await resolveMentions(['kinbot#999'])
-    expect(out['kinbot#999']).toEqual({ found: false, reason: 'TICKET_NOT_FOUND' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
+    const out = await resolveMentions(['hivekeep#999'])
+    expect(out['hivekeep#999']).toEqual({ found: false, reason: 'TICKET_NOT_FOUND' })
   })
 
   it('resolves bare refs via the active project context', async () => {
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
     fakeTickets.push({ id: 't1', projectId: 'p1', number: 7, title: 'Bare', status: 'todo' })
 
     const out = await resolveMentions(['#7'], { activeProjectId: 'p1' })
@@ -232,8 +232,8 @@ describe('resolveMentions', () => {
       title: 'Bare',
       status: 'todo',
       projectId: 'p1',
-      projectSlug: 'kinbot',
-      projectName: 'KinBot',
+      projectSlug: 'hivekeep',
+      projectName: 'Hivekeep',
     })
   })
 
@@ -243,41 +243,41 @@ describe('resolveMentions', () => {
   })
 
   it('de-dupes identical refs into a single resolution', async () => {
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
     fakeTickets.push({ id: 't1', projectId: 'p1', number: 42, title: 'Dup', status: 'todo' })
 
-    const out = await resolveMentions(['kinbot#42', 'kinbot#42', 'kinbot#42'])
+    const out = await resolveMentions(['hivekeep#42', 'hivekeep#42', 'hivekeep#42'])
     // All three keys point to the same logical ref, only one entry remains.
-    expect(Object.keys(out)).toEqual(['kinbot#42'])
-    expect(out['kinbot#42']!.found).toBe(true)
+    expect(Object.keys(out)).toEqual(['hivekeep#42'])
+    expect(out['hivekeep#42']!.found).toBe(true)
   })
 
   it('handles a mixed batch with partial successes', async () => {
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
     fakeProjects.push({ id: 'p2', slug: 'soupcon', title: 'Soupcon' })
     fakeTickets.push({ id: 't1', projectId: 'p1', number: 1, title: 'A', status: 'todo' })
     fakeTickets.push({ id: 't2', projectId: 'p2', number: 5, title: 'B', status: 'done' })
 
     const out = await resolveMentions(
-      ['kinbot#1', 'soupcon#5', 'kinbot#999', 'ghost#1', '#1'],
+      ['hivekeep#1', 'soupcon#5', 'hivekeep#999', 'ghost#1', '#1'],
       { activeProjectId: 'p1' },
     )
-    expect(out['kinbot#1']!.found).toBe(true)
+    expect(out['hivekeep#1']!.found).toBe(true)
     expect(out['soupcon#5']!.found).toBe(true)
-    expect(out['kinbot#999']).toEqual({ found: false, reason: 'TICKET_NOT_FOUND' })
+    expect(out['hivekeep#999']).toEqual({ found: false, reason: 'TICKET_NOT_FOUND' })
     expect(out['ghost#1']).toEqual({ found: false, reason: 'PROJECT_NOT_FOUND' })
     expect(out['#1']!.found).toBe(true) // bare resolves via activeProjectId
   })
 
   it('caps to RESOLVE_MENTIONS_MAX_REFS — extras are silently dropped', async () => {
     expect(RESOLVE_MENTIONS_MAX_REFS).toBeGreaterThan(0)
-    fakeProjects.push({ id: 'p1', slug: 'kinbot', title: 'KinBot' })
+    fakeProjects.push({ id: 'p1', slug: 'hivekeep', title: 'Hivekeep' })
     // Build a batch larger than the cap with unique refs.
-    const refs = Array.from({ length: RESOLVE_MENTIONS_MAX_REFS + 5 }, (_, i) => `kinbot#${i + 1}`)
+    const refs = Array.from({ length: RESOLVE_MENTIONS_MAX_REFS + 5 }, (_, i) => `hivekeep#${i + 1}`)
     const out = await resolveMentions(refs)
     // Only the first MAX entries are processed.
     expect(Object.keys(out).length).toBe(RESOLVE_MENTIONS_MAX_REFS)
     // The dropped entries remain absent.
-    expect(out[`kinbot#${RESOLVE_MENTIONS_MAX_REFS + 1}`]).toBeUndefined()
+    expect(out[`hivekeep#${RESOLVE_MENTIONS_MAX_REFS + 1}`]).toBeUndefined()
   })
 })

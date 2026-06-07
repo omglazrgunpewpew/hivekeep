@@ -1,26 +1,26 @@
 /**
- * @kinbot/react — TypeScript Definitions
- * React hooks and convenience re-exports for KinBot mini-apps.
+ * @hivekeep/react — TypeScript Definitions
+ * React hooks and convenience re-exports for Hivekeep mini-apps.
  */
 
 import type {
-  KinBot, KinBotTheme, KinBotKin, KinBotUser, KinBotStorage,
-  KinBotApi, KinBotHttp, KinBotClipboard, KinBotEvents, KinBotApps,
-  KinBotMemory, KinBotConversation, MiniAppInfo, MemoryResult,
+  Hivekeep, HivekeepTheme, HivekeepKin, HivekeepUser, HivekeepStorage,
+  HivekeepApi, HivekeepHttp, HivekeepClipboard, HivekeepEvents, HivekeepApps,
+  HivekeepMemory, HivekeepConversation, MiniAppInfo, MemoryResult,
   CreatedMemory, ConversationMessage, SharedData, ToastType,
-} from './kinbot-sdk';
+} from './hivekeep-sdk';
 
-// ─── useKinBot ──────────────────────────────────────────────────────────────
+// ─── useHivekeep ──────────────────────────────────────────────────────────────
 
-export interface UseKinBotReturn {
-  kinbot: KinBot;
-  app: KinBot['app'];
-  theme: KinBotTheme;
+export interface UseHivekeepReturn {
+  hivekeep: Hivekeep;
+  app: Hivekeep['app'];
+  theme: HivekeepTheme;
   ready: () => void;
 }
 
-/** Access the KinBot SDK instance with reactive theme/app updates. */
-export function useKinBot(): UseKinBotReturn;
+/** Access the Hivekeep SDK instance with reactive theme/app updates. */
+export function useHivekeep(): UseHivekeepReturn;
 
 // ─── useStorage ─────────────────────────────────────────────────────────────
 
@@ -33,17 +33,17 @@ export function useStorage<T = unknown>(
 // ─── useTheme ───────────────────────────────────────────────────────────────
 
 /** Reactive theme hook. */
-export function useTheme(): KinBotTheme;
+export function useTheme(): HivekeepTheme;
 
 // ─── useKin ─────────────────────────────────────────────────────────────────
 
 /** Reactive Kin info hook. */
-export function useKin(): { kin: KinBotKin; loading: boolean };
+export function useKin(): { kin: HivekeepKin; loading: boolean };
 
 // ─── useUser ────────────────────────────────────────────────────────────────
 
 /** Reactive user info hook. */
-export function useUser(): { user: KinBotUser; loading: boolean };
+export function useUser(): { user: HivekeepUser; loading: boolean };
 
 // ─── useForm ────────────────────────────────────────────────────────────────
 
@@ -194,7 +194,7 @@ export interface UseFetchReturn<T = unknown> {
   status: number | null;
 }
 
-/** Fetch external data via KinBot.http() proxy. Pass null URL to skip. */
+/** Fetch external data via Hivekeep.http() proxy. Pass null URL to skip. */
 export function useFetch<T = unknown>(url: string | null, options?: UseFetchOptions): UseFetchReturn<T>;
 
 // ─── useApi ─────────────────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ export interface UseApiReturn<T = unknown> {
   refetch: () => Promise<void>;
 }
 
-/** Fetch from mini-app backend (_server.js) via KinBot.api(). Pass null path to skip. */
+/** Fetch from mini-app backend (_server.js) via Hivekeep.api(). Pass null path to skip. */
 export function useApi<T = unknown>(path: string | null, options?: UseApiOptions): UseApiReturn<T>;
 
 // ─── useAsync ───────────────────────────────────────────────────────────────
@@ -309,32 +309,32 @@ export function usePagination<T = unknown>(
 
 // ─── Convenience Re-exports ─────────────────────────────────────────────────
 
-export const toast: KinBot['toast'];
-export const confirm: KinBot['confirm'];
-export const prompt: KinBot['prompt'];
-export const navigate: KinBot['navigate'];
-export const fullpage: KinBot['fullpage'];
-export const setTitle: KinBot['setTitle'];
-export const setBadge: KinBot['setBadge'];
-export const openApp: KinBot['openApp'];
-export const clipboard: KinBot['clipboard'];
-export const storage: KinBot['storage'];
-export const api: KinBot['api'];
-export const http: KinBot['http'];
-export const events: KinBot['events'];
-export const kin: KinBot['kin'];
-export const user: KinBot['user'];
-export const memory: KinBot['memory'];
-export const conversation: KinBot['conversation'];
-export const notification: KinBot['notification'];
-export const resize: KinBot['resize'];
-export const share: KinBot['share'];
-export const shortcut: KinBot['shortcut'];
-export const apps: KinBot['apps'];
-export const download: KinBot['download'];
+export const toast: Hivekeep['toast'];
+export const confirm: Hivekeep['confirm'];
+export const prompt: Hivekeep['prompt'];
+export const navigate: Hivekeep['navigate'];
+export const fullpage: Hivekeep['fullpage'];
+export const setTitle: Hivekeep['setTitle'];
+export const setBadge: Hivekeep['setBadge'];
+export const openApp: Hivekeep['openApp'];
+export const clipboard: Hivekeep['clipboard'];
+export const storage: Hivekeep['storage'];
+export const api: Hivekeep['api'];
+export const http: Hivekeep['http'];
+export const events: Hivekeep['events'];
+export const kin: Hivekeep['kin'];
+export const user: Hivekeep['user'];
+export const memory: Hivekeep['memory'];
+export const conversation: Hivekeep['conversation'];
+export const notification: Hivekeep['notification'];
+export const resize: Hivekeep['resize'];
+export const share: Hivekeep['share'];
+export const shortcut: Hivekeep['shortcut'];
+export const apps: Hivekeep['apps'];
+export const download: Hivekeep['download'];
 
 /**
- * Persistent state using browser localStorage (not synced via KinBot storage).
+ * Persistent state using browser localStorage (not synced via Hivekeep storage).
  * Useful for UI preferences, collapsed states, and other non-critical local data.
  * Keys are auto-prefixed with 'kb:'. Syncs across tabs via storage events.
  * @param key - localStorage key

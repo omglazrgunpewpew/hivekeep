@@ -1,6 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-// Colored brand marks from @lobehub/icons (same set the KinBot app uses, see ProviderIcon.tsx).
+// Colored brand marks from @lobehub/icons (same set the Hivekeep app uses, see ProviderIcon.tsx).
 // Rendered server-side → static HTML, no client JS.
 import Claude from '@lobehub/icons/es/Claude';
 import OpenAI from '@lobehub/icons/es/OpenAI';
@@ -25,7 +25,7 @@ const S = 18;
   <div class="body">
     <span class="kicker">Providers &amp; plugins</span>
     <h2 class="display" style="margin-top:12px">Bring any provider, or add your own.</h2>
-    <p>KinBot speaks to providers across every capability out of the box. One config per provider, and capabilities are auto-detected (an OpenAI key lights up LLM, image, embeddings and speech at once).</p>
+    <p>Hivekeep speaks to providers across every capability out of the box. One config per provider, and capabilities are auto-detected (an OpenAI key lights up LLM, image, embeddings and speech at once).</p>
 
     <div class="prov-groups">
       <div class="pgroup">
@@ -94,28 +94,28 @@ const S = 18;
       </div>
     </div>
 
-    <p class="plug-note">Don't see yours? Install a plugin from npm (anything tagged <code>kinbot-plugin</code>) straight from the in-app marketplace, or have a Kin write one. A plugin can add <b>providers, channels, tools and hooks</b>. A few real ones:</p>
+    <p class="plug-note">Don't see yours? Install a plugin from npm (anything tagged <code>hivekeep-plugin</code>) straight from the in-app marketplace, or have a Kin write one. A plugin can add <b>providers, channels, tools and hooks</b>. A few real ones:</p>
 
     <div class="plug-grid">
-      <a class="plug" href="https://github.com/MarlBurroW/kinbot-plugin-twilio-sms" target="_blank" rel="noopener">
+      <a class="plug" href="https://github.com/MarlBurroW/hivekeep-plugin-twilio-sms" target="_blank" rel="noopener">
         <span class="ptag">channel</span>
         <h4><Icon name="simple-icons:twilio" /> Twilio SMS</h4>
         <p>Send and receive <b>SMS</b> through the Twilio REST API and webhooks. A real channel adapter.</p>
         <span class="gh"><Icon name="simple-icons:github" /> View on GitHub</span>
       </a>
-      <a class="plug" href="https://github.com/MarlBurroW/kinbot-plugin-mistral" target="_blank" rel="noopener">
+      <a class="plug" href="https://github.com/MarlBurroW/hivekeep-plugin-mistral" target="_blank" rel="noopener">
         <span class="ptag">LLM provider</span>
         <h4><Mistral.Color size={19} /> Mistral</h4>
         <p>Adds <b>Mistral AI</b> as a provider: chat models with tool calling, vision and streaming.</p>
         <span class="gh"><Icon name="simple-icons:github" /> View on GitHub</span>
       </a>
-      <a class="plug" href="https://github.com/MarlBurroW/kinbot-plugin-replicate" target="_blank" rel="noopener">
+      <a class="plug" href="https://github.com/MarlBurroW/hivekeep-plugin-replicate" target="_blank" rel="noopener">
         <span class="ptag">image / LLM provider</span>
         <h4><Replicate size={19} /> Replicate</h4>
         <p>Brings <b>Replicate-hosted models</b>: image (Flux), LLM (Llama 3, Mixtral) and embeddings.</p>
         <span class="gh"><Icon name="simple-icons:github" /> View on GitHub</span>
       </a>
     </div>
-    <p class="plug-more">Also on the marketplace: <a href="https://github.com/MarlBurroW/kinbot-plugin-teamspeak" target="_blank" rel="noopener">TeamSpeak</a> (voice channel) · <a href="https://github.com/MarlBurroW/kinbot-plugin-home-assistant" target="_blank" rel="noopener">Home Assistant</a> (smart-home tools). And counting.</p>
+    <p class="plug-more">Also on the marketplace: <a href="https://github.com/MarlBurroW/hivekeep-plugin-teamspeak" target="_blank" rel="noopener">TeamSpeak</a> (voice channel) · <a href="https://github.com/MarlBurroW/hivekeep-plugin-home-assistant" target="_blank" rel="noopener">Home Assistant</a> (smart-home tools). And counting.</p>
   </div>
 </section></div>

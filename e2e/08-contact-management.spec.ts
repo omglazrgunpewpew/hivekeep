@@ -116,7 +116,7 @@ test.describe.serial('Contact management', () => {
     await mockProviderModels(page)
 
     await page.goto('/')
-    await expect(page.getByText('Sign in to your KinBot workspace')).toBeVisible({
+    await expect(page.getByText('Sign in to your Hivekeep workspace')).toBeVisible({
       timeout: 10_000,
     })
     await loginAs(page)

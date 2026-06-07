@@ -42,7 +42,7 @@ import {
   InvalidRequestError,
   NetworkError,
   ProviderServerError,
-  KinbotProviderError,
+  HivekeepProviderError,
 } from '@/server/llm/core/types'
 import type {
   LLMProvider,
@@ -226,8 +226,8 @@ function createClient(config: ProviderConfig): Anthropic {
   })
 }
 
-function mapApiError(err: unknown): KinbotProviderError {
-  if (err instanceof KinbotProviderError) return err
+function mapApiError(err: unknown): HivekeepProviderError {
+  if (err instanceof HivekeepProviderError) return err
   if (err instanceof APIError) return mapAnthropicApiError(err)
   if (err instanceof Error) return new NetworkError(err.message, err)
   return new NetworkError(String(err))

@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 COPY package.json bun.lock ./
-# Workspace members must be present so `@kinbot-developer/sdk` (workspace:*) resolves.
+# Workspace members must be present so `@hivekeep-developer/sdk` (workspace:*) resolves.
 COPY packages ./packages
 RUN bun install --frozen-lockfile
 
@@ -21,16 +21,16 @@ RUN bun run build
 FROM oven/bun:1 AS production
 WORKDIR /app
 
-LABEL org.opencontainers.image.title="KinBot" \
+LABEL org.opencontainers.image.title="Hivekeep" \
       org.opencontainers.image.description="Self-hosted AI agents with persistent memory, real identity, and collaboration" \
-      org.opencontainers.image.url="https://github.com/MarlBurroW/kinbot" \
-      org.opencontainers.image.source="https://github.com/MarlBurroW/kinbot" \
+      org.opencontainers.image.url="https://github.com/MarlBurroW/hivekeep" \
+      org.opencontainers.image.source="https://github.com/MarlBurroW/hivekeep" \
       org.opencontainers.image.licenses="AGPL-3.0"
 
 # Install production dependencies (better-sqlite3 needs build tools for node-gyp)
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY package.json bun.lock ./
-# The server imports `@kinbot-developer/sdk` (workspace pkg shipping TS source)
+# The server imports `@hivekeep-developer/sdk` (workspace pkg shipping TS source)
 # at runtime, so the workspace members must be present for the production install
 # AND must persist in the final image (Bun runs the SDK's src directly).
 COPY packages ./packages
@@ -58,17 +58,17 @@ COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build /app/.env.example ./.env.example
 
 # Create non-root user for security
-RUN groupadd --gid 1001 kinbot && \
-    useradd --uid 1001 --gid kinbot --shell /bin/sh --create-home kinbot
+RUN groupadd --gid 1001 hivekeep && \
+    useradd --uid 1001 --gid hivekeep --shell /bin/sh --create-home hivekeep
 
 # Create data directory with correct ownership
-RUN mkdir -p /app/data && chown -R kinbot:kinbot /app/data
+RUN mkdir -p /app/data && chown -R hivekeep:hivekeep /app/data
 
 # Environment
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
-ENV KINBOT_DATA_DIR=/app/data
+ENV HIVEKEEP_DATA_DIR=/app/data
 
 EXPOSE 3000
 

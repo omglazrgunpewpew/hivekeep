@@ -45,10 +45,10 @@ export const createMiniAppTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Create a new mini web app displayed in the KinBot sidebar. ' +
+        'Create a new mini web app displayed in the Hivekeep sidebar. ' +
         'Call get_mini_app_docs first for full SDK reference. ' +
         'Use get_mini_app_templates to start from a template. ' +
-        'Bare ES imports (react, @kinbot/react, …) resolve ONLY via an app.json import map, ' +
+        'Bare ES imports (react, @hivekeep/react, …) resolve ONLY via an app.json import map, ' +
         'never via inline HTML tags — pass `dependencies` (shorthand import map) or a `files` ' +
         'map that includes app.json so the app works in a single call. If you provide HTML with ' +
         'bare imports but no app.json/dependencies, a default app.json (react stack) is created ' +
@@ -114,8 +114,8 @@ export const createMiniAppTool: ToolRegistration = {
               fileset['app.json'] = buildDefaultManifest()
               warning =
                 'No app.json or import map was provided, but your HTML imports bare ES modules. ' +
-                'A default app.json was created with: react, react-dom/client, @kinbot/react, ' +
-                '@kinbot/components. Edit it via write_mini_app_file if you need different ' +
+                'A default app.json was created with: react, react-dom/client, @hivekeep/react, ' +
+                '@hivekeep/components. Edit it via write_mini_app_file if you need different ' +
                 "versions. See get_mini_app_docs('getting-started')."
             }
           }

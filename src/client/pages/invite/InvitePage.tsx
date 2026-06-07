@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Input } from '@/client/components/ui/input'
 import { PasswordInput } from '@/client/components/ui/password-input'
 import { Button } from '@/client/components/ui/button'
-import { KinbotLogo } from '@/client/components/common/KinbotLogo'
+import { HivekeepLogo } from '@/client/components/common/HivekeepLogo'
 import { Label } from '@/client/components/ui/label'
 import { Alert, AlertDescription } from '@/client/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
@@ -152,8 +152,8 @@ export function InvitePage() {
     return (
       <div className="surface-base flex min-h-screen items-center justify-center">
         <div className="text-center animate-fade-in">
-          <KinbotLogo size={56} title={null} className="mx-auto mb-3" />
-          <h1 className="text-4xl font-extrabold text-foreground">KinBot</h1>
+          <HivekeepLogo size={56} title={null} className="mx-auto mb-3" />
+          <h1 className="text-4xl font-extrabold text-foreground">Hivekeep</h1>
           <p className="mt-3 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
@@ -169,8 +169,8 @@ export function InvitePage() {
 
         <div className="relative z-10 w-full max-w-md animate-fade-in-up">
           <div className="glass-strong rounded-2xl p-8 shadow-lg text-center space-y-4">
-            <KinbotLogo size={56} title={null} className="mx-auto" />
-            <h1 className="text-3xl font-extrabold text-foreground">KinBot</h1>
+            <HivekeepLogo size={56} title={null} className="mx-auto" />
+            <h1 className="text-3xl font-extrabold text-foreground">Hivekeep</h1>
             <Alert variant="destructive">
               <AlertCircle className="size-4" />
               <AlertDescription>{t('invite.invalidToken')}</AlertDescription>
@@ -190,8 +190,8 @@ export function InvitePage() {
     return (
       <div className="surface-base flex min-h-screen items-center justify-center">
         <div className="text-center animate-fade-in space-y-2">
-          <KinbotLogo size={56} title={null} className="mx-auto" />
-          <h1 className="text-4xl font-extrabold text-foreground">KinBot</h1>
+          <HivekeepLogo size={56} title={null} className="mx-auto" />
+          <h1 className="text-4xl font-extrabold text-foreground">Hivekeep</h1>
           <p className="text-muted-foreground">{t('invite.success')}</p>
         </div>
       </div>
@@ -209,8 +209,8 @@ export function InvitePage() {
         <div className="glass-strong rounded-2xl p-8 shadow-lg">
           {/* Header */}
           <div className="mb-6 text-center">
-            <KinbotLogo size={64} title={null} className="mx-auto mb-3" />
-            <h1 className="text-3xl font-extrabold text-foreground">KinBot</h1>
+            <HivekeepLogo size={64} title={null} className="mx-auto mb-3" />
+            <h1 className="text-3xl font-extrabold text-foreground">Hivekeep</h1>
             <h2 className="mt-2 text-lg font-semibold text-foreground">
               {t('invite.title')}
             </h2>

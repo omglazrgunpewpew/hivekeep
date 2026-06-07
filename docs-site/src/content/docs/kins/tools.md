@@ -3,7 +3,7 @@ title: Tools
 description: Give your Kins capabilities with built-in tools, MCP servers, and custom scripts.
 ---
 
-Kins interact with the world through **tools** — functions they can call during conversations. KinBot provides 100+ built-in tools, plus support for MCP servers and custom scripts.
+Kins interact with the world through **tools** — functions they can call during conversations. Hivekeep provides 100+ built-in tools, plus support for MCP servers and custom scripts.
 
 ## Built-in tools
 
@@ -260,10 +260,10 @@ The system prompt includes a tool selection table that steers Kins toward struct
 |---|---|
 | `run_shell` | Execute a shell command (main + sub-kin) |
 | `http_request` | Make HTTP requests to external APIs |
-| `get_platform_config` | Read current KinBot configuration (sensitive values redacted) |
-| `get_platform_logs` | View KinBot platform logs (opt-in) |
+| `get_platform_config` | Read current Hivekeep configuration (sensitive values redacted) |
+| `get_platform_logs` | View Hivekeep platform logs (opt-in) |
 | `update_platform_config` | Modify a config value in the .env file (opt-in) |
-| `restart_platform` | Trigger a graceful restart of KinBot (opt-in) |
+| `restart_platform` | Trigger a graceful restart of Hivekeep (opt-in) |
 | `get_system_info` | Get system/platform information |
 | `list_providers` | List all configured AI providers with their capabilities |
 | `list_models` | List available models across providers, optionally filtered by capability (llm, image, embedding, search, rerank) |
@@ -288,8 +288,8 @@ The system prompt includes a tool selection table that steers Kins toward struct
 
 Custom tool execution timeout is configurable via environment variables:
 
-- `KINBOT_CUSTOM_TOOL_TIMEOUT` — default timeout (default: 30s)
-- `KINBOT_CUSTOM_TOOL_MAX_TIMEOUT` — maximum allowed timeout (default: 300s / 5min)
+- `HIVEKEEP_CUSTOM_TOOL_TIMEOUT` — default timeout (default: 30s)
+- `HIVEKEEP_CUSTOM_TOOL_MAX_TIMEOUT` — maximum allowed timeout (default: 300s / 5min)
 
 Per-invocation timeout values passed by the Kin are clamped between 1 second and the server maximum.
 
@@ -325,7 +325,7 @@ Some powerful tools are **disabled by default** and must be explicitly enabled v
 | All plugin management tools | Can install/remove server extensions |
 | `get_platform_logs` | Exposes internal server logs |
 | `update_platform_config` | Can modify server configuration |
-| `restart_platform` | Can restart the entire KinBot process |
+| `restart_platform` | Can restart the entire Hivekeep process |
 | `execute_sql` | Direct database access — use with extreme caution |
 
 ## Tool availability
@@ -371,4 +371,4 @@ Kins can create their own tools by writing scripts:
 2. The script is stored in the Kin's workspace
 3. The Kin (or other tools) can invoke it via `run_custom_tool`
 
-This lets Kins build specialized automation without needing code changes to KinBot.
+This lets Kins build specialized automation without needing code changes to Hivekeep.

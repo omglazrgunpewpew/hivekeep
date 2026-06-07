@@ -21,7 +21,7 @@ describe('validateManifest', () => {
       author: 'Test',
       homepage: 'https://example.com',
       license: 'MIT',
-      kinbot: '>=0.10.0',
+      hivekeep: '>=0.10.0',
       main: 'index.ts',
       icon: 'icon.png',
       permissions: ['http:api.example.com', 'storage'],

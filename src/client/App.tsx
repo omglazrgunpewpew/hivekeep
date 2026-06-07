@@ -33,7 +33,7 @@ function PageFallback() {
   return (
     <div className="surface-base flex min-h-screen items-center justify-center">
       <div className="text-center animate-fade-in">
-        <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">KinBot</h1>
+        <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">Hivekeep</h1>
       </div>
     </div>
   )
@@ -89,7 +89,7 @@ function AppRoot() {
     return (
       <div className="surface-base flex min-h-screen items-center justify-center">
         <div className="text-center animate-fade-in">
-          <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">KinBot</h1>
+          <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">Hivekeep</h1>
           <p className="mt-3 text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ function AppRoot() {
     return (
       <div className="surface-base flex min-h-screen items-center justify-center">
         <div className="text-center animate-fade-in max-w-md space-y-4">
-          <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">KinBot</h1>
+          <h1 className="gradient-primary-text text-4xl font-bold tracking-tight">Hivekeep</h1>
           <p className="text-muted-foreground">{t('errors.backendUnavailable')}</p>
           <button
             onClick={() => {

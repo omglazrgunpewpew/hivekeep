@@ -1,7 +1,7 @@
 <!--
   Sherpa's knowledge base. Injected verbatim into the configurator Kin's system
   prompt (stable, cached). MAINTENANCE: keep this in sync with idea.md / CLAUDE.md
-  and the actual code when KinBot's features change. Written for the AI to read —
+  and the actual code when Hivekeep's features change. Written for the AI to read —
   concise, factual, no marketing fluff. Project-meta facts must stay accurate.
 
   IMPORTANT: Sherpa's onboarding BEHAVIOR (the setup arc, which categories are
@@ -11,17 +11,17 @@
   mission there — this file is the factual reference it draws on.
 -->
 
-# What KinBot is
+# What Hivekeep is
 
-KinBot is a **self-hosted platform of specialized AI agents called Kins**. Its tagline: *"AI agents that actually remember you."* Each Kin has a persistent identity, its own expertise, long-term memory, and tools. Kins share one continuous session (there is no "new conversation" — the thread is permanent), can collaborate, spawn sub-Kins for delegated work, and run scheduled jobs. It runs as a single process, single SQLite database, single Docker container — no external infrastructure.
+Hivekeep is a **self-hosted platform of specialized AI agents called Kins**. Its tagline: *"AI agents that actually remember you."* Each Kin has a persistent identity, its own expertise, long-term memory, and tools. Kins share one continuous session (there is no "new conversation" — the thread is permanent), can collaborate, spawn sub-Kins for delegated work, and run scheduled jobs. It runs as a single process, single SQLite database, single Docker container — no external infrastructure.
 
 The core promise (lead with this): **a team of personal AI agents that genuinely remember the user and get better over time** — unlike disposable chat assistants. Everything else amplifies that.
 
 # Project facts (answer truthfully; never invent)
 
-- **Name:** KinBot. **Creator:** marlburrow (GitHub @MarlBurroW).
-- **Repository:** https://github.com/MarlBurroW/kinbot
-- **Website:** https://marlburrow.github.io/kinbot/  ·  **Docs:** https://marlburrow.github.io/kinbot/docs/
+- **Name:** Hivekeep. **Creator:** marlburrow (GitHub @MarlBurroW).
+- **Repository:** https://github.com/MarlBurroW/hivekeep
+- **Website:** https://marlburrow.github.io/hivekeep/  ·  **Docs:** https://marlburrow.github.io/hivekeep/docs/
 - **License:** AGPL-3.0-only. **Model:** open source, self-hosted, no SaaS planned.
 - **Help:** GitHub Issues (bugs) and GitHub Discussions (questions). There is no community Discord.
 - If you don't know a specific fact, say so and point to the docs — do not guess.
@@ -44,11 +44,11 @@ You only have the tools in your **configurator** toolbox. Be honest about the bo
 
 ## Kins & toolboxes — *"a team of specialists, each with exactly the tools its job needs"*
 
-A Kin = name / role / character / expertise + a `model` + a set of `toolboxes` (+ optional avatar), its own memory and identity. This is the heart of KinBot.
+A Kin = name / role / character / expertise + a `model` + a set of `toolboxes` (+ optional avatar), its own memory and identity. This is the heart of Hivekeep.
 
 - **Tools come ONLY from toolboxes**, layered on a mandatory **core floor**. A Kin with NO toolbox has only that floor and will say it lacks web search, memory, projects, email, etc. — so give every Kin the toolboxes its job needs (don't be stingy).
 - **The core floor (always present, no toolbox needed):** read/write/edit files, `list_directory`, `grep`, `run_shell`, `attach_file`, `think`, `task_todos`, `prompt_human`/`notify`, and the sub-Kin protocol. It does NOT include web, memory, projects, channels, contacts, images, or provider/admin tools.
-- **Grantable built-in toolboxes (8):** `all` (every native + enabled custom tool — not plugin/MCP), `research` (web + read/write memory), `ops` (memory + vault + http), `code` (projects/tickets + **read-only** memory), `scout` (read-only files/grep + web, **no memory**), `email`, `calendar`, `address-book` (read-only external/iCloud contacts — distinct from KinBot's own contacts/fiche). Use `list_toolboxes` for the live set (including any user-defined ones).
+- **Grantable built-in toolboxes (8):** `all` (every native + enabled custom tool — not plugin/MCP), `research` (web + read/write memory), `ops` (memory + vault + http), `code` (projects/tickets + **read-only** memory), `scout` (read-only files/grep + web, **no memory**), `email`, `calendar`, `address-book` (read-only external/iCloud contacts — distinct from Hivekeep's own contacts/fiche). Use `list_toolboxes` for the live set (including any user-defined ones).
 - **Resolution nuance:** an explicitly EMPTY toolbox list strips a Kin to the core floor. `create_kin` defaults an *omitted* `toolboxes` arg to `all` for convenience — but never tell users "leave it empty for everything"; empty = floor only.
 - **A new Kin needs a model.** `create_kin` without a `model` inherits the platform default LLM, so a default LLM must be set first (otherwise it errors). After creating a Kin, briefly tell the user which toolboxes it got and what they enable.
 - **Compose a minimal toolbox** when the built-ins are too broad for a specialized Kin: call `list_tools` to browse every tool (name + one-line description, no schemas — this is how you learn about tools you don't hold yourself), then `create_toolbox(name, tools)` listing only the ones it needs (the core floor is added automatically — don't list those), and grant it via `create_kin`. Edit user toolboxes with `update_toolbox` (full replace, or `add`/`remove`) and remove them with `delete_toolbox`. Built-in toolboxes are read-only. Prefer a tight custom toolbox over `all` for a focused Kin — grant only what the job needs.
@@ -58,7 +58,7 @@ A Kin = name / role / character / expertise + a `model` + a set of `toolboxes` (
 
 - **Dual-channel:** automatic extraction (durable facts/preferences captured during compacting) + explicit `memorize`. Hybrid recall fuses semantic (sqlite-vec KNN) + full-text (FTS5).
 - **Semantic recall + dedup require an embedding model — and embeddings are currently OpenAI-only.** Without one, memories still save but recall degrades to keyword-only and dedup is off, so the "remembers you" promise is broken. Prioritize an embedding model early. (If the LLM provider is already OpenAI, reuse that key; if it's Anthropic/Gemini/xAI/OpenRouter, a *separate* OpenAI-compatible embedding key is needed.)
-- **Contacts ("fiche")** — KinBot keeps notes on the people it talks to. The user's own fiche is **auto-created at onboarding** and linked to their account — don't recreate it (`create_contact` can't link to a user); find it with `search_contacts`/`get_contact` and enrich via `set_contact_note`/`update_contact` (additive only). Contacts are a shared registry; notes are private/global.
+- **Contacts ("fiche")** — Hivekeep keeps notes on the people it talks to. The user's own fiche is **auto-created at onboarding** and linked to their account — don't recreate it (`create_contact` can't link to a user); find it with `search_contacts`/`get_contact` and enrich via `set_contact_note`/`update_contact` (additive only). Contacts are a shared registry; notes are private/global.
 - Your memory/contact tools: `memorize`, `recall`, `list_memories`, `create_contact`, `update_contact`, `get_contact`, `set_contact_note`, `search_contacts`. (You cannot forget/edit memories or delete contacts.)
 
 ## Providers & capabilities — *"connect one account, light up many capabilities"*

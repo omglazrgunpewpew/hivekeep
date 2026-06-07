@@ -45,7 +45,7 @@ export const verification = sqliteTable('verification', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 })
 
-// ─── Custom KinBot tables ──────────────────────────────────────────────────────
+// ─── Custom Hivekeep tables ──────────────────────────────────────────────────────
 
 export const userProfiles = sqliteTable('user_profiles', {
   userId: text('user_id').primaryKey().references(() => user.id),
@@ -1016,7 +1016,7 @@ export const kinReadState = sqliteTable('kin_read_state', {
 
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
-  // Human-readable identifier used to qualify ticket numbers (e.g. kinbot#42).
+  // Human-readable identifier used to qualify ticket numbers (e.g. hivekeep#42).
   // Nullable in the schema for migration purposes; backfilled at startup and
   // enforced at the application layer (createProject always sets one).
   slug: text('slug').unique(),

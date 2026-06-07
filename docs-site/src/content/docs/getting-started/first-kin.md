@@ -1,13 +1,13 @@
 ---
 title: Your First Kin
-description: Create your first AI agent in KinBot.
+description: Create your first AI agent in Hivekeep.
 ---
 
 A **Kin** is a persistent AI agent with its own identity, memory, and tools. Unlike disposable chat sessions, a Kin remembers every conversation and builds knowledge over time.
 
 ## Creating a Kin
 
-1. Open KinBot in your browser (default: `http://localhost:3000`, or port `3333` for manual installs)
+1. Open Hivekeep in your browser (default: `http://localhost:3000`, or port `3333` for manual installs)
 2. Complete the onboarding wizard (set up your admin account and first AI provider)
 3. Click **New Kin** in the sidebar
 4. Give it a **name**, **description**, and optionally a **system prompt**
@@ -32,11 +32,11 @@ Every conversation is automatically stored. Kins extract important facts into lo
 
 ### Session compacting
 
-When a conversation gets long, KinBot automatically summarizes older messages to stay within token limits. Original messages are always preserved — compacting is non-destructive and reversible.
+When a conversation gets long, Hivekeep automatically summarizes older messages to stay within token limits. Original messages are always preserved — compacting is non-destructive and reversible.
 
 ### Tools
 
-Kins come with 100+ built-in tools out of the box: web search, memory management, file handling, sub-agent delegation, cron jobs, and more. See [Tools](/kinbot/docs/kins/tools/) for the full list.
+Kins come with 100+ built-in tools out of the box: web search, memory management, file handling, sub-agent delegation, cron jobs, and more. See [Tools](/hivekeep/docs/kins/tools/) for the full list.
 
 ### Collaboration
 
@@ -44,7 +44,7 @@ Kins can talk to each other, delegate tasks to sub-agents, and work on cron sche
 
 ## Next steps
 
-- [Configure](/kinbot/docs/getting-started/configuration/) environment variables and providers
-- Learn about [System Prompts](/kinbot/docs/kins/system-prompts/) for shaping Kin behavior
-- Explore [Mini-Apps](/kinbot/docs/mini-apps/overview/) — interactive UIs built by Kins
-- Set up [Channels](/kinbot/docs/channels/overview/) (Telegram, Discord, etc.)
+- [Configure](/hivekeep/docs/getting-started/configuration/) environment variables and providers
+- Learn about [System Prompts](/hivekeep/docs/kins/system-prompts/) for shaping Kin behavior
+- Explore [Mini-Apps](/hivekeep/docs/mini-apps/overview/) — interactive UIs built by Kins
+- Set up [Channels](/hivekeep/docs/channels/overview/) (Telegram, Discord, etc.)

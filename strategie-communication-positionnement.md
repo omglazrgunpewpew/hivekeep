@@ -1,4 +1,4 @@
-# Stratégie de communication & positionnement — KinBot 1.0 (premier jet)
+# Stratégie de communication & positionnement — Hivekeep 1.0 (premier jet)
 
 > **Statut : brouillon de travail, à challenger avec le fondateur.** Ce document est opinioné par construction : il propose des choix tranchés pour amorcer la discussion, pas pour la clore. Les zones grises sont signalées en *Questions ouvertes* (section 9) et par des notes inline `[À TRANCHER]`.
 
@@ -8,7 +8,7 @@
 
 ### Phrase de positionnement (recommandée)
 
-> **KinBot, c'est votre propre équipe d'agents IA — qui se souviennent, collaborent et vous répondent partout — installée sur votre serveur en un seul conteneur.**
+> **Hivekeep, c'est votre propre équipe d'agents IA — qui se souviennent, collaborent et vous répondent partout — installée sur votre serveur en un seul conteneur.**
 
 L'idée centrale repose sur quatre mots porteurs, dans cet ordre de force : **équipe d'agents persistants** (pas un chatbot) + **mémoire** (qui se souviennent) + **omnicanal** (partout) + **souveraineté/simplicité** (votre serveur, un conteneur).
 
@@ -36,7 +36,7 @@ Les gens qui font déjà tourner Jellyfin, Nextcloud, Home Assistant sur un home
 ### #2 — Devs / tinkerers / intégrateurs
 Ceux qui veulent étendre, scripter, brancher leurs propres outils et APIs.
 - **Message qui résonne :** *"Custom tools dans n'importe quel langage avec rendu React riche. Plugins NPM via SDK typé. MCP natif. Mini-apps construites par l'agent. Tout extensible, rien verrouillé."*
-- **Pourquoi eux :** ce sont les évangélistes. Ils écrivent les plugins du marketplace, les blog posts, les "I built X with KinBot". L'extensibilité (custom tools + mini-apps + plugins) est faite pour eux.
+- **Pourquoi eux :** ce sont les évangélistes. Ils écrivent les plugins du marketplace, les blog posts, les "I built X with Hivekeep". L'extensibilité (custom tools + mini-apps + plugins) est faite pour eux.
 
 ### #3 — Privacy-conscious / souveraineté-first
 Individus et petites structures qui refusent le cloud fermé par principe (RGPD, données sensibles, méfiance).
@@ -88,9 +88,9 @@ Les `wow_factor` des dossiers et la veille concurrentielle ne pointent pas tous 
 
 ## 4. Tableau comparatif (synthèse de la veille)
 
-Dimensions choisies = celles où KinBot gagne ou se différencie, croisées avec ce qui compte pour les cibles.
+Dimensions choisies = celles où Hivekeep gagne ou se différencie, croisées avec ce qui compte pour les cibles.
 
-| Dimension | KinBot | LibreChat | Open WebUI | AnythingLLM | Lobe Chat | Dify | OpenClaw | ChatGPT/Claude |
+| Dimension | Hivekeep | LibreChat | Open WebUI | AnythingLLM | Lobe Chat | Dify | OpenClaw | ChatGPT/Claude |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Self-hosted souverain | ✅ | ✅ | ✅ | ✅ | ⚠️ cloud market | ✅ | ✅ | ❌ |
 | Déploiement 1 conteneur, zéro infra externe | ✅ | ❌ Mongo | ⚠️ | ✅ | ❌ PG+Redis+S3 | ❌ lourd | ⚠️ daemon | n/a |
@@ -109,7 +109,7 @@ Dimensions choisies = celles où KinBot gagne ou se différencie, croisées avec
 
 Légende : ✅ fort/natif · ⚠️ partiel/custom/dépendances · ❌ absent.
 
-**Lecture du tableau :** les lignes où KinBot est seul en ✅ (session continue, inter-agents, vault jamais-au-LLM, transparence tokens, onboarding conversationnel) sont les **angles d'attaque à marteler**. La colonne OpenClaw est le vrai rival sur l'omnicanal — d'où l'importance de différencier sur "PWA polie multi-user vs CLI mono-user".
+**Lecture du tableau :** les lignes où Hivekeep est seul en ✅ (session continue, inter-agents, vault jamais-au-LLM, transparence tokens, onboarding conversationnel) sont les **angles d'attaque à marteler**. La colonne OpenClaw est le vrai rival sur l'omnicanal — d'où l'importance de différencier sur "PWA polie multi-user vs CLI mono-user".
 
 `[À TRANCHER]` Hermes Agent et QwenPaw sont cités comme "nouveaux entrants rapides sur mémoire long-terme et multi-canal" mais sans dossier détaillé. À surveiller — peuvent menacer le pilier #1. Faut-il les inclure dans le tableau public ou les garder en veille interne ? (Je recommande veille interne : ne pas faire de pub à des challengers émergents.)
 
@@ -167,7 +167,7 @@ Légende : ✅ fort/natif · ⚠️ partiel/custom/dépendances · ❌ absent.
   /features/channels        Omnicanal, transfert de canal, PWA
   /features/automation      Crons, webhooks, human-in-the-loop, scout
   /features/security        Vault, comptes connectés, transparence tokens, multi-user
-/why-kinbot             Comparatif détaillé vs alternatives + tableau des gaps de marché
+/why-hivekeep             Comparatif détaillé vs alternatives + tableau des gaps de marché
 /docs                   → renvoie vers la doc (Starlight)
 /showcase               Galerie de mini-apps, custom tools communautaires, captures
 /quickstart             docker run, prérequis, première connexion, lien Sherpa
@@ -176,7 +176,7 @@ Légende : ✅ fort/natif · ⚠️ partiel/custom/dépendances · ❌ absent.
 /community              Discord/Matrix, contribuer, plugins tiers
 ```
 
-Navigation principale réduite : **Features · Why KinBot · Docs · Quickstart · GitHub**. Le reste en footer.
+Navigation principale réduite : **Features · Why Hivekeep · Docs · Quickstart · GitHub**. Le reste en footer.
 
 `[À TRANCHER]` `/roadmap` qui assume publiquement la maturité ~80% : honnêteté radicale (cohérente avec la cible early-adopter et le pilier transparence) ou risque de faire fuir ? Je recommande de l'assumer — les self-hosters respectent l'honnêteté et c'est aligné avec l'ADN "transparence".
 
@@ -219,13 +219,13 @@ Core Concepts       Kins & identité · Session continue & compacting · Mémoir
 Working with Kins   Créer/configurer · Toolboxes · Avatars · Modèles & providers
 Collaboration       Sous-Kins (await/async) · Inter-Kin messaging · Crons · Webhooks · Human-in-the-loop
 Channels            Connecter Telegram/WhatsApp/Slack/Discord/Signal/Matrix · Transfert de canal · PWA
-Extending KinBot    Custom tools (+ renderers) · Mini-apps (SDK, hooks, composants) · Plugins (SDK, publication NPM) · MCP
+Extending Hivekeep    Custom tools (+ renderers) · Mini-apps (SDK, hooks, composants) · Plugins (SDK, publication NPM) · MCP
 Projects            Projets · Kanban/tickets · Intégration GitHub
 Connected Accounts  Mail · Calendrier · Contacts · OAuth & IMAP/CalDAV
 Security & Privacy  Vault · Comptes connectés · Multi-user/isolation · Redaction
 Transparency        Contexte & tokens · Cache · Compacting · Calibration
 Administration      Config (env vars) · Providers · Logs/SQL · Sauvegardes/migrations
-Reference           API REST · SSE events · SDK (@kinbot-developer/sdk) · CLI
+Reference           API REST · SSE events · SDK (@hivekeep-developer/sdk) · CLI
 Troubleshooting / FAQ
 ```
 
@@ -238,7 +238,7 @@ Principe : **chaque feature héros du site a une page doc dédiée** (cohérence
 **Branding & nom**
 - Le mot **"Kin"** : on l'expose dès la tagline ou on le révèle après "agents" ? (Je recommande : agents en surface, Kins juste après.)
 - **Sherpa** : nom définitif du configurateur ? Risque de collision marque (matériel de montagne, autres SaaS "Sherpa"). À vérifier juridiquement.
-- Identité visuelle de la marque KinBot elle-même (logo, mascotte ?) — l'avatar bundlé de Sherpa peut-il devenir un élément de marque ?
+- Identité visuelle de la marque Hivekeep elle-même (logo, mascotte ?) — l'avatar bundlé de Sherpa peut-il devenir un élément de marque ?
 
 **Licence & modèle**
 - **Open-source (MIT/Apache) vs source-available ?** Décision structurante : impacte le pitch "souveraineté/lock-in", l'adoption communautaire (cf. AnythingLLM MIT = 54k stars) et un éventuel modèle commercial futur. Le marketplace de plugins NPM suppose une communauté ouverte. **À trancher en priorité** — tout le reste en découle (badges, ton, /community).

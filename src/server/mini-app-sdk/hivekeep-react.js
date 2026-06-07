@@ -1,18 +1,18 @@
 /**
- * KinBot React SDK — ES Module
- * Served at /api/mini-apps/sdk/kinbot-react.js
+ * Hivekeep React SDK — ES Module
+ * Served at /api/mini-apps/sdk/hivekeep-react.js
  *
- * Provides React hooks that layer on top of the vanilla KinBot SDK (window.KinBot).
+ * Provides React hooks that layer on top of the vanilla Hivekeep SDK (window.Hivekeep).
  * The vanilla SDK is always auto-injected as a regular <script> before any ES modules,
- * so window.KinBot is guaranteed to exist when this module runs.
+ * so window.Hivekeep is guaranteed to exist when this module runs.
  *
  * Usage in mini-apps:
  *   import { useState } from 'react'
  *   import { createRoot } from 'react-dom/client'
- *   import { useKinBot, useStorage, toast } from '@kinbot/react'
+ *   import { useHivekeep, useStorage, toast } from '@hivekeep/react'
  *
  *   function App() {
- *     const { app, ready } = useKinBot()
+ *     const { app, ready } = useHivekeep()
  *     const [todos, setTodos, loading] = useStorage('todos', [])
  *     if (!ready || loading) return <div>Loading...</div>
  *     return <div>{app.name}</div>
@@ -23,38 +23,38 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-// ─── useKinBot ──────────────────────────────────────────────────────────────
+// ─── useHivekeep ──────────────────────────────────────────────────────────────
 
 /**
- * Core hook — manages KinBot.ready() lifecycle and provides reactive app state.
+ * Core hook — manages Hivekeep.ready() lifecycle and provides reactive app state.
  * Call once at the root of your app. All other hooks can be used independently.
  *
  * @returns {{ app: object|null, ready: boolean, theme: {mode,palette}, locale: string, isFullPage: boolean, api: object }}
  */
-export function useKinBot() {
+export function useHivekeep() {
   const [app, setApp] = useState(null)
   const [ready, setReady] = useState(false)
-  const [theme, setTheme] = useState(window.KinBot.theme)
-  const [locale, setLocale] = useState(window.KinBot.locale)
-  const [isFullPage, setIsFullPage] = useState(window.KinBot.isFullPage)
+  const [theme, setTheme] = useState(window.Hivekeep.theme)
+  const [locale, setLocale] = useState(window.Hivekeep.locale)
+  const [isFullPage, setIsFullPage] = useState(window.Hivekeep.isFullPage)
 
   useEffect(() => {
     let mounted = true
 
-    window.KinBot.ready().then((meta) => {
+    window.Hivekeep.ready().then((meta) => {
       if (mounted) {
         setApp(meta)
         setReady(true)
       }
     })
 
-    const offTheme = window.KinBot.on('theme-changed', (t) => {
+    const offTheme = window.Hivekeep.on('theme-changed', (t) => {
       if (mounted) setTheme(t)
     })
-    const offLocale = window.KinBot.on('locale-changed', (d) => {
+    const offLocale = window.Hivekeep.on('locale-changed', (d) => {
       if (mounted) setLocale(d.locale)
     })
-    const offFullpage = window.KinBot.on('fullpage-changed', (d) => {
+    const offFullpage = window.Hivekeep.on('fullpage-changed', (d) => {
       if (mounted) setIsFullPage(d.isFullPage)
     })
 
@@ -66,15 +66,15 @@ export function useKinBot() {
     }
   }, [])
 
-  return { app, ready, theme, locale, isFullPage, api: window.KinBot.api }
+  return { app, ready, theme, locale, isFullPage, api: window.Hivekeep.api }
 }
 
 // ─── useStorage ─────────────────────────────────────────────────────────────
 
 /**
- * Reactive key-value storage hook backed by KinBot.storage.
+ * Reactive key-value storage hook backed by Hivekeep.storage.
  * Automatically loads the initial value and persists on every set call.
- * Awaits KinBot.ready() internally, so it's safe to use anywhere.
+ * Awaits Hivekeep.ready() internally, so it's safe to use anywhere.
  *
  * @param {string} key — storage key
  * @param {any} defaultValue — value to use until loaded or if key doesn't exist
@@ -90,8 +90,8 @@ export function useStorage(key, defaultValue) {
     mountedRef.current = true
     setLoading(true)
 
-    window.KinBot.ready()
-      .then(() => window.KinBot.storage.get(key))
+    window.Hivekeep.ready()
+      .then(() => window.Hivekeep.storage.get(key))
       .then((stored) => {
         if (mountedRef.current && stored != null) {
           setValue(stored)
@@ -99,7 +99,7 @@ export function useStorage(key, defaultValue) {
         }
       })
       .catch((err) => {
-        console.error('[KinBot React] useStorage load failed:', err)
+        console.error('[Hivekeep React] useStorage load failed:', err)
       })
       .finally(() => {
         if (mountedRef.current) setLoading(false)
@@ -115,8 +115,8 @@ export function useStorage(key, defaultValue) {
       const val = typeof newValue === 'function' ? newValue(valueRef.current) : newValue
       setValue(val)
       valueRef.current = val
-      window.KinBot.storage.set(key, val).catch((err) => {
-        console.error('[KinBot React] useStorage save failed:', err)
+      window.Hivekeep.storage.set(key, val).catch((err) => {
+        console.error('[Hivekeep React] useStorage save failed:', err)
       })
     },
     [key],
@@ -129,15 +129,15 @@ export function useStorage(key, defaultValue) {
 
 /**
  * Lightweight reactive theme hook.
- * Use this instead of useKinBot() when you only need theme info.
+ * Use this instead of useHivekeep() when you only need theme info.
  *
  * @returns {{ mode: 'light'|'dark', palette: string }}
  */
 export function useTheme() {
-  const [theme, setTheme] = useState(window.KinBot.theme)
+  const [theme, setTheme] = useState(window.Hivekeep.theme)
 
   useEffect(() => {
-    return window.KinBot.on('theme-changed', setTheme)
+    return window.Hivekeep.on('theme-changed', setTheme)
   }, [])
 
   return theme
@@ -147,7 +147,7 @@ export function useTheme() {
 
 /**
  * Reactive access to the parent Kin info (id, name, avatarUrl).
- * Waits for KinBot.ready() then returns KinBot.kin.
+ * Waits for Hivekeep.ready() then returns Hivekeep.kin.
  *
  * @returns {{ kin: object|null, loading: boolean }}
  */
@@ -157,9 +157,9 @@ export function useKin() {
 
   useEffect(() => {
     let mounted = true
-    window.KinBot.ready().then(() => {
+    window.Hivekeep.ready().then(() => {
       if (mounted) {
-        setKin(window.KinBot.kin)
+        setKin(window.Hivekeep.kin)
         setLoading(false)
       }
     })
@@ -173,7 +173,7 @@ export function useKin() {
 
 /**
  * Reactive access to the current user info (id, name, locale, timezone, avatarUrl).
- * Waits for KinBot.ready() then returns KinBot.user.
+ * Waits for Hivekeep.ready() then returns Hivekeep.user.
  *
  * @returns {{ user: object|null, loading: boolean }}
  */
@@ -183,9 +183,9 @@ export function useUser() {
 
   useEffect(() => {
     let mounted = true
-    window.KinBot.ready().then(() => {
+    window.Hivekeep.ready().then(() => {
       if (mounted) {
-        setUser(window.KinBot.user)
+        setUser(window.Hivekeep.user)
         setLoading(false)
       }
     })
@@ -399,7 +399,7 @@ export function useForm(initialValues, validate) {
 
 /**
  * Hook for searching and storing Kin memories from within a mini-app.
- * Wraps KinBot.memory.search() and KinBot.memory.store().
+ * Wraps Hivekeep.memory.search() and Hivekeep.memory.store().
  *
  * @returns {{ search: (query, limit?) => Promise<Array>, store: (content, options?) => Promise<object>, results: Array, loading: boolean }}
  *
@@ -415,11 +415,11 @@ export function useMemory() {
   const search = useCallback(async (query, limit) => {
     setLoading(true)
     try {
-      const res = await window.KinBot.memory.search(query, limit)
+      const res = await window.Hivekeep.memory.search(query, limit)
       setResults(res)
       return res
     } catch (err) {
-      console.error('[KinBot React] useMemory search failed:', err)
+      console.error('[Hivekeep React] useMemory search failed:', err)
       return []
     } finally {
       setLoading(false)
@@ -428,9 +428,9 @@ export function useMemory() {
 
   const store = useCallback(async (content, options) => {
     try {
-      return await window.KinBot.memory.store(content, options)
+      return await window.Hivekeep.memory.store(content, options)
     } catch (err) {
-      console.error('[KinBot React] useMemory store failed:', err)
+      console.error('[Hivekeep React] useMemory store failed:', err)
       throw err
     }
   }, [])
@@ -442,7 +442,7 @@ export function useMemory() {
 
 /**
  * Hook for interacting with the Kin's conversation.
- * Wraps KinBot.conversation.history() and KinBot.conversation.send().
+ * Wraps Hivekeep.conversation.history() and Hivekeep.conversation.send().
  *
  * @returns {{ history: (limit?) => Promise<Array>, send: (text, options?) => Promise, messages: Array, loading: boolean }}
  *
@@ -458,11 +458,11 @@ export function useConversation() {
   const history = useCallback(async (limit) => {
     setLoading(true)
     try {
-      const msgs = await window.KinBot.conversation.history(limit)
+      const msgs = await window.Hivekeep.conversation.history(limit)
       setMessages(msgs)
       return msgs
     } catch (err) {
-      console.error('[KinBot React] useConversation history failed:', err)
+      console.error('[Hivekeep React] useConversation history failed:', err)
       return []
     } finally {
       setLoading(false)
@@ -471,9 +471,9 @@ export function useConversation() {
 
   const send = useCallback(async (text, options) => {
     try {
-      return await window.KinBot.conversation.send(text, options)
+      return await window.Hivekeep.conversation.send(text, options)
     } catch (err) {
-      console.error('[KinBot React] useConversation send failed:', err)
+      console.error('[Hivekeep React] useConversation send failed:', err)
       throw err
     }
   }, [])
@@ -503,10 +503,10 @@ export function useShortcut(key, callback) {
 
   useEffect(() => {
     if (!key) return
-    const unregister = window.KinBot.shortcut(key, (...args) => savedCallback.current(...args))
+    const unregister = window.Hivekeep.shortcut(key, (...args) => savedCallback.current(...args))
     return () => {
       if (typeof unregister === 'function') unregister()
-      else window.KinBot.shortcut(key, null)
+      else window.Hivekeep.shortcut(key, null)
     }
   }, [key])
 }
@@ -530,11 +530,11 @@ export function useApps() {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const list = await window.KinBot.apps.list()
+      const list = await window.Hivekeep.apps.list()
       setApps(list)
       return list
     } catch (err) {
-      console.error('[KinBot React] useApps failed:', err)
+      console.error('[Hivekeep React] useApps failed:', err)
       return []
     } finally {
       setLoading(false)
@@ -542,7 +542,7 @@ export function useApps() {
   }, [])
 
   useEffect(() => {
-    window.KinBot.ready().then(refresh)
+    window.Hivekeep.ready().then(refresh)
   }, [refresh])
 
   return { apps, loading, refresh }
@@ -551,7 +551,7 @@ export function useApps() {
 // ─── useSharedData ──────────────────────────────────────────────────────────
 
 /**
- * Listen for data shared from another mini-app via KinBot.share().
+ * Listen for data shared from another mini-app via Hivekeep.share().
  * Calls the handler when shared data arrives. Also returns the last received data.
  *
  * @param {Function} [onData] — optional callback when data arrives
@@ -571,7 +571,7 @@ export function useSharedData(onData) {
   }, [onData])
 
   useEffect(() => {
-    return window.KinBot.on('shared-data', (payload) => {
+    return window.Hivekeep.on('shared-data', (payload) => {
       setData(payload)
       if (handlerRef.current) handlerRef.current(payload)
     })
@@ -655,7 +655,7 @@ export function useClipboard() {
   const copy = useCallback(async (text) => {
     setLoading(true)
     try {
-      await window.KinBot.clipboard.write(text)
+      await window.Hivekeep.clipboard.write(text)
       setCopied(true)
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => setCopied(false), 2000)
@@ -670,7 +670,7 @@ export function useClipboard() {
   const paste = useCallback(async () => {
     setLoading(true)
     try {
-      return await window.KinBot.clipboard.read()
+      return await window.Hivekeep.clipboard.read()
     } catch {
       return null
     } finally {
@@ -689,7 +689,7 @@ export function useClipboard() {
 
 /**
  * Hook for sending browser notifications via the parent window.
- * Wraps `KinBot.notification()` with a reactive API and permission state.
+ * Wraps `Hivekeep.notification()` with a reactive API and permission state.
  *
  * @returns {{ notify: (title: string, body?: string) => Promise<boolean>, lastSent: string|null }}
  *
@@ -701,7 +701,7 @@ export function useNotification() {
   const [lastSent, setLastSent] = useState(null)
 
   const notify = useCallback(async (title, body) => {
-    const ok = await window.KinBot.notification(title, body)
+    const ok = await window.Hivekeep.notification(title, body)
     if (ok) setLastSent(new Date().toISOString())
     return ok
   }, [])
@@ -713,7 +713,7 @@ export function useNotification() {
 
 /**
  * Hook for triggering file downloads from within a mini-app.
- * Wraps `KinBot.download()` with a reactive downloading state.
+ * Wraps `Hivekeep.download()` with a reactive downloading state.
  *
  * @returns {{ download: (filename: string, content: string|object|Blob|ArrayBuffer, mimeType?: string) => Promise<boolean>, downloading: boolean }}
  *
@@ -728,7 +728,7 @@ export function useDownload() {
   const doDownload = useCallback(async (filename, content, mimeType) => {
     setDownloading(true)
     try {
-      const ok = await window.KinBot.download(filename, content, mimeType)
+      const ok = await window.Hivekeep.download(filename, content, mimeType)
       return ok
     } catch {
       return false
@@ -743,7 +743,7 @@ export function useDownload() {
 // ─── useFetch ───────────────────────────────────────────────────────────────
 
 /**
- * Hook for fetching external data via `KinBot.http()` with automatic
+ * Hook for fetching external data via `Hivekeep.http()` with automatic
  * loading/error/refetch states. Fetches on mount and when `url` changes.
  *
  * @param {string|null} url - URL to fetch (pass null to skip/pause)
@@ -786,13 +786,13 @@ export function useFetch(url, options = {}) {
       try {
         let result, status
         if (json && (!method || method === 'GET')) {
-          result = await window.KinBot.http.json(url, headers)
+          result = await window.Hivekeep.http.json(url, headers)
           status = 200
         } else if (method === 'POST' || body) {
-          result = await window.KinBot.http.post(url, body, headers)
+          result = await window.Hivekeep.http.post(url, body, headers)
           status = 200
         } else {
-          const resp = await window.KinBot.http(url, { method, body: body ? JSON.stringify(body) : undefined, headers })
+          const resp = await window.Hivekeep.http(url, { method, body: body ? JSON.stringify(body) : undefined, headers })
           status = resp.status
           result = json ? await resp.json() : await resp.text()
         }
@@ -813,7 +813,7 @@ export function useFetch(url, options = {}) {
 // ─── useApi ─────────────────────────────────────────────────────────────────
 
 /**
- * Hook for calling the mini-app's backend API (`_server.js`) via `KinBot.api()`
+ * Hook for calling the mini-app's backend API (`_server.js`) via `Hivekeep.api()`
  * with automatic loading/error/refetch states. Fetches on mount when path is provided.
  *
  * @param {string|null} path - API path (e.g. "/items") or null to skip
@@ -848,7 +848,7 @@ export function useApi(path, options = {}) {
 
     const doFetch = async () => {
       try {
-        const apiObj = window.KinBot.api
+        const apiObj = window.Hivekeep.api
         let result
         if (method === 'GET') {
           result = await apiObj.get(path)
@@ -926,7 +926,7 @@ export function useAsync(asyncFn) {
 
 /**
  * Hook for subscribing to real-time SSE events from the mini-app backend.
- * Wraps `KinBot.events` with automatic connect/disconnect on mount/unmount.
+ * Wraps `Hivekeep.events` with automatic connect/disconnect on mount/unmount.
  *
  * @param {string} [eventName] - Specific event name to listen for (omit to receive all events)
  * @param {Function} [callback] - Callback for each event. If omitted, events accumulate in `messages`.
@@ -954,7 +954,7 @@ export function useEventStream(eventName, callback) {
   cbRef.current = callback
 
   useEffect(() => {
-    const evts = window.KinBot.events
+    const evts = window.Hivekeep.events
     if (!evts) return
 
     const handler = (data) => {
@@ -990,11 +990,11 @@ export function useEventStream(eventName, callback) {
 
 /**
  * Hook for infinite-scroll / "load more" pagination patterns. Fetches pages from
- * a backend API (`KinBot.api()`) or external URL (`KinBot.http()`) and merges results.
+ * a backend API (`Hivekeep.api()`) or external URL (`Hivekeep.http()`) and merges results.
  *
  * @param {string|null} path - API path (e.g. "/items") or full URL. Pass null to disable.
  * @param {object} [options] - Configuration options
- * @param {string} [options.source='api'] - 'api' for KinBot.api(), 'http' for KinBot.http()
+ * @param {string} [options.source='api'] - 'api' for Hivekeep.api(), 'http' for Hivekeep.http()
  * @param {number} [options.pageSize=20] - Items per page
  * @param {string} [options.pageParam='page'] - Query param name for page number
  * @param {string} [options.limitParam='limit'] - Query param name for page size
@@ -1087,9 +1087,9 @@ export function useInfiniteScroll(path, options = {}) {
 
       let response
       if (source === 'http') {
-        response = await window.KinBot.http.json(url)
+        response = await window.Hivekeep.http.json(url)
       } else {
-        response = await window.KinBot.api.get(url)
+        response = await window.Hivekeep.api.get(url)
       }
 
       const extracted = extractItems(response)
@@ -1162,7 +1162,7 @@ export function useInfiniteScroll(path, options = {}) {
  *
  * @param {string|null} path - API path or full URL. Pass null to disable.
  * @param {object} [options] - Configuration options
- * @param {string} [options.source='api'] - 'api' for KinBot.api(), 'http' for KinBot.http()
+ * @param {string} [options.source='api'] - 'api' for Hivekeep.api(), 'http' for Hivekeep.http()
  * @param {number} [options.pageSize=20] - Items per page
  * @param {string} [options.pageParam='page'] - Query param name for page number
  * @param {string} [options.limitParam='limit'] - Query param name for page size
@@ -1226,9 +1226,9 @@ export function usePagination(path, options = {}) {
 
         let response
         if (source === 'http') {
-          response = await window.KinBot.http.json(url)
+          response = await window.Hivekeep.http.json(url)
         } else {
-          response = await window.KinBot.api.get(url)
+          response = await window.Hivekeep.api.get(url)
         }
 
         if (cancelled) return
@@ -1265,33 +1265,33 @@ export function usePagination(path, options = {}) {
 
 // ─── Convenience re-exports from vanilla SDK ─────────────────────────────────
 
-export const toast = window.KinBot.toast
-export const confirm = window.KinBot.confirm
-export const prompt = window.KinBot.prompt
-export const navigate = window.KinBot.navigate
-export const fullpage = window.KinBot.fullpage
-export const setTitle = window.KinBot.setTitle
-export const setBadge = window.KinBot.setBadge
-export const openApp = window.KinBot.openApp
-export const clipboard = window.KinBot.clipboard
-export const storage = window.KinBot.storage
-export const api = window.KinBot.api
-export const http = window.KinBot.http
-export const events = window.KinBot.events
-export const kin = window.KinBot.kin
-export const user = window.KinBot.user
-export const memory = window.KinBot.memory
-export const conversation = window.KinBot.conversation
-export const notification = window.KinBot.notification
-export const resize = window.KinBot.resize
-export const share = window.KinBot.share
-export const shortcut = window.KinBot.shortcut
-export const apps = window.KinBot.apps
-export const download = window.KinBot.download
+export const toast = window.Hivekeep.toast
+export const confirm = window.Hivekeep.confirm
+export const prompt = window.Hivekeep.prompt
+export const navigate = window.Hivekeep.navigate
+export const fullpage = window.Hivekeep.fullpage
+export const setTitle = window.Hivekeep.setTitle
+export const setBadge = window.Hivekeep.setBadge
+export const openApp = window.Hivekeep.openApp
+export const clipboard = window.Hivekeep.clipboard
+export const storage = window.Hivekeep.storage
+export const api = window.Hivekeep.api
+export const http = window.Hivekeep.http
+export const events = window.Hivekeep.events
+export const kin = window.Hivekeep.kin
+export const user = window.Hivekeep.user
+export const memory = window.Hivekeep.memory
+export const conversation = window.Hivekeep.conversation
+export const notification = window.Hivekeep.notification
+export const resize = window.Hivekeep.resize
+export const share = window.Hivekeep.share
+export const shortcut = window.Hivekeep.shortcut
+export const apps = window.Hivekeep.apps
+export const download = window.Hivekeep.download
 
 // ─── useLocalStorage ────────────────────────────────────────────────────────
 /**
- * Persistent state using browser localStorage (not synced via KinBot storage).
+ * Persistent state using browser localStorage (not synced via Hivekeep storage).
  * Useful for UI preferences, collapsed states, and other non-critical local data.
  * @param {string} key - localStorage key (auto-prefixed with 'kb:')
  * @param {*} defaultValue - fallback when key doesn't exist

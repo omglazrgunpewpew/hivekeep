@@ -118,14 +118,14 @@ Configurable knobs:
 
 ## Section 3: Evidence from 97d4e72b
 
-DB inspection on the live prod DB (read-only, via SSH to `192.168.1.14`, file `/home/marlburrow/.local/share/kinbot/kinbot.db`).
+DB inspection on the live prod DB (read-only, via SSH to `192.168.1.14`, file `/home/marlburrow/.local/share/hivekeep/hivekeep.db`).
 
 ### 3a. Task row
 
 ```
 id      : 97d4e72b-c2ed-4724-a337-64efcda27bb6
 status  : failed
-title   : Ticket: Slug projet + numéro de ticket lisible (kinbot#42, #42, UUID)
+title   : Ticket: Slug projet + numéro de ticket lisible (hivekeep#42, #42, UUID)
 created : 1778838820831  (start)
 updated : 1778839633053  (final resolve)
 elapsed : 812222 ms = 13 min 32 s
@@ -138,7 +138,7 @@ Only **four** messages total on the task message stream:
 
 | # | role | source | created_at (ms) | len | tool_calls | preview |
 |---|---|---|---|---|---|---|
-| 1 | user | system | 1778838820953 | 77 | 0 | "Work on ticket: Slug projet + numero de ticket lisible (kinbot#42, #42, UUID)" |
+| 1 | user | system | 1778838820953 | 77 | 0 | "Work on ticket: Slug projet + numero de ticket lisible (hivekeep#42, #42, UUID)" |
 | 2 | assistant | kin | 1778838820958 | 2389 | **100** | "Now let me check the active speaker / kin engine context..." |
 | 3 | user | system | 1778839550188 | 295 | 0 | "[System] You have not called update_task_status() yet. ..." |
 | 4 | assistant | kin | 1778839550247 | 1017 | 6 | "Task finalized as failed (partial WIP). Summary: ..." |
@@ -168,7 +168,7 @@ I do not have offline access to `@anthropic-ai/claude-agent-sdk` source in this 
 
 Surface-level comparison:
 
-| Mechanism | KinBot `executeSubKin` | Claude Agent SDK (`query` / Claude Code) |
+| Mechanism | Hivekeep `executeSubKin` | Claude Agent SDK (`query` / Claude Code) |
 |---|---|---|
 | Hard iteration cap | `maxSteps` (default 100, env-configurable) | `maxTurns` option (configurable, no hard internal cap baked in) |
 | What happens at the cap | Loop exits silently, then nudge, then force-fail | Session ends, returns a result; the SDK does not synthesize a "you must call tool X" prompt |
@@ -176,7 +176,7 @@ Surface-level comparison:
 | Required terminal tool | `update_task_status` is mandatory for graceful completion | None; a session is "done" when the model stops emitting tool calls and produces a final text turn |
 | Behavior on "no tool call" step | Loop breaks, nudge fires unless status was changed | Treated as a normal end-of-turn |
 
-The structural difference: Claude Code is designed around the **model deciding when to stop**, with `maxTurns` as a budget ceiling and the host process accepting whatever final state the model arrives at. KinBot's sub-task path is designed around the **host insisting on a specific terminal tool call** (`update_task_status`) and treating its absence as a failure mode that must be resolved within one extra round.
+The structural difference: Claude Code is designed around the **model deciding when to stop**, with `maxTurns` as a budget ceiling and the host process accepting whatever final state the model arrives at. Hivekeep's sub-task path is designed around the **host insisting on a specific terminal tool call** (`update_task_status`) and treating its absence as a failure mode that must be resolved within one extra round.
 
 This insistence is what creates the "premature finalize" failure: the host's interpretation of "you stopped before calling the terminal tool" is "you are stuck"; in reality the model may simply have run out of step budget mid-work and would happily continue if given more steps. The nudge then forces a binary completed/failed choice, and a honest agent picks `failed` because it is not done.
 

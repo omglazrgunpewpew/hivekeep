@@ -1,4 +1,4 @@
-# KinBot 1.0 — Plan de documentation (Starlight)
+# Hivekeep 1.0 — Plan de documentation (Starlight)
 
 > Source de vérité pour la doc utilisateur 1.0. Structurée **par pilier** (cf. messaging §5 et stratégie §3/§8), affinée pour coller au scaffold Starlight existant (`docs-site/src/content/docs/`). Principe directeur : **parité marketing ↔ doc** (chaque feature héros du site a sa page dédiée) et **bénéfice d'abord, feature ensuite**. Les docs internes obsolètes en structure (`idea.md`, `api.md`, `schema.md`…) ne sont pas publiées telles quelles : elles servent de **matière première** à miner.
 
@@ -20,7 +20,7 @@
 Introduction
   Bienvenue
   Concepts clés (glossaire)
-  Pourquoi KinBot (vs plateformes d'agents)
+  Pourquoi Hivekeep (vs plateformes d'agents)
 
 Démarrage (Getting Started)
   Installation (docker run, prérequis)
@@ -83,7 +83,7 @@ Confiance & transparence (+)
 Référence
   API REST
   Événements SSE
-  SDK (@kinbot-developer/sdk)
+  SDK (@hivekeep-developer/sdk)
   Configuration (variables d'env)
 
 Aide
@@ -99,9 +99,9 @@ Aide
 
 | Page | Scope (1 ligne) | Source à miner |
 |---|---|---|
-| `intro/welcome` | Ce qu'est KinBot, pour qui, en 60 secondes — pose la métaphore « équipe d'agents chez vous ». | `kinbot-1.0-messaging.md` (§1, §4) · `catalogue` (Introduction) |
+| `intro/welcome` | Ce qu'est Hivekeep, pour qui, en 60 secondes — pose la métaphore « équipe d'agents chez vous ». | `hivekeep-1.0-messaging.md` (§1, §4) · `catalogue` (Introduction) |
 | `intro/concepts` | **Glossaire des concepts clés** (voir §4 ci-dessous). | `catalogue` (carte des capacités) · `idea.md` |
-| `intro/why-kinbot` | Positionnement vs plateformes d'agents autonomes + tableau des différenciateurs. | `strategie-communication.md` (§4 tableau) · `catalogue` (différenciateurs transversaux) |
+| `intro/why-hivekeep` | Positionnement vs plateformes d'agents autonomes + tableau des différenciateurs. | `strategie-communication.md` (§4 tableau) · `catalogue` (différenciateurs transversaux) |
 
 ### Démarrage
 
@@ -200,7 +200,7 @@ Aide
 |---|---|---|
 | `api/rest` *(existe)* | Contrats REST par route. | `api.md` |
 | `api/sse` *(existe)* | Catalogue des événements SSE et règles emit↔handle. | `sse.md` · `api.md` |
-| `reference/sdk` | API du SDK `@kinbot-developer/sdk` (plugins + mini-apps). | `plugins/api.md` · `mini-apps/sdk-reference.md` · `PLUGIN-SPEC.md` |
+| `reference/sdk` | API du SDK `@hivekeep-developer/sdk` (plugins + mini-apps). | `plugins/api.md` · `mini-apps/sdk-reference.md` · `PLUGIN-SPEC.md` |
 | `reference/configuration` | Toutes les variables d'env et defaults. | `config.md` |
 
 ### Aide
@@ -274,7 +274,7 @@ Priorisé par : (a) débloquer un nouvel utilisateur de bout en bout, (b) couvri
 16. `extending/toolboxes`, `extending/mcp`, `plugins/overview`, `providers/*`
 17. `ui/tour-pwa`, `ui/themes`, `ui/avatars`, `ui/rich-tool-rendering`
 18. `channels/{6 plateformes}`, `connected-accounts/*`
-19. `intro/why-kinbot`
+19. `intro/why-hivekeep`
 
 **Vague 4 — Profondeur & power-user**
 20. `automation/*`, `projects/*`
@@ -294,4 +294,4 @@ Priorisé par : (a) débloquer un nouvel utilisateur de bout en bout, (b) couvri
 - **Ne pas publier en l'état** : `idea.md`, `schema.md`, `api.md`, `sse.md`, `prompt-system.md`, `compacting.md`, `sherpa.md`, les `*-journal.md`, `teams-design.md` — ce sont des sources internes à reformuler en langage bénéfice-d'abord.
 - **Pages clés à signaler comme prioritaires hors-vague si le temps manque** : le glossaire (`intro/concepts`) et `getting-started/first-launch-sherpa` portent à eux seuls la compréhension + l'activation du produit.
 
-Fichiers de référence (chemins absolus) : `/Users/nicolasvarrot/projects/kinbot/kinbot-1.0-messaging.md`, `/Users/nicolasvarrot/projects/kinbot/kinbot-1.0-strategie-communication.md`, `/Users/nicolasvarrot/projects/kinbot/kinbot-1.0-catalogue-capacites.md`, scaffold Starlight existant `/Users/nicolasvarrot/projects/kinbot/docs-site/src/content/docs/`.
+Fichiers de référence (chemins absolus) : `/Users/nicolasvarrot/projects/hivekeep/hivekeep-1.0-messaging.md`, `/Users/nicolasvarrot/projects/hivekeep/hivekeep-1.0-strategie-communication.md`, `/Users/nicolasvarrot/projects/hivekeep/hivekeep-1.0-catalogue-capacites.md`, scaffold Starlight existant `/Users/nicolasvarrot/projects/hivekeep/docs-site/src/content/docs/`.

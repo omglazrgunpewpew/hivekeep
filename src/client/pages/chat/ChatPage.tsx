@@ -66,7 +66,7 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
   // have a stored slug matching an existing kin.
   useEffect(() => {
     if (selectedKinSlug) {
-      try { localStorage.setItem('kinbot:lastSelectedKinSlug', selectedKinSlug) } catch { /* ignore */ }
+      try { localStorage.setItem('hivekeep:lastSelectedKinSlug', selectedKinSlug) } catch { /* ignore */ }
     }
   }, [selectedKinSlug])
 
@@ -74,7 +74,7 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
     if (selectedKinSlug || kinsLoading || kins.length === 0) return
     if (location.pathname !== '/') return
     let stored: string | null = null
-    try { stored = localStorage.getItem('kinbot:lastSelectedKinSlug') } catch { /* ignore */ }
+    try { stored = localStorage.getItem('hivekeep:lastSelectedKinSlug') } catch { /* ignore */ }
     if (!stored) return
     if (!kins.some((k) => k.slug === stored)) return
     navigate(`/kin/${stored}`, { replace: true })

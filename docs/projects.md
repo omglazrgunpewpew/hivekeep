@@ -1,6 +1,6 @@
 # Projects & tickets
 
-KinBot ships an internal project tracker. A project is a long-lived workspace
+Hivekeep ships an internal project tracker. A project is a long-lived workspace
 (repo, mission, product line) holding a kanban board of tickets and a palette
 of tags. Tickets are independent units of work that can be addressed by humans
 in chat, by tools, and by sub-Kin tasks spawned from a card.
@@ -20,7 +20,7 @@ A ticket has three valid identifiers; tools accept any of them.
 | Format            | Example                                | When to use                          |
 |-------------------|----------------------------------------|--------------------------------------|
 | **UUID**          | `9ba56654-c252-4a23-afa9-d6d227f2d05b` | Programmatic, FK in DB, SSE payloads |
-| **Qualified id**  | `kinbot#42`                            | Cross-project chat, commit messages  |
+| **Qualified id**  | `hivekeep#42`                            | Cross-project chat, commit messages  |
 | **Bare number**   | `#42` or `42`                          | Same-project chat, with an active project set |
 
 The UUID is the source of truth and is what all foreign keys (`tasks.ticket_id`,
@@ -122,6 +122,6 @@ files, and Kins working on the ticket can list/read/add/rename/delete them.
 ## Prompt block injection
 
 The system prompt's *Ticket assignment* block exposes both the slug and the
-number to sub-Kins, so a sub-task working on `kinbot#42` can refer to it in
+number to sub-Kins, so a sub-task working on `hivekeep#42` can refer to it in
 its replies and tool calls without ever seeing the UUID. The *Active project*
 block similarly lists `slug#N` for open tickets.

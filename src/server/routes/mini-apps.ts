@@ -142,7 +142,7 @@ miniAppRoutes.post('/', async (c) => {
       fileset['app.json'] = buildDefaultManifest()
       warning =
         'No app.json or import map was provided, but your HTML imports bare ES modules. ' +
-        'A default app.json (react, react-dom/client, @kinbot/react, @kinbot/components) was created automatically.'
+        'A default app.json (react, react-dom/client, @hivekeep/react, @hivekeep/components) was created automatically.'
     }
 
     const app = await createMiniApp({
@@ -825,8 +825,8 @@ const THEME_SYNC_SCRIPT = `<script>
 })();
 </script>`
 
-const SDK_LINK = '<link rel="stylesheet" href="/api/mini-apps/sdk/kinbot-sdk.css">'
-const SDK_SCRIPT = '<script src="/api/mini-apps/sdk/kinbot-sdk.js"></script>'
+const SDK_LINK = '<link rel="stylesheet" href="/api/mini-apps/sdk/hivekeep-sdk.css">'
+const SDK_SCRIPT = '<script src="/api/mini-apps/sdk/hivekeep-sdk.js"></script>'
 
 /** Base tag so relative paths (src="app.js", import "./utils.js") resolve to the static directory */
 function baseTag(appId: string): string {
@@ -909,7 +909,7 @@ function transpileInlineJsx(html: string): string {
         return `<script type="module">${transpiled}</script>`
       } catch (err) {
         console.error('[mini-app] JSX transpilation failed:', err)
-        return `<script type="module">console.error('[KinBot] JSX transpilation failed — check your JSX syntax');</script>`
+        return `<script type="module">console.error('[Hivekeep] JSX transpilation failed — check your JSX syntax');</script>`
       }
     },
   )
@@ -947,7 +947,7 @@ miniAppRoutes.get('/:id/serve', async (c) => {
   let moduleHelpTag = ''
   if (!importMapTag && !htmlHasInlineImportMap(html) && findBareModuleImports(html).length > 0) {
     const help =
-      "[KinBot] This mini-app imports ES modules (e.g. 'react') but no import map was found. " +
+      "[Hivekeep] This mini-app imports ES modules (e.g. 'react') but no import map was found. " +
       'Add an app.json with a "dependencies" map (or pass `dependencies` to create_mini_app). ' +
       "See get_mini_app_docs('getting-started')."
     moduleHelpTag = `<script>console.error(${JSON.stringify(help)})</script>`
@@ -1021,7 +1021,7 @@ miniAppRoutes.get('/:id/static/*', async (c) => {
       })
     } catch (err) {
       console.error('[mini-app] JSX/TSX transpilation failed for', assetPath, err)
-      return new Response(`console.error('[KinBot] Failed to transpile ${assetPath}');`, {
+      return new Response(`console.error('[Hivekeep] Failed to transpile ${assetPath}');`, {
         headers: { 'Content-Type': 'application/javascript' },
         status: 500,
       })
@@ -1042,10 +1042,10 @@ miniAppRoutes.get('/:id/static/*', async (c) => {
 
 export const miniAppSdkRoutes = new Hono()
 
-miniAppSdkRoutes.get('/kinbot-sdk.js', async (c) => {
-  const jsPath = join(import.meta.dir, '../mini-app-sdk/kinbot-sdk.js')
+miniAppSdkRoutes.get('/hivekeep-sdk.js', async (c) => {
+  const jsPath = join(import.meta.dir, '../mini-app-sdk/hivekeep-sdk.js')
   if (!existsSync(jsPath)) {
-    return new Response('/* KinBot SDK JS not found */', {
+    return new Response('/* Hivekeep SDK JS not found */', {
       headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=3600' },
     })
   }
@@ -1055,10 +1055,10 @@ miniAppSdkRoutes.get('/kinbot-sdk.js', async (c) => {
   })
 })
 
-miniAppSdkRoutes.get('/kinbot-react.js', async (c) => {
-  const jsPath = join(import.meta.dir, '../mini-app-sdk/kinbot-react.js')
+miniAppSdkRoutes.get('/hivekeep-react.js', async (c) => {
+  const jsPath = join(import.meta.dir, '../mini-app-sdk/hivekeep-react.js')
   if (!existsSync(jsPath)) {
-    return new Response('/* KinBot React SDK not found */', {
+    return new Response('/* Hivekeep React SDK not found */', {
       headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=3600' },
     })
   }
@@ -1068,10 +1068,10 @@ miniAppSdkRoutes.get('/kinbot-react.js', async (c) => {
   })
 })
 
-miniAppSdkRoutes.get('/kinbot-components.js', async (c) => {
-  const jsPath = join(import.meta.dir, '../mini-app-sdk/kinbot-components.js')
+miniAppSdkRoutes.get('/hivekeep-components.js', async (c) => {
+  const jsPath = join(import.meta.dir, '../mini-app-sdk/hivekeep-components.js')
   if (!existsSync(jsPath)) {
-    return new Response('/* KinBot Components not found */', {
+    return new Response('/* Hivekeep Components not found */', {
       headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=3600' },
     })
   }
@@ -1082,7 +1082,7 @@ miniAppSdkRoutes.get('/kinbot-components.js', async (c) => {
 })
 
 // Serve TypeScript type definitions for SDK autocomplete / documentation
-for (const dtsFile of ['kinbot-sdk.d.ts', 'kinbot-react.d.ts', 'kinbot-components.d.ts']) {
+for (const dtsFile of ['hivekeep-sdk.d.ts', 'hivekeep-react.d.ts', 'hivekeep-components.d.ts']) {
   miniAppSdkRoutes.get(`/${dtsFile}`, async (c) => {
     const dtsPath = join(import.meta.dir, `../mini-app-sdk/${dtsFile}`)
     if (!existsSync(dtsPath)) {
@@ -1097,11 +1097,11 @@ for (const dtsFile of ['kinbot-sdk.d.ts', 'kinbot-react.d.ts', 'kinbot-component
   })
 }
 
-miniAppSdkRoutes.get('/kinbot-sdk.css', async (c) => {
+miniAppSdkRoutes.get('/hivekeep-sdk.css', async (c) => {
   // Serve the SDK CSS file
-  const cssPath = join(import.meta.dir, '../mini-app-sdk/kinbot-sdk.css')
+  const cssPath = join(import.meta.dir, '../mini-app-sdk/hivekeep-sdk.css')
   if (!existsSync(cssPath)) {
-    return new Response('/* KinBot SDK CSS not found */', {
+    return new Response('/* Hivekeep SDK CSS not found */', {
       headers: { 'Content-Type': 'text/css', 'Cache-Control': 'public, max-age=3600' },
     })
   }

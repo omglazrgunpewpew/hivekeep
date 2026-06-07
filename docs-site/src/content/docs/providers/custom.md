@@ -1,11 +1,11 @@
 ---
 title: Adding Custom Providers
-description: Extend KinBot with custom AI providers via plugins.
+description: Extend Hivekeep with custom AI providers via plugins.
 ---
 
 Beyond the built-in providers, you can ship your own through the **plugin system**. Plugin providers register into the same four native registries as built-ins (LLM, embedding, image, search) and appear alongside them in the Settings UI — there is no second-class plugin shape.
 
-This page is a quick orientation. The full author guide is on the [Developing Plugins](/kinbot/docs/plugins/developing/) page, including a complete `SearchProvider` example.
+This page is a quick orientation. The full author guide is on the [Developing Plugins](/hivekeep/docs/plugins/developing/) page, including a complete `SearchProvider` example.
 
 ## When you need a plugin
 
@@ -22,7 +22,7 @@ A plugin exports a `providers` array. Each entry implements one of the four nati
 
 ```typescript
 // In your plugin's main file
-import type { SearchProvider, PluginContext } from '@kinbot-developer/sdk'
+import type { SearchProvider, PluginContext } from '@hivekeep-developer/sdk'
 
 class MySearchProvider implements SearchProvider {
   readonly type = 'my-search'

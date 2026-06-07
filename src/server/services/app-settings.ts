@@ -252,7 +252,7 @@ export async function setDefaultImageProviderId(providerId: string | null): Prom
  * array under a single app_settings row so we don't need a schema
  * migration for the feature.
  *
- * Multi-user note: KinBot is "individual or small group" with shared
+ * Multi-user note: Hivekeep is "individual or small group" with shared
  * configuration — this list is NOT per-user. A dismissed item stays
  * dismissed for every admin viewing the dashboard. Reactivation
  * happens from Settings → General → 'Show setup checklist'.

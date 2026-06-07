@@ -128,8 +128,8 @@ test.describe.serial('Settings — General & Navigation', () => {
   test('should display system info in settings footer', async ({ page }) => {
     await openSettings(page)
 
-    // Footer should show KinBot version
-    await expect(page.getByText(/kinbot v/i)).toBeVisible({ timeout: 5_000 })
+    // Footer should show Hivekeep version
+    await expect(page.getByText(/hivekeep v/i)).toBeVisible({ timeout: 5_000 })
   })
 
   test('should close settings with Close button', async ({ page }) => {

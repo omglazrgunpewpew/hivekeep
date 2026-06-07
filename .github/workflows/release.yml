@@ -80,7 +80,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: KinBot ${{ steps.changelog.outputs.version }}
+          name: Hivekeep ${{ steps.changelog.outputs.version }}
           body: |
             ## What's Changed
 
@@ -92,22 +92,22 @@ jobs:
 
             **One-liner (Linux/macOS):**
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/MarlBurroW/kinbot/main/install.sh | bash
+            curl -fsSL https://raw.githubusercontent.com/MarlBurroW/hivekeep/main/install.sh | bash
             ```
 
             **Docker:**
             ```bash
             docker run -d \
-              --name kinbot \
+              --name hivekeep \
               -p 3000:3000 \
-              -v kinbot-data:/app/data \
-              ghcr.io/MarlBurroW/kinbot:${{ github.ref_name }}
+              -v hivekeep-data:/app/data \
+              ghcr.io/MarlBurroW/hivekeep:${{ github.ref_name }}
             ```
 
             **Manual:**
             ```bash
-            git clone https://github.com/MarlBurroW/kinbot.git
-            cd kinbot && bun install && bun run build && bun run db:migrate
+            git clone https://github.com/MarlBurroW/hivekeep.git
+            cd hivekeep && bun install && bun run build && bun run db:migrate
             NODE_ENV=production bun run start
             ```
 

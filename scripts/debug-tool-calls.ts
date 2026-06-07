@@ -2,7 +2,7 @@
  * Debug script: find the tool count threshold where the model stops calling tools
  *
  * Tests with increasing tool counts: 1, 10, 30, 50, 80, 100, 120, 152
- * Uses real KinBot system prompt + conversation history.
+ * Uses real Hivekeep system prompt + conversation history.
  *
  * Usage:
  *   ANTHROPIC_API_KEY=sk-... bun run scripts/debug-tool-calls.ts

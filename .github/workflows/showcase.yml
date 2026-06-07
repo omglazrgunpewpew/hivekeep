@@ -66,7 +66,7 @@ jobs:
       # ── Record dark mode ──
       - name: Record showcase (dark)
         env:
-          E2E_DB_PATH: ${{ runner.temp }}/kinbot-showcase-dark.db
+          E2E_DB_PATH: ${{ runner.temp }}/hivekeep-showcase-dark.db
           SHOWCASE_THEME: dark
         run: |
           npx playwright test --config=playwright.showcase.config.js
@@ -76,7 +76,7 @@ jobs:
       # ── Record light mode (separate DB to avoid port/state conflicts) ──
       - name: Record showcase (light)
         env:
-          E2E_DB_PATH: ${{ runner.temp }}/kinbot-showcase-light.db
+          E2E_DB_PATH: ${{ runner.temp }}/hivekeep-showcase-light.db
           SHOWCASE_THEME: light
         run: |
           rm -rf test-results

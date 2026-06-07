@@ -185,7 +185,7 @@ kinRoutes.post('/generate-config', async (c) => {
 
   const lang = language === 'fr' ? 'French' : 'English'
 
-  const systemPrompt = `You are a configuration generator for an AI assistant platform called KinBot. A "Kin" is a specialized AI assistant with a unique identity, personality, and expertise.
+  const systemPrompt = `You are a configuration generator for an AI assistant platform called Hivekeep. A "Kin" is a specialized AI assistant with a unique identity, personality, and expertise.
 
 Given a user's description of the assistant they want, generate a complete Kin configuration as JSON.
 
@@ -1387,7 +1387,7 @@ kinRoutes.get('/:id/export', async (c) => {
     : []
 
   const exportData = {
-    _kinbot: {
+    _hivekeep: {
       version: 1,
       exportedAt: new Date().toISOString(),
     },
@@ -1402,7 +1402,7 @@ kinRoutes.get('/:id/export', async (c) => {
     mcpServers: mcpServerDetails,
   }
 
-  const filename = `${details.slug || details.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.kinbot.json`
+  const filename = `${details.slug || details.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.hivekeep.json`
 
   c.header('Content-Disposition', `attachment; filename="${filename}"`)
   c.header('Content-Type', 'application/json')
@@ -1422,7 +1422,7 @@ kinRoutes.post('/import', async (c) => {
     expertise?: string
     model?: string
     thinkingConfig?: KinThinkingConfig | null
-    _kinbot?: { version?: number }
+    _hivekeep?: { version?: number }
   }
   const toolboxIds = normalizeToolboxIdsInput(body.toolboxIds)
 
