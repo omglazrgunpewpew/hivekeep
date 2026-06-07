@@ -60,10 +60,6 @@ bun run db:migrate
 NODE_ENV=production bun run start
 ```
 
-:::note
-When running manually without Docker, the default port is **3333** (set by `.env.example`). The Docker image and install script default to **3000**.
-:::
-
 ### Prerequisites
 
 - [Bun](https://bun.sh) >= 1.0

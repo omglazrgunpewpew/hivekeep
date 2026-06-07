@@ -160,7 +160,7 @@ function resolveServerTimezone(): string {
 
 export const config = {
   version: appVersion,
-  port: Number(process.env.PORT ?? 3333),
+  port: Number(process.env.PORT ?? 3000),
   /** Max HTTP request body size (bytes) accepted by Bun.serve. Bun's own
    *  default is ~128 MB, which silently caps large file-storage uploads.
    *  Set MAX_REQUEST_BODY_MB to a positive value to enforce a cap; 0 (default)
@@ -639,7 +639,7 @@ export const config = {
     intervalHours: Number(process.env.VERSION_CHECK_INTERVAL_HOURS ?? 1),
   },
 
-  publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 3333}`,
+  publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 3000}`,
 
   environment: {
     installationType: detectInstallationType(),

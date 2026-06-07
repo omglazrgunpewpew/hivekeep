@@ -276,12 +276,12 @@ Copy `.env.example` to `.env` and adjust as needed. All values have sensible def
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `3333` | HTTP server port |
+| `PORT` | `3000` | HTTP server port |
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose on all interfaces) |
 | `HIVEKEEP_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
 | `ENCRYPTION_KEY` | *(auto-generated)* | 64-char hex key for AES-256-GCM vault encryption. Auto-generated and persisted to `data/.encryption-key` on first run. |
 | `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
-| `PUBLIC_URL` | `http://localhost:3333` | Public-facing URL (used in webhooks, invitation links) |
+| `PUBLIC_URL` | `http://localhost:3000` | Public-facing URL (used in webhooks, invitation links) |
 
 See [`.env.example`](.env.example) for the complete list of all options (compacting thresholds, memory tuning, queue settings, cron limits, web browsing, etc.).
 
@@ -300,10 +300,10 @@ See [`.env.example`](.env.example) for the complete list of all options (compact
 git clone https://github.com/MarlBurroW/hivekeep.git
 cd hivekeep
 bun install
-bun run dev    # Starts Vite dev server (port 5173) + Hono backend (port 3333)
+bun run dev    # Starts Vite dev server (port 5173) + Hono backend (port 3000)
 ```
 
-The dev server proxies API requests from port 5173 to 3333 automatically.
+The dev server proxies API requests from port 5173 to 3000 automatically.
 
 ### Commands
 
@@ -362,7 +362,7 @@ All settings have sensible defaults. Override only what you need.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `3333` | HTTP server port |
+| `PORT` | `3000` | HTTP server port |
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose externally) |
 | `NODE_ENV` | `development` | Set to `production` for optimized builds |
 | `PUBLIC_URL` | `http://localhost:{PORT}` | Public-facing URL (for OAuth callbacks, webhooks) |

@@ -9,7 +9,7 @@ Hivekeep uses environment variables for configuration. Copy `.env.example` to `.
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `3333` (`3000` in Docker) | HTTP server port |
+| `PORT` | `3000` | HTTP server port |
 | `HOST` | `127.0.0.1` | Bind address (`0.0.0.0` to expose on all interfaces) |
 | `HIVEKEEP_DATA_DIR` | `./data` | Persistent data directory (DB, uploads, workspaces) |
 | `DB_PATH` | `$HIVEKEEP_DATA_DIR/hivekeep.db` | SQLite database file path |

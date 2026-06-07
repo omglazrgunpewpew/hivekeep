@@ -58,7 +58,7 @@ jobs:
 
       - name: Start server
         env:
-          PORT: '3333'
+          PORT: '3000'
           NODE_ENV: production
           HIVEKEEP_DATA_DIR: ${{ runner.temp }}/hivekeep-data
           DB_PATH: ${{ runner.temp }}/hivekeep-data/hivekeep.db
@@ -69,7 +69,7 @@ jobs:
       - name: Wait for health check
         run: |
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:3333/api/health > /dev/null 2>&1; then
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
               echo "Server is up after ${i}s"
               exit 0
             fi
@@ -80,13 +80,13 @@ jobs:
 
       - name: Verify health endpoint
         run: |
-          RESPONSE=$(curl -sf http://localhost:3333/api/health)
+          RESPONSE=$(curl -sf http://localhost:3000/api/health)
           echo "Response: $RESPONSE"
           echo "$RESPONSE" | jq -e '.status == "ok"'
 
       - name: Verify frontend is served
         run: |
-          HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' http://localhost:3333/)
+          HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' http://localhost:3000/)
           echo "Frontend HTTP status: $HTTP_CODE"
           [ "$HTTP_CODE" = "200" ]
 

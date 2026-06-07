@@ -167,7 +167,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
         <div>
           <p>No Postgres, Redis, Mongo, or message broker. Bun and SQLite in a single binary. Your data, your keys, your machine.</p>
           <p>Secrets live in an encrypted vault. Agents reference a vault key to reach a service; they <b>never read the value</b>, so it <b>never reaches the LLM</b>.</p>
-          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 hivekeep<br /><span class="cmt"># then open your browser. Queenie does the rest.</span></div>
+          <div class="term mono"><span class="c">$</span> docker run -d -p 3000:3000 -v hivekeep-data:/app/data ghcr.io/marlburrow/hivekeep<br /><span class="cmt"># then open your browser. Queenie does the rest.</span></div>
         </div>
         <dl class="specs">
           <div class="r"><dt>Footprint</dt><dd>1 process · 1 SQLite file</dd></div>
@@ -369,4 +369,26 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="26" height="26" alt="" /> Hivekeep</div>
     <span class="m">Open-source · MIT · Built with Bun · © 2026</span>
   </div></footer>
+
+<script>
+  // Wire up click-to-copy on command blocks (`.cmd`). The command text is the
+  // first span (minus the leading "$ "); `.cp` is the copy icon.
+  document.querySelectorAll<HTMLElement>('.cmd').forEach((cmd) => {
+    const btn = cmd.querySelector<HTMLElement>('.cp')
+    const code = cmd.querySelector<HTMLElement>('span:not(.cp)')
+    if (!btn || !code) return
+    btn.setAttribute('role', 'button')
+    btn.setAttribute('aria-label', 'Copy command')
+    btn.addEventListener('click', async () => {
+      const text = (code.textContent || '').replace(/^\s*\$\s*/, '').trim()
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch {
+        return
+      }
+      btn.classList.add('copied')
+      setTimeout(() => btn.classList.remove('copied'), 1500)
+    })
+  })
+</script>
 </Base>

@@ -7,7 +7,7 @@ A **Agent** is a persistent AI agent with its own identity, memory, and tools. U
 
 ## Creating a Agent
 
-1. Open Hivekeep in your browser (default: `http://localhost:3000`, or port `3333` for manual installs)
+1. Open Hivekeep in your browser (default: `http://localhost:3000`)
 2. Complete the onboarding wizard (set up your admin account and first AI provider)
 3. Click **New Agent** in the sidebar
 4. Give it a **name**, **description**, and optionally a **system prompt**

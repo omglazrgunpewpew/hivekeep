@@ -117,8 +117,8 @@ describe('getPlatformConfigTool', () => {
   it('returns platform configuration', async () => {
     const result = await execute(getPlatformConfigTool as ToolRegistration, {})
     expect(result.version).toBe('0.23.0')
-    expect(result.publicUrl).toBe('http://localhost:3333')
-    expect(result.port).toBe(3333)
+    expect(result.publicUrl).toBe('http://localhost:3000')
+    expect(result.port).toBe(3000)
     expect(result.installation.type).toBe('systemd-user')
     expect(result.installation.isDocker).toBe(false)
   })

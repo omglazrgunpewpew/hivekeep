@@ -200,7 +200,11 @@ hr.rule{border:0;border-top:1px solid var(--line);margin:0;}
 .getstarted p{color:var(--ink-soft);margin:0 auto 26px;max-width:48ch;}
 .getstarted .cmd{display:inline-flex;align-items:center;gap:16px;font-family:"JetBrains Mono",monospace;font-size:.88rem;background:oklch(0.10 0.018 312);border:1px solid var(--line-strong);border-radius:10px;padding:14px 18px;color:var(--ink);max-width:100%;overflow-x:auto;}
 .getstarted .cmd .c{color:var(--green);}
-.getstarted .cmd .cp{color:var(--ink-soft);display:inline-flex;}
+.getstarted .cmd .cp{color:var(--ink-soft);display:inline-flex;cursor:pointer;flex-shrink:0;transition:color .15s;}
+.getstarted .cmd .cp:hover{color:var(--ink);}
+.getstarted .cmd .cp.copied{color:var(--green);}
+.getstarted .cmd .cp.copied svg{display:none;}
+.getstarted .cmd .cp.copied::after{content:'Copied';font-family:"JetBrains Mono",monospace;font-size:.78rem;}
 .getstarted .btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:26px;}
 
 /* faithful memory card (mirrors MemoryCard.tsx) */

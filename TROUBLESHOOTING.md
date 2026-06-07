@@ -47,11 +47,11 @@ bun install
 
 ### Port already in use (`EADDRINUSE`)
 
-Another process is using the port (default 3333):
+Another process is using the port (default 3000):
 
 ```bash
 # Find what's using the port
-lsof -i :3333
+lsof -i :3000
 
 # Use a different port
 PORT=4000 bun run start

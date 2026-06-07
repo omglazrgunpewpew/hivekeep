@@ -13,12 +13,12 @@
 /** Complete config object matching src/server/config.ts shape */
 export const fullMockConfig = {
   version: '0.0.0-test',
-  port: 3333,
+  port: 3000,
   dataDir: '/tmp/hivekeep-test',
   encryptionKey: 'test-key-0000000000000000000000000000000000000000000000000000000000000000',
   logLevel: 'error' as const,
   isDocker: false,
-  publicUrl: 'http://localhost:3333',
+  publicUrl: 'http://localhost:3000',
 
   db: { path: '/tmp/hivekeep-test/hivekeep.db' },
 
