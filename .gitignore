@@ -77,3 +77,6 @@ plugins/*
 
 # WSL/Windows alternate-data-stream artifacts
 *:Zone.Identifier
+
+# Stray exported context capture (debug artifact, not part of the app)
+kin-context.json

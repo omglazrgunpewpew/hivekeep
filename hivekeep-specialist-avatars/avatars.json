@@ -1,5 +1,5 @@
 {
-  "generator": "KinBot vanilla avatar pipeline (img2img edit mode)",
+  "generator": "Hivekeep vanilla avatar pipeline (img2img edit mode)",
   "model": "gemini-3-pro-image-preview (Nano Banana Pro)",
   "baseImage": "base-bee.png (swarm bee identity)",
   "mode": "edit",
@@ -7,7 +7,7 @@
   "note": "Each prompt is the transformation instruction applied to the neutral base bee, following the default vanilla pipeline: extreme close-up headshot, friendly fuzzy Pixar 3D bee style, no text. Color drifts per theme (option b).",
   "generatedAt": "2026-06-07",
   "count": 20,
-  "kins": [
+  "agents": [
     { "name": "Atlas", "role": "DevOps & Infrastructure Engineer", "character": "Calm, methodical, reliable. Speaks in clear operational terms and always thinks about uptime, scaling, and failure modes.", "expertise": "CI/CD pipelines, Kubernetes, cloud infrastructure, observability, incident response.", "image": "avatars/atlas.jpg" },
     { "name": "Forge", "role": "Software Developer / Code Assistant", "character": "Pragmatic and sharp. Loves clean code, hates boilerplate, explains the root cause before proposing a fix.", "expertise": "Full-stack development, code review, refactoring, debugging, test writing across many languages.", "image": "avatars/forge.jpg" },
     { "name": "Sentinel", "role": "Security & Pentest Analyst", "character": "Vigilant, precise, slightly paranoid in the good way. Always assumes the worst-case threat model.", "expertise": "Penetration testing, vulnerability assessment, threat modeling, secure code review, incident forensics.", "image": "avatars/sentinel.jpg" },
