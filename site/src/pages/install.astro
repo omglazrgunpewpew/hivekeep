@@ -1,0 +1,90 @@
+---
+import Base from '../layouts/Base.astro';
+import { Icon } from 'astro-icon/components';
+import InstallConfigurator from '../components/InstallConfigurator.tsx';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// Two install methods, honest tradeoffs. `y` = strength, `n` = caveat.
+const methods = [
+  {
+    tag: 'Container',
+    name: 'Docker',
+    primary: false,
+    for: 'Best for trying it out, or running a clean, sandboxed appliance.',
+    points: [
+      ['y', 'Runs anywhere — macOS, Linux, Windows'],
+      ['y', 'Zero host pollution, fully isolated'],
+      ['y', 'One command to run, one to update'],
+      ['n', "Agent-installed tools & binaries don't survive a restart"],
+      ['n', 'Limited access to host hardware'],
+    ],
+  },
+  {
+    tag: 'Bare metal',
+    name: 'Native (install.sh)',
+    primary: true,
+    for: 'Best for a permanent home where the agents truly own the machine.',
+    points: [
+      ['y', 'Agents own the box — install tools & deps, persisted'],
+      ['y', 'Direct hardware access (GPU, devices)'],
+      ['y', 'systemd / launchd service, auto-update with rollback'],
+      ['n', 'Modifies the host system (by design)'],
+      ['n', 'Linux & macOS (Windows via WSL2)'],
+    ],
+  },
+];
+---
+<Base title="Install Hivekeep" description="Install Hivekeep your way — Docker to try it, or a native install to give your agents a real home. Generate the exact command for your setup.">
+  <!-- ===== top bar ===== -->
+  <header class="topbar"><div class="wrap in">
+    <a class="brand" href={`${base}/`}><img class="brand-logo" src={`${base}/logo.svg`} width="28" height="28" alt="" /> Hivekeep</a>
+    <nav>
+      <a href={`${base}/#memory`}>Features</a><a href={`${base}/#household`}>The household</a>
+      <a href={`${base}/#why`}>Why Hivekeep</a>
+      <a href="https://github.com/MarlBurroW/hivekeep">GitHub ↗</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#configure">Configure</a>
+  </div></header>
+
+  <!-- ===== intro ===== -->
+  <div class="wrap">
+    <div class="install-head">
+      <span class="kicker" style="justify-content:center">Install</span>
+      <h1 class="display">Install Hivekeep your way.</h1>
+      <p>Two paths, same app. Pick how much of the machine you want your agents to own — then generate the exact command. Either way, once it's up, <b>Queenie</b> sets up the rest by chatting with you. No config files to edit.</p>
+    </div>
+
+    <!-- ===== method comparison ===== -->
+    <div class="methods">
+      {methods.map((m) => (
+        <div class={`method${m.primary ? ' primary' : ''}`}>
+          <span class="tag">{m.tag}</span>
+          <h3 class="display">{m.name}</h3>
+          <p class="for">{m.for}</p>
+          <ul>
+            {m.points.map(([k, label]) => (
+              <li class={k}>
+                <Icon name={k === 'y' ? 'lucide:check' : 'lucide:x'} />
+                <span class="lbl">{label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <!-- ===== configurator ===== -->
+    <div id="configure" style="scroll-margin-top:80px;margin:18px 0 70px;">
+      <span class="kicker">Configure your install</span>
+      <h2 class="display" style="margin:12px 0 22px;">Generate your command.</h2>
+      <InstallConfigurator client:load />
+    </div>
+  </div>
+
+  <!-- ===== footer ===== -->
+  <footer class="footer"><div class="wrap in">
+    <a class="brand" href={`${base}/`}><img class="brand-logo" src={`${base}/logo.svg`} width="26" height="26" alt="" /> Hivekeep</a>
+    <span class="m">Open-source · MIT · Built with Bun · © 2026</span>
+  </div></footer>
+</Base>

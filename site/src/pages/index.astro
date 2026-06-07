@@ -42,7 +42,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <a href="#why">Why Hivekeep</a><a href="#docs">Docs</a>
       <a href="https://github.com/MarlBurroW/hivekeep">GitHub ↗</a>
     </nav>
-    <a class="btn btn-primary btn-sm" href="#start">Get started</a>
+    <a class="btn btn-primary btn-sm" href={`${base}/install`}>Get started</a>
   </div></header>
 
   <!-- ===== hero ===== -->
@@ -61,7 +61,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
             <div class="row"><span class="k">Channels</span><span class="v">6 built-in</span></div>
           </dl>
           <div class="cta">
-            <a class="btn btn-primary" href="#start"><Icon name="lucide:terminal" /> Start in 2 minutes</a>
+            <a class="btn btn-primary" href={`${base}/install`}><Icon name="lucide:terminal" /> Start in 2 minutes</a>
             <a class="link-mono" href="#demo">Watch the demo <Icon name="lucide:play" /></a>
           </div>
         </div>
@@ -355,11 +355,12 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="wrap" style="position:relative;z-index:1">
       <span class="kicker" style="justify-content:center">Get started</span>
       <h2 class="display">Run your team in two minutes.</h2>
-      <p>One command. No external services to provision. Open your browser and Queenie walks you through the rest.</p>
+      <p>One command to try it on localhost. Open your browser and Queenie walks you through the rest.</p>
       <div class="cmd"><span><span class="c">$</span> docker run -d -p 3000:3000 -v hivekeep-data:/app/data ghcr.io/marlburrow/hivekeep</span><span class="cp"><Icon name="lucide:copy" /></span></div>
+      <p style="margin-top:14px;font-size:.92rem;">Want a domain, a custom port, or a native install where agents own the machine? <a class="link-mono" href={`${base}/install`}>Configure your install <Icon name="lucide:arrow-right" /></a></p>
       <div class="btns">
-        <a class="btn btn-primary" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub</a>
-        <a class="btn btn-ghost" href="#docs"><Icon name="lucide:book-open" /> Read the docs</a>
+        <a class="btn btn-primary" href={`${base}/install`}><Icon name="lucide:terminal" /> Configure your install</a>
+        <a class="btn btn-ghost" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub</a>
       </div>
     </div>
   </section>
