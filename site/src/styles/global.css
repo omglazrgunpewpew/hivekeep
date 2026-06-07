@@ -63,6 +63,12 @@ hr.rule{border:0;border-top:1px solid var(--line);margin:0;}
 .glow{position:absolute;border-radius:50%;filter:blur(95px);pointer-events:none;z-index:0;}
 .glow.a{width:520px;height:520px;background:oklch(0.84 0.14 55/.18);top:-160px;right:-90px;}
 .glow.b{width:420px;height:420px;background:oklch(0.58 0.22 305/.16);top:120px;left:-160px;}
+/* Honeycomb texture: ties the page back to the bee logomark and the "hive of
+   autonomous workers" idea. Kept very faint and masked so it reads as
+   atmosphere, never decoration. background-image is set inline (base-aware). */
+.hexfield{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.05;background-repeat:repeat;background-size:46px auto;}
+.hexfield.fade-tr{-webkit-mask-image:radial-gradient(125% 100% at 80% 6%,#000 0%,oklch(0 0 0/.4) 40%,transparent 72%);mask-image:radial-gradient(125% 100% at 80% 6%,#000 0%,oklch(0 0 0/.4) 40%,transparent 72%);}
+.hexfield.fade-c{-webkit-mask-image:radial-gradient(72% 86% at 50% 32%,#000 0%,transparent 72%);mask-image:radial-gradient(72% 86% at 50% 32%,#000 0%,transparent 72%);}
 .hero .meta{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
 .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.12fr .88fr;gap:46px;align-items:center;margin-top:18px;}
 .hero h1{font-size:clamp(2.8rem,5.6vw,4.7rem);line-height:1.0;margin:14px 0 18px;}
