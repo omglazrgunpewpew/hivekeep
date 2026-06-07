@@ -15,7 +15,6 @@ import { cn } from '@/client/lib/utils'
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
-  { value: 'de', label: 'Deutsch' },
   { value: 'fr', label: 'Français' },
 ] as const
 

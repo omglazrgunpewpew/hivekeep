@@ -60,7 +60,7 @@ meRoutes.patch('/', async (c) => {
   const body = await c.req.json()
 
   // Input validation
-  const SUPPORTED_LANGUAGES = ['en', 'fr', 'de']
+  const SUPPORTED_LANGUAGES = ['en', 'fr']
   const MAX_NAME_LENGTH = 100
   const MAX_PSEUDONYM_LENGTH = 30
   const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
