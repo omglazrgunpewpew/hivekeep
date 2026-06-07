@@ -62,7 +62,7 @@ Agents interact with the world through **tools** — functions they can call dur
 
 ### Tasks (multi-agent)
 
-These tools let a Agent spawn background sub-agents and manage delegated work:
+These tools let an Agent spawn background sub-agents and manage delegated work:
 
 | Tool | Availability | Description |
 |---|---|---|
@@ -209,9 +209,9 @@ Task mode parameters:
 | Tool | Description |
 |---|---|
 | `create_agent` | Create a new Agent |
-| `update_agent` | Update a Agent's configuration |
-| `delete_agent` | Delete a Agent |
-| `get_agent_details` | Get full details of a Agent |
+| `update_agent` | Update an Agent's configuration |
+| `delete_agent` | Delete an Agent |
+| `get_agent_details` | Get full details of an Agent |
 
 :::note
 Agent management tools are **opt-in** (disabled by default). Enable them via `enabledOptInTools` in the tool config.
@@ -354,7 +354,7 @@ When a sub-agent sends an inter-Agent message:
 
 [Model Context Protocol](https://modelcontextprotocol.io/) servers extend Agents with external tools. Agents can even manage their own MCP connections (with user approval).
 
-MCP servers added by a Agent start in `pending_approval` status and must be approved by an admin before they become active.
+MCP servers added by an Agent start in `pending_approval` status and must be approved by an admin before they become active.
 
 To connect an MCP server:
 1. Go to Settings > MCP Servers

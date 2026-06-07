@@ -4,7 +4,7 @@ import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { SecretPromptRequest } from '@/shared/types'
 
 /**
- * Pending secure-input prompts for a Agent. Fetches on mount, listens for
+ * Pending secure-input prompts for an Agent. Fetches on mount, listens for
  * `prompt:secret-request` / `prompt:secret-resolved` SSE, and exposes a
  * `respond` that POSTs the raw values to the server (which vaults them — they
  * never go through the LLM).

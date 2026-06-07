@@ -26,11 +26,11 @@ test.describe.serial('Mini App Gallery', () => {
     const appsTab = page.getByRole('tab', { name: 'Mini-Apps' })
     await appsTab.click()
 
-    // The empty state text depends on whether a Agent is selected:
-    // - With a Agent selected: "No apps yet" / "Ask a Agent to create one"
-    // - Without a Agent selected: "Select a Agent" / "Select a Agent to see its mini-apps"
+    // The empty state text depends on whether an Agent is selected:
+    // - With an Agent selected: "No apps yet" / "Ask an Agent to create one"
+    // - Without an Agent selected: "Select an Agent" / "Select an Agent to see its mini-apps"
     const noAppsYet = page.getByText('No apps yet')
-    const selectAAgent = page.getByText('Select a Agent', { exact: true })
+    const selectAAgent = page.getByText('Select an Agent', { exact: true })
 
     // One of the two empty states should be visible
     await expect(noAppsYet.or(selectAAgent)).toBeVisible({ timeout: 5000 })

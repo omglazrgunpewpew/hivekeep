@@ -291,7 +291,7 @@ export const updateProjectKnowledgeTool: ToolRegistration = {
         if (resolved.error) return { error: resolved.error }
 
         // Cross-project guardrail: an entry must belong to the project the
-        // caller is currently acting on. Without it, a Agent with an active
+        // caller is currently acting on. Without it, an Agent with an active
         // project could be tricked into editing another project's entries.
         const existing = await getProjectKnowledge(id)
         if (!existing) return { error: 'KNOWLEDGE_NOT_FOUND' }

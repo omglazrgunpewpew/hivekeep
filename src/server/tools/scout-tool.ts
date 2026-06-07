@@ -89,7 +89,7 @@ export const scoutTool: ToolRegistration = {
         //
         // Without the active-project fallback the project scout tier was only
         // ever consulted for ticket-bound tasks: a scout dispatched from a main
-        // session (or a plain spawn) on a Agent with an active project silently
+        // session (or a plain spawn) on an Agent with an active project silently
         // skipped the project's scout_model and fell through to the Agent's own
         // main model (e.g. Opus instead of the project's configured Haiku).
         let projectId: string | null = null

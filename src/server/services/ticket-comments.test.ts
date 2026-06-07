@@ -299,7 +299,7 @@ describe('ticket-comments service', () => {
     ).rejects.toThrow('FORBIDDEN')
   })
 
-  itMocked('lets a user edit any comment (including a Agent authored one)', async () => {
+  itMocked('lets a user edit any comment (including an Agent authored one)', async () => {
     const created = await createTicketComment({
       ticketId: 'ticket-1',
       author: { type: 'agent', id: 'agent-author' },
@@ -313,7 +313,7 @@ describe('ticket-comments service', () => {
     expect(updated?.content).toBe('edited by user')
   })
 
-  itMocked('forbids a Agent from deleting another Agent’s comment but allows its own', async () => {
+  itMocked('forbids an Agent from deleting another Agent’s comment but allows its own', async () => {
     const c1 = await createTicketComment({
       ticketId: 'ticket-1',
       author: { type: 'agent', id: 'agent-author' },

@@ -70,7 +70,7 @@ function resolveToolbox(idOrName: string) {
 
 /**
  * list_tools — enumerate every grantable tool (native / plugin / MCP / custom)
- * with a one-line description, WITHOUT input schemas. This lets a Agent discover
+ * with a one-line description, WITHOUT input schemas. This lets an Agent discover
  * tools it doesn't itself hold so it can compose a minimal toolbox. Read-only.
  */
 export const listToolsTool: ToolRegistration = {
@@ -81,7 +81,7 @@ export const listToolsTool: ToolRegistration = {
   create: () =>
     tool({
       description:
-        'List the catalog of EVERY grantable tool (native, plugin, MCP, custom) with a short description — WITHOUT input schemas (those are too large). Use this to discover tools you do not yourself have access to, then reference their exact names in create_toolbox / update_toolbox to give a Agent exactly what it needs. Optional filters narrow the (large) list: domain, source, or a free-text query matched against name + description.',
+        'List the catalog of EVERY grantable tool (native, plugin, MCP, custom) with a short description — WITHOUT input schemas (those are too large). Use this to discover tools you do not yourself have access to, then reference their exact names in create_toolbox / update_toolbox to give an Agent exactly what it needs. Optional filters narrow the (large) list: domain, source, or a free-text query matched against name + description.',
       inputSchema: z.object({
         query: z.string().optional().describe('Case-insensitive substring matched against tool name + description (e.g. "calendar", "memory").'),
         domain: z.string().optional().describe('Restrict to one domain (e.g. "memory", "email", "filesystem"). See the domain field in results.'),
@@ -157,7 +157,7 @@ export const listToolsTool: ToolRegistration = {
 
         return {
           total: out.length,
-          note: 'Schemas are omitted. The "all" toolbox already grants every native + custom tool; build a narrower toolbox only when a Agent needs a focused subset.',
+          note: 'Schemas are omitted. The "all" toolbox already grants every native + custom tool; build a narrower toolbox only when an Agent needs a focused subset.',
           tools: out,
         }
       },
@@ -167,7 +167,7 @@ export const listToolsTool: ToolRegistration = {
 // ─── list_toolboxes — discover toolboxes ────────────────────────────────────────
 
 /**
- * list_toolboxes — discover the toolboxes available to grant a Agent.
+ * list_toolboxes — discover the toolboxes available to grant an Agent.
  * Read-only. Backs the "Use list_toolboxes to discover more" guidance in
  * create_agent / update_agent.
  */
@@ -179,7 +179,7 @@ export const listToolboxesTool: ToolRegistration = {
   create: () =>
     tool({
       description:
-        "List the toolboxes you can grant a Agent (built-in and user-defined). A Agent's toolset is the mandatory core floor unioned with every granted toolbox. Use the returned names with create_agent / update_agent; edit user-defined ones with update_toolbox / delete_toolbox (built-ins are read-only).",
+        "List the toolboxes you can grant an Agent (built-in and user-defined). An Agent's toolset is the mandatory core floor unioned with every granted toolbox. Use the returned names with create_agent / update_agent; edit user-defined ones with update_toolbox / delete_toolbox (built-ins are read-only).",
       inputSchema: z.object({}),
       execute: async () => {
         const boxes = listToolboxes()
@@ -207,7 +207,7 @@ export const listToolboxesTool: ToolRegistration = {
 
 /**
  * create_toolbox — define a new user toolbox (a named, minimal allow-list of
- * tools) so a Agent can be granted exactly what it needs. Validates tool names
+ * tools) so an Agent can be granted exactly what it needs. Validates tool names
  * against the catalog to reject typos/hallucinations.
  */
 export const createToolboxTool: ToolRegistration = {
@@ -216,7 +216,7 @@ export const createToolboxTool: ToolRegistration = {
   create: () =>
     tool({
       description:
-        'Create a new user-defined toolbox: a named, minimal set of tools to grant a Agent exactly what its job needs (instead of the broad "all"). Discover valid tool names with list_tools first. Tool names are validated — unknown names are rejected. The core floor is always added on top automatically, so list only the extra tools.',
+        'Create a new user-defined toolbox: a named, minimal set of tools to grant an Agent exactly what its job needs (instead of the broad "all"). Discover valid tool names with list_tools first. Tool names are validated — unknown names are rejected. The core floor is always added on top automatically, so list only the extra tools.',
       inputSchema: z.object({
         name: z.string().describe('Unique toolbox name (lowercase-kebab recommended). Cannot collide with a built-in (all/research/ops/code/scout/email/calendar/address-book/configurator) or an existing toolbox.'),
         description: z.string().optional().describe('What this toolbox is for (shown in the UI and to list_toolboxes).'),

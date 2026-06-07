@@ -672,7 +672,7 @@ export const deleteTicketCommentTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Delete a comment by its UUID. A Agent can only delete its own comments. Hard delete, no recovery.',
+        'Delete a comment by its UUID. An Agent can only delete its own comments. Hard delete, no recovery.',
       inputSchema: z.object({
         comment_id: z.string(),
       }),

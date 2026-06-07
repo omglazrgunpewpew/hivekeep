@@ -10,7 +10,7 @@ import { api } from '@/client/lib/api'
  *    so a page reload or fresh device sees state that survived the previous session.
  *  - SSE `chat:message` increments the in-memory counter for non-active Agents,
  *    keeping the badge live without a server roundtrip per message.
- *  - Whenever the user opens a Agent (sidebar click OR URL navigation), or a message
+ *  - Whenever the user opens an Agent (sidebar click OR URL navigation), or a message
  *    arrives in the active Agent, the server-side `lastReadAt` is bumped via
  *    `POST /api/agents/:id/mark-read`, keeping persistence in sync with the UI.
  */
@@ -38,7 +38,7 @@ export function useUnreadPerAgent(selectedAgentId: string | null): {
       .catch(() => { /* fall back to empty map — SSE will hydrate as new messages arrive */ })
   }, [])
 
-  // When the user lands on or switches to a Agent (including via URL navigation
+  // When the user lands on or switches to an Agent (including via URL navigation
   // that bypasses handleSelectAgent), clear its badge and persist the read marker.
   useEffect(() => {
     if (!selectedAgentId) return

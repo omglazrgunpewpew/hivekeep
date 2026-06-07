@@ -295,7 +295,7 @@ export function AgentFormModal({
       setModel(config.suggestedModel)
     }
 
-    // Tool grants are managed exclusively through toolboxes. A Agent with no
+    // Tool grants are managed exclusively through toolboxes. An Agent with no
     // toolbox selected has only the core floor — pick toolboxes in the Tools
     // tab to grant web/memory/projects/etc. (the resolver no longer treats an
     // empty selection as "all").

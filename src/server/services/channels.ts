@@ -45,7 +45,7 @@ export function popChannelQueueMeta(queueItemId: string): ChannelQueueMeta | und
 
 // ─── Channel transfer hints (one-shot, consumed by the next inbound) ────────
 //
-// When a Agent calls transfer_channel(channelId, targetAgentSlug, reason?), the
+// When an Agent calls transfer_channel(channelId, targetAgentSlug, reason?), the
 // channel binding mutates (channels.agentId is updated). The next inbound on
 // the channel should carry transfer context so the new Agent understands it
 // just inherited the conversation. We stash the hint here keyed by channelId.
@@ -238,7 +238,7 @@ export async function listChannels(agentId?: string) {
 
 /**
  * List every channel on the platform, joined with its owner Agent's slug/name.
- * Powers `list_channels({ scope: 'all' })` so a Agent can discover channels it can
+ * Powers `list_channels({ scope: 'all' })` so an Agent can discover channels it can
  * borrow for a cross-Agent send. Left-join on agents keeps a row even if the owner
  * Agent was deleted (slug/name then null).
  */
@@ -690,7 +690,7 @@ export interface SendToChannelAsResult {
  * Send a message proactively through a channel, on behalf of `senderAgentId`.
  *
  * Shared by send_channel_message and send_to_contact. Unlike
- * `deliverChannelResponse` (auto-delivery of a Agent reply tied to an assistant
+ * `deliverChannelResponse` (auto-delivery of an Agent reply tied to an assistant
  * `messages` row), this path has no originating message — it persists an audit
  * `channel_message_links` row with `messageId = null` and `sentByAgentId` set.
  *
@@ -1581,7 +1581,7 @@ export async function listChannelConversations(channelId: string) {
   return { users, knownChatIds: distinctChatIds }
 }
 
-// ─── Active channels for a Agent (for prompt builder) ─────────────────────────
+// ─── Active channels for an Agent (for prompt builder) ─────────────────────────
 
 export async function getActiveChannelsForAgent(agentId: string) {
   return db

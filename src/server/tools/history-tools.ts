@@ -10,7 +10,7 @@ import type { ToolRegistration } from '@/server/tools/types'
 const log = createLogger('tools:history')
 
 /**
- * search_history — keyword search across message history for a Agent.
+ * search_history — keyword search across message history for an Agent.
  * Uses FTS5 keyword search with optional date range filtering and pagination.
  */
 export const searchHistoryTool: ToolRegistration = {

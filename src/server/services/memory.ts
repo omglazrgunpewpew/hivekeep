@@ -50,7 +50,7 @@ interface MemorySearchResult {
 // ─── Dedup (lightweight, raw vector distance) ───────────────────────────────
 
 /**
- * Check if a memory content is a near-duplicate of an existing memory for a Agent.
+ * Check if a memory content is a near-duplicate of an existing memory for an Agent.
  * Uses raw cosine distance (no boosts, no HyDE, no multi-query) for speed and accuracy.
  * Returns true if a duplicate is found (distance < threshold).
  */

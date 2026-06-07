@@ -98,14 +98,14 @@ export const requestProviderSetupTool: ToolRegistration = {
 /**
  * request_channel_setup — open a secure popup for the user to paste a messaging
  * channel's credentials (Discord/Telegram bot token), then create + activate the
- * channel bound to a Agent. The token goes straight to the vault.
+ * channel bound to an Agent. The token goes straight to the vault.
  */
 export const requestChannelSetupTool: ToolRegistration = {
   availability: ['main'],
   create: (ctx) =>
     tool({
       description:
-        'Open a SECURE POPUP for the user to paste a messaging channel\'s credentials (e.g. a Discord or Telegram bot token), then create + activate the channel bound to a Agent. ' +
+        'Open a SECURE POPUP for the user to paste a messaging channel\'s credentials (e.g. a Discord or Telegram bot token), then create + activate the channel bound to an Agent. ' +
         'The token goes straight to the encrypted vault — you never see it; you get back whether activation succeeded. ' +
         'Ask the user which platform and which Agent first. This ends your turn; you resume when they submit.',
       inputSchema: z.object({

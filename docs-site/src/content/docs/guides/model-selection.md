@@ -3,7 +3,7 @@ title: Model Selection & Troubleshooting
 description: Choose the right model for your Agents and fix common issues like "text mode" and failed tool calls.
 ---
 
-The model you assign to a Agent has a **massive** impact on how well it performs — especially for autonomous tasks. This guide helps you choose the right model and debug common problems.
+The model you assign to an Agent has a **massive** impact on how well it performs — especially for autonomous tasks. This guide helps you choose the right model and debug common problems.
 
 ## Recommended models
 
@@ -149,7 +149,7 @@ OpenRouter is convenient if you want to test different models without setting up
 
 ## Verifying tool use is working
 
-After setting up a Agent, verify it's actually using tools:
+After setting up an Agent, verify it's actually using tools:
 
 ### Quick test
 

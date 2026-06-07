@@ -99,7 +99,7 @@ export interface ResolveToolsetOptions {
 }
 
 /**
- * Resolve the final toolset (Record<name, Tool>) for a Agent or task from its
+ * Resolve the final toolset (Record<name, Tool>) for an Agent or task from its
  * toolbox selection, unifying native + plugin + MCP + custom under one
  * allow-list. See the module header for the exact model.
  */

@@ -21,8 +21,8 @@ Auth routes (`/api/auth/*`) are handled by [Better Auth](https://www.better-auth
 | `GET` | `/api/agents` | List all Agents |
 | `POST` | `/api/agents` | Create a new Agent |
 | `GET` | `/api/agents/:id` | Get Agent details |
-| `PATCH` | `/api/agents/:id` | Update a Agent |
-| `DELETE` | `/api/agents/:id` | Delete a Agent |
+| `PATCH` | `/api/agents/:id` | Update an Agent |
+| `DELETE` | `/api/agents/:id` | Delete an Agent |
 | `GET` | `/api/agents/:id/tools` | List available tools (grouped by domain) |
 | `GET` | `/api/agents/:id/context-usage` | Get context window usage |
 | `GET` | `/api/agents/:id/context-preview` | Get full LLM context preview (system prompt, messages, tools, token estimates). Accepts `?taskId` or `?sessionId` query params |
@@ -38,7 +38,7 @@ Auth routes (`/api/auth/*`) are handled by [Better Auth](https://www.better-auth
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/agents/:agentId/messages` | Get conversation history |
-| `POST` | `/api/agents/:agentId/messages` | Send a message to a Agent |
+| `POST` | `/api/agents/:agentId/messages` | Send a message to an Agent |
 | `POST` | `/api/agents/:agentId/messages/inject` | Inject a message with high priority (aborts current stream if active, used by `/btw` command) |
 
 ## Reactions
@@ -66,7 +66,7 @@ Memories can be accessed via Agent-scoped routes or global maintenance routes.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/agents/:id/memories` | List memories for a Agent |
+| `GET` | `/api/agents/:id/memories` | List memories for an Agent |
 | `POST` | `/api/agents/:id/memories` | Create a memory |
 | `PATCH` | `/api/agents/:id/memories/:memoryId` | Update a memory |
 | `DELETE` | `/api/agents/:id/memories/:memoryId` | Delete a memory |
@@ -95,7 +95,7 @@ Agent-scoped knowledge base (RAG document sources).
 
 ## Channels
 
-Channels are managed globally (not scoped to a Agent).
+Channels are managed globally (not scoped to an Agent).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -198,7 +198,7 @@ All session responses include an `expiresAt` field (Unix timestamp in ms, or `nu
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/agents/:agentId/quick-sessions` | List sessions for a Agent |
+| `GET` | `/api/agents/:agentId/quick-sessions` | List sessions for an Agent |
 | `POST` | `/api/agents/:agentId/quick-sessions` | Create a session |
 
 ### Session detail
@@ -279,7 +279,7 @@ See [Providers](/hivekeep/docs/providers/supported/) for the full provider refer
 
 ## Cron Jobs
 
-Cron jobs are managed globally (not scoped to a Agent).
+Cron jobs are managed globally (not scoped to an Agent).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|

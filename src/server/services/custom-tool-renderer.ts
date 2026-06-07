@@ -317,7 +317,7 @@ export interface RendererValidation {
 }
 
 /**
- * Validate a custom tool's renderer SERVER-SIDE so a Agent can discover a broken
+ * Validate a custom tool's renderer SERVER-SIDE so an Agent can discover a broken
  * renderer without opening a browser. Two steps:
  *   1. BUILD — bundle `renderer.tsx` via {@link buildCustomToolRendererForSSR}.
  *      A syntax error / unresolved import surfaces here as `phase:'build'`.

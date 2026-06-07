@@ -79,7 +79,7 @@ transfer_channel({
 | Already bound to target | `{ ok: true, noop: true, message: '...' }` |
 | `reason` over 200 chars | Rejected by Zod before `execute` runs. |
 
-### Example invocation from a Agent
+### Example invocation from an Agent
 
 ```json
 {
@@ -149,7 +149,7 @@ by the `<channel-context>` hint described above.
 ## SSE event
 
 The tool broadcasts a `channel:transferred` event (visible to every open
-client) so any UI tab showing a Agent sidebar or the channel page can
+client) so any UI tab showing an Agent sidebar or the channel page can
 refresh the binding badge in real time:
 
 ```json
@@ -295,7 +295,7 @@ binding is just whatever `channels.agentId` currently says.
 
 `transfer_channel` is a **persistent** operation: it mutates `channels.agentId`,
 so the target Agent becomes the new owner and receives every future inbound on
-that channel. Cross-Agent send is the **ephemeral** counterpart: a Agent sends a
+that channel. Cross-Agent send is the **ephemeral** counterpart: an Agent sends a
 single message through a channel bound to another Agent **without changing the
 binding**. The owner stays the owner; the borrower just posts once.
 

@@ -177,7 +177,7 @@ export interface MCPToolSummary {
 }
 
 /**
- * Get a lightweight summary of MCP tools available to a Agent.
+ * Get a lightweight summary of MCP tools available to an Agent.
  * Used for injection into the system prompt so the Agent knows what MCP tools are available.
  * This reuses existing connections (or creates them) but only extracts metadata.
  */

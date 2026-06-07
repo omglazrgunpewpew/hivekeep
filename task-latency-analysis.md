@@ -39,7 +39,7 @@ Wire-level capture, both harnesses routed through one local proxy via
 - Captures live under `data/llm-capture/<label>/`.
 
 **Test task** (identical across all runs): a read-only "map how the thinking
-config flows from a Agent's settings to the Anthropic request" exploration of the
+config flows from an Agent's settings to the Anthropic request" exploration of the
 hivekeep repo. Read-only → no repo state to reset → starting state identical.
 
 ## Runs

@@ -7,7 +7,7 @@
  * the model expresses intent in natural language.
  *
  * Slugs are derived from the provider's `name` at creation time and never
- * change afterwards, so a Agent that remembers `provider_id: "openai-codex"`
+ * change afterwards, so an Agent that remembers `provider_id: "openai-codex"`
  * keeps working even if the user later renames the provider in the UI.
  */
 

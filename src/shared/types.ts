@@ -1018,7 +1018,7 @@ export interface RunningAgentOnTicket {
   taskId: string
 }
 
-/** Whoever created a ticket — either a platform user (UI) or a Agent (tool). */
+/** Whoever created a ticket — either a platform user (UI) or an Agent (tool). */
 export type TicketReporter =
   | { type: 'user'; id: string; name: string; avatarUrl: string | null }
   | { type: 'agent'; id: string; slug: string | null; name: string; avatarUrl: string | null }

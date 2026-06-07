@@ -292,7 +292,7 @@ createRoot(document.getElementById("root")).render(<App />);
 
 ## Templates
 
-Hivekeep includes built-in templates for common patterns. Ask a Agent:
+Hivekeep includes built-in templates for common patterns. Ask an Agent:
 
 > "Create a mini-app using the kanban template"
 

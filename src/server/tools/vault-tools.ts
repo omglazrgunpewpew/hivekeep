@@ -142,7 +142,7 @@ export const updateSecretTool: ToolRegistration = {
 
 /**
  * delete_secret — delete a secret from the Vault.
- * A Agent can only delete secrets it created itself.
+ * An Agent can only delete secrets it created itself.
  * Available to main agents only.
  */
 export const deleteSecretTool: ToolRegistration = {

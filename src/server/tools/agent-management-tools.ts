@@ -37,7 +37,7 @@ export const createAgentTool: ToolRegistration = {
           .array(z.string())
           .optional()
           .describe(
-            'Names of toolboxes granting this Agent its tools. A Agent with NO toolbox can only use the core floor (read/write files, shell, basic) — so give it the toolboxes it needs (don\'t be stingy). Built-ins: "all" (everything), "research" (web + memory), "ops" (memory + vault + http), "code" (projects/tickets), "scout", "email", "calendar", "address-book". Omit to default to "all". Use list_toolboxes to discover more.',
+            'Names of toolboxes granting this Agent its tools. An Agent with NO toolbox can only use the core floor (read/write files, shell, basic) — so give it the toolboxes it needs (don\'t be stingy). Built-ins: "all" (everything), "research" (web + memory), "ops" (memory + vault + http), "code" (projects/tickets), "scout", "email", "calendar", "address-book". Omit to default to "all". Use list_toolboxes to discover more.',
           ),
         generate_avatar: z
           .boolean()
@@ -125,7 +125,7 @@ export const updateAgentTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        "Update a Agent's properties or tool grants. On YOURSELF you may refine your persona (name, role, character, expertise) and regenerate your avatar (generate_avatar: true), but you may NOT change your own toolboxes, model, or slug — ask a user or another Agent for those.",
+        "Update an Agent's properties or tool grants. On YOURSELF you may refine your persona (name, role, character, expertise) and regenerate your avatar (generate_avatar: true), but you may NOT change your own toolboxes, model, or slug — ask a user or another Agent for those.",
       inputSchema: z.object({
         agent_id: z.string().describe('Slug or UUID'),
         name: z.string().optional(),
@@ -151,7 +151,7 @@ export const updateAgentTool: ToolRegistration = {
           return { error: `Agent "${agent_id}" not found` }
         }
 
-        // A Agent may refine its OWN persona (name, role, character, expertise) and
+        // An Agent may refine its OWN persona (name, role, character, expertise) and
         // regenerate its OWN avatar — this powers the self-improving flow (e.g.
         // Queenie refreshing its look when the user changes the avatar
         // art-direction). But it may NOT change its toolboxes (privilege
@@ -230,7 +230,7 @@ export const updateAgentTool: ToolRegistration = {
 }
 
 /**
- * delete_agent — permanently delete a Agent and all its data.
+ * delete_agent — permanently delete an Agent and all its data.
  * Opt-in tool: disabled by default.
  */
 export const deleteAgentTool: ToolRegistration = {
@@ -240,7 +240,7 @@ export const deleteAgentTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Permanently delete a Agent and all its data. Irreversible. Cannot delete yourself.',
+        'Permanently delete an Agent and all its data. Irreversible. Cannot delete yourself.',
       inputSchema: z.object({
         agent_id: z.string().describe('Slug or UUID'),
         confirm: z.literal(true).describe('Must be true'),
@@ -275,7 +275,7 @@ export const deleteAgentTool: ToolRegistration = {
 }
 
 /**
- * get_agent_details — get detailed information about a Agent.
+ * get_agent_details — get detailed information about an Agent.
  * Opt-in tool: disabled by default.
  */
 export const getAgentDetailsTool: ToolRegistration = {
@@ -286,7 +286,7 @@ export const getAgentDetailsTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Get detailed information about a Agent including config, MCP servers, and tool settings.',
+        'Get detailed information about an Agent including config, MCP servers, and tool settings.',
       inputSchema: z.object({
         agent_id: z.string().describe('Slug or UUID'),
       }),

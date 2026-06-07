@@ -12,7 +12,7 @@ const log = createLogger('wakeup-scheduler')
 const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 /**
- * Schedule a one-shot wake-up for a Agent.
+ * Schedule a one-shot wake-up for an Agent.
  * Persisted to DB so it survives server restarts.
  */
 export async function scheduleWakeup(params: {
@@ -48,7 +48,7 @@ export async function scheduleWakeup(params: {
 }
 
 /**
- * Schedule a recurring wake-up for a Agent.
+ * Schedule a recurring wake-up for an Agent.
  * Fires every `intervalSeconds` until `expiresAt` or cancelled.
  */
 export async function scheduleRecurringWakeup(params: {
@@ -113,7 +113,7 @@ export async function cancelWakeup(id: string, requestingAgentId: string): Promi
 }
 
 /**
- * List pending wake-ups created by a Agent.
+ * List pending wake-ups created by an Agent.
  */
 export async function listPendingWakeups(callerAgentId: string) {
   return db

@@ -29,7 +29,7 @@ describe('attach-file-tool staging', () => {
   // ─── stageAttachment ──────────────────────────────────────────────
 
   describe('stageAttachment', () => {
-    it('stages a single attachment for a agent', () => {
+    it('stages a single attachment for an agent', () => {
       const att = makeAttachment('photo.png')
       stageAttachment(KIN_A, att)
 

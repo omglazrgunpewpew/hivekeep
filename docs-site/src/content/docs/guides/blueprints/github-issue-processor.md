@@ -1,9 +1,9 @@
 ---
 title: "Blueprint: GitHub Issue Processor"
-description: A complete, copy-paste-ready blueprint for a Agent that triages, diagnoses, and processes GitHub issues autonomously.
+description: A complete, copy-paste-ready blueprint for an Agent that triages, diagnoses, and processes GitHub issues autonomously.
 ---
 
-This blueprint sets up a Agent that autonomously processes GitHub issues — triaging new issues, diagnosing bugs, implementing fixes, and managing the issue lifecycle. This pattern is **running in production** on the Hivekeep repository itself.
+This blueprint sets up an Agent that autonomously processes GitHub issues — triaging new issues, diagnosing bugs, implementing fixes, and managing the issue lifecycle. This pattern is **running in production** on the Hivekeep repository itself.
 
 ## Use case
 

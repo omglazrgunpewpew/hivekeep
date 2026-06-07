@@ -34,7 +34,7 @@ async function createChannel(page: Page, name: string, token: string, platform?:
   await page.getByPlaceholder('My Telegram bot').fill(name)
 
   // Select Agent
-  const agentCombobox = page.locator('[role="combobox"]').filter({ hasText: /select a agent/i })
+  const agentCombobox = page.locator('[role="combobox"]').filter({ hasText: /select an agent/i })
   if (await agentCombobox.isVisible({ timeout: 1_000 }).catch(() => false)) {
     await agentCombobox.click()
     await page.getByRole('option').first().click()

@@ -562,7 +562,7 @@ export const transcribeAudioTool: ToolRegistration = {
           return { error: `No file with id "${file_id}".`, code: 'FILE_NOT_FOUND' }
         }
         if (fileRow.agentId !== ctx.agentId) {
-          // Agent isolation — never let a Agent transcribe another Agent's audio.
+          // Agent isolation — never let an Agent transcribe another Agent's audio.
           return { error: 'File belongs to another Agent.', code: 'FILE_FORBIDDEN' }
         }
 

@@ -287,7 +287,7 @@ cronRoutes.delete('/:id', async (c) => {
   }
 })
 
-// POST /api/crons/:id/approve — approve a Agent-created cron
+// POST /api/crons/:id/approve — approve an Agent-created cron
 cronRoutes.post('/:id/approve', async (c) => {
   const cronId = c.req.param('id')
   const existing = await getCron(cronId)

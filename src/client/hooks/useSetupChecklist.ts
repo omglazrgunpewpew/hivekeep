@@ -39,7 +39,7 @@ export type SetupItemSeverity = 'required' | 'recommended' | 'optional'
 export interface SetupItemTarget {
   /** Settings section id (e.g. 'providers', 'models'). */
   section?: string
-  /** True when the action is 'create a Agent' rather than 'open settings'. */
+  /** True when the action is 'create an Agent' rather than 'open settings'. */
   createAgent?: boolean
 }
 

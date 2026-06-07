@@ -16,7 +16,7 @@ interface AgentToolsTabProps {
 }
 
 /**
- * The TOOLBOX is the sole tool-grant primitive for a Agent. This tab lets the
+ * The TOOLBOX is the sole tool-grant primitive for an Agent. This tab lets the
  * user assign one or more toolboxes; the resolved toolset is CORE_TOOLS unioned
  * with every selected toolbox's listed tools (intersected with what actually
  * exists). A null/empty selection defaults to the built-in 'all' toolbox.

@@ -217,7 +217,7 @@ Memory extraction does **not** run during merges — memories were already extra
 
 ## Catch-up loop
 
-When a Agent has accumulated a large backlog (e.g. context at 95% after a long conversation), a single compaction might not be enough. `maybeCompact()` runs in a **loop**: it keeps triggering compaction until the context usage drops below the threshold, up to a maximum of 5 cycles. SSE progress events include the current cycle and estimated total so the UI can show progress.
+When an Agent has accumulated a large backlog (e.g. context at 95% after a long conversation), a single compaction might not be enough. `maybeCompact()` runs in a **loop**: it keeps triggering compaction until the context usage drops below the threshold, up to a maximum of 5 cycles. SSE progress events include the current cycle and estimated total so the UI can show progress.
 
 ---
 
@@ -321,7 +321,7 @@ truth from the last turn) is still preferred for the trigger when available.
 
 | Event | Description |
 |---|---|
-| `compacting:start` | Compaction started for a Agent (includes cycle number and estimated total for catch-up progress) |
+| `compacting:start` | Compaction started for an Agent (includes cycle number and estimated total for catch-up progress) |
 | `compacting:done` | Compaction completed (includes summary and memories extracted) |
 | `compacting:error` | Compaction failed (error persisted in conversation history) |
 

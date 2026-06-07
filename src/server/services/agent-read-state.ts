@@ -4,7 +4,7 @@ import { sseManager } from '@/server/sse/index'
 
 /**
  * Bump the read marker for (userId, agentId) to "now". Used when the user opens
- * a Agent or when a fresh assistant message arrives in the currently viewed Agent.
+ * an Agent or when a fresh assistant message arrives in the currently viewed Agent.
  */
 export async function markAgentAsRead(userId: string, agentId: string): Promise<void> {
   const now = new Date()
@@ -28,7 +28,7 @@ export async function markAgentAsRead(userId: string, agentId: string): Promise<
  * Mirrors the client-side filter in useUnreadPerAgent: only assistant messages
  * that are not part of a task or quick-session, and not redacted.
  *
- * If a Agent has no read_state row, the floor is `MAX(user.created_at, agent.created_at)`,
+ * If an Agent has no read_state row, the floor is `MAX(user.created_at, agent.created_at)`,
  * so messages predating either are not counted (avoids flooding new users).
  *
  * Only Agents with at least 1 unread message appear in the result.

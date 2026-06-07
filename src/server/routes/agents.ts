@@ -330,7 +330,7 @@ agentRoutes.post('/avatar/preview', async (c) => {
 })
 
 // GET /api/agents/avatar-config — read-only effective avatar axes (style A,
-// subject B) + base reference state. Non-admin (any user creating a Agent needs
+// subject B) + base reference state. Non-admin (any user creating an Agent needs
 // the pre-fills in the avatar modal); writing the global config stays admin-only
 // under /api/settings.
 agentRoutes.get('/avatar-config', async (c) => {
@@ -643,7 +643,7 @@ agentRoutes.post('/', async (c) => {
   )
 })
 
-// PATCH /api/agents/:id — update a agent (accepts UUID or slug)
+// PATCH /api/agents/:id — update an agent (accepts UUID or slug)
 agentRoutes.patch('/:id', async (c) => {
   const existing = resolveAgentByIdOrSlug(c.req.param('id'))
   if (!existing) {
@@ -713,7 +713,7 @@ agentRoutes.patch('/:id', async (c) => {
   })
 })
 
-// DELETE /api/agents/:id — delete a agent (accepts UUID or slug)
+// DELETE /api/agents/:id — delete an agent (accepts UUID or slug)
 agentRoutes.delete('/:id', async (c) => {
   const existing = resolveAgentByIdOrSlug(c.req.param('id'))
   if (!existing) {
@@ -728,7 +728,7 @@ agentRoutes.delete('/:id', async (c) => {
   return c.json({ success: true })
 })
 
-// PATCH /api/agents/:id/active-project — set or clear the active project for a Agent
+// PATCH /api/agents/:id/active-project — set or clear the active project for an Agent
 agentRoutes.patch('/:id/active-project', async (c) => {
   const existing = resolveAgentByIdOrSlug(c.req.param('id'))
   if (!existing) {
@@ -1352,7 +1352,7 @@ agentRoutes.patch('/:id/memories/:memoryId', async (c) => {
   })
 })
 
-// GET /api/agents/:id/export — export a Agent's configuration as JSON
+// GET /api/agents/:id/export — export an Agent's configuration as JSON
 agentRoutes.get('/:id/export', async (c) => {
   const agent = resolveAgentByIdOrSlug(c.req.param('id'))
   if (!agent) {

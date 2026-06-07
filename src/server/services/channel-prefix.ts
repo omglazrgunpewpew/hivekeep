@@ -13,7 +13,7 @@
  * Used in two cases:
  *   - identity-switch fallback after a transfer_channel handoff on adapters
  *     that cannot switch identity natively (identitySwitchMode === 'prefix').
- *   - cross-Agent send: a Agent borrows another Agent's channel, so the human needs
+ *   - cross-Agent send: an Agent borrows another Agent's channel, so the human needs
  *     to know which Agent is actually speaking through the bot.
  *
  * Idempotent: if the content already starts with `[Name]` it is returned

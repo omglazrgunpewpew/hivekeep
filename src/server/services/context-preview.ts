@@ -285,7 +285,7 @@ function safeToJsonSchema(schema: unknown): Record<string, unknown> | null {
 }
 
 /**
- * Build a context preview for a Agent — the system prompt as it would be
+ * Build a context preview for an Agent — the system prompt as it would be
  * assembled right now, plus the list of available tools and message history.
  *
  * This mirrors the data-gathering logic in agent-engine.processAgentQueue()

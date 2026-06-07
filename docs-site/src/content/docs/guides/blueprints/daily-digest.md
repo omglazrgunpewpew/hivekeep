@@ -1,9 +1,9 @@
 ---
 title: "Blueprint: Daily Digest"
-description: A copy-paste-ready blueprint for a Agent that curates daily tech news, monitors sources, and delivers a summary report.
+description: A copy-paste-ready blueprint for an Agent that curates daily tech news, monitors sources, and delivers a summary report.
 ---
 
-This blueprint sets up a Agent that runs on a daily schedule to gather information from the web, summarize it, and deliver a structured digest. Use it for tech watch, competitor monitoring, industry news, or any recurring research task.
+This blueprint sets up an Agent that runs on a daily schedule to gather information from the web, summarize it, and deliver a structured digest. Use it for tech watch, competitor monitoring, industry news, or any recurring research task.
 
 ## Use case
 

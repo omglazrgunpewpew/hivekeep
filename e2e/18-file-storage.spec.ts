@@ -4,7 +4,7 @@ import { loginAs, TEST_USER } from './helpers/auth'
 const BASE = 'http://localhost:3334'
 
 /**
- * Helper: ensure at least one Agent exists (needed for file storage — files belong to a Agent).
+ * Helper: ensure at least one Agent exists (needed for file storage — files belong to an Agent).
  */
 async function ensureAgentExists(page: import('@playwright/test').Page) {
   await page.goto(BASE)
@@ -53,7 +53,7 @@ test.describe.serial('File Storage settings', () => {
     await page.waitForSelector('[data-slot="sidebar"]', { timeout: 10000 })
   })
 
-  test('should ensure a Agent exists for file storage tests', async ({ page }) => {
+  test('should ensure an Agent exists for file storage tests', async ({ page }) => {
     await ensureAgentExists(page)
   })
 

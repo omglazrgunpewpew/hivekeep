@@ -302,7 +302,7 @@ export const listTasksTool: ToolRegistration = {
           limit: args.limit,
           offset: args.offset,
           // Scope to tasks where this Agent is either the parent (spawner) or
-          // the source (executor) unless the caller explicitly targets a Agent slug.
+          // the source (executor) unless the caller explicitly targets an Agent slug.
           relatedToAgentId: args.parent_agent_slug || args.child_agent_slug ? undefined : ctx.agentId,
         }
 

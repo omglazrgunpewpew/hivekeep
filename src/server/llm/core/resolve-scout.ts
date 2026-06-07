@@ -1,5 +1,5 @@
 /**
- * Resolve the "scout" model — the cheap model a Agent (or one of its sub-tasks)
+ * Resolve the "scout" model — the cheap model an Agent (or one of its sub-tasks)
  * delegates read-only exploration to via the `scout` tool, mirroring how
  * Claude Code hands heavy exploration to a Haiku sub-agent instead of burning
  * Opus steps.
@@ -57,7 +57,7 @@ function asTier(
 }
 
 /**
- * Resolve the effective scout model for a Agent (optionally within a project),
+ * Resolve the effective scout model for an Agent (optionally within a project),
  * honoring an optional per-spawn override. Always returns a concrete model —
  * it falls back to the Agent's own main model, which is `notNull` in the schema.
  *

@@ -71,7 +71,7 @@ export const userProfiles = sqliteTable('user_profiles', {
 export const providers = sqliteTable('providers', {
   id: text('id').primaryKey(),
   /** Stable human-readable identifier (e.g. "openai-codex", "claude-max").
-   *  Used in tool calls (spawn_self/spawn_agent) where a Agent would otherwise
+   *  Used in tool calls (spawn_self/spawn_agent) where an Agent would otherwise
    *  have to manipulate the UUID. Auto-generated from `name` at creation,
    *  unique across all providers. */
   slug: text('slug').notNull().unique(),
@@ -667,7 +667,7 @@ export const channelMessageLinks = sqliteTable('channel_message_links', {
   platformChatId: text('platform_chat_id').notNull(),
   direction: text('direction').notNull(), // 'inbound' | 'outbound'
   // Agent that actually authored/sent the message. Distinct from the channel's
-  // owner (channels.agentId) when a Agent borrows another Agent's channel (cross-Agent
+  // owner (channels.agentId) when an Agent borrows another Agent's channel (cross-Agent
   // send). Null for legacy rows and inbound links. FK set null on Agent delete so
   // the audit row survives.
   sentByAgentId: text('sent_by_agent_id').references(() => agents.id, { onDelete: 'set null' }),
@@ -1165,7 +1165,7 @@ export const ticketAttachments = sqliteTable('ticket_attachments', {
  * is reachable via the `search_project_knowledge` tool.
  *
  * authorAgentId is nullable: a NULL value means the entry was created by the
- * end-user via the REST API / UI rather than by a Agent tool call.
+ * end-user via the REST API / UI rather than by an Agent tool call.
  */
 export const projectKnowledge = sqliteTable('project_knowledge', {
   id: text('id').primaryKey(),

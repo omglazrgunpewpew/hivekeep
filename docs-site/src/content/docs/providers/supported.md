@@ -30,7 +30,7 @@ Hivekeep ships with built-in providers across four families: language models (LL
 
 ## Search-provider capabilities at a glance
 
-Search providers declare static capability flags so a Agent can pick the right one for the job. `web_search` honors what each provider supports and emits a warning when the LLM asks for something the provider doesn't expose.
+Search providers declare static capability flags so an Agent can pick the right one for the job. `web_search` honors what each provider supports and emits a warning when the LLM asks for something the provider doesn't expose.
 
 | Provider | `answer` | `freshness` | `domains` | `lang` | `location` | Notes |
 |---|:---:|:---:|:---:|:---:|:---:|---|

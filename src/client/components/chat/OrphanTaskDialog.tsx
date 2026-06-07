@@ -20,7 +20,7 @@ interface OrphanTaskDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Fixed target Agent. Omit to let the user pick one inside the dialog (e.g.
-   *  when launched from the Tasks page rather than a Agent's conversation). */
+   *  when launched from the Tasks page rather than an Agent's conversation). */
   agentId?: string
   agentName?: string
 }
@@ -28,13 +28,13 @@ interface OrphanTaskDialogProps {
 const TITLE_MAX = 120
 
 /**
- * Launch a standalone (orphan) task on a Agent — no project/ticket binding.
+ * Launch a standalone (orphan) task on an Agent — no project/ticket binding.
  * The user picks a prompt and, optionally, overrides for model, reasoning
  * effort, and toolboxes. Posts to `POST /api/agents/:id/tasks`; the result is
  * deposited back into the Agent's main session (async mode).
  *
  * Two modes:
- *   - Fixed Agent (`agentId` + `agentName` provided) — launched from a Agent's
+ *   - Fixed Agent (`agentId` + `agentName` provided) — launched from an Agent's
  *     conversation header, no Agent selector shown.
  *   - Picker (`agentId` omitted) — launched from the Tasks page; the user first
  *     chooses which Agent should run the task via a AgentSelector.

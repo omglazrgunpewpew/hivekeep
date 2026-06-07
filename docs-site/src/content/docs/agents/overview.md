@@ -5,7 +5,7 @@ description: Understanding Hivekeep's persistent AI agents.
 
 Agents are Hivekeep's core concept: **persistent AI agents** that live on your server, remember everything, and work as a team.
 
-Unlike disposable chatbot sessions, a Agent has:
+Unlike disposable chatbot sessions, an Agent has:
 
 - **A permanent identity** — name, role, personality, expertise, avatar
 - **Continuous memory** — every conversation is remembered forever through vector + full-text search
@@ -13,9 +13,9 @@ Unlike disposable chatbot sessions, a Agent has:
 - **Collaboration skills** — Agents talk to each other, delegate tasks, and spawn sub-agents
 - **Autonomy** — cron jobs, webhooks, and channel integrations let them work while you sleep
 
-## Anatomy of a Agent
+## Anatomy of an Agent
 
-When you create a Agent, you define:
+When you create an Agent, you define:
 
 | Field | Purpose |
 |---|---|

@@ -133,7 +133,7 @@ export const sendChannelMessageTool: ToolRegistration = {
       execute: async ({ channel_id, chat_id, message, attachments }) => {
         log.debug({ agentId: ctx.agentId, channelId: channel_id, chatId: chat_id }, 'Channel message send requested')
 
-        // Existence-only check: a Agent may borrow another Agent's channel. When the
+        // Existence-only check: an Agent may borrow another Agent's channel. When the
         // caller is not the channel owner, sendToChannelAs prefixes the message
         // with the caller's Agent name and records sentByAgentId for audit.
         const outboundAttachments: OutboundAttachment[] | undefined = attachments?.map(a => ({
@@ -161,7 +161,7 @@ export const sendChannelMessageTool: ToolRegistration = {
 }
 
 /**
- * list_endpoints — surface the destinations a Agent can post to within a
+ * list_endpoints — surface the destinations an Agent can post to within a
  * connected channel. Examples: Discord guild channels + DM threads,
  * TeamSpeak rooms, Matrix joined rooms, Telegram groups.
  *

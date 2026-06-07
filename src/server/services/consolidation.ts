@@ -172,7 +172,7 @@ async function mergeCluster(
 }
 
 /**
- * Run memory consolidation for a Agent.
+ * Run memory consolidation for an Agent.
  * Finds near-duplicate memories, merges them via LLM, replaces originals.
  * Returns the number of memories consolidated (removed).
  */

@@ -358,11 +358,11 @@
     "miniApps": {
       "title": "Mini-Apps",
       "empty": "No apps yet",
-      "emptyDescription": "Ask a Agent to create one",
+      "emptyDescription": "Ask an Agent to create one",
       "search": "Search mini-apps...",
       "noResults": "No mini-apps found",
-      "noAgentSelected": "Select a Agent",
-      "noAgentSelectedDescription": "Select a Agent to see its mini-apps",
+      "noAgentSelected": "Select an Agent",
+      "noAgentSelectedDescription": "Select an Agent to see its mini-apps",
       "viewGrid": "Grid view",
       "viewList": "List view"
     },
@@ -630,7 +630,7 @@
       "taskDescription": "Task instructions",
       "taskDescriptionPlaceholder": "What should the Agent do at each execution...",
       "agent": "Owner Agent",
-      "agentPlaceholder": "Select a Agent",
+      "agentPlaceholder": "Select an Agent",
       "targetAgent": "Target Agent (optional)",
       "targetAgentHint": "If set, this Agent executes the task instead of the owner.",
       "model": "Model (optional)",
@@ -696,7 +696,7 @@
     "placeholder": "How can I help you?",
     "send": "Send",
     "stop": "Stop generating",
-    "selectAgent": "Select a Agent to start chatting",
+    "selectAgent": "Select an Agent to start chatting",
     "empty": "No messages yet. Say hello!",
     "transfer": {
       "outTitle": "Channel transferred to {{agentName}}",
@@ -889,15 +889,15 @@
       "step2Desc": "The Hub is your central coordinator. It receives messages and routes them to the right specialist Agent.",
       "step2Action": "Create Hub",
       "step3Title": "Add a specialist Agent",
-      "step3Desc": "Create a Agent with specific expertise (finance, coding, writing...) that the Hub can delegate to.",
-      "step3Action": "Create a Agent",
+      "step3Desc": "Create an Agent with specific expertise (finance, coding, writing...) that the Hub can delegate to.",
+      "step3Action": "Create an Agent",
       "step4Title": "Connect a channel",
       "step4Desc": "Optionally connect Telegram, Discord, Slack, or other platforms so your Agents can chat outside the web UI.",
       "step4Action": "Add channel",
-      "allDone": "You’re all set! Select a Agent from the sidebar to start chatting.",
+      "allDone": "You’re all set! Select an Agent from the sidebar to start chatting.",
       "onboardingStep": "Step {{current}}/{{total}}"
     },
-    "shortcutHint": "to quickly find a Agent",
+    "shortcutHint": "to quickly find an Agent",
     "copyMessage": "Copy message",
     "copied": "Copied to clipboard",
     "copyFailed": "Failed to copy",
@@ -1128,7 +1128,7 @@
   },
   "customTools": {
     "title": "Custom Tools",
-    "description": "Global tools you (or your Agents) script in any language. Once created, add them to a toolbox to grant them to a Agent — they run as custom_<slug>.",
+    "description": "Global tools you (or your Agents) script in any language. Once created, add them to a toolbox to grant them to an Agent — they run as custom_<slug>.",
     "create": "New custom tool",
     "edit": "Edit custom tool",
     "empty": "No custom tools yet",
@@ -1137,7 +1137,7 @@
     "deleteTitle": "Delete custom tool",
     "deleteConfirm": "This will permanently delete \"{{name}}\" and its files. Toolboxes that list it will simply skip it.",
     "enabled": "Enabled",
-    "byAgent": "created by a Agent",
+    "byAgent": "created by an Agent",
     "installDeps": "Install dependencies",
     "installAfterSave": "Save the tool first, then install its dependencies.",
     "testTitle": "Test run",
@@ -1195,7 +1195,7 @@
       "content": "Custom tools let you extend Hivekeep with your own scripts.",
       "bullet1": "Each tool is a script in its own folder; it reads arguments as JSON on stdin and prints its result to stdout.",
       "bullet2": "Add a requirements.txt (Python) or package.json (Node/Bun) and click Install to set up dependencies.",
-      "bullet3": "Grant a tool to a Agent by adding custom_<slug> to one of its toolboxes."
+      "bullet3": "Grant a tool to an Agent by adding custom_<slug> to one of its toolboxes."
     },
     "iconPicker": {
       "trigger": "Pick an icon",
@@ -1302,7 +1302,7 @@
       "globalPromptTip": "Instructions injected into every Agent's system prompt. Use this for rules or guidelines all your Agents should follow.",
       "hubAgent": "Hub Agent",
       "hubAgentTip": "The Hub Agent is the central coordinator that routes messages and manages other Agents. It gets access to all tools automatically.",
-      "hubAgentPlaceholder": "Select a Agent...",
+      "hubAgentPlaceholder": "Select an Agent...",
       "hubAgentHint": "The Hub Agent receives messages by default and can delegate to specialist Agents.",
       "hubSaved": "Hub Agent updated",
       "hubAgentNone": "None",
@@ -1439,11 +1439,11 @@
       "defaultLlmPlaceholder": "Select default LLM",
       "defaultCompacting": "Default Compacting Model",
       "defaultCompactingTip": "Model that summarizes old conversation history as the context window fills up. A small, fast model is enough.",
-      "defaultCompactingHint": "Used when a Agent's conversation grows beyond its context window — old messages get summarized to free up room. Without it, each Agent uses its own chat model for compacting (works fine but may cost more on long conversations).",
+      "defaultCompactingHint": "Used when an Agent's conversation grows beyond its context window — old messages get summarized to free up room. Without it, each Agent uses its own chat model for compacting (works fine but may cost more on long conversations).",
       "defaultCompactingPlaceholder": "Use each Agent's own model (default)",
       "defaultScout": "Default Scout Model",
       "defaultScoutTip": "A cheap, fast model the `scout` tool uses to delegate heavy read-only exploration. A small, fast model is ideal here.",
-      "defaultScoutHint": "Used by the `scout` tool when a Agent or task delegates large read-only exploration (locating code, mapping a subsystem) instead of grinding through it on the expensive model. A Agent or project can override this. Without it, the scout falls back to the calling Agent's own model.",
+      "defaultScoutHint": "Used by the `scout` tool when an Agent or task delegates large read-only exploration (locating code, mapping a subsystem) instead of grinding through it on the expensive model. An Agent or project can override this. Without it, the scout falls back to the calling Agent's own model.",
       "defaultScoutPlaceholder": "Use the calling Agent's own model (default)",
       "defaultImage": "Default Image Model",
       "defaultImageTip": "Image-generation model used by `generate_image` and AI avatar generation.",
@@ -1517,7 +1517,7 @@
       "help": {
         "content": "MCP (Model Context Protocol) servers are external programs that give your Agents additional capabilities beyond their built-in tools. They run as separate processes and communicate via a standard protocol.",
         "bullet1": "Each MCP server provides one or more tools (e.g. file search, database queries, API integrations)",
-        "bullet2": "Servers are started automatically when a Agent needs them and stopped when idle",
+        "bullet2": "Servers are started automatically when an Agent needs them and stopped when idle",
         "bullet3": "Environment variables let you pass API keys and secrets securely to the server process",
         "bullet4": "Agents can also discover and add MCP servers on their own (shown as \"Pending approval\")"
       }
@@ -1587,7 +1587,7 @@
       "descriptionTip": "A short note about what this entry is used for. Helps Agents understand when to use it.",
       "help": {
         "content": "The Vault is a secure key-value store where you can save credentials, API keys, and other secrets. Agents can access vault entries through their tools without the actual secret values appearing in conversations.",
-        "bullet1": "Secrets are encrypted at rest and only decrypted when a Agent needs them",
+        "bullet1": "Secrets are encrypted at rest and only decrypted when an Agent needs them",
         "bullet2": "You can organize secrets by type (API key, password, token, etc.) and create custom types",
         "bullet3": "Attach files to vault entries for certificates, config files, or other sensitive documents",
         "bullet4": "Mark entries as favorites for quick access"
@@ -1673,7 +1673,7 @@
       "subject": "Subject",
       "subjectPlaceholder": "Contact or context (optional)",
       "agent": "Agent",
-      "agentPlaceholder": "Select a Agent",
+      "agentPlaceholder": "Select an Agent",
       "search": "Search memories...",
       "category": {
         "fact": "Fact",
@@ -1797,7 +1797,7 @@
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "What will this webhook receive?",
       "agent": "Target Agent",
-      "agentPlaceholder": "Select a Agent",
+      "agentPlaceholder": "Select an Agent",
       "active": "Active",
       "inactive": "Inactive",
       "triggerCount": "{{count}} triggers",
@@ -1951,7 +1951,7 @@
         "content": "Connect a Gmail account via OAuth. First configure a Google Cloud OAuth app (client ID + secret), then click Connect and authorize access.",
         "bullet1": "Create an OAuth app in Google Cloud Console with the Gmail scopes, and register the redirect URI shown by your Hivekeep host (…/api/email-accounts/oauth/callback).",
         "bullet2": "Paste the client ID and secret below, then Connect to authorize the mailbox.",
-        "bullet3": "Grant a Agent the \"email\" toolbox to let it list, read, search and send mail through connected accounts."
+        "bullet3": "Grant an Agent the \"email\" toolbox to let it list, read, search and send mail through connected accounts."
       },
       "empty": "No email account connected",
       "emptyDescription": "Configure a provider above and connect a mailbox to get started.",
@@ -2075,7 +2075,7 @@
         }
       },
       "agentLabel": "Agent",
-      "agentPlaceholder": "Select a Agent...",
+      "agentPlaceholder": "Select an Agent...",
       "nameTip": "A friendly name for this channel connection. Helps distinguish multiple channels of the same platform.",
       "agentTip": "The Agent that will respond to messages on this channel. Each channel is handled by exactly one Agent.",
       "transferWarning": "Selecting a different Agent will transfer this channel. The previous Agent loses the binding and both Agents get an audit-trail row in their conversation.",
@@ -2292,12 +2292,12 @@
       "mention": "Mention"
     },
     "descriptions": {
-      "prompt-pending": "A Agent is waiting for your response to continue",
+      "prompt-pending": "An Agent is waiting for your response to continue",
       "channel-user-pending": "A new user on a channel needs your approval",
-      "cron-pending-approval": "A scheduled job created by a Agent needs your approval",
-      "mcp-pending-approval": "An MCP server added by a Agent needs your approval",
-      "agent-error": "A Agent encountered an error that may need investigation",
-      "agent-alert": "A Agent sent you a notification",
+      "cron-pending-approval": "A scheduled job created by an Agent needs your approval",
+      "mcp-pending-approval": "An MCP server added by an Agent needs your approval",
+      "agent-error": "An Agent encountered an error that may need investigation",
+      "agent-alert": "An Agent sent you a notification",
       "mention": "Someone mentioned you in a conversation"
     }
   },
@@ -2994,7 +2994,7 @@
       "change": "Change maintainer",
       "dialogTitle": "Maintainer of \"{{name}}\"",
       "dialogDescription": "The maintainer is the Agent responsible for this app and the target of improvement requests. Any Agent can still edit the app.",
-      "selectPlaceholder": "Select a Agent",
+      "selectPlaceholder": "Select an Agent",
       "reassign": "Reassign",
       "reassigned": "Maintainer set to {{agent}}"
     }
@@ -3034,7 +3034,7 @@
     "description": "Launch a standalone task on {{name}} — no project or ticket needed. The result is posted back into this thread when it finishes.",
     "descriptionGeneric": "Launch a standalone task — no project or ticket needed. Pick the Agent that should run it; the result is posted back into its thread when it finishes.",
     "agentField": "Agent",
-    "agentPlaceholder": "Choose a Agent to run this task",
+    "agentPlaceholder": "Choose an Agent to run this task",
     "promptField": "What should this task do?",
     "promptPlaceholder": "e.g. research the top 3 vector databases and summarize trade-offs",
     "promptHelp": "Describe the work for this one-off task.",
@@ -3191,7 +3191,7 @@
       "titleField": "Project title",
       "titlePlaceholder": "e.g. Backend refactor",
       "descriptionField": "Description",
-      "descriptionPlaceholder": "Context, goals, links, constraints — anything useful for a Agent working on this project.",
+      "descriptionPlaceholder": "Context, goals, links, constraints — anything useful for an Agent working on this project.",
       "descriptionHint": "Markdown supported. This description is injected into the system prompt of any Agent that has this project active."
     },
     "ticket": {
@@ -3218,7 +3218,7 @@
         "startTask": "Start a task",
         "noTasks": "No tasks have been spawned on this ticket yet.",
         "noTasksTitle": "No tasks yet",
-        "noTasksDescription": "Spawn a Agent to work on this ticket and track the run here.",
+        "noTasksDescription": "Spawn an Agent to work on this ticket and track the run here.",
         "notFound": "This ticket was not found — it may have been deleted.",
         "back": "Back to {{type}}",
         "ticketRef": "Ticket {{ref}}",
@@ -3283,7 +3283,7 @@
       "title": "Start a task",
       "description": "Spawn a sub-Agent to work on this ticket. Pre-selected Agent is the one with this project active. The task runs in await mode — you'll get a turn on the Agent's thread when it finishes.",
       "agentField": "Which Agent should run this task?",
-      "agentPlaceholder": "Select a Agent",
+      "agentPlaceholder": "Select an Agent",
       "activeOnProject": "active here",
       "runPromptField": "Run-specific instructions (optional)",
       "runPromptPlaceholder": "e.g. focus only on the backend, leave the UI for the next Agent",

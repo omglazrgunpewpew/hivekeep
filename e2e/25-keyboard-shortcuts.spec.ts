@@ -96,7 +96,7 @@ test.describe('Keyboard shortcuts dialog', () => {
   })
 
   test('does not open when typing in an input', async ({ page }) => {
-    // Click on a agent first to get the chat input visible
+    // Click on an agent first to get the chat input visible
     const agentLink = page.locator('[data-testid="agent-link"]').first()
     const hasAgent = await agentLink.isVisible({ timeout: 3_000 }).catch(() => false)
     if (!hasAgent) {

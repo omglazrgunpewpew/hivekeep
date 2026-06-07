@@ -277,7 +277,7 @@ export function useAgents() {
     }
   }, [fetchAgentOrder])
 
-  // Fetch initial context usage for a agent (so the counter doesn't show "— / —")
+  // Fetch initial context usage for an agent (so the counter doesn't show "— / —")
   const fetchContextUsage = useCallback(async (agentId: string) => {
     try {
       const data = await api.get<{ contextTokens: number; contextWindow: number; apiContextTokens?: number;contextBreakdown?: ContextTokenBreakdown; pipelineStatus?: ContextPipelineStatus; compactingPercent?: number; compactingThresholdPercent?: number; summaryCount?: number; maxSummaries?: number; summaryTokens?: number; summaryBudgetTokens?: number; keepPercent?: number }>(`/agents/${agentId}/context-usage`)

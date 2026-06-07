@@ -4,7 +4,7 @@
  * The provider needs an "active project id" to resolve bare `#N` mentions.
  * That id depends on context:
  *
- *   - Inside a Agent chat (`/agent/:slug`): the agent's `activeProjectId`.
+ *   - Inside an Agent chat (`/agent/:slug`): the agent's `activeProjectId`.
  *   - Inside a project page (`/projects/:projectId`): the project id itself.
  *   - Elsewhere: null (bare refs will surface as `NO_ACTIVE_PROJECT`).
  *

@@ -44,7 +44,7 @@ export function stageAttachment(agentId: string, att: OutboundAttachment): void 
 }
 
 /**
- * Pop all staged attachments for a Agent (consumes them).
+ * Pop all staged attachments for an Agent (consumes them).
  * Called by deliverChannelResponse after the turn completes.
  */
 export function popStagedAttachments(agentId: string): OutboundAttachment[] {

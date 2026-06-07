@@ -653,7 +653,7 @@ class PlaywrightManager {
     return true
   }
 
-  /** Called by deleteAgent — remove all saved states for a Agent. */
+  /** Called by deleteAgent — remove all saved states for an Agent. */
   async deleteAllSavedStatesForAgent(agentId: string): Promise<number> {
     const dir = this.statesDirForAgent(agentId)
     if (!existsSync(dir)) return 0

@@ -929,7 +929,7 @@ export const setMiniAppMaintainerTool: ToolRegistration = {
   create: (ctx) =>
     tool({
       description:
-        'Reassign the maintainer Agent of a mini app (the Agent responsible for it and the target of "improve this app" requests). Any Agent can do this. `agent` accepts a Agent id or slug.',
+        'Reassign the maintainer Agent of a mini app (the Agent responsible for it and the target of "improve this app" requests). Any Agent can do this. `agent` accepts an Agent id or slug.',
       inputSchema: z.object({
         app_id: z.string(),
         agent: z.string().describe('Target maintainer Agent (id or slug)'),

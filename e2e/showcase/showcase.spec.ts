@@ -83,7 +83,7 @@ test('Hivekeep showcase walkthrough', async ({ page }) => {
   await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   await pause(page, 2000)
 
-  // ── Create a Agent ──
+  // ── Create an Agent ──
   await page.getByTitle('New Agent').click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Describe your Agent' })).toBeVisible()

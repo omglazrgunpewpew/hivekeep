@@ -855,7 +855,7 @@ export function DesignSystemPage() {
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="gradient-primary border-0 text-white glow-primary btn-magnetic">
-                      <Plus className="size-4" /> Create a Agent
+                      <Plus className="size-4" /> Create an Agent
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="surface-card dark:glass-strong">
@@ -2692,7 +2692,7 @@ export function DesignSystemPage() {
                     <p className="font-medium">No Agents yet</p>
                     <p className="mt-1 text-sm text-muted-foreground">Create your first AI assistant to get started.</p>
                     <Button size="sm" className="mt-4 gradient-primary border-0 text-white">
-                      <Plus className="size-4" /> Create a Agent
+                      <Plus className="size-4" /> Create an Agent
                     </Button>
                   </div>
                   <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-card/50 p-8 text-center">

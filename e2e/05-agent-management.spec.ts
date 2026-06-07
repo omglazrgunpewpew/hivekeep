@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { loginAs, mockProviderModels } from './helpers/auth'
 
 /**
- * Helper: Click on a agent card in the sidebar by name.
+ * Helper: Click on an agent card in the sidebar by name.
  */
 async function selectAgent(page: Page, agentName: string) {
   await page.getByText(agentName, { exact: true }).first().click()
@@ -26,7 +26,7 @@ async function openAgentEditModal(page: Page, agentName: string) {
 }
 
 /**
- * Helper: Create a agent via the UI (used as setup for edit/delete tests).
+ * Helper: Create an agent via the UI (used as setup for edit/delete tests).
  */
 async function createAgent(page: Page, name: string, role: string) {
   await page.getByTitle('New Agent').click()
@@ -58,7 +58,7 @@ test.describe.serial('Agent management', () => {
   })
 
   test('should create a second agent for management tests', async ({ page }) => {
-    await createAgent(page, 'Management Test Agent', 'A agent for testing edit and delete operations')
+    await createAgent(page, 'Management Test Agent', 'An agent for testing edit and delete operations')
 
     // Verify it appears in the sidebar
     await expect(page.getByText('Management Test Agent').first()).toBeVisible()
@@ -75,7 +75,7 @@ test.describe.serial('Agent management', () => {
     // Should see the role field
     const roleInput = page.locator('#agentFormRole')
     await expect(roleInput).toBeVisible()
-    await expect(roleInput).toHaveValue('A agent for testing edit and delete operations')
+    await expect(roleInput).toHaveValue('An agent for testing edit and delete operations')
   })
 
   test('should edit agent name and role', async ({ page }) => {
@@ -145,7 +145,7 @@ test.describe.serial('Agent management', () => {
     await expect(page.getByRole('dialog').getByText(/memor/i).first()).toBeVisible({ timeout: 5_000 })
   })
 
-  test('should delete a agent with confirmation', async ({ page }) => {
+  test('should delete an agent with confirmation', async ({ page }) => {
     // First create a disposable agent
     await createAgent(page, 'Disposable Agent', 'Will be deleted')
 
@@ -165,7 +165,7 @@ test.describe.serial('Agent management', () => {
     await expect(page.getByText('Disposable Agent')).toBeHidden({ timeout: 10_000 })
   })
 
-  test('should create a agent via the wizard dialog', async ({ page }) => {
+  test('should create an agent via the wizard dialog', async ({ page }) => {
     // Open the new agent dialog
     await page.getByTitle('New Agent').click()
     await expect(page.getByRole('dialog')).toBeVisible()
@@ -189,7 +189,7 @@ test.describe.serial('Agent management', () => {
     await page.keyboard.press('Escape')
   })
 
-  test('should select a agent and open its chat', async ({ page }) => {
+  test('should select an agent and open its chat', async ({ page }) => {
     await selectAgent(page, 'Renamed Agent')
 
     // Chat area should be visible with message input

@@ -1,6 +1,6 @@
 ---
 title: Autonomy Quickstart
-description: Get a Agent running autonomously in 15–30 minutes — crons, webhooks, and sub-tasks explained.
+description: Get an Agent running autonomously in 15–30 minutes — crons, webhooks, and sub-tasks explained.
 ---
 
 Hivekeep Agents aren't just chatbots — they can work autonomously on schedules, react to external events, and delegate work to sub-agents. This guide takes you from zero to a working autonomous Agent.
@@ -24,7 +24,7 @@ Before starting, make sure you have:
 - A working Hivekeep installation ([Installation guide](/hivekeep/docs/getting-started/installation/))
 - At least one **LLM provider** configured (Anthropic recommended — see [Model Selection](/hivekeep/docs/guides/model-selection/))
 - At least one **embedding provider** configured (for memory)
-- A Agent created ([Your First Agent](/hivekeep/docs/getting-started/first-agent/))
+- An Agent created ([Your First Agent](/hivekeep/docs/getting-started/first-agent/))
 
 :::caution[Model choice matters]
 Autonomous Agents **must** use a model with strong tool-calling capabilities. Claude Sonnet 4 or Claude Sonnet 3.5 are strongly recommended. Models that default to "text mode" (describing actions instead of executing them) will fail silently. See [Model Selection](/hivekeep/docs/guides/model-selection/) for details.
@@ -68,7 +68,7 @@ The Agent will call `create_cron` with the appropriate configuration. You'll see
 
 ### Option B: Understand the cron structure
 
-When a Agent creates a cron, it specifies:
+When an Agent creates a cron, it specifies:
 
 | Parameter | Description | Example |
 |---|---|---|

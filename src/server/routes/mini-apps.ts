@@ -83,7 +83,7 @@ miniAppRoutes.post('/:id/generate-icon', async (c) => {
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
 
-// List apps for a agent
+// List apps for an agent
 miniAppRoutes.get('/', async (c) => {
   const agentId = c.req.query('agentId')
   if (agentId) {

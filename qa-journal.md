@@ -59,7 +59,7 @@
   - Memory save button correctly disabled until content is filled
   - Delete flow has proper confirmation dialog ("Are you sure? This will permanently delete...")
   - Delete works correctly, Agent removed from sidebar immediately
-  - Chat view loads properly when selecting a Agent, with conversation starters and rich text editor
+  - Chat view loads properly when selecting an Agent, with conversation starters and rich text editor
   - Agent card ordering in sidebar can be changed (drag handles present)
   - Slug auto-generated from name correctly (e.g. "test-qa-agent")
 
@@ -96,7 +96,7 @@
 - **Note:** Agent pages (`/agent/dev`, `/agent/dispatcher`) consistently cause the headless browser to timeout/hang, likely due to WebSocket connections or heavy React rendering. This blocked testing Area 3 (Conversations). May be specific to headless Chromium rather than a real user-facing issue.
 
 ### Next run
-- Area 4: Tasks/Crons (create, edit, enable/disable, delete tasks - can test from sidebar without entering a Agent page)
+- Area 4: Tasks/Crons (create, edit, enable/disable, delete tasks - can test from sidebar without entering an Agent page)
 - Or Area 3: Conversations (if browser stability improves)
 
 ## 2026-03-04 08:40 UTC
@@ -131,7 +131,7 @@
 - **Note:** Browser automation continues to be challenging with Hivekeep. The `type` action does not reliably fill React controlled inputs (Name field). CodeMirror editor (Task instructions) requires `document.execCommand` to properly update state. Agent pages still cause browser timeouts. Auth required resetting the QA user password via DB because the test@hivekeep.local user from E2E helpers doesn't exist in the live instance.
 
 ### Next run
-- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires navigating to a Agent page which causes browser hangs
+- Area 3: Conversations (send messages, chat UI, scroll behavior) - requires navigating to an Agent page which causes browser hangs
 - Area 11: Contacts (add, approve, edit, delete) - testable from Settings
 - Area 12: Webhooks (create, edit, test, delete) - testable from Settings
 - Area 5: Provider settings - testable from Settings
@@ -451,8 +451,8 @@
 #### UX suggestions
 
 **Enhancement: Misleading empty state when no Agent selected - Issue #64**
-- Sidebar shows "No apps yet - Ask a Agent to create one" even when apps exist on other Agents
-- Should show "Select a Agent to see its apps" or show all apps across Agents
+- Sidebar shows "No apps yet - Ask an Agent to create one" even when apps exist on other Agents
+- Should show "Select an Agent to see its apps" or show all apps across Agents
 
 **Enhancement: Clone button doesn't update after cloning, allows duplicates - Issue #65**
 - After cloning, the Clone button stays active (not "Owned"/"Cloned")
@@ -880,7 +880,7 @@
 - Contact identifier update: proper diff logic (detect added/changed/removed identifiers)
 - searchContacts: searches across names, identifiers, and notes with deduplication
 - ensureUserContactsExist: auto-creates contacts for all users (backfill)
-- deleteNotesByAgent: cleanup when a Agent is deleted
+- deleteNotesByAgent: cleanup when an Agent is deleted
 - listContactsForPrompt: efficient summary with linked agent slug and identifier summary
 
 ### Next run

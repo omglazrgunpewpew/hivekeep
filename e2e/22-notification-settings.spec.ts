@@ -161,7 +161,7 @@ test.describe.serial('Settings — Notifications', () => {
     const dialog = page.getByRole('dialog')
 
     // Check a few descriptions are visible
-    await expect(dialog.getByText('A Agent is waiting for your response to continue')).toBeVisible()
+    await expect(dialog.getByText('An Agent is waiting for your response to continue')).toBeVisible()
     await expect(dialog.getByText('Someone mentioned you in a conversation')).toBeVisible()
   })
 })

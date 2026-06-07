@@ -25,7 +25,7 @@ test.describe.serial('Conversation statistics popover', () => {
   })
 
   test('create agent and send a message so stats have data', async ({ page }) => {
-    // Create a agent if it doesn't exist
+    // Create an agent if it doesn't exist
     const testAssistant = page.getByText('Test Assistant').first()
     const isAgentVisible = await testAssistant.isVisible({ timeout: 3_000 }).catch(() => false)
 

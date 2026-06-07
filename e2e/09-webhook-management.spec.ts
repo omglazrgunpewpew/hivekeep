@@ -42,8 +42,8 @@ async function createWebhook(page: Page, name: string, description?: string) {
   // Wait for dialog
   await expect(page.getByRole('heading', { name: 'Add webhook' })).toBeVisible({ timeout: 5_000 })
 
-  // Select a Agent (Radix Select)
-  const agentSelect = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select a agent/i })
+  // Select an Agent (Radix Select)
+  const agentSelect = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select an agent/i })
   if (await agentSelect.isVisible({ timeout: 2_000 }).catch(() => false)) {
     await agentSelect.click()
     await page.locator('[data-slot="select-item"]').first().click({ timeout: 5_000 })
@@ -69,7 +69,7 @@ async function createWebhook(page: Page, name: string, description?: string) {
 }
 
 /**
- * Create a Agent via the sidebar "+" button if none exists (needed for webhook creation).
+ * Create an Agent via the sidebar "+" button if none exists (needed for webhook creation).
  */
 async function ensureAgentExists(page: Page) {
   const noAgents = page.getByText('No Agents yet')
@@ -102,7 +102,7 @@ test.describe.serial('Webhook management', () => {
     await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
-  test('should ensure a Agent exists for webhook tests', async ({ page }) => {
+  test('should ensure an Agent exists for webhook tests', async ({ page }) => {
     await ensureAgentExists(page)
   })
 
@@ -138,7 +138,7 @@ test.describe.serial('Webhook management', () => {
 
     await expect(page.getByRole('heading', { name: 'Add webhook' })).toBeVisible({ timeout: 5_000 })
 
-    const agentSelect = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select a agent/i })
+    const agentSelect = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select an agent/i })
     if (await agentSelect.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await agentSelect.click()
       await page.locator('[data-slot="select-item"]').first().click({ timeout: 5_000 })

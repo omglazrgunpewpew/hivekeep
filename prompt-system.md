@@ -1,6 +1,6 @@
 # Hivekeep — System prompt construction
 
-This document specifies how context is assembled before each LLM call for a Agent (main agent or sub-Agent).
+This document specifies how context is assembled before each LLM call for an Agent (main agent or sub-Agent).
 
 > **Language convention**: All prompt templates are written in English as the base language. The Agent adapts its response language based on the `[7] Language` block injected dynamically.
 

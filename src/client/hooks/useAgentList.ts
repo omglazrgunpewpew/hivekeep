@@ -14,7 +14,7 @@ export interface AgentListItem {
 /**
  * Lightweight hook to fetch the agent list for selectors and display.
  * Unlike the full `useAgents` hook, this doesn't include ordering, CRUD, or models.
- * Use this in settings pages that just need a agent list for dropdowns or name/avatar display.
+ * Use this in settings pages that just need an agent list for dropdowns or name/avatar display.
  *
  * Listens to `agent:active-project` so consumers (e.g. project avatars stack) reflect
  * project-activation changes live.

@@ -84,7 +84,7 @@ if (currentTask && currentTask.status === 'in_progress') {
 
 Important properties:
 - The trigger is **status-based**, not turn-count-based or timer-based. Any path that exits the loop while `task.status === 'in_progress'` lands here.
-- The first nudge **recursively re-enters** `executeSubAgent` with `isNudge = true`. That recursive invocation gets its own fresh 100-step budget, its own `assistantMessageId`, etc. So a Agent that calls `update_task_status` during the nudge round resolves cleanly.
+- The first nudge **recursively re-enters** `executeSubAgent` with `isNudge = true`. That recursive invocation gets its own fresh 100-step budget, its own `assistantMessageId`, etc. So an Agent that calls `update_task_status` during the nudge round resolves cleanly.
 - The second branch (else) only runs **after the nudge round itself terminates with the task still `in_progress`**. This is one nudge, then fail. No second chance.
 - There is **no `stepLimitReached` detection** here, unlike the main-Agent path in [src/server/services/agent-engine.ts:1807-1823](src/server/services/agent-engine.ts#L1807-L1823) where hitting the step cap is treated separately and the turn is closed with a "truncated, ask me to continue" string instead of nudging or failing.
 

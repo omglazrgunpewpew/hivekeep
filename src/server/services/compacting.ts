@@ -69,7 +69,7 @@ interface EffectiveCompactingConfig {
 }
 
 /**
- * Resolve effective compacting config for a Agent.
+ * Resolve effective compacting config for an Agent.
  * Per-Agent overrides > global env vars > defaults.
  */
 async function getEffectiveCompactingConfig(agentId: string): Promise<EffectiveCompactingConfig> {
@@ -120,7 +120,7 @@ async function getEffectiveCompactingConfig(agentId: string): Promise<EffectiveC
 // ─── Threshold Evaluation ────────────────────────────────────────────────────
 
 /**
- * Evaluate whether compacting should trigger for a Agent.
+ * Evaluate whether compacting should trigger for an Agent.
  * Uses token-based threshold: triggers when context tokens exceed thresholdPercent of context window.
  *
  * Prefers the provider-reported `apiContextTokens` from the cache (ground
@@ -242,7 +242,7 @@ export async function getCompactingProximity(agentId: string): Promise<Compactin
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Get all active (in-context) summaries for a Agent, ordered oldest to newest */
+/** Get all active (in-context) summaries for an Agent, ordered oldest to newest */
 async function getActiveSummaries(agentId: string) {
   return db
     .select()
@@ -281,7 +281,7 @@ export interface CompactingResult {
 }
 
 /**
- * Run the compacting process for a Agent.
+ * Run the compacting process for an Agent.
  * 1. Find the keep-window boundary (keep recent messages fitting keepPercent of context)
  * 2. Summarize everything before the boundary into a NEW summary
  * 3. Run memory extraction on compacted messages
@@ -322,7 +322,7 @@ export async function runCompacting(
   //    total). Halving relative to current-state guarantees the algo always
   //    finds something to summarize when the user explicitly asks, even when
   //    the recent tail already fits the regular budget. Without the relative
-  //    cap, a Agent sitting at 90k of messages with 250k budget got "nothing to
+  //    cap, an Agent sitting at 90k of messages with 250k budget got "nothing to
   //    compact" forever despite the user wanting more relief.
   // Calibrate raw BPE up to the Agent's measured real-token count, using the same
   // per-Agent EMA factor (api/raw, clamped [0.7,3.0]) the navbar/visualizer use.

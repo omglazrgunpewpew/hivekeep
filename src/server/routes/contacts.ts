@@ -470,7 +470,7 @@ contactRoutes.delete('/:id/platform-ids/:pidId', async (c) => {
 
 // ─── Notes ──────────────────────────────────────────────────────────────────
 
-// POST /api/contacts/:id/notes — create/upsert a note (admin creates on behalf of a agent)
+// POST /api/contacts/:id/notes — create/upsert a note (admin creates on behalf of an agent)
 contactRoutes.post('/:id/notes', async (c) => {
   const contactId = c.req.param('id')
   const { agentId, scope, content } = (await c.req.json()) as {

@@ -952,7 +952,7 @@ export function joinSystemPrompt(p: BuiltSystemPrompt): string {
 }
 
 /**
- * Build the system prompt for a Agent following the block structure
+ * Build the system prompt for an Agent following the block structure
  * defined in prompt-system.md.
  *
  * Returns a `{ stable, volatile }` pair so callers can place a cache breakpoint
@@ -1228,7 +1228,7 @@ export function buildSystemPrompt(params: PromptParams): BuiltSystemPrompt {
   }
 
   // [4.5] Agent directory + collaboration instructions (main agent only)
-  // Stable: only changes when a Agent is created/edited.
+  // Stable: only changes when an Agent is created/edited.
   if (params.isSubAgent && params.agentDirectory.length > 0) {
     // Sub-Agent view: compact directory with inter-Agent communication instructions
     const directoryLines = params.agentDirectory

@@ -68,7 +68,7 @@ export interface EnqueueParams {
 }
 
 /**
- * Enqueue a message for a Agent. Returns the queue item ID and position.
+ * Enqueue a message for an Agent. Returns the queue item ID and position.
  */
 export async function enqueueMessage(params: EnqueueParams) {
   const id = params.id ?? uuid()
@@ -133,7 +133,7 @@ export async function enqueueMessage(params: EnqueueParams) {
 }
 
 /**
- * Dequeue the next message for a Agent. Returns null if the queue is empty.
+ * Dequeue the next message for an Agent. Returns null if the queue is empty.
  * Messages are ordered by priority (DESC) then creation time (ASC).
  *
  * Uses a single atomic UPDATE ... RETURNING * to prevent race conditions:
@@ -219,7 +219,7 @@ export async function markQueueItemDone(itemId: string) {
 }
 
 /**
- * Check if a Agent is currently processing a message.
+ * Check if an Agent is currently processing a message.
  * @param mode - 'main' checks only main/task items, 'quick' checks only quick session items.
  */
 export async function isAgentProcessing(agentId: string, mode: 'main' | 'quick' = 'main'): Promise<boolean> {
@@ -235,7 +235,7 @@ export async function isAgentProcessing(agentId: string, mode: 'main' | 'quick' 
 }
 
 /**
- * Get the queue size for a Agent.
+ * Get the queue size for an Agent.
  */
 export async function getQueueSize(agentId: string): Promise<number> {
   const pending = await db
@@ -248,7 +248,7 @@ export async function getQueueSize(agentId: string): Promise<number> {
 }
 
 /**
- * List pending queue items for a Agent (ordered by priority DESC, creation time ASC).
+ * List pending queue items for an Agent (ordered by priority DESC, creation time ASC).
  */
 export async function getPendingQueueItems(agentId: string) {
   const rows = await db

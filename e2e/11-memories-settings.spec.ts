@@ -12,16 +12,16 @@ async function openMemoriesSettings(page: Page) {
 }
 
 /**
- * Ensure a Agent exists (needed for creating memories).
+ * Ensure an Agent exists (needed for creating memories).
  */
 async function ensureAgentExists(page: Page) {
-  // Navigate to home, check if a Agent already exists in sidebar
+  // Navigate to home, check if an Agent already exists in sidebar
   const agentCard = page.locator('[data-slot="sidebar"] .surface-card').first()
   if (await agentCard.isVisible({ timeout: 3_000 }).catch(() => false)) {
     return // Agent already exists
   }
 
-  // Create a Agent via the wizard
+  // Create an Agent via the wizard
   const createButton = page.getByRole('button', { name: /create/i }).first()
   if (await createButton.isVisible({ timeout: 2_000 }).catch(() => false)) {
     await createButton.click()
@@ -130,8 +130,8 @@ test.describe.serial('Settings — Memories', () => {
     await page.getByRole('button', { name: 'Add memory' }).first().click()
     await expect(page.getByPlaceholder('Enter the memory content...')).toBeVisible({ timeout: 5_000 })
 
-    // Select a Agent if the Agent picker is visible
-    const agentPicker = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select a agent/i })
+    // Select an Agent if the Agent picker is visible
+    const agentPicker = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select an agent/i })
     if (await agentPicker.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await agentPicker.click()
       await page.locator('[data-slot="select-item"]').first().click()
@@ -175,7 +175,7 @@ test.describe.serial('Settings — Memories', () => {
     await expect(page.getByPlaceholder('Enter the memory content...')).toBeVisible({ timeout: 5_000 })
 
     // Select Agent if picker visible
-    const agentPicker = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select a agent/i })
+    const agentPicker = page.locator('[data-slot="select-trigger"]').filter({ hasText: /select an agent/i })
     if (await agentPicker.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await agentPicker.click()
       await page.locator('[data-slot="select-item"]').first().click()

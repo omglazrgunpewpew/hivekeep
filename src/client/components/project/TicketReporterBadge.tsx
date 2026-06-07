@@ -13,13 +13,13 @@ interface TicketReporterBadgeProps {
   /** Avatar size class. Defaults: compact size-4, full size-5. */
   size?: string
   className?: string
-  /** When true and reporter is a Agent with a slug, the avatar links to that Agent's thread. */
+  /** When true and reporter is an Agent with a slug, the avatar links to that Agent's thread. */
   clickable?: boolean
 }
 
 /**
  * Discreet badge showing who created the ticket — either a platform user
- * (via UI) or a Agent (via tool call). Designed to be small and unobtrusive on
+ * (via UI) or an Agent (via tool call). Designed to be small and unobtrusive on
  * the kanban card and inline within the side panel header.
  */
 export function TicketReporterBadge({

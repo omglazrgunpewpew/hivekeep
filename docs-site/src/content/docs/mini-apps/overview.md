@@ -68,7 +68,7 @@ Mini-apps run in an iframe and communicate with Hivekeep through a postMessage-b
 
 ## Quick Example
 
-A Agent can create a simple counter app:
+An Agent can create a simple counter app:
 
 ```jsx
 // Created via create_mini_app tool

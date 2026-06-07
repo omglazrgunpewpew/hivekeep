@@ -194,7 +194,7 @@ export function getActiveTaskSnapshot(taskId: string): ActiveTaskStreamSnapshot 
   return activeTaskStreams.get(taskId)
 }
 
-/** Build a public avatar URL from a Agent's stored avatar path */
+/** Build a public avatar URL from an Agent's stored avatar path */
 function agentAvatarUrl(agentId: string, avatarPath: string | null, updatedAt?: Date | null): string | null {
   if (!avatarPath) return null
   const ext = avatarPath.split('.').pop() ?? 'png'
@@ -1009,7 +1009,7 @@ export interface StartOrphanTaskResult {
 }
 
 /**
- * Spawn a human-initiated standalone task on a Agent with NO project/ticket
+ * Spawn a human-initiated standalone task on an Agent with NO project/ticket
  * binding. The Agent runs the given prompt in an ephemeral sub-Agent and its
  * result is deposited back as an informational message in the Agent's main
  * session (async mode — same shape as cron/webhook orphan tasks).

@@ -1,5 +1,5 @@
 /**
- * Diagnose why compacting is leaving a Agent much heavier than expected.
+ * Diagnose why compacting is leaving an Agent much heavier than expected.
  *
  * Usage on prod:
  *   bun run scripts/diag-compacting.ts <agent-slug-or-id>

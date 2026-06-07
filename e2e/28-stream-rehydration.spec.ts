@@ -6,7 +6,7 @@ import { loginAs, mockProviderModels } from './helpers/auth'
  * sur le main thread".
  *
  * Scenario:
- *   1. Send a message to a Agent in its main conversation.
+ *   1. Send a message to an Agent in its main conversation.
  *   2. While the assistant is still streaming tokens, navigate away
  *      (Projects page).
  *   3. Navigate back to the conversation BEFORE chat:done fires.

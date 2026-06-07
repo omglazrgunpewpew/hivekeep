@@ -3,9 +3,9 @@ title: Your First Agent
 description: Create your first AI agent in Hivekeep.
 ---
 
-A **Agent** is a persistent AI agent with its own identity, memory, and tools. Unlike disposable chat sessions, a Agent remembers every conversation and builds knowledge over time.
+A **Agent** is a persistent AI agent with its own identity, memory, and tools. Unlike disposable chat sessions, an Agent remembers every conversation and builds knowledge over time.
 
-## Creating a Agent
+## Creating an Agent
 
 1. Open Hivekeep in your browser (default: `http://localhost:3000`)
 2. Complete the onboarding wizard (set up your admin account and first AI provider)
@@ -14,7 +14,7 @@ A **Agent** is a persistent AI agent with its own identity, memory, and tools. U
 5. Choose an AI **model** from your configured providers
 6. Start chatting
 
-## What makes a Agent?
+## What makes an Agent?
 
 | Property | Description |
 |---|---|

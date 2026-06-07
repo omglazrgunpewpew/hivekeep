@@ -86,7 +86,7 @@ function toAccount(row: ProviderRow, cfg: EmailAccountConfig): EmailAccount {
   }
 }
 
-/** A Agent may use an account when it's global, or when its id is on the
+/** An Agent may use an account when it's global, or when its id is on the
  *  account's allow-list. */
 function agentAllowed(cfg: EmailAccountConfig, agentId?: string): boolean {
   if (!cfg.allowed_agent_ids || cfg.allowed_agent_ids.length === 0) return true

@@ -163,7 +163,7 @@ test.describe.serial('Settings — General & Navigation', () => {
       page.getByText('The Hub Agent receives messages by default')
     ).toBeVisible()
 
-    // Select trigger should show placeholder or a agent name
+    // Select trigger should show placeholder or an agent name
     // Scroll to Hub Agent section first (may be below fold in CI viewports)
     const hubAgentLabel = page.getByText('Hub Agent', { exact: true })
     await hubAgentLabel.scrollIntoViewIfNeeded()

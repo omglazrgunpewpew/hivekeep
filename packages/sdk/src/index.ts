@@ -146,7 +146,7 @@ export function asSchema(input: unknown): NormalizedSchema {
 
 // ─── Tool registration (what plugins put under `exports.tools`) ─────────────
 
-/** Where a tool is available: a Agent's main conversation, a sub-Agent task, or both. */
+/** Where a tool is available: an Agent's main conversation, a sub-Agent task, or both. */
 export type ToolAvailability = 'main' | 'sub-agent'
 
 /** Runtime context passed to a tool factory by Hivekeep when the tool is resolved. */
@@ -374,7 +374,7 @@ export interface DeliveryStatusUpdate {
  *   3. `start`          — open the inbound stream (polling, WebSocket,
  *                          webhook subscription) and hand Hivekeep the
  *                          `onMessage` callback. Must remain idempotent.
- *   4. `sendMessage`    — outbound from a Agent's response.
+ *   4. `sendMessage`    — outbound from an Agent's response.
  *   5. `stop`           — clean teardown when the channel is disabled
  *                          or Hivekeep shuts down.
  *
@@ -387,7 +387,7 @@ export interface DeliveryStatusUpdate {
 /**
  * A discoverable destination within a channel connection — a Discord
  * guild channel, a TeamSpeak room, a Telegram group, a Matrix room, a
- * DM thread, etc. Returned by `ChannelAdapter.listEndpoints` so a Agent
+ * DM thread, etc. Returned by `ChannelAdapter.listEndpoints` so an Agent
  * can post somewhere it hasn't received a message from first.
  *
  * The `id` is the opaque value the Agent later passes back as `chat_id`
@@ -452,7 +452,7 @@ export interface ChannelAdapter {
   ): Promise<OutboundMessageResult>
 
   /**
-   * Discover the destinations a Agent can post to within this channel
+   * Discover the destinations an Agent can post to within this channel
    * connection — Discord guild channels + DM threads, TeamSpeak rooms,
    * Matrix rooms, Telegram groups/DMs known to the bot, Slack channels,
    * etc. Optional: adapters where the destination is always a single

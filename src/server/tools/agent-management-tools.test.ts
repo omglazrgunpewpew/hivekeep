@@ -128,7 +128,7 @@ describe('createAgentTool', () => {
     expect(createAgentTool.defaultDisabled).toBe(true)
   })
 
-  itMocked('creates a agent and returns its details', async () => {
+  itMocked('creates an agent and returns its details', async () => {
     mockCreateAgent.mockResolvedValueOnce({
       id: 'new-agent-id',
       slug: 'my-helper',
@@ -335,7 +335,7 @@ describe('updateAgentTool', () => {
     }
   })
 
-  itMocked('updates a agent successfully', async () => {
+  itMocked('updates an agent successfully', async () => {
     mockResolveAgentId.mockReturnValueOnce('target-agent-id')
     mockUpdateAgent.mockResolvedValueOnce({
       agent: {
@@ -476,7 +476,7 @@ describe('deleteAgentTool', () => {
     expect(result).toEqual({ error: 'Agent "not-found" not found' })
   })
 
-  itMocked('deletes a agent successfully', async () => {
+  itMocked('deletes an agent successfully', async () => {
     mockResolveAgentId.mockReturnValueOnce('target-agent-id')
     mockDeleteAgent.mockResolvedValueOnce(true)
 

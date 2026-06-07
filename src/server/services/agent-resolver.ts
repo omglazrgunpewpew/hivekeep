@@ -4,7 +4,7 @@ import { agents } from '@/server/db/schema'
 import { isUUID } from '@/server/utils/slug'
 
 /**
- * Resolve a agent by either UUID or slug.
+ * Resolve an agent by either UUID or slug.
  * Returns the full agent row or undefined.
  */
 export function resolveAgentByIdOrSlug(idOrSlug: string) {
@@ -15,7 +15,7 @@ export function resolveAgentByIdOrSlug(idOrSlug: string) {
 }
 
 /**
- * Resolve a slug or UUID to a agent UUID.
+ * Resolve a slug or UUID to an agent UUID.
  * Returns the UUID or null if not found.
  */
 export function resolveAgentId(idOrSlug: string): string | null {

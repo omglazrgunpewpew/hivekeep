@@ -51,7 +51,7 @@ async function createJob(
   await page.getByPlaceholder('e.g. Daily report, Weekly cleanup...').fill(opts.name)
 
   // Select Agent (pick first available)
-  const agentCombobox = page.locator('[role="combobox"]').filter({ hasText: /select a agent/i })
+  const agentCombobox = page.locator('[role="combobox"]').filter({ hasText: /select an agent/i })
   if (await agentCombobox.isVisible({ timeout: 2_000 }).catch(() => false)) {
     await agentCombobox.click()
     await page.getByRole('option').first().click()

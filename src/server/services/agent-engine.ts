@@ -216,7 +216,7 @@ const activeAbortControllers = new Map<string, AbortController>()
 const quickAbortControllers = new Map<string, AbortController>()
 
 // Live in-memory snapshot of the currently-streaming assistant message on
-// a Agent's main thread. Mirrors the `activeTaskStreams` pattern in tasks.ts:
+// an Agent's main thread. Mirrors the `activeTaskStreams` pattern in tasks.ts:
 // the DB row is only inserted at the END of the turn (unlike sub-task
 // streams which pre-insert), so a client that mounts mid-stream (after
 // navigating away and back) would otherwise see only the typing indicator
@@ -297,7 +297,7 @@ function scaleBreakdown(b: ContextTokenBreakdown, factor: number): ContextTokenB
   }
 }
 
-/** Store the local-estimate context size for a Agent (called BEFORE each LLM
+/** Store the local-estimate context size for an Agent (called BEFORE each LLM
  *  call). Does NOT touch apiContextTokens — that field is owned by
  *  recordApiContextSize and reflects the most recent provider roundtrip.
  *
@@ -329,7 +329,7 @@ export function setLastContextUsage(
   setSetting(`context_usage:${agentId}`, JSON.stringify(data)).catch(() => {})
 }
 
-/** Drop the cached apiContextTokens (provider ground truth) for a Agent
+/** Drop the cached apiContextTokens (provider ground truth) for an Agent
  *  without otherwise touching the entry. Used by the compacting service
  *  after a successful summary write — the previous API count was for a
  *  payload that no longer reflects reality, so leaving it as the
@@ -344,7 +344,7 @@ export function invalidateApiContextSize(agentId: string): void {
   setSetting(`context_usage:${agentId}`, JSON.stringify(data)).catch(() => {})
 }
 
-/** Update the cached api-reported context size (ground truth) for a Agent and
+/** Update the cached api-reported context size (ground truth) for an Agent and
  *  refine the per-Agent calibration factor by EMA-blending the new observed
  *  ratio. Called from the agent-engine after each LLM turn. */
 export function recordApiContextSize(agentId: string, peakStepInputTokens: number) {
@@ -373,7 +373,7 @@ export function recordApiContextSize(agentId: string, peakStepInputTokens: numbe
   setSetting(`context_usage:${agentId}`, JSON.stringify(data)).catch(() => {})
 }
 
-/** Get the cached context usage for a Agent, if available.
+/** Get the cached context usage for an Agent, if available.
  *
  *  `contextTokens` (current usage) is read from the cache.
  *  `contextWindow` (model's max) is always recomputed from the Agent's current
@@ -383,7 +383,7 @@ export function recordApiContextSize(agentId: string, peakStepInputTokens: numbe
  *      Opus 4.7 to 1M tokens since the last LLM call)
  *    - the Agent's model was changed in the UI
  */
-/** Drop all in-memory + persisted context usage state for a Agent. Called by
+/** Drop all in-memory + persisted context usage state for an Agent. Called by
  *  deleteAgent so the lastContextUsage map and the corresponding app_settings
  *  row don't leak after the Agent is gone (uncleaned, both grow unboundedly
  *  on a deployment with high Agent churn). */
@@ -908,7 +908,7 @@ export function maskOldToolResults(
 }
 
 /**
- * Abort the active LLM stream for a Agent, if any.
+ * Abort the active LLM stream for an Agent, if any.
  * Returns true if a stream was aborted, false if none was active.
  */
 export function abortAgentStream(agentId: string): boolean {
@@ -935,7 +935,7 @@ function shouldAutoDeliverToChannel(queueItem: { messageType: string }): boolean
 }
 
 /**
- * Process the next message in a Agent's queue.
+ * Process the next message in an Agent's queue.
  * Returns true if a message was processed, false if the queue was empty.
  */
 export async function processNextMessage(agentId: string): Promise<boolean> {
@@ -1175,7 +1175,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       if (owner) userLanguage = owner.language as 'fr' | 'en'
     }
 
-    // Only propagate userId when the source is actually a user (not a agent or task)
+    // Only propagate userId when the source is actually a user (not an agent or task)
     const effectiveUserId = queueItem.sourceType === 'user' ? (queueItem.sourceId ?? undefined) : undefined
 
     // Execute beforeChat hook
@@ -2081,7 +2081,7 @@ const QUICK_SESSION_EXCLUDED_TOOLS = new Set([
 ])
 
 /**
- * Process the next quick session message for a Agent.
+ * Process the next quick session message for an Agent.
  * Runs in a separate slot from the main session (parallel processing).
  */
 export async function processQuickMessage(agentId: string): Promise<boolean> {
@@ -3078,7 +3078,7 @@ export async function buildMessageHistory(agentId: string): Promise<{ messages: 
 }
 
 /**
- * Resolve a Agent's thinking config from its raw JSON column.
+ * Resolve an Agent's thinking config from its raw JSON column.
  * Defaults to `{ enabled: true, effort: 'medium' }` when never configured —
  * interleaved thinking measurably reduces tool-result hallucinations on multi-step turns.
  * Explicit `{ enabled: false }` is respected as a user opt-out.

@@ -13,7 +13,7 @@ test.describe.serial('Chat flow', () => {
     await expect(page.getByText('Agents', { exact: true })).toBeVisible({ timeout: 10_000 })
   })
 
-  test('create a agent', async ({ page }) => {
+  test('create an agent', async ({ page }) => {
     // Click the "+" button to create a new Agent (title="New Agent")
     await page.getByTitle('New Agent').click()
 

@@ -135,15 +135,15 @@ Agents have access to a rich set of native tools out of the box, no configuratio
 
 ## 💡 What people build with Hivekeep
 
-**DevOps copilot** — A Agent connected to GitHub webhooks triages new issues, reviews PRs, runs CI checks, and creates releases. It remembers your codebase conventions and past decisions. Cron jobs monitor infrastructure and alert you on Telegram.
+**DevOps copilot** — An Agent connected to GitHub webhooks triages new issues, reviews PRs, runs CI checks, and creates releases. It remembers your codebase conventions and past decisions. Cron jobs monitor infrastructure and alert you on Telegram.
 
-**Home automation brain** — A Agent talks to Home Assistant via MCP, learns your routines over time, and adjusts lighting/heating based on context. Ask it "why was the heating on last night?" and it remembers.
+**Home automation brain** — An Agent talks to Home Assistant via MCP, learns your routines over time, and adjusts lighting/heating based on context. Ask it "why was the heating on last night?" and it remembers.
 
-**Personal knowledge base** — Upload docs, meeting notes, project specs. A Agent indexes everything with RAG and answers questions across months of accumulated context. Unlike ChatGPT, it never forgets previous conversations.
+**Personal knowledge base** — Upload docs, meeting notes, project specs. An Agent indexes everything with RAG and answers questions across months of accumulated context. Unlike ChatGPT, it never forgets previous conversations.
 
 **Multi-agent team** — A dispatcher Agent receives requests and delegates to specialists (one for code, one for sysadmin, one for writing). They collaborate, share context through memories, and report back.
 
-**Business monitoring** — Webhooks feed sales data, support tickets, or server metrics into a Agent. It builds mini-app dashboards, sends daily Slack summaries, and flags anomalies before you notice them.
+**Business monitoring** — Webhooks feed sales data, support tickets, or server metrics into an Agent. It builds mini-app dashboards, sends daily Slack summaries, and flags anomalies before you notice them.
 
 **Family assistant** — Multiple users share the same instance. One Agent manages groceries via Telegram, another handles kids' schedules, another tracks household tasks. Each remembers everyone's preferences.
 

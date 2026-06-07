@@ -140,7 +140,7 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
   // Suppress the onboarding checklist while initial data is still loading.
   // Without this, the chat momentarily renders the checklist when arriving
   // on "/" before agents/models have been fetched, then flips to the
-  // "Select a agent" placeholder once data lands. Showing nothing during
+  // "Select an agent" placeholder once data lands. Showing nothing during
   // load is much calmer than the flash.
   //
   // We rely on `agentsLoading` alone — gating on `llmModels.length > 0 ||
@@ -177,7 +177,7 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
 
   const selectedAgent = agents.find((k) => k.slug === selectedAgentSlug)
 
-  // Fetch context usage when selecting a agent so the token counter is populated immediately
+  // Fetch context usage when selecting an agent so the token counter is populated immediately
   useEffect(() => {
     if (selectedAgent?.id) {
       fetchContextUsage(selectedAgent.id)
@@ -321,7 +321,7 @@ export function ChatPage({ onOpenSettings, onOpenAccount }: ChatPageProps) {
                   <div className="surface-chat relative flex flex-1 flex-col items-center overflow-y-auto p-6">
                     {/* Mobile sidebar trigger — the standalone trigger bar is
                         hidden on mobile, so without this the user has no way to
-                        open the sidebar and pick a Agent from the placeholder. */}
+                        open the sidebar and pick an Agent from the placeholder. */}
                     <div className="absolute left-2 top-2 md:hidden">
                       <SidebarTrigger />
                     </div>

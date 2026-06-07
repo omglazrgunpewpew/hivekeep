@@ -66,7 +66,7 @@ Memories are stored as vector embeddings using an embedding provider (OpenAI, Vo
 
 ## Retrieval Pipeline
 
-When a Agent needs relevant memories (either via the `recall` tool or automatic injection at conversation start), Hivekeep runs a multi-stage pipeline:
+When an Agent needs relevant memories (either via the `recall` tool or automatic injection at conversation start), Hivekeep runs a multi-stage pipeline:
 
 ### 1. Contextual Query Rewriting
 
@@ -128,7 +128,7 @@ This ensures only genuinely relevant memories are injected, avoiding noise. Enab
 
 ## Retrieval Tracking
 
-Every time memories are injected into a Agent's context, their retrieval count and timestamp are updated. This data feeds into:
+Every time memories are injected into an Agent's context, their retrieval count and timestamp are updated. This data feeds into:
 
 - **Retrieval frequency boost** during search scoring
 - **Importance recalibration** — a periodic process that nudges importance scores based on retrieval patterns (frequently retrieved = bump up, never retrieved after 30+ days = slight decrease)

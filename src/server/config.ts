@@ -444,7 +444,7 @@ export const config = {
     ),
   },
 
-  // Native run_shell tool. The per-call `timeout` arg lets a Agent extend a slow
+  // Native run_shell tool. The per-call `timeout` arg lets an Agent extend a slow
   // command (long test suites, builds, migrations) up to maxTimeoutMs; omitted
   // → defaultTimeoutMs. Raise maxTimeoutMs via env when tasks legitimately need
   // commands longer than the 10-minute default ceiling.
@@ -562,7 +562,7 @@ export const config = {
 
   // Tier 3: stateful, multi-turn browser sessions (browser_open_session etc.)
   // Default: enabled. The browser_* tools are defaultDisabled, so they only
-  // reach a Agent when a granted toolbox lists them by name — sessions cannot be
+  // reach an Agent when a granted toolbox lists them by name — sessions cannot be
   // used by accident. Set BROWSER_SESSIONS_ENABLED=false to disable globally.
   browserSessions: {
     enabled: process.env.BROWSER_SESSIONS_ENABLED !== 'false',

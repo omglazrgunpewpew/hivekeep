@@ -16,7 +16,7 @@ import { MAX_MESSAGE_LENGTH } from '@/shared/constants'
 const log = createLogger('routes:messages')
 const messageRoutes = new Hono<{ Variables: AppVariables }>()
 
-// POST /api/agents/:agentId/messages — send a message to a agent (accepts UUID or slug)
+// POST /api/agents/:agentId/messages — send a message to an agent (accepts UUID or slug)
 messageRoutes.post('/', async (c) => {
   const agentIdParam = c.req.param('agentId')
   const agentId = agentIdParam ? resolveAgentId(agentIdParam) : null

@@ -1,5 +1,5 @@
 /**
- * One-time migration: before toolboxes, a Agent with null/empty `toolbox_ids`
+ * One-time migration: before toolboxes, an Agent with null/empty `toolbox_ids`
  * meant "all tools". The resolver default has changed to "no toolbox → CORE
  * floor only", so make existing null-toolbox Agents explicit (['all']) to preserve
  * their behavior. Guarded by a setting flag so it runs exactly once — otherwise

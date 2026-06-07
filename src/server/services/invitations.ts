@@ -23,7 +23,7 @@ export function buildInvitationUrl(token: string): string {
 interface CreateInvitationParams {
   createdBy: string // userId
   label?: string
-  agentId?: string // if created by a Agent tool
+  agentId?: string // if created by an Agent tool
   expiresInDays?: number
 }
 

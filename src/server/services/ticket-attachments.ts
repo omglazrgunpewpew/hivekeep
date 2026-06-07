@@ -528,7 +528,7 @@ export function guessMimeType(filename: string): string {
   return EXT_TO_MIME[ext] ?? 'application/octet-stream'
 }
 
-/** Best-effort text-decoding for a Agent reading the attachment inline. Returns
+/** Best-effort text-decoding for an Agent reading the attachment inline. Returns
  *  `null` when the content is binary or too large for a sane inline read. */
 export async function readAttachmentAsText(
   attachmentId: string,
