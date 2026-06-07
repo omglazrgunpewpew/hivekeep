@@ -2458,6 +2458,7 @@
       "deactivate_channel": "Deactivate Channel",
       "attach_file": "Attach File",
       "get_system_info": "System Info",
+      "get_setup_health": "Check Setup Health",
       "list_providers": "List Providers",
       "list_models": "List Models",
       "describe_provider_config": "Describe Provider Config",

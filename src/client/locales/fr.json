@@ -2458,6 +2458,7 @@
       "deactivate_channel": "Désactiver un canal",
       "attach_file": "Joindre un fichier",
       "get_system_info": "Infos système",
+      "get_setup_health": "Vérifier l'état de la configuration",
       "list_providers": "Lister les fournisseurs",
       "list_models": "Lister les modèles",
       "describe_provider_config": "Décrire la config d'un fournisseur",
