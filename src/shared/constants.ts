@@ -456,6 +456,11 @@ export const CORE_TOOLS: readonly string[] = [
   // Human in the loop.
   'prompt_human',
   'notify',
+  // Secure secret entry (popup → vault; the value never reaches the LLM). The
+  // secure analog of prompt_human, so any Kin can acquire a credential it needs
+  // instead of asking the user to paste it into the chat. Main-only in practice
+  // (availability 'main' keeps it out of sub-Kins) and admin-gated at runtime.
+  'prompt_secret',
 
   // File attachments (sub-Kins often need to surface screenshots / files
   // back to the user without going through write_file + a separate channel

@@ -13,6 +13,7 @@ describe('CORE_TOOLS', () => {
       'update_task_status',
       'request_input',
       'prompt_human',
+      'prompt_secret',
     ]) {
       expect(CORE_TOOLS).toContain(required)
     }
