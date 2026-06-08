@@ -5,8 +5,6 @@ description: Build, test, and publish Hivekeep plugins with the @hivekeep/sdk pa
 
 This is the canonical guide for writing Hivekeep plugins. Every plugin imports everything it needs from `@hivekeep/sdk`. There are no Hivekeep-internal imports a plugin should reach into.
 
-> The legacy plugin-store-specific `docs/plugins.md` and `PLUGIN-SPEC.md` are pointers to this page. If you're consulting them and they disagree with this guide, this guide wins.
-
 ## Quickstart
 
 ```bash

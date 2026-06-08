@@ -14,7 +14,7 @@ docker run -d --name hivekeep \
   ghcr.io/marlburrow/hivekeep:latest
 ```
 
-Open `http://localhost:3000` — the onboarding wizard handles the rest.
+Open `http://localhost:3000` and Queenie, your setup guide, handles the rest.
 
 ## One-liner script (Linux / macOS)
 
