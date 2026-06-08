@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Avatar from '../components/Avatar.astro';
 import Providers from '../components/Providers.astro';
+import AgentDemo from '../components/AgentDemo.tsx';
 import { Icon } from 'astro-icon/components';
 import agents from '../agents.json';
 import stats from '../data/stats.json';
@@ -59,7 +60,6 @@ const lastCommit = relTime((stats as any).lastCommitISO);
 // Show the strip only if at least one tile has real data.
 const showHealth = showStars || showOpenIssues || showContributors || !!ciState || !!lastCommit;
 const HUES = [305, 40, 20, 330, 265, 210, 150, 55, 15, 235, 290, 30, 170, 95, 260, 50, 200, 120];
-const panelAgents = agents.slice(0, 5);
 const channels = [
   ['telegram', 'Telegram'], ['whatsapp', 'WhatsApp'], ['slack', 'Slack'],
   ['discord', 'Discord'], ['signal', 'Signal'], ['matrix', 'Matrix'],
@@ -118,23 +118,8 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
           </div>
         </div>
 
-        <!-- product-like Agents panel -->
-        <div class="panel glass">
-          <div class="ph-head"><span class="t">// your agents</span><span class="c">{agents.length} active</span></div>
-          <div>
-            {panelAgents.map((k, i) => {
-              const st = k.status === 'working' ? 'work' : k.status === 'idle' ? 'idle' : '';
-              const label = k.status === 'working' ? 'working' : k.status === 'idle' ? 'idle' : 'online';
-              return (
-                <div class="krow" style={`animation-delay:${i * 0.18}s`}>
-                  <span class="av"><Avatar name={k.name} avatar={k.avatar} size={34} hue={HUES[i]} /></span>
-                  <span class="meta2"><div class="nm">{k.name}</div><div class="dm">{k.domain}</div></span>
-                  <span class={`st ${st}`}><span class="pip"></span>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <!-- interactive Agents panel: click a row to replay a scripted demo -->
+        <AgentDemo client:load total={agents.length} />
       </div>
     </div>
 
@@ -405,7 +390,8 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="num display">07<small>Examples</small></div>
     <div class="body">
       <h2 class="display">Build a household for your life.</h2>
-      <p>Hivekeep ships with one Agent: <b>Queenie</b>, your setup guide. You create the rest, or just ask Queenie to build them for you. Each one gets its own name, domain, memory, tools, and an auto-generated avatar.</p>
+      <p>Hivekeep ships with one Agent: <b>Queenie</b>, your setup guide. You create the rest, or just ask Queenie to build them for you. Each one gets its own name, domain, memory, tools, and a generated avatar.</p>
+      <p>Avatars come in Hivekeep's <b>default art style</b>, so a fresh hive already looks like a set. Want your own look? Set a <b>custom avatar style</b> once — pixel art, watercolor, your own brand — and every Agent regenerates in it, so your whole team stays on theme.</p>
       <p class="examples-note mono">A few examples of what people build →</p>
       <div class="directory">
         {agents.map((k, i) => {
