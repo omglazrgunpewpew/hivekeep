@@ -15,6 +15,49 @@ const repoStars = stats.stars;
 // reads as nobody starred it, so hide the badge entirely in that case.
 const showStars = typeof repoStars === 'number' && repoStars > 0;
 const starLabel = repoStars >= 1000 ? `${(repoStars / 1000).toFixed(1)}k` : String(repoStars);
+
+// ── project health (derived from site/src/data/stats.json at build) ──────────
+// Every value is "show only when meaningful": a silent stats-fetch failure in
+// the pages workflow leaves placeholders (0 / '' / null), and we hide those
+// rather than render a misleading "0 issues / no commits" state.
+const releaseUrl = (stats as any).latestReleaseUrl || 'https://github.com/MarlBurroW/hivekeep/releases';
+const openIssues = typeof (stats as any).openIssues === 'number' ? (stats as any).openIssues : 0;
+const showOpenIssues = openIssues > 0;
+const contributors = typeof (stats as any).contributors === 'number' ? (stats as any).contributors : 0;
+const showContributors = contributors > 0;
+const topContributors: { login: string; avatarUrl: string; htmlUrl: string }[] = Array.isArray((stats as any).topContributors)
+  ? (stats as any).topContributors
+  : [];
+
+// CI status → green/red dot + label. Unknown/missing stays hidden.
+const ciStatus = String((stats as any).ciStatus || '');
+const ciState =
+  ciStatus === 'success' ? { cls: 'ok', label: 'passing' }
+  : ciStatus === 'failure' ? { cls: 'bad', label: 'failing' }
+  : ciStatus ? { cls: 'warn', label: ciStatus }
+  : null;
+
+// "last commit Nd ago", computed at build from the ISO timestamp.
+function relTime(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return null;
+  const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+  const mins = Math.round(secs / 60);
+  const hrs = Math.round(mins / 60);
+  const days = Math.round(hrs / 24);
+  if (secs < 60) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  if (days < 30) return `${days}d ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.round(months / 12)}y ago`;
+}
+const lastCommit = relTime((stats as any).lastCommitISO);
+
+// Show the strip only if at least one tile has real data.
+const showHealth = showStars || showOpenIssues || showContributors || !!ciState || !!lastCommit;
 const HUES = [305, 40, 20, 330, 265, 210, 150, 55, 15, 235, 290, 30, 170, 95, 260, 50, 200, 120];
 const panelAgents = agents.slice(0, 5);
 const channels = [
@@ -48,7 +91,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="28" height="28" alt="" /> Hivekeep</div>
     <nav>
       <a href="#memory">Features</a><a href="#household">The household</a>
-      <a href="#why">Why Hivekeep</a><a href="#docs">Docs</a>
+      <a href="#why">Why Hivekeep</a><a href={`${base}/docs/`}>Docs</a>
       <a href="https://github.com/MarlBurroW/hivekeep">GitHub ↗</a>
     </nav>
     <a class="btn btn-primary btn-sm" href={`${base}/install`}>Get started</a>
@@ -102,6 +145,57 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       ))}
     </div></div>
   </section>
+
+  <!-- ===== project health (live GitHub signals, baked at deploy) ===== -->
+  {showHealth && (
+    <section class="health"><div class="wrap">
+      <div class="health-row">
+        <span class="health-kicker"><Icon name="lucide:activity" /> live from GitHub</span>
+        <div class="health-tiles">
+          <a class="htile" href={releaseUrl}>
+            <span class="ht-ic"><Icon name="lucide:tag" /></span>
+            <span class="ht-body"><span class="ht-val">v{repoVersion}</span><span class="ht-lab">latest release</span></span>
+          </a>
+          {ciState && (
+            <span class="htile">
+              <span class={`ht-ci ${ciState.cls}`}><span class="ci-dot"></span></span>
+              <span class="ht-body"><span class="ht-val">CI {ciState.label}</span><span class="ht-lab">main branch</span></span>
+            </span>
+          )}
+          {showStars && (
+            <a class="htile" href="https://github.com/MarlBurroW/hivekeep">
+              <span class="ht-ic"><Icon name="lucide:star" /></span>
+              <span class="ht-body"><span class="ht-val">{starLabel}</span><span class="ht-lab">stars</span></span>
+            </a>
+          )}
+          {showOpenIssues && (
+            <a class="htile" href="https://github.com/MarlBurroW/hivekeep/issues">
+              <span class="ht-ic"><Icon name="lucide:circle-dot" /></span>
+              <span class="ht-body"><span class="ht-val">{openIssues}</span><span class="ht-lab">open {openIssues === 1 ? 'issue' : 'issues'}</span></span>
+            </a>
+          )}
+          {lastCommit && (
+            <a class="htile" href="https://github.com/MarlBurroW/hivekeep/commits/main">
+              <span class="ht-ic"><Icon name="lucide:git-commit-horizontal" /></span>
+              <span class="ht-body"><span class="ht-val">{lastCommit}</span><span class="ht-lab">last commit</span></span>
+            </a>
+          )}
+          {showContributors && (
+            <a class="htile" href="https://github.com/MarlBurroW/hivekeep/graphs/contributors">
+              {topContributors.length > 0 && (
+                <span class="ht-faces">
+                  {topContributors.map((c) => (
+                    <img class="ht-face" src={c.avatarUrl} width="22" height="22" loading="lazy" alt={c.login} />
+                  ))}
+                </span>
+              )}
+              <span class="ht-body"><span class="ht-val">{contributors}</span><span class="ht-lab">{contributors === 1 ? 'contributor' : 'contributors'}</span></span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div></section>
+  )}
 
   <!-- ===== install video ===== -->
   <section class="videoblock" id="demo"><div class="wrap">
@@ -385,7 +479,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   </section>
 
   <!-- ===== footer ===== -->
-  <footer class="footer" id="docs"><div class="wrap in">
+  <footer class="footer"><div class="wrap in">
     <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="26" height="26" alt="" /> Hivekeep</div>
     <span class="m">Open-source · AGPL-3.0 · Built with Bun · © 2026</span>
   </div></footer>
@@ -411,4 +505,39 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
     })
   })
 </script>
+
+<style>
+  /* project health strip: live GitHub signals under the hero.
+     Reuses the global design tokens (aurora gradient, glass, lines). */
+  .health{border-bottom:1px solid var(--line);background:oklch(0.125 0.026 312);}
+  .health-row{display:flex;align-items:center;gap:22px;padding:16px 0;flex-wrap:wrap;}
+  .health-kicker{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;font-family:"JetBrains Mono",monospace;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
+  .health-kicker svg{width:1.05em;height:1.05em;color:var(--primary);}
+  .health-tiles{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;flex:1;}
+
+  .htile{display:inline-flex;align-items:center;gap:10px;padding:.5rem .8rem;border:1px solid var(--line-strong);border-radius:var(--r-pill);background:oklch(1 0 0/.03);transition:border-color .15s ease,transform .15s ease,background .15s ease;}
+  a.htile:hover{border-color:var(--primary);transform:translateY(-2px);background:oklch(1 0 0/.05);}
+  .ht-ic{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;flex:0 0 auto;background:oklch(0.72 0.19 305/.14);color:var(--primary);}
+  .ht-ic svg{width:15px;height:15px;}
+  .ht-body{display:flex;flex-direction:column;line-height:1.1;}
+  .ht-val{font-weight:700;font-size:.92rem;color:var(--ink);}
+  .ht-lab{font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+
+  /* CI status indicator: green / red / amber dot */
+  .ht-ci{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;flex:0 0 auto;background:oklch(1 0 0/.05);}
+  .ht-ci .ci-dot{width:9px;height:9px;border-radius:50%;}
+  .ht-ci.ok .ci-dot{background:var(--green);box-shadow:0 0 9px var(--green);}
+  .ht-ci.bad .ci-dot{background:oklch(0.64 0.24 22);box-shadow:0 0 9px oklch(0.64 0.24 22);}
+  .ht-ci.warn .ci-dot{background:var(--peach);box-shadow:0 0 9px var(--peach);}
+
+  /* contributor avatars, overlapped */
+  .ht-faces{display:inline-flex;flex:0 0 auto;}
+  .ht-face{width:22px;height:22px;border-radius:50%;border:2px solid oklch(0.125 0.026 312);object-fit:cover;margin-left:-7px;background:var(--surface);}
+  .ht-face:first-child{margin-left:0;}
+
+  @media(max-width:860px){
+    .health-row{gap:12px;}
+    .health-tiles{gap:8px;}
+  }
+</style>
 </Base>
