@@ -150,7 +150,7 @@ jobs:
               --name hivekeep \
               -p 3000:3000 \
               -v hivekeep-data:/app/data \
-              ghcr.io/marlburrow/hivekeep:${{ github.ref_name }}
+              ghcr.io/marlburrow/hivekeep:latest
             ```
 
             For all installation methods and an interactive configurator, see the [install guide](https://marlburrow.github.io/hivekeep/install).
