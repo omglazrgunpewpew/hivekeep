@@ -455,6 +455,9 @@
     "settings": {
       "title": "Paramètres de l'Agent",
       "save": "Enregistrer",
+      "tabSaved": "Modifications enregistrées",
+      "dangerZone": "Zone de danger",
+      "dangerZoneDesc": "Supprimer définitivement cet Agent et toutes ses données. Cette action est irréversible.",
       "delete": "Supprimer cet Agent",
       "deleteConfirm": "Êtes-vous sûr ? Cela supprimera définitivement cet Agent et toutes ses données.",
       "deleteAction": "Supprimer définitivement"

@@ -455,6 +455,9 @@
     "settings": {
       "title": "Agent settings",
       "save": "Save changes",
+      "tabSaved": "Changes saved",
+      "dangerZone": "Danger zone",
+      "dangerZoneDesc": "Permanently delete this Agent and all of its data. This cannot be undone.",
       "delete": "Delete this Agent",
       "deleteConfirm": "Are you sure? This will permanently delete this Agent and all its data.",
       "deleteAction": "Delete permanently"

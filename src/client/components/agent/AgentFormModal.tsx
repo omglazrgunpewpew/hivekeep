@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogBody,
@@ -37,7 +38,7 @@ import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesD
 import { useUnsavedChanges } from '@/client/hooks/useUnsavedChanges'
 import { useHasCapability } from '@/client/hooks/useHasCapability'
 import { cn } from '@/client/lib/utils'
-import { api, getErrorMessage } from '@/client/lib/api'
+import { api, getErrorMessage, toastError } from '@/client/lib/api'
 import type { AgentCompactingConfig, AgentThinkingConfig } from '@/shared/types'
 import type { GeneratedAgentConfig } from '@/client/hooks/useAgents'
 
@@ -127,6 +128,33 @@ const TABS: Array<{ id: TabId; icon: typeof Settings; labelKey: string }> = [
   { id: 'thinking', icon: Sparkles, labelKey: 'agent.tabs.thinking' },
 ]
 
+/** Normalize a compacting config: if every field is empty, collapse to null so
+ *  the override is cleared. Mirrors the server's coupled-pair handling. */
+function normalizeCompactingConfig(config: AgentCompactingConfig | null): AgentCompactingConfig | null {
+  if (!config) return null
+  const hasAny =
+    config.compactingModel != null ||
+    config.compactingProviderId != null ||
+    config.thresholdPercent != null ||
+    config.keepPercent != null ||
+    config.summaryBudgetPercent != null ||
+    config.maxSummaries != null ||
+    config.keepMaxTokens != null ||
+    config.triggerMaxTokens != null ||
+    config.summaryMaxTokens != null
+  return hasAny ? config : null
+}
+
+/** Scout model/provider are coupled — a partial pair collapses to "inherit"
+ *  (null/null), mirroring the server's coupled-pair validation. */
+function normalizeScoutPair(scoutModel: string | null, scoutProviderId: string | null) {
+  const bothSet = !!scoutModel && !!scoutProviderId
+  return {
+    scoutModel: bothSet ? scoutModel : null,
+    scoutProviderId: bothSet ? scoutProviderId : null,
+  }
+}
+
 /** Convert data URL to File */
 function dataUrlToFile(dataUrl: string): File {
   const [header = '', base64 = ''] = dataUrl.split(',')
@@ -138,6 +166,50 @@ function dataUrlToFile(dataUrl: string): File {
   }
   const ext = mime === 'image/jpeg' ? 'jpg' : 'png'
   return new File([bytes], `avatar.${ext}`, { type: mime })
+}
+
+/** Shell around the body+footer. CREATE mode wraps everything in a single
+ *  layout-transparent form (so the footer's submit button POSTs all fields).
+ *  EDIT mode renders the children directly — each tab supplies its own form. */
+function FormShell({
+  isEdit,
+  onCreateSubmit,
+  children,
+}: {
+  isEdit: boolean
+  onCreateSubmit: (e: React.FormEvent) => void
+  children: React.ReactNode
+}) {
+  if (isEdit) return <>{children}</>
+  return (
+    <form onSubmit={onCreateSubmit} className="contents">
+      {children}
+    </form>
+  )
+}
+
+/** A single tab's content wrapper. In EDIT mode it is a form whose submit does
+ *  a partial PATCH; in CREATE mode it's a plain div (the outer create form owns
+ *  submission). Tab-switch nav buttons stay type="button" and live outside. */
+function TabForm({
+  isEdit,
+  onSubmit,
+  className,
+  children,
+}: {
+  isEdit: boolean
+  onSubmit: (e: React.FormEvent) => void
+  className?: string
+  children: React.ReactNode
+}) {
+  if (isEdit) {
+    return (
+      <form onSubmit={onSubmit} className={className}>
+        {children}
+      </form>
+    )
+  }
+  return <div className={className}>{children}</div>
 }
 
 export function AgentFormModal({
@@ -163,7 +235,7 @@ export function AgentFormModal({
   const defaultExpertise = t('agent.defaults.expertise')
 
   // Unsaved changes guard
-  const { isDirty, markDirty, resetDirty, guardedClose, confirmDialogProps } = useUnsavedChanges({
+  const { markDirty, resetDirty, guardedClose, confirmDialogProps } = useUnsavedChanges({
     onClose: () => onOpenChange(false),
   })
 
@@ -198,6 +270,40 @@ export function AgentFormModal({
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Per-tab dirty tracking (edit mode). Each tab compares its current field
+  // values to a snapshot captured on load / after its own save, so a partial
+  // save only marks THAT tab clean and the close-guard combines all tabs.
+  const [initialGeneral, setInitialGeneral] = useState('')
+  const [initialToolboxIds, setInitialToolboxIds] = useState('')
+  const [initialCompacting, setInitialCompacting] = useState('')
+  const [initialThinking, setInitialThinking] = useState('')
+
+  // Per-tab saving state (edit mode partial saves)
+  const [savingGeneral, setSavingGeneral] = useState(false)
+  const [savingTools, setSavingTools] = useState(false)
+  const [savingCompaction, setSavingCompaction] = useState(false)
+  const [savingThinking, setSavingThinking] = useState(false)
+
+  // Serialized "current" values per tab — compared to the snapshots above to
+  // derive dirtiness. The avatar is part of the General tab (a changed file
+  // counts as a General edit even though the text fields match).
+  const currentGeneral = useMemo(
+    () => {
+      const { scoutModel: sm, scoutProviderId: sp } = normalizeScoutPair(scoutModel, scoutProviderId)
+      return JSON.stringify({ name, slug, role, model, providerId, scoutModel: sm, scoutProviderId: sp, character, expertise })
+    },
+    [name, slug, role, model, providerId, scoutModel, scoutProviderId, character, expertise],
+  )
+  const currentToolboxIds = useMemo(() => JSON.stringify(toolboxIds ?? null), [toolboxIds])
+  const currentCompacting = useMemo(() => JSON.stringify(normalizeCompactingConfig(compactingConfig)), [compactingConfig])
+  const currentThinking = useMemo(() => JSON.stringify(thinkingConfig ?? null), [thinkingConfig])
+
+  const generalDirty = currentGeneral !== initialGeneral || avatarFile != null
+  const toolsDirty = currentToolboxIds !== initialToolboxIds
+  const compactionDirty = currentCompacting !== initialCompacting
+  const thinkingDirty = currentThinking !== initialThinking
+  const anyDirty = generalDirty || toolsDirty || compactionDirty || thinkingDirty
 
   // Track if avatar generation was aborted (component unmount / new generation)
   const avatarAbortRef = useRef<AbortController | null>(null)
@@ -245,6 +351,23 @@ export function AgentFormModal({
       setAvatarPreview(agent.avatarUrl)
       setWizardStep('form')
       setWasAiGenerated(false)
+
+      // Capture per-tab snapshots so each tab can derive its own dirtiness.
+      const loadedScout = normalizeScoutPair(agent.scoutModel ?? null, agent.scoutProviderId ?? null)
+      setInitialGeneral(JSON.stringify({
+        name: agent.name,
+        slug: agent.slug,
+        role: agent.role,
+        model: agent.model,
+        providerId: agent.providerId ?? null,
+        scoutModel: loadedScout.scoutModel,
+        scoutProviderId: loadedScout.scoutProviderId,
+        character: agent.character,
+        expertise: agent.expertise,
+      }))
+      setInitialToolboxIds(JSON.stringify(agent.toolboxIds ?? null))
+      setInitialCompacting(JSON.stringify(normalizeCompactingConfig(agent.compactingConfig ?? null)))
+      setInitialThinking(JSON.stringify(agent.thinkingConfig ?? null))
     } else {
       setName('')
       setSlug('')
@@ -262,6 +385,13 @@ export function AgentFormModal({
       setWizardStep('describe')
       setWasAiGenerated(false)
       setWizardDescription('')
+
+      // Reset per-tab snapshots (unused in create mode, which relies on the
+      // single-submit flow + markDirty, but kept consistent for cleanliness).
+      setInitialGeneral('')
+      setInitialToolboxIds('')
+      setInitialCompacting('')
+      setInitialThinking('')
 
       // Pre-populate with default LLM model
       api.get<{ defaultLlmModel: string | null; defaultLlmProviderId: string | null }>('/settings/default-models')
@@ -282,6 +412,15 @@ export function AgentFormModal({
     setIsAvatarGenerating(false)
     resetDirty()
   }, [agent, defaultCharacter, defaultExpertise, resetDirty])
+
+  // In edit mode the close-guard is driven by the combined per-tab dirtiness
+  // (derived from snapshots), so a per-tab save clears it for that tab without
+  // any explicit resetDirty call. Create mode keeps using markDirty directly.
+  useEffect(() => {
+    if (!isEdit) return
+    if (anyDirty) markDirty()
+    else resetDirty()
+  }, [isEdit, anyDirty, markDirty, resetDirty])
 
   /** Apply a generated config to the form fields */
   const applyGeneratedConfig = (config: GeneratedAgentConfig) => {
@@ -400,42 +539,101 @@ export function AgentFormModal({
     }
   }
 
+  /** Create-mode submit — POSTs every field at once, then uploads the avatar.
+   *  Edit mode uses the per-tab partial-save handlers below instead. */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!onCreateAgent) return
     setError('')
     setIsLoading(true)
 
     try {
-      // Scout model/provider are coupled — a partial pair collapses to "inherit"
-      // (null/null), mirroring the server's coupled-pair validation.
-      const scoutBothSet = !!scoutModel && !!scoutProviderId
-      const effectiveScoutModel = scoutBothSet ? scoutModel : null
-      const effectiveScoutProviderId = scoutBothSet ? scoutProviderId : null
-      if (isEdit && onUpdateAgent) {
-        // Normalize compactingConfig: if all fields are empty, send null to clear the override
-        const effectiveCompactingConfig = (
-          compactingConfig?.compactingModel != null ||
-          compactingConfig?.compactingProviderId != null ||
-          compactingConfig?.thresholdPercent != null ||
-          compactingConfig?.keepPercent != null ||
-          compactingConfig?.summaryBudgetPercent != null ||
-          compactingConfig?.maxSummaries != null ||
-          compactingConfig?.keepMaxTokens != null ||
-          compactingConfig?.triggerMaxTokens != null ||
-          compactingConfig?.summaryMaxTokens != null
-        ) ? compactingConfig : null
-        await onUpdateAgent(agent.id, { name, slug, role, character, expertise, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, toolboxIds, compactingConfig: effectiveCompactingConfig, thinkingConfig })
-        if (avatarFile) await onUploadAvatar(agent.id, avatarFile)
-      } else if (onCreateAgent) {
-        const created = await onCreateAgent({ name, slug: slug || undefined, role, character, expertise, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, toolboxIds })
-        if (avatarFile) await onUploadAvatar(created.id, avatarFile)
-      }
+      const { scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId } = normalizeScoutPair(scoutModel, scoutProviderId)
+      const created = await onCreateAgent({ name, slug: slug || undefined, role, character, expertise, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, toolboxIds })
+      if (avatarFile) await onUploadAvatar(created.id, avatarFile)
       resetDirty()
       onOpenChange(false)
     } catch (err: unknown) {
       setError(getErrorMessage(err) || t('common.error'))
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // ─── Per-tab partial-save handlers (edit mode) ───
+  // Each PATCHes only its own fields, marks its tab clean (by re-snapshotting),
+  // and toasts on success. None of them close the modal.
+
+  const handleSaveGeneral = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isEdit || !agent || !onUpdateAgent) return
+    setError('')
+    setSavingGeneral(true)
+    try {
+      const { scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId } = normalizeScoutPair(scoutModel, scoutProviderId)
+      await onUpdateAgent(agent.id, { name, slug, role, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, character, expertise })
+      if (avatarFile) {
+        await onUploadAvatar(agent.id, avatarFile)
+        setAvatarFile(null)
+      }
+      // Re-snapshot so this tab is clean (using the normalized scout pair).
+      setInitialGeneral(JSON.stringify({ name, slug, role, model, providerId, scoutModel: effectiveScoutModel, scoutProviderId: effectiveScoutProviderId, character, expertise }))
+      setScoutModel(effectiveScoutModel)
+      setScoutProviderId(effectiveScoutProviderId)
+      toast.success(t('agent.settings.tabSaved'))
+    } catch (err: unknown) {
+      toastError(err)
+    } finally {
+      setSavingGeneral(false)
+    }
+  }
+
+  const handleSaveTools = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isEdit || !agent || !onUpdateAgent) return
+    setError('')
+    setSavingTools(true)
+    try {
+      await onUpdateAgent(agent.id, { toolboxIds })
+      setInitialToolboxIds(JSON.stringify(toolboxIds ?? null))
+      toast.success(t('agent.settings.tabSaved'))
+    } catch (err: unknown) {
+      toastError(err)
+    } finally {
+      setSavingTools(false)
+    }
+  }
+
+  const handleSaveCompaction = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isEdit || !agent || !onUpdateAgent) return
+    setError('')
+    setSavingCompaction(true)
+    try {
+      const effectiveCompactingConfig = normalizeCompactingConfig(compactingConfig)
+      await onUpdateAgent(agent.id, { compactingConfig: effectiveCompactingConfig })
+      setInitialCompacting(JSON.stringify(effectiveCompactingConfig))
+      toast.success(t('agent.settings.tabSaved'))
+    } catch (err: unknown) {
+      toastError(err)
+    } finally {
+      setSavingCompaction(false)
+    }
+  }
+
+  const handleSaveThinking = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isEdit || !agent || !onUpdateAgent) return
+    setError('')
+    setSavingThinking(true)
+    try {
+      await onUpdateAgent(agent.id, { thinkingConfig })
+      setInitialThinking(JSON.stringify(thinkingConfig ?? null))
+      toast.success(t('agent.settings.tabSaved'))
+    } catch (err: unknown) {
+      toastError(err)
+    } finally {
+      setSavingThinking(false)
     }
   }
 
@@ -607,7 +805,10 @@ export function AgentFormModal({
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="contents">
+              {/* In EDIT mode each tab is its own form with its own Save
+                  button (no shared footer). In CREATE mode the whole body is a
+                  single form that POSTs everything at once via the footer. */}
+              <FormShell isEdit={isEdit} onCreateSubmit={handleSubmit}>
                 {/* Body: left nav + scrollable content. Stacks vertically on
                     mobile (nav becomes a horizontal scrollable tab bar). */}
                 <DialogBody className="flex min-h-0 flex-1 flex-col overflow-hidden p-0 sm:flex-row">
@@ -647,7 +848,7 @@ export function AgentFormModal({
                     <div className="flex-1 overflow-y-auto">
                       <div className="p-6">
                       {activeTab === 'general' && (
-                        <div className="space-y-4">
+                        <TabForm isEdit={isEdit} onSubmit={handleSaveGeneral} className="space-y-4">
                           {/* No-LLM banner — surfaces the constraint up-front
                               so the empty Model picker below is explained,
                               and points the user at Settings → Providers. */}
@@ -856,15 +1057,79 @@ export function AgentFormModal({
                             />
                           </FormField>
 
-                        </div>
+                          {/* Per-tab Save (edit mode only) */}
+                          {isEdit && (
+                            <div className="flex items-center gap-2 pt-2">
+                              <Button
+                                type="submit"
+                                disabled={!generalDirty || savingGeneral || !name || !role}
+                                className="btn-shine"
+                              >
+                                {savingGeneral ? (
+                                  <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    {t('common.loading')}
+                                  </>
+                                ) : (
+                                  t('common.save')
+                                )}
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Danger Zone (edit mode only) — delete lives here now
+                              that the shared footer is gone. */}
+                          {isEdit && (
+                            <div className="border-t border-destructive/30 pt-6 mt-6 space-y-3">
+                              <h3 className="text-sm font-medium text-destructive">
+                                {t('agent.settings.dangerZone')}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {t('agent.settings.dangerZoneDesc')}
+                              </p>
+                              <ConfirmDeleteButton
+                                onConfirm={handleDelete}
+                                title={t('agent.settings.delete')}
+                                description={t('agent.settings.deleteConfirm')}
+                                confirmLabel={t('agent.settings.deleteAction')}
+                                trigger={
+                                  <Button type="button" variant="destructive" size="sm" disabled={isDeleting}>
+                                    <Trash2 className="size-4" />
+                                    {t('agent.settings.delete')}
+                                  </Button>
+                                }
+                              />
+                            </div>
+                          )}
+                        </TabForm>
                       )}
 
                       {activeTab === 'tools' && (
-                        <AgentToolsTab
-                          agentId={isEdit ? agent.id : null}
-                          toolboxIds={toolboxIds}
-                          onToolboxIdsChange={(next) => { setToolboxIds(next); markDirty() }}
-                        />
+                        <TabForm isEdit={isEdit} onSubmit={handleSaveTools} className="space-y-4">
+                          <AgentToolsTab
+                            agentId={isEdit ? agent.id : null}
+                            toolboxIds={toolboxIds}
+                            onToolboxIdsChange={(next) => { setToolboxIds(next); markDirty() }}
+                          />
+                          {isEdit && (
+                            <div className="flex items-center gap-2 pt-2">
+                              <Button
+                                type="submit"
+                                disabled={!toolsDirty || savingTools}
+                                className="btn-shine"
+                              >
+                                {savingTools ? (
+                                  <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    {t('common.loading')}
+                                  </>
+                                ) : (
+                                  t('common.save')
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </TabForm>
                       )}
 
                       {activeTab === 'memory' && isEdit && (
@@ -874,7 +1139,7 @@ export function AgentFormModal({
                       )}
 
                       {activeTab === 'compaction' && isEdit && (
-                        <div className="space-y-3">
+                        <TabForm isEdit={isEdit} onSubmit={handleSaveCompaction} className="space-y-3">
                           <Label className="inline-flex items-center gap-1.5 text-sm font-medium">
                             <Archive className="size-4" />
                             {t('agent.compacting.title')}
@@ -1051,7 +1316,24 @@ export function AgentFormModal({
                               }}
                             />
                           </FormField>
-                        </div>
+
+                          <div className="flex items-center gap-2 pt-2">
+                            <Button
+                              type="submit"
+                              disabled={!compactionDirty || savingCompaction}
+                              className="btn-shine"
+                            >
+                              {savingCompaction ? (
+                                <>
+                                  <Loader2 className="size-4 animate-spin" />
+                                  {t('common.loading')}
+                                </>
+                              ) : (
+                                t('common.save')
+                              )}
+                            </Button>
+                          </div>
+                        </TabForm>
                       )}
 
                       {activeTab === 'compaction' && !isEdit && (
@@ -1074,7 +1356,7 @@ export function AgentFormModal({
 
                       {/* ── Thinking tab ────────────────────────── */}
                       {activeTab === 'thinking' && isEdit && (
-                        <div className="space-y-4">
+                        <TabForm isEdit={isEdit} onSubmit={handleSaveThinking} className="space-y-4">
                           <div className="flex items-center gap-2">
                             <Sparkles className="size-4 text-chart-4" />
                             <h3 className="text-sm font-medium">{t('agent.thinking.title')}</h3>
@@ -1115,7 +1397,24 @@ export function AgentFormModal({
                               />
                             </FormField>
                           )}
-                        </div>
+
+                          <div className="flex items-center gap-2 pt-2">
+                            <Button
+                              type="submit"
+                              disabled={!thinkingDirty || savingThinking}
+                              className="btn-shine"
+                            >
+                              {savingThinking ? (
+                                <>
+                                  <Loader2 className="size-4 animate-spin" />
+                                  {t('common.loading')}
+                                </>
+                              ) : (
+                                t('common.save')
+                              )}
+                            </Button>
+                          </div>
+                        </TabForm>
                       )}
 
                       {activeTab === 'thinking' && !isEdit && (
@@ -1131,68 +1430,42 @@ export function AgentFormModal({
                   </div>
                 </DialogBody>
 
-                {/* Footer */}
-                <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-                  {isEdit ? (
-                    <>
-                      <ConfirmDeleteButton
-                        onConfirm={handleDelete}
-                        title={t('agent.settings.delete')}
-                        description={t('agent.settings.deleteConfirm')}
-                        confirmLabel={t('agent.settings.deleteAction')}
-                        trigger={
-                          <Button type="button" variant="destructive" size="sm" disabled={isDeleting}>
-                            <Trash2 className="size-4" />
-                            {t('agent.settings.delete')}
-                          </Button>
-                        }
-                      />
-
-                      <Button type="submit" disabled={isLoading || !name || !role} className="btn-shine">
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="size-4 animate-spin" />
-                            {t('common.loading')}
-                          </>
-                        ) : (
-                          t('agent.settings.save')
-                        )}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {hasWizard ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setWizardStep('describe')}
-                        >
-                          <ArrowLeft className="size-4" />
-                          {t('agent.wizard.back')}
-                        </Button>
-                      ) : (
-                        <div />
-                      )}
+                {/* Footer — CREATE only. In edit mode each tab carries its own
+                    Save button and the delete affordance lives in the General
+                    tab's Danger Zone, so no shared footer is rendered. */}
+                {!isEdit && (
+                  <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+                    {hasWizard ? (
                       <Button
-                        type="submit"
-                        disabled={isLoading || !name || !role || !model}
-                        className="btn-shine"
-                        size="lg"
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setWizardStep('describe')}
                       >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="size-4 animate-spin" />
-                            {t('common.loading')}
-                          </>
-                        ) : (
-                          t('agent.create.submit')
-                        )}
+                        <ArrowLeft className="size-4" />
+                        {t('agent.wizard.back')}
                       </Button>
-                    </>
-                  )}
-                </DialogFooter>
-              </form>
+                    ) : (
+                      <div />
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !name || !role || !model}
+                      className="btn-shine"
+                      size="lg"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          {t('common.loading')}
+                        </>
+                      ) : (
+                        t('agent.create.submit')
+                      )}
+                    </Button>
+                  </DialogFooter>
+                )}
+              </FormShell>
             </>
           )}
         </DialogContent>
