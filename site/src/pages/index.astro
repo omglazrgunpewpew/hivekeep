@@ -89,12 +89,15 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   <!-- ===== top bar ===== -->
   <header class="topbar"><div class="wrap in">
     <div class="brand"><img class="brand-logo" src={`${base}/logo.svg`} width="28" height="28" alt="" /> Hivekeep</div>
-    <nav>
+    <nav id="site-nav">
       <a href="#memory">Features</a><a href="#household">The household</a>
       <a href="#why">Why Hivekeep</a><a href={`${base}/docs/`}>Docs</a>
       <a href="https://github.com/MarlBurroW/hivekeep">GitHub ↗</a>
     </nav>
-    <a class="btn btn-primary btn-sm" href={`${base}/install`}>Get started</a>
+    <div class="nav-actions">
+      <a class="btn btn-primary btn-sm" href={`${base}/install`}>Get started</a>
+      <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><Icon name="lucide:menu" class="ic-menu" /><Icon name="lucide:x" class="ic-x" /></button>
+    </div>
   </div></header>
 
   <!-- ===== hero ===== -->
@@ -522,8 +525,32 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
   .ht-face:first-child{margin-left:0;}
 
   @media(max-width:860px){
-    .health-row{gap:12px;}
-    .health-tiles{gap:8px;}
+    .health-row{flex-direction:column;align-items:stretch;gap:12px;}
+    .health-kicker{align-self:flex-start;}
+    .health-tiles{flex-direction:column;align-items:stretch;width:100%;gap:8px;}
+    .htile{width:100%;}
   }
 </style>
+
+<script>
+  // Mobile nav: toggle the dropdown, and close it on link tap, outside click,
+  // or resize back to desktop.
+  const tb = document.querySelector('.topbar')
+  const btn = tb?.querySelector('.nav-toggle')
+  if (tb && btn) {
+    const close = () => { tb.classList.remove('open'); btn.setAttribute('aria-expanded', 'false') }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const open = tb.classList.toggle('open')
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    })
+    tb.querySelector('nav')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) close()
+    })
+    document.addEventListener('click', (e) => {
+      if (!tb.contains(e.target as Node)) close()
+    })
+    window.addEventListener('resize', () => { if (window.innerWidth > 860) close() })
+  }
+</script>
 </Base>
