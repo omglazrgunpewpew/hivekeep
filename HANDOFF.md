@@ -88,3 +88,12 @@ Some **internal brand drafts still assume MIT** and were intentionally left unto
 The autonomous loop kept **AGPL-3.0 everywhere it ships**. Plugin-manifest `license` fields and the `create-hivekeep-plugin` scaffolder default (`"MIT"`) describe the *plugin author's* choice, not Hivekeep's, so they were left as-is.
 
 **Founder decision needed:** if MIT (or any other license) is actually desired instead of AGPL-3.0, a human must change `LICENSE` + `package.json` + every shipped reference (and the drafts above). The loop will not flip the license on its own.
+
+## CI scope decision
+
+The 1.0 minimal-CI rebuild **intentionally dropped** two workflows that previously existed:
+
+- **`codeql.yml`** (CodeQL static analysis / code scanning)
+- **`dependency-review.yml`** (dependency-review on pull requests)
+
+This was a deliberate decision to keep the 1.0 CI surface small and fast, not an accident. They were **not** re-added. If the security/static-analysis coverage they provided is wanted later, either workflow can be re-introduced as-is. `ci.yml` keeps the essential gates (typecheck, test, build, a single cached amd64 Docker build, and shell-script validation for `install.sh` + `docker/entrypoint.sh`); `release.yml` handles multi-arch image publishing and GitHub releases.

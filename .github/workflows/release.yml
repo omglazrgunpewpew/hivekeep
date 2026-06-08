@@ -71,7 +71,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
@@ -82,7 +82,7 @@ jobs:
             type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
@@ -119,12 +119,21 @@ jobs:
             SECTION=$(git log "${GITHUB_REF}" --pretty=format:"- %s" --no-merges | head -50)
           fi
 
+          # The :latest tag is only published for stable (non-prerelease) tags.
+          # Prerelease tags contain a '-' (e.g. v1.0.0-rc.1), so point their
+          # docker-run example at the concrete version instead of :latest.
+          case "$VERSION" in
+            *-*) DOCKER_TAG="$VERSION" ;;
+            *)   DOCKER_TAG="latest" ;;
+          esac
+
           {
             echo "changelog<<HIVEKEEP_EOF"
             echo "$SECTION"
             echo "HIVEKEEP_EOF"
           } >> "$GITHUB_OUTPUT"
           echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=${DOCKER_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -150,7 +159,7 @@ jobs:
               --name hivekeep \
               -p 3000:3000 \
               -v hivekeep-data:/app/data \
-              ghcr.io/marlburrow/hivekeep:latest
+              ghcr.io/marlburrow/hivekeep:${{ steps.changelog.outputs.docker_tag }}
             ```
 
             For all installation methods and an interactive configurator, see the [install guide](https://marlburrow.github.io/hivekeep/install).
