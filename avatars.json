@@ -1,5 +1,5 @@
 {
-  "generator": "KinBot vanilla avatar pipeline (img2img edit mode)",
+  "generator": "Hivekeep vanilla avatar pipeline (img2img edit mode)",
   "model": "gemini-3-pro-image-preview (Nano Banana Pro)",
   "baseImage": "robot-bee insectoid base (faceted compound eyes + mandible)",
   "mode": "edit",
