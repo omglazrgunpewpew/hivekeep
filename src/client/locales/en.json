@@ -112,6 +112,7 @@
   "onboarding": {
     "title": "Welcome to Hivekeep",
     "subtitle": "Let's set up your workspace",
+    "queenieGettingReady": "{{name}} is getting ready…",
     "step": "Step {{current}} of {{total}}",
     "steps": {
       "identity": "Your identity",
