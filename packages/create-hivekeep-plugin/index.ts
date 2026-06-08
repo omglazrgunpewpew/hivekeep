@@ -290,7 +290,7 @@ This plugin provides: ${opts.types.join(', ')}
 
 ## Development
 
-See the [Hivekeep Plugin Development Guide](https://github.com/MarlBurroW/hivekeep/blob/main/PLUGIN-DEVELOPMENT.md) for details.
+See the [Hivekeep Plugin Development Guide](https://marlburrow.github.io/hivekeep/docs/plugins/developing/) for details.
 
 ## License
 

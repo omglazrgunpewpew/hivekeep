@@ -56,6 +56,10 @@
       "type": "string",
       "description": "Display icon. Either an emoji (\"🔔\") or a path to a file inside the plugin directory."
     },
+    "iconUrl": {
+      "type": "string",
+      "description": "Path to a logo image inside the plugin directory (e.g. \"logo.svg\"). Hivekeep serves it via GET /api/plugins/<name>/logo and surfaces it in the Plugins UI and the npm Browse tab."
+    },
     "permissions": {
       "type": "array",
       "items": {
