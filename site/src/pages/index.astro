@@ -10,6 +10,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // Live GitHub stats baked in at deploy by the pages workflow (site/src/data/stats.json).
 const repoVersion = stats.version;
 const repoStars = stats.stars;
+// Only show the count when it is a positive number. A silent stats-fetch failure
+// in the pages workflow falls back to 0, and rendering "0" next to "Star on GitHub"
+// reads as nobody starred it, so hide the badge entirely in that case.
+const showStars = typeof repoStars === 'number' && repoStars > 0;
 const starLabel = repoStars >= 1000 ? `${(repoStars / 1000).toFixed(1)}k` : String(repoStars);
 const HUES = [305, 40, 20, 330, 265, 210, 150, 55, 15, 235, 290, 30, 170, 95, 260, 50, 200, 120];
 const panelAgents = agents.slice(0, 5);
@@ -375,7 +379,7 @@ const cmpIcon = { yes: 'lucide:check', par: 'lucide:minus', no: 'lucide:x' };
       <p style="margin-top:16px;font-size:.92rem;">Want a custom port, access from other devices, your own domain, or to compare Docker vs native first? <a class="link-mono" href={`${base}/install`}>See all install options <Icon name="lucide:arrow-right" /></a></p>
       <div class="btns">
         <a class="btn btn-primary" href={`${base}/install`}><Icon name="lucide:terminal" /> See all install options</a>
-        <a class="btn btn-ghost" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub <span class="ghstars"><Icon name="lucide:star" /> {starLabel}</span></a>
+        <a class="btn btn-ghost" href="https://github.com/MarlBurroW/hivekeep"><Icon name="lucide:github" /> Star on GitHub {showStars && <span class="ghstars"><Icon name="lucide:star" /> {starLabel}</span>}</a>
       </div>
     </div>
   </section>
