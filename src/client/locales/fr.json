@@ -199,23 +199,6 @@
       "getApiKey": "Obtenir votre clé API {{provider}}"
     }
   },
-  "hub": {
-    "badge": "Hub",
-    "defaultDescription": "Un coordinateur central qui reçoit tous les messages et les redirige vers les Agents spécialisés en fonction de leur expertise. Amical, efficace, et doué pour comprendre les intentions.",
-    "channelHint": "Les messages de ce canal iront au Hub, qui pourra les rediriger vers les Agents spécialistes.",
-    "deleteWarning": "Cet Agent est votre Hub. Le supprimer retirera votre coordinateur central.",
-    "wizard": {
-      "title": "Créer votre Hub",
-      "subtitle": "Le Hub est le coordinateur central de votre équipe d'Agents. Il reçoit vos messages, comprend vos besoins et délègue au bon spécialiste.",
-      "diagramYou": "Vous",
-      "diagramCaption": "Vous parlez au Hub. Il redirige vers le bon Agent automatiquement.",
-      "specDev": "Dev",
-      "specResearch": "Recherche",
-      "specWriter": "Rédaction",
-      "grantAllTools": "Donner accès à tous les outils",
-      "grantAllToolsDescription": "Le Hub aura accès à tous les outils, y compris les outils d'administration (gestion des Agents, système, base de données). Décochez pour laisser l'IA décider des outils à activer."
-    }
-  },
   "sidebar": {
     "agents": {
       "title": "Agents",
@@ -228,7 +211,6 @@
       "contextMenu": {
         "edit": "Modifier les paramètres",
         "delete": "Supprimer l'Agent",
-        "setAsHub": "Définir comme Hub",
         "viewUsage": "Consommation de tokens"
       }
     },
@@ -423,7 +405,6 @@
       "allEnabled": "Tous activés",
       "allDisabled": "Tous désactivés",
       "countEnabled": "{{count}} / {{total}}",
-      "hubNotice": "Cet Agent est le Hub. Tous les outils opt-in sont automatiquement activés au runtime, indépendamment des toggles ci-dessous.",
       "autoEnabled": "Auto",
       "noMcp": "Aucun serveur MCP configuré.",
       "saveMcpHint": "Enregistrez l'Agent d'abord pour configurer les outils MCP.",
@@ -560,7 +541,6 @@
     "modelUnavailableInput": "Envoi impossible - le modèle de cet Agent est indisponible",
     "modelUnavailableAction": "Ouvrir Fournisseurs",
     "invalidJsonFile": "Fichier JSON invalide",
-    "hub": "Hub",
     "delete": "Supprimer cet Agent",
     "deleteConfirm": "Cette action est irréversible. Toutes les conversations et données associées à cet Agent seront définitivement supprimées.",
     "deleteAction": "Supprimer"
@@ -1241,12 +1221,6 @@
       "globalPromptHint": "Ce texte est injecté dans le prompt système de chaque Agent.",
       "saved": "Prompt global mis à jour",
       "globalPromptTip": "Instructions injectées dans le prompt système de chaque Agent. Utilisez-le pour des règles ou directives communes.",
-      "hubAgent": "Agent Hub",
-      "hubAgentTip": "L'Agent Hub est le coordinateur central qui route les messages et gère les autres Agents. Il a accès à tous les outils automatiquement.",
-      "hubAgentPlaceholder": "Sélectionner un Agent...",
-      "hubAgentHint": "L'Agent Hub reçoit les messages par défaut et peut déléguer aux Agents spécialistes.",
-      "hubSaved": "Agent Hub mis à jour",
-      "hubAgentNone": "Aucun",
       "fetchError": "Impossible de charger les paramètres",
       "publicUrlWarning": {
         "title": "L'URL publique est peut-être mal configurée",

@@ -199,23 +199,6 @@
       "getApiKey": "Get your {{provider}} API key"
     }
   },
-  "hub": {
-    "badge": "Hub",
-    "defaultDescription": "A central coordinator that receives all messages and routes them to specialized Agents based on their expertise. Friendly, efficient, and good at understanding intent.",
-    "channelHint": "Messages from this channel will go to the Hub, which can route them to specialist Agents.",
-    "deleteWarning": "This Agent is your Hub. Deleting it will remove your central coordinator.",
-    "wizard": {
-      "title": "Create your Hub",
-      "subtitle": "The Hub is the central coordinator of your Agent team. It receives your messages, understands what you need, and delegates to the right specialist.",
-      "diagramYou": "You",
-      "diagramCaption": "You talk to the Hub. It routes to the right Agent automatically.",
-      "specDev": "Dev",
-      "specResearch": "Research",
-      "specWriter": "Writer",
-      "grantAllTools": "Grant access to all tools",
-      "grantAllToolsDescription": "The Hub will have access to every tool, including administrative ones (Agent management, system, database). Uncheck to let the AI decide which tools to enable."
-    }
-  },
   "sidebar": {
     "agents": {
       "title": "Agents",
@@ -228,7 +211,6 @@
       "contextMenu": {
         "edit": "Edit settings",
         "delete": "Delete Agent",
-        "setAsHub": "Set as Hub",
         "viewUsage": "Token usage"
       }
     },
@@ -423,7 +405,6 @@
       "allEnabled": "All enabled",
       "allDisabled": "All disabled",
       "countEnabled": "{{count}} / {{total}}",
-      "hubNotice": "This Agent is the Hub. All opt-in tools are automatically enabled at runtime, regardless of the toggles below.",
       "autoEnabled": "Auto",
       "noMcp": "No MCP servers configured.",
       "saveMcpHint": "Save the Agent first to configure MCP tools.",
@@ -560,7 +541,6 @@
     "modelUnavailableInput": "Cannot send messages - this Agent's model is unavailable",
     "modelUnavailableAction": "Open Providers",
     "invalidJsonFile": "Invalid JSON file",
-    "hub": "Hub",
     "delete": "Delete this Agent",
     "deleteConfirm": "This action cannot be undone. All conversations and data associated with this Agent will be permanently deleted.",
     "deleteAction": "Delete"
@@ -1241,12 +1221,6 @@
       "globalPromptHint": "This text is injected into every Agent's system prompt.",
       "saved": "Global prompt updated",
       "globalPromptTip": "Instructions injected into every Agent's system prompt. Use this for rules or guidelines all your Agents should follow.",
-      "hubAgent": "Hub Agent",
-      "hubAgentTip": "The Hub Agent is the central coordinator that routes messages and manages other Agents. It gets access to all tools automatically.",
-      "hubAgentPlaceholder": "Select an Agent...",
-      "hubAgentHint": "The Hub Agent receives messages by default and can delegate to specialist Agents.",
-      "hubSaved": "Hub Agent updated",
-      "hubAgentNone": "None",
       "fetchError": "Failed to load settings",
       "publicUrlWarning": {
         "title": "Public URL may be misconfigured",
