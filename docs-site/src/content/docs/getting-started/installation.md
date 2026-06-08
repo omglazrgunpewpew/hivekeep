@@ -67,4 +67,4 @@ NODE_ENV=production bun run start
 
 ## What's next?
 
-Head to [First Agent](/hivekeep/docs/getting-started/first-agent/) to create your first AI agent.
+Head to [First Agent](/docs/getting-started/first-agent/) to create your first AI agent.

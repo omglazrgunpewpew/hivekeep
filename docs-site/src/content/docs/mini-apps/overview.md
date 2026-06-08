@@ -109,9 +109,9 @@ createRoot(document.getElementById("root")).render(<App />);
 
 ## Next Steps
 
-- [Getting Started](/hivekeep/docs/mini-apps/getting-started/) — Build your first mini-app
-- [Components](/hivekeep/docs/mini-apps/components/) — Browse the component library
-- [Hooks](/hivekeep/docs/mini-apps/hooks/) — React hooks for Hivekeep integration
-- [SDK Reference](/hivekeep/docs/mini-apps/sdk-reference/) — Complete SDK API
-- [Backend](/hivekeep/docs/mini-apps/backend/) — Server-side logic with _server.js
-- [Guidelines](/hivekeep/docs/mini-apps/guidelines/) — Best practices
+- [Getting Started](/docs/mini-apps/getting-started/) — Build your first mini-app
+- [Components](/docs/mini-apps/components/) — Browse the component library
+- [Hooks](/docs/mini-apps/hooks/) — React hooks for Hivekeep integration
+- [SDK Reference](/docs/mini-apps/sdk-reference/) — Complete SDK API
+- [Backend](/docs/mini-apps/backend/) — Server-side logic with _server.js
+- [Guidelines](/docs/mini-apps/guidelines/) — Best practices

@@ -232,7 +232,7 @@ I've implemented a fix in branch `fix/issue-42` — see commit abc1234.
 
 ### Agent writes text instead of calling tools
 
-This is the "text mode" problem. See [Model Selection](/hivekeep/docs/guides/model-selection/) — the fix is usually switching to Claude Sonnet.
+This is the "text mode" problem. See [Model Selection](/docs/guides/model-selection/) — the fix is usually switching to Claude Sonnet.
 
 ### Tasks stay "in progress" forever
 

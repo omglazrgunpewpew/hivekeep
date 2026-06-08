@@ -5,7 +5,7 @@ description: Extend Hivekeep with custom AI providers via plugins.
 
 Beyond the built-in providers, you can ship your own through the **plugin system**. Plugin providers register into the same four native registries as built-ins (LLM, embedding, image, search) and appear alongside them in the Settings UI — there is no second-class plugin shape.
 
-This page is a quick orientation. The full author guide is on the [Developing Plugins](/hivekeep/docs/plugins/developing/) page, including a complete `SearchProvider` example.
+This page is a quick orientation. The full author guide is on the [Developing Plugins](/docs/plugins/developing/) page, including a complete `SearchProvider` example.
 
 ## When you need a plugin
 

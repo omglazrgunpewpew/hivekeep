@@ -65,9 +65,9 @@ Plugins have two levels of enablement:
 | **Git URL** | Settings → Plugins → Install from URL | Unpublished, private, or in-development plugins |
 | **Manual** | Drop a folder into `plugins/` | Local development; managed entirely by hand |
 
-See [Developing Plugins](/hivekeep/docs/plugins/developing/) for the full development guide.
+See [Developing Plugins](/docs/plugins/developing/) for the full development guide.
 
 ## Next Steps
 
-- [Developing Plugins](/hivekeep/docs/plugins/developing/): build your first plugin
-- [Plugin API](/hivekeep/docs/plugins/api/): full API reference
+- [Developing Plugins](/docs/plugins/developing/): build your first plugin
+- [Plugin API](/docs/plugins/api/): full API reference

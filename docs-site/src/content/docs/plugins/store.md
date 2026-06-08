@@ -32,7 +32,7 @@ To make a plugin discoverable in the registry, publish it to npm with the keywor
 }
 ```
 
-The scaffolder (`bunx create-hivekeep-plugin`) sets the keyword for you. See [Developing Plugins](/hivekeep/docs/plugins/developing/) for the full build-and-publish workflow.
+The scaffolder (`bunx create-hivekeep-plugin`) sets the keyword for you. See [Developing Plugins](/docs/plugins/developing/) for the full build-and-publish workflow.
 
 ## Installing
 
@@ -48,6 +48,6 @@ Installing from the registry runs `npm install` for the chosen package inside an
 
 ## Next Steps
 
-- [Plugins Overview](/hivekeep/docs/plugins/overview/): what plugins can do and how they are managed
-- [Developing Plugins](/hivekeep/docs/plugins/developing/): build and publish your own
-- [Plugin API](/hivekeep/docs/plugins/api/): full API reference
+- [Plugins Overview](/docs/plugins/overview/): what plugins can do and how they are managed
+- [Developing Plugins](/docs/plugins/developing/): build and publish your own
+- [Plugin API](/docs/plugins/api/): full API reference

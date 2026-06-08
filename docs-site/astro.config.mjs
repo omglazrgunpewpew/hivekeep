@@ -4,12 +4,12 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://marlburrow.github.io',
-	base: '/hivekeep/docs',
+	site: 'https://hivekeep.app',
+	base: '/docs',
 	// Land users straight on Getting Started instead of a marketing splash.
-	// Keys are resolved against the configured `base`, so '/' maps to /hivekeep/docs/.
+	// Keys are resolved against the configured `base`, so '/' maps to /docs/.
 	redirects: {
-		'/': '/hivekeep/docs/getting-started/installation/',
+		'/': '/docs/getting-started/installation/',
 	},
 	integrations: [
 		starlight({

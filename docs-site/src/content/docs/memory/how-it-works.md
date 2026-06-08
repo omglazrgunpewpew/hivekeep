@@ -6,7 +6,7 @@ description: Understanding Hivekeep's memory system — extraction, retrieval, a
 Hivekeep gives each Agent persistent memory across conversations. The system uses two complementary channels: **automatic extraction** and **explicit remembering**, backed by a sophisticated hybrid search pipeline. Memories can be **private** (default, only the owning Agent can access them) or **shared** (visible and searchable by all Agents).
 
 :::note
-For Agent-specific memory features (importance, categories, retrieval), see [Agent Memory](/hivekeep/docs/agents/memory/).
+For Agent-specific memory features (importance, categories, retrieval), see [Agent Memory](/docs/agents/memory/).
 :::
 
 ## Dual-Channel Architecture
@@ -142,7 +142,7 @@ When enabled, Hivekeep periodically consolidates similar memories to reduce redu
 3. **LLM merge** — each cluster is sent to an LLM that either merges them into a single richer memory or **aborts** if the memories are about genuinely different topics (preventing false merges)
 4. **Quality guardrails** — the LLM preserves all unique details, picks the most appropriate category/subject, and keeps the highest importance rating from the sources
 
-Consolidation is disabled by default. Enable it by setting `MEMORY_CONSOLIDATION_MODEL` to a model identifier. See [configuration](/hivekeep/docs/memory/configuration/#memory-consolidation) for all settings.
+Consolidation is disabled by default. Enable it by setting `MEMORY_CONSOLIDATION_MODEL` to a model identifier. See [configuration](/docs/memory/configuration/#memory-consolidation) for all settings.
 
 ## Stale Memory Pruning
 

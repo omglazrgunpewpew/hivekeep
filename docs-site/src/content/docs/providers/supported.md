@@ -3,7 +3,7 @@ title: Supported Providers
 description: "Built-in providers (LLM, embedding, image, search, STT, TTS) shipped with Hivekeep."
 ---
 
-Hivekeep ships with built-in providers across six capability families: language models (LLM), embeddings, image generation, web search, speech-to-text (STT), and text-to-speech (TTS). A single provider often covers several families: capabilities are auto-detected from one config entry. Additional providers (Mistral, Replicate, …) are available as first-party plugins, and you can write your own via the [Custom Providers](/hivekeep/docs/providers/custom/) plugin path.
+Hivekeep ships with built-in providers across six capability families: language models (LLM), embeddings, image generation, web search, speech-to-text (STT), and text-to-speech (TTS). A single provider often covers several families: capabilities are auto-detected from one config entry. Additional providers (Mistral, Replicate, …) are available as first-party plugins, and you can write your own via the [Custom Providers](/docs/providers/custom/) plugin path.
 
 ## Provider Table
 

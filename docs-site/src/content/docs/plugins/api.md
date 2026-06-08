@@ -256,7 +256,7 @@ export default function (ctx: PluginContext): PluginExports {
 }
 ```
 
-See [Developing Plugins → Providers](/hivekeep/docs/plugins/developing/#providers) for worked examples, and the [Mistral provider tutorial](/hivekeep/docs/plugins/tutorial-mistral/) for a complete two-capability plugin.
+See [Developing Plugins → Providers](/docs/plugins/developing/#providers) for worked examples, and the [Mistral provider tutorial](/docs/plugins/tutorial-mistral/) for a complete two-capability plugin.
 
 ## Plugin Cards
 

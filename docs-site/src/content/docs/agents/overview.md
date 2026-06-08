@@ -46,6 +46,6 @@ You can designate one Agent as the **Hub** — a central coordinator that receiv
 
 ## What's next?
 
-- [System Prompts](/hivekeep/docs/agents/system-prompts/) — craft the perfect personality
-- [Tools](/hivekeep/docs/agents/tools/) — give your Agents capabilities
-- [Memory](/hivekeep/docs/agents/memory/) — how Agents remember
+- [System Prompts](/docs/agents/system-prompts/) — craft the perfect personality
+- [Tools](/docs/agents/tools/) — give your Agents capabilities
+- [Memory](/docs/agents/memory/) — how Agents remember

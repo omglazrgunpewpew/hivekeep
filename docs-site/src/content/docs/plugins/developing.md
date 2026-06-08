@@ -63,7 +63,7 @@ That's it. Restart Hivekeep, enable the plugin in Settings → Plugins, and Agen
 ### Worked examples
 
 - **In-repo single-file example**: `packages/sdk/examples/hello-agent/` exercises every extension point in one file (a tool that emits a card, a stub LLM provider, a stub channel adapter, `beforeChat`/`afterToolCall` hooks, `onCardAction`, and `activate`/`deactivate`). It is loaded by the SDK's own test suite, so it stays in sync with the SDK.
-- **Provider tutorial**: [Tutorial: Mistral Provider](/hivekeep/docs/plugins/tutorial-mistral/) builds a complete plugin that contributes two providers (chat + speech-to-text) from a single API key.
+- **Provider tutorial**: [Tutorial: Mistral Provider](/docs/plugins/tutorial-mistral/) builds a complete plugin that contributes two providers (chat + speech-to-text) from a single API key.
 
 ## Manifest (`plugin.json`)
 
@@ -491,4 +491,4 @@ Either way, the plugin's runtime contract is the same: a default-exported functi
 
 ## Migration
 
-If you're moving from a plugin written against the pre-0.2 SDK (legacy `ProviderDefinition`, loose `HookContext`, `import { tool } from 'ai'`…), see [Migrating from 0.1](/hivekeep/docs/plugins/migrating-from-0.1/).
+If you're moving from a plugin written against the pre-0.2 SDK (legacy `ProviderDefinition`, loose `HookContext`, `import { tool } from 'ai'`…), see [Migrating from 0.1](/docs/plugins/migrating-from-0.1/).

@@ -36,7 +36,7 @@ When a conversation gets long, Hivekeep automatically summarizes older messages 
 
 ### Tools
 
-Agents come with 100+ built-in tools out of the box: web search, memory management, file handling, sub-agent delegation, cron jobs, and more. See [Tools](/hivekeep/docs/agents/tools/) for the full list.
+Agents come with 100+ built-in tools out of the box: web search, memory management, file handling, sub-agent delegation, cron jobs, and more. See [Tools](/docs/agents/tools/) for the full list.
 
 ### Collaboration
 
@@ -44,7 +44,7 @@ Agents can talk to each other, delegate tasks to sub-agents, and work on cron sc
 
 ## Next steps
 
-- [Configure](/hivekeep/docs/getting-started/configuration/) environment variables and providers
-- Learn about [System Prompts](/hivekeep/docs/agents/system-prompts/) for shaping Agent behavior
-- Explore [Mini-Apps](/hivekeep/docs/mini-apps/overview/): interactive UIs built by Agents
-- Set up [Channels](/hivekeep/docs/channels/overview/) (Telegram, Discord, etc.)
+- [Configure](/docs/getting-started/configuration/) environment variables and providers
+- Learn about [System Prompts](/docs/agents/system-prompts/) for shaping Agent behavior
+- Explore [Mini-Apps](/docs/mini-apps/overview/): interactive UIs built by Agents
+- Set up [Channels](/docs/channels/overview/) (Telegram, Discord, etc.)

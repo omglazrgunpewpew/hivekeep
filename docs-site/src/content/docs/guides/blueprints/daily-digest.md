@@ -258,7 +258,7 @@ the broader "agentic AI" narrative we've been tracking since March.
 This is the "text mode" problem — the Agent is generating plausible-sounding content without calling `web_search`. Verify:
 1. The task output shows actual `web_search` tool calls
 2. Switch to Claude Sonnet if you're on a different model
-3. See [Model Selection](/hivekeep/docs/guides/model-selection/) for details
+3. See [Model Selection](/docs/guides/model-selection/) for details
 
 ### Digest quality is low
 

@@ -248,7 +248,7 @@ Sub-tasks spawned by Agents (inter-Agent delegation, subtasks). Tasks support **
 | `PATCH` | `/api/plugins/:id` | Update plugin config |
 | `DELETE` | `/api/plugins/:id` | Uninstall a plugin |
 
-See [Plugin API](/hivekeep/docs/plugins/api/) for the full plugin store and registry routes.
+See [Plugin API](/docs/plugins/api/) for the full plugin store and registry routes.
 
 ## Providers
 
@@ -260,7 +260,7 @@ See [Plugin API](/hivekeep/docs/plugins/api/) for the full plugin store and regi
 | `DELETE` | `/api/providers/:id` | Remove provider config |
 | `POST` | `/api/providers/:id/test` | Test provider connection |
 
-See [Providers](/hivekeep/docs/providers/supported/) for the full provider reference.
+See [Providers](/docs/providers/supported/) for the full provider reference.
 
 ## Contacts
 
@@ -486,4 +486,4 @@ Token usage tracking for all LLM calls. All routes require admin role.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/sse` | SSE event stream (see [SSE Events](/hivekeep/docs/api/sse/)) |
+| `GET` | `/api/sse` | SSE event stream (see [SSE Events](/docs/api/sse/)) |

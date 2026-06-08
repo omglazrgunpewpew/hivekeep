@@ -35,8 +35,8 @@ const pageTitle = title
     : title
   : DEFAULT_TITLE;
 
-// Absolute URLs. `Astro.site` is the origin (https://marlburrow.github.io);
-// the configured base (/hivekeep) is part of Astro.url.pathname, so resolving
+// Absolute URLs. `Astro.site` is the origin (https://hivekeep.app);
+// the configured base (/) is part of Astro.url.pathname, so resolving
 // the current pathname against the site origin yields the full canonical URL.
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
 const ogImageURL = new URL(

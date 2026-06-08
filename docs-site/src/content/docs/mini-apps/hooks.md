@@ -318,4 +318,4 @@ Hash-based routing for multi-page apps.
 const { path, params, navigate, back } = useHashRouter("/");
 ```
 
-See also the `Router`, `Route`, `Link`, and `NavLink` components in [@hivekeep/components](/hivekeep/docs/mini-apps/components/#routing).
+See also the `Router`, `Route`, `Link`, and `NavLink` components in [@hivekeep/components](/docs/mini-apps/components/#routing).

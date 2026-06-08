@@ -4,10 +4,10 @@ import icon from 'astro-icon';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 
-// Project Pages: served at https://marlburrow.github.io/hivekeep/
+// Custom domain: served at https://hivekeep.app/
 export default defineConfig({
-  site: 'https://marlburrow.github.io',
-  base: '/hivekeep',
+  site: 'https://hivekeep.app',
+  base: '/',
   integrations: [
     tailwind({ applyBaseStyles: false }), // we ship our own reset + tokens in global.css
     icon(),

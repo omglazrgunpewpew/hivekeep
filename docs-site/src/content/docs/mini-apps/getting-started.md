@@ -130,7 +130,7 @@ function Stats() {
 }
 ```
 
-See [Backend](/hivekeep/docs/mini-apps/backend/) for the full backend guide.
+See [Backend](/docs/mini-apps/backend/) for the full backend guide.
 
 ## Multi-File Apps
 
@@ -173,7 +173,7 @@ Max 20 snapshots per app (oldest are auto-pruned).
 
 ## Next Steps
 
-- [Components](/hivekeep/docs/mini-apps/components/) — Browse 50+ themed components
-- [Hooks](/hivekeep/docs/mini-apps/hooks/) — All available React hooks
-- [SDK Reference](/hivekeep/docs/mini-apps/sdk-reference/) — Complete API
-- [Guidelines](/hivekeep/docs/mini-apps/guidelines/) — Best practices
+- [Components](/docs/mini-apps/components/) — Browse 50+ themed components
+- [Hooks](/docs/mini-apps/hooks/) — All available React hooks
+- [SDK Reference](/docs/mini-apps/sdk-reference/) — Complete API
+- [Guidelines](/docs/mini-apps/guidelines/) — Best practices
