@@ -138,7 +138,7 @@ export async function seedConfiguratorAgent(adminUserId: string, providerId: str
     agentId: agent.id,
     messageType: 'user',
     content:
-      '[A new user just finished initial setup and opened the onboarding chat. Greet them warmly, introduce yourself as their Hivekeep guide, and start onboarding by getting to know them. Keep it short and friendly.]',
+      '[A new user just finished initial setup and opened the onboarding chat. FIRST call get_setup_health (read-only) so your guidance is grounded in the real current state, THEN greet them warmly, introduce yourself as their Hivekeep guide, and start onboarding by getting to know them. Keep it short and friendly.]',
     sourceType: 'system',
     priority: config.queue.userPriority,
     // Hidden from the chat UI — it's just the trigger for Queenie's first greeting.
