@@ -1123,6 +1123,21 @@ body {
   border: 1px solid oklch(1 0 0 / 0.08);
 }
 
+/* A lighter glass: less blur, more transparent. Used by HumanPromptCard and
+   mini-app templates (and documented in CLAUDE.md) — was referenced but never
+   defined, so those surfaces rendered with no glass background. */
+.glass-subtle {
+  background: oklch(1 0 0 / 0.04);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+.dark .glass-subtle {
+  background: oklch(1 0 0 / 0.03);
+  border: 1px solid oklch(1 0 0 / 0.05);
+}
+
 /* ─── GLOW ─────────────────────────────────────────────── */
 
 .glow-primary {
