@@ -14,7 +14,6 @@ import { Button } from '@/client/components/ui/button'
 import { Label } from '@/client/components/ui/label'
 import { Checkbox } from '@/client/components/ui/checkbox'
 import { Progress } from '@/client/components/ui/progress'
-import { ScrollArea } from '@/client/components/ui/scroll-area'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { api, toastError } from '@/client/lib/api'
@@ -221,7 +220,7 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
+      <DialogContent size="2xl">
         <DialogHeader>
           <DialogTitle>{t('settings.avatars.bulk.title')}</DialogTitle>
           <DialogDescription>
@@ -263,7 +262,7 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
                 <Checkbox checked={allSelected ? true : someSelected ? 'indeterminate' : false} />
                 {allSelected ? t('settings.avatars.bulk.deselectAll') : t('settings.avatars.bulk.selectAll')}
               </button>
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                 {t('settings.avatars.bulk.selectedCount', { count: selected.size })}
               </span>
             </div>
@@ -274,7 +273,7 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
               {t('settings.avatars.bulk.noAgents')}
             </p>
           ) : (
-            <ScrollArea className="h-[320px] rounded-lg border border-border">
+            <div className="max-h-[320px] overflow-y-auto rounded-lg border border-border">
               <div className="divide-y divide-border/60">
                 {visibleAgents.map((agent) => {
                   const status = rowStatus.get(agent.id)
@@ -290,18 +289,18 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
                       )}
                     >
                       {interactive ? (
-                        <Checkbox checked={checked} onCheckedChange={() => toggleOne(agent.id)} />
+                        <Checkbox className="shrink-0" checked={checked} onCheckedChange={() => toggleOne(agent.id)} />
                       ) : (
-                        <span className="grid size-4 place-content-center">{renderStatusIcon(status)}</span>
+                        <span className="grid size-4 shrink-0 place-content-center">{renderStatusIcon(status)}</span>
                       )}
-                      <Avatar className="size-9 rounded-lg ring-1 ring-border">
+                      <Avatar className="size-9 shrink-0 rounded-lg ring-1 ring-border">
                         {agent.avatarUrl && <AvatarImage src={agent.avatarUrl} alt={agent.name} className="object-cover" />}
                         <AvatarFallback className="rounded-lg text-xs">
                           {agent.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex min-w-0 items-center gap-1.5">
                           <span className="truncate text-sm font-medium">{agent.name}</span>
                           {agent.kind === 'configurator' && (
                             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -312,7 +311,7 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
                         <p className="truncate text-xs text-muted-foreground">{agent.role}</p>
                       </div>
                       {!interactive && status === 'error' && errors.get(agent.id) && (
-                        <span className="max-w-[40%] truncate text-xs text-destructive" title={errors.get(agent.id)}>
+                        <span className="max-w-[40%] shrink-0 truncate text-xs text-destructive" title={errors.get(agent.id)}>
                           {errors.get(agent.id)}
                         </span>
                       )}
@@ -320,7 +319,7 @@ export function BulkAvatarRegenModal({ open, onOpenChange, agents, imageModels }
                   )
                 })}
               </div>
-            </ScrollArea>
+            </div>
           )}
 
           {phase === 'done' && (
