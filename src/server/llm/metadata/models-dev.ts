@@ -152,6 +152,24 @@ export function modelsDevToMetadata(m: ModelsDevModel): ResolvedModelMetadata {
   return out
 }
 
+/** All models.dev keys for a provider type ("<provId>/<modelId>"), for the
+ *  admin "remap" picker in the Models view. Empty when the provider isn't in
+ *  models.dev (e.g. plugins). */
+export function listModelsDevKeys(providerType: string): string[] {
+  const provId = toModelsDevProviderId(providerType)
+  const prov = snapshot()[provId]
+  if (!prov) return []
+  return Object.keys(prov).map((id) => `${provId}/${id}`)
+}
+
+/** Look up a models.dev entry by its "<provId>/<modelId>" key (for admin remap). */
+export function getModelsDevByKey(key: string): ModelsDevModel | null {
+  const slash = key.indexOf('/')
+  if (slash < 0) return null
+  const prov = snapshot()[key.slice(0, slash)]
+  return prov?.[key.slice(slash + 1)] ?? null
+}
+
 /** Convenience: match + map in one call. Null when no plausible match. */
 export function resolveFromModelsDev(
   providerType: string,

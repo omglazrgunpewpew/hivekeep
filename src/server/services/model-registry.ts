@@ -15,7 +15,7 @@
 import { and, eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { modelRegistry, providers as providersTable } from '@/server/db/schema'
-import { resolveFromModelsDev, type MatchConfidence, type ResolvedModelMetadata } from '@/server/llm/metadata/models-dev'
+import { getModelsDevByKey, modelsDevToMetadata, resolveFromModelsDev, type MatchConfidence, type ResolvedModelMetadata } from '@/server/llm/metadata/models-dev'
 import { getLLMProvider } from '@/server/llm/llm/registry'
 import { loadProviderConfig } from '@/server/services/provider-config'
 import { createLogger } from '@/server/logger'
@@ -244,4 +244,90 @@ function safeParseArray(s: string | null): string[] {
   } catch {
     return []
   }
+}
+
+// ─── admin edits (Models view) ──────────────────────────────────────────────────
+
+/** Editable metadata fields. Setting any of these PINS it (survives re-sync). */
+export interface RegistryEditPatch {
+  displayName?: string
+  enabled?: boolean
+  contextWindow?: number | null
+  maxOutput?: number | null
+  supportsImageInput?: boolean | null
+  supportsPdfInput?: boolean | null
+  supportsToolCall?: boolean | null
+  /** null = mark as a non-reasoning model. */
+  thinking?: { efforts: ThinkingEffort[] } | null
+  pricing?: { input: number; output: number; cacheRead?: number; cacheWrite?: number } | null
+}
+
+/** Apply an admin edit. Every metadata field present in the patch is pinned. */
+export function updateRegistryModel(id: string, patch: RegistryEditPatch): void {
+  const row = db.select().from(modelRegistry).where(eq(modelRegistry.id, id)).get()
+  if (!row) return
+  const pinned = new Set<string>(safeParseArray(row.overriddenFields))
+  const set: Partial<Row> = { updatedAt: new Date() }
+
+  if (patch.displayName !== undefined) set.displayName = patch.displayName
+  if (patch.enabled !== undefined) set.enabled = patch.enabled
+  if ('contextWindow' in patch) { set.contextWindow = patch.contextWindow ?? null; pinned.add('contextWindow') }
+  if ('maxOutput' in patch) { set.maxOutput = patch.maxOutput ?? null; pinned.add('maxOutput') }
+  if ('supportsImageInput' in patch) { set.supportsImageInput = patch.supportsImageInput ?? null; pinned.add('supportsImageInput') }
+  if ('supportsPdfInput' in patch) { set.supportsPdfInput = patch.supportsPdfInput ?? null; pinned.add('supportsPdfInput') }
+  if ('supportsToolCall' in patch) { set.supportsToolCall = patch.supportsToolCall ?? null; pinned.add('supportsToolCall') }
+  if ('thinking' in patch) {
+    set.reasoning = patch.thinking
+      ? JSON.stringify({ enabled: true, efforts: patch.thinking.efforts })
+      : JSON.stringify({ enabled: false, efforts: [] })
+    pinned.add('thinking')
+  }
+  if ('pricing' in patch) { set.pricing = patch.pricing ? JSON.stringify(patch.pricing) : null; pinned.add('pricing') }
+
+  set.overriddenFields = JSON.stringify([...pinned])
+  db.update(modelRegistry).set(set).where(eq(modelRegistry.id, id)).run()
+}
+
+/** Switch a row between `auto` (resyncs) and `manual` (frozen). */
+export function setMappingMode(id: string, mode: 'auto' | 'manual'): void {
+  db.update(modelRegistry).set({ mappingMode: mode, updatedAt: new Date() }).where(eq(modelRegistry.id, id)).run()
+}
+
+/**
+ * Re-point a row at a specific models.dev entry (admin fixes a wrong match).
+ * Pulls that entry's metadata into all NON-pinned fields and clears the review flag.
+ */
+export function remapModel(id: string, modelsDevKey: string | null): void {
+  const row = db.select().from(modelRegistry).where(eq(modelRegistry.id, id)).get()
+  if (!row) return
+  const pinned = new Set<string>(safeParseArray(row.overriddenFields))
+  const md = modelsDevKey ? getModelsDevByKey(modelsDevKey) : null
+  const meta = md ? modelsDevToMetadata(md) : {}
+  const cols = metadataToColumns(meta)
+  const patch: Partial<Row> = {
+    modelsDevKey: md ? modelsDevKey : null,
+    matchConfidence: md ? 'exact' : 'none',
+    needsReview: false,
+    updatedAt: new Date(),
+  }
+  for (const f of PINNABLE_FIELDS) {
+    if (pinned.has(f)) continue
+    if (f === 'thinking') patch.reasoning = cols.reasoning ?? null
+    else if (f === 'pricing') patch.pricing = cols.pricing ?? null
+    else (patch as Record<string, unknown>)[f] = (cols as Record<string, unknown>)[f] ?? null
+  }
+  db.update(modelRegistry).set(patch).where(eq(modelRegistry.id, id)).run()
+}
+
+/** Clear a single pinned override (revert that field to auto on next resync). */
+export function unpinField(id: string, field: RegistryField): void {
+  const row = db.select().from(modelRegistry).where(eq(modelRegistry.id, id)).get()
+  if (!row) return
+  const pinned = new Set<string>(safeParseArray(row.overriddenFields))
+  pinned.delete(field)
+  db.update(modelRegistry).set({ overriddenFields: JSON.stringify([...pinned]), updatedAt: new Date() }).where(eq(modelRegistry.id, id)).run()
+}
+
+export function getRegistryRowById(id: string): Row | undefined {
+  return db.select().from(modelRegistry).where(eq(modelRegistry.id, id)).get()
 }

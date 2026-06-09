@@ -51,7 +51,7 @@ mock.module('@/server/db/index', () => ({ db: testDb, sqlite }))
 const reg = schemaIsReal
   ? await import('@/server/services/model-registry')
   : ({} as typeof import('@/server/services/model-registry'))
-const { reconcileProviderModels, getRegistryRow, listRegistryByProvider, rowToMetadata } = reg
+const { reconcileProviderModels, getRegistryRow, listRegistryByProvider, rowToMetadata, updateRegistryModel, remapModel, setMappingMode } = reg
 const modelRegistry = (schema as typeof import('@/server/db/schema')).modelRegistry
 
 const PROVIDER = 'provider-uuid-1'
@@ -126,5 +126,41 @@ d('rowToMetadata', () => {
     expect(md.supportsImageInput).toBe(true)
     expect(md.supportsPdfInput).toBe(false)
     expect(md.thinking).toEqual({ efforts: [] }) // reasoning toggle-only
+  })
+})
+
+d('admin edits (Models view)', () => {
+  it('pins an edited field so it survives re-reconcile', () => {
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'deepseek-v4-flash', name: 'DS', contextWindow: 1_000_000 }])
+    const id = getRegistryRow(PROVIDER, 'deepseek-v4-flash')!.id
+    updateRegistryModel(id, { contextWindow: 50_000 })
+    let row = getRegistryRow(PROVIDER, 'deepseek-v4-flash')!
+    expect(row.contextWindow).toBe(50_000)
+    expect(JSON.parse(row.overriddenFields!)).toContain('contextWindow')
+    // resync must NOT clobber the pinned value
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'deepseek-v4-flash', name: 'DS', contextWindow: 1_000_000 }])
+    row = getRegistryRow(PROVIDER, 'deepseek-v4-flash')!
+    expect(row.contextWindow).toBe(50_000)
+  })
+
+  it('remaps an unmatched model onto a models.dev entry', () => {
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'weird-alias', name: 'Weird' }])
+    const id = getRegistryRow(PROVIDER, 'weird-alias')!.id
+    expect(getRegistryRow(PROVIDER, 'weird-alias')!.needsReview).toBe(true)
+    remapModel(id, 'deepseek/deepseek-v4-flash')
+    const row = getRegistryRow(PROVIDER, 'weird-alias')!
+    expect(row.modelsDevKey).toBe('deepseek/deepseek-v4-flash')
+    expect(row.needsReview).toBe(false)
+    expect(row.contextWindow).toBe(1_000_000) // pulled from models.dev
+    expect(JSON.parse(row.pricing!).input).toBe(0.14)
+  })
+
+  it('freezes a row set to manual mode', () => {
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'deepseek-v4-flash', name: 'DS', contextWindow: 1_000_000 }])
+    const id = getRegistryRow(PROVIDER, 'deepseek-v4-flash')!.id
+    setMappingMode(id, 'manual')
+    updateRegistryModel(id, { contextWindow: 7 })
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'deepseek-v4-flash', name: 'DS', contextWindow: 1_000_000 }])
+    expect(getRegistryRow(PROVIDER, 'deepseek-v4-flash')!.contextWindow).toBe(7)
   })
 })
