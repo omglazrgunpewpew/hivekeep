@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Folder } from 'lucide-react'
 import { FormDialog } from '@/client/components/common/FormDialog'
 import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
-import { Textarea } from '@/client/components/ui/textarea'
+import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/client/components/ui/select'
+import { AgentSelector } from '@/client/components/common/AgentSelector'
+import type { AgentOption } from '@/client/components/common/AgentSelectItem'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { useAgents } from '@/client/hooks/useAgents'
 import { ConditionNodeEditor, defaultGroup } from '@/client/components/account-trigger/ConditionBuilder'
@@ -26,6 +29,7 @@ interface Props {
 export function AccountTriggerFormDialog({ accountId, open, onOpenChange, onSaved, trigger }: Props) {
   const { t } = useTranslation()
   const { agents } = useAgents()
+  const agentOptions: AgentOption[] = agents.map((a) => ({ id: a.id, name: a.name, role: a.role ?? '', avatarUrl: a.avatarUrl }))
 
   const [name, setName] = useState('')
   const [prompt, setPrompt] = useState('')
@@ -97,6 +101,7 @@ export function AccountTriggerFormDialog({ accountId, open, onOpenChange, onSave
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
+      size="3xl"
       title={trigger ? t('settings.triggers.editTitle') : t('settings.triggers.addTitle')}
       description={t('settings.triggers.dialogDescription')}
       error={error}
@@ -113,18 +118,25 @@ export function AccountTriggerFormDialog({ accountId, open, onOpenChange, onSave
           <Select value={folder} onValueChange={setFolder}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {folders.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+              {folders.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  <span className="flex items-center gap-2">
+                    <Folder className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{f.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </FormField>
 
         <FormField label={t('settings.triggers.targetAgent')}>
-          <Select value={targetAgentId} onValueChange={setTargetAgentId}>
-            <SelectTrigger><SelectValue placeholder={t('settings.triggers.selectAgent')} /></SelectTrigger>
-            <SelectContent>
-              {agents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <AgentSelector
+            value={targetAgentId}
+            onValueChange={setTargetAgentId}
+            agents={agentOptions}
+            placeholder={t('settings.triggers.selectAgent')}
+          />
         </FormField>
       </div>
 
@@ -133,7 +145,7 @@ export function AccountTriggerFormDialog({ accountId, open, onOpenChange, onSave
       </FormField>
 
       <FormField label={t('settings.triggers.prompt')} hint={t('settings.triggers.promptHint')}>
-        <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} placeholder={t('settings.triggers.promptPlaceholder')} />
+        <MarkdownEditor value={prompt} onChange={setPrompt} height="140px" />
       </FormField>
 
       <FormField label={t('settings.triggers.dispatchMode')} hint={t('settings.triggers.dispatchHint')}>
