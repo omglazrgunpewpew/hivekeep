@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
@@ -8,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/clie
 import { PROVIDER_DISPLAY_NAMES } from '@/shared/constants'
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
 import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteButton'
-import { ProviderModelsModal } from '@/client/components/agent/ProviderModelsModal'
+import { useSettingsNav } from '@/client/pages/settings/SettingsPage'
 
 const CAPABILITY_ICONS: Record<string, typeof Brain> = {
   llm: Brain,
@@ -40,7 +39,7 @@ interface ProviderCardProps {
 
 export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: ProviderCardProps) {
   const { t } = useTranslation()
-  const [modelsOpen, setModelsOpen] = useState(false)
+  const settingsNav = useSettingsNav()
 
   return (
     <Card className="surface-card">
@@ -100,8 +99,7 @@ export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: 
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  onClick={() => setModelsOpen(true)}
-                  disabled={!provider.isValid}
+                  onClick={() => settingsNav('modelRegistry')}
                 >
                   <List className="size-3.5" />
                 </Button>
@@ -145,13 +143,6 @@ export function ProviderCard({ provider, isTesting, onTest, onEdit, onDelete }: 
           )}
         </div>
       </CardContent>
-      <ProviderModelsModal
-        open={modelsOpen}
-        onOpenChange={setModelsOpen}
-        providerId={provider.id}
-        providerName={provider.name}
-        capabilities={provider.capabilities}
-      />
     </Card>
   )
 }
