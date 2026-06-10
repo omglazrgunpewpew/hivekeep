@@ -167,13 +167,16 @@ export function ModelRegistryTable() {
             {filtered.map((m) => (
               <tr key={m.id} className="border-t border-border [&>td]:px-3 [&>td]:py-2 hover:bg-muted/30">
                 <td className="font-medium">
-                  <span className={m.stale ? 'line-through opacity-60' : ''}>{m.modelId}</span>
+                  <span className={m.stale ? 'line-through opacity-60' : ''}>{m.displayName || m.modelId}</span>
                   <span className="ml-2 inline-flex gap-1 align-middle">
                     {m.mappingMode === 'manual' && <Badge variant="secondary" className="text-[10px]">manual</Badge>}
                     {m.needsReview && !m.stale && <Badge className="bg-amber-500/20 text-amber-600 text-[10px]">review</Badge>}
                     {m.stale && <Badge variant="outline" className="text-[10px]">stale</Badge>}
                     {m.overriddenFields.length > 0 && <Pin className="size-3 text-primary inline" />}
                   </span>
+                  {m.displayName && m.displayName !== m.modelId && (
+                    <span className="block font-mono text-[11px] font-normal text-muted-foreground">{m.modelId}</span>
+                  )}
                 </td>
                 <td className="text-muted-foreground">
                   <span className="flex items-center gap-2">
@@ -220,6 +223,7 @@ function EditModelDialog({ model, onClose, onSaved }: {
   onSaved: (m: RegistryModel) => void
 }) {
   const { t } = useTranslation()
+  const [displayName, setDisplayName] = useState(model.displayName ?? '')
   const [ctx, setCtx] = useState(model.contextWindow?.toString() ?? '')
   const [maxOut, setMaxOut] = useState(model.maxOutput?.toString() ?? '')
   const [image, setImage] = useState(model.supportsImageInput ?? false)
@@ -247,6 +251,7 @@ function EditModelDialog({ model, onClose, onSaved }: {
         await api.post(`/models/${model.id}/mode`, { mode: manual ? 'manual' : 'auto' })
       }
       const patch: Record<string, unknown> = {
+        displayName,
         contextWindow: ctx ? Number(ctx) : null,
         maxOutput: maxOut ? Number(maxOut) : null,
         supportsImageInput: image,
@@ -288,6 +293,13 @@ function EditModelDialog({ model, onClose, onSaved }: {
       submitLabel={t('common.save', 'Save')}
       cancelLabel={t('common.cancel', 'Cancel')}
     >
+      <Field label={t('settings.modelRegistry.displayName', 'Display name')}>
+        <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={model.modelId} />
+        <p className="text-[11px] text-muted-foreground">
+          {t('settings.modelRegistry.displayNameHint', 'Shown everywhere a model name appears. Leave blank to use the models.dev label (falls back to the id).')}
+        </p>
+      </Field>
+
       <p className="text-xs text-muted-foreground">
         {t('settings.modelRegistry.matchInfo', 'models.dev match')}:{' '}
         <span className="font-mono">{model.modelsDevKey ?? '—'}</span> ({model.matchConfidence ?? 'none'})

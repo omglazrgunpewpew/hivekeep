@@ -129,6 +129,8 @@ const VALID_EFFORTS: readonly ThinkingEffort[] = ['low', 'medium', 'high', 'max'
 
 /** The subset of `LLMModel` the registry owns. */
 export interface ResolvedModelMetadata {
+  /** Human-readable label (models.dev `name`, e.g. "Claude Haiku 3.5"). */
+  displayName?: string
   contextWindow?: number
   maxOutput?: number
   supportsImageInput?: boolean
@@ -142,6 +144,7 @@ export interface ResolvedModelMetadata {
 /** Map a models.dev entry onto our metadata shape. */
 export function modelsDevToMetadata(m: ModelsDevModel): ResolvedModelMetadata {
   const out: ResolvedModelMetadata = {}
+  if (m.name) out.displayName = m.name
   if (typeof m.context === 'number') out.contextWindow = m.context
   if (typeof m.output === 'number') out.maxOutput = m.output
   if (Array.isArray(m.input)) {

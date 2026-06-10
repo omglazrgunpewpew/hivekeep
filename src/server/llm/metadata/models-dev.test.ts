@@ -87,6 +87,7 @@ describe('matchModelsDev', () => {
 describe('modelsDevToMetadata', () => {
   it('maps DeepSeek V4 (1M, text-only, reasoning w/ efforts, pricing)', () => {
     const md = modelsDevToMetadata(SNAP.deepseek['deepseek-v4-flash'])
+    expect(md.displayName).toBe('DeepSeek V4 Flash')
     expect(md.contextWindow).toBe(1_000_000)
     expect(md.maxOutput).toBe(384_000)
     expect(md.supportsImageInput).toBe(false)
@@ -115,6 +116,12 @@ describe('modelsDevToMetadata', () => {
     const r = resolveFromModelsDev('deepseek', 'deepseek-v4-flash')!
     expect(r.match.confidence).toBe('exact')
     expect(r.metadata.contextWindow).toBe(1_000_000)
+    expect(r.metadata.displayName).toBe('DeepSeek V4 Flash')
+  })
+
+  it('omits displayName when models.dev has no name', () => {
+    const md = modelsDevToMetadata({ context: 1000 })
+    expect(md.displayName).toBeUndefined()
   })
 })
 

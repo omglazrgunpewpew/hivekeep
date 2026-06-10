@@ -17,6 +17,7 @@ import {
   deleteProviderVaultSecrets,
 } from '@/server/services/provider-config'
 import { getLLMProvider } from '@/server/llm/llm/registry'
+import { enrichModel } from '@/server/llm/metadata/enrich'
 import { getEmbeddingProvider } from '@/server/llm/embedding/registry'
 import { getImageProvider } from '@/server/llm/image/registry'
 import { getSearchProvider } from '@/server/llm/search/registry'
@@ -485,17 +486,21 @@ providerRoutes.get('/models', async (c) => {
         const entries: ModelEntry[] = []
         for (const providerModels of familyResults) {
           for (const model of providerModels) {
+            // Chat models go through the same registry enrichment as the chat
+            // path, so the label (name), context and capabilities shown in the
+            // picker match what the Agent actually runs with.
+            const m = model.capability === 'llm' ? { ...model, ...enrichModel(p.id, p.type, model) } : model
             entries.push({
-              id: model.id,
-              name: model.name,
+              id: m.id,
+              name: m.name,
               providerId: p.id,
               providerName: p.name,
               providerType: p.type,
-              capability: model.capability,
-              ...(model.capability === 'llm' && model.supportsImageInput ? { supportsImageInput: true } : {}),
-              ...(model.capability === 'image' ? { maxImageInputs: model.maxImageInputs ?? 0 } : {}),
-              ...(model.contextWindow ? { contextWindow: model.contextWindow } : {}),
-              ...(model.maxOutput != null ? { maxOutput: model.maxOutput } : {}),
+              capability: m.capability,
+              ...(m.capability === 'llm' && m.supportsImageInput ? { supportsImageInput: true } : {}),
+              ...(m.capability === 'image' ? { maxImageInputs: m.maxImageInputs ?? 0 } : {}),
+              ...(m.contextWindow ? { contextWindow: m.contextWindow } : {}),
+              ...(m.maxOutput != null ? { maxOutput: m.maxOutput } : {}),
             })
           }
         }

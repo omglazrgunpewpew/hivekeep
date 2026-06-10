@@ -14,6 +14,7 @@
 import type { ResolvedModelMetadata } from '@/server/llm/metadata/models-dev'
 
 const FIELDS: readonly (keyof ResolvedModelMetadata)[] = [
+  'displayName',
   'contextWindow',
   'maxOutput',
   'supportsImageInput',

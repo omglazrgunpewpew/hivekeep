@@ -22,6 +22,9 @@ import type { LLMModel } from '@/server/llm/llm/types'
 /** Apply resolved metadata onto a copy of the model. */
 function applyMetadata(model: LLMModel, meta: ResolvedModelMetadata): LLMModel {
   const out: LLMModel = { ...model }
+  // Human-readable label (models.dev name or admin override) drives the name
+  // shown everywhere a model is displayed; the raw id stays in `out.id`.
+  if (meta.displayName) out.name = meta.displayName
   if (meta.contextWindow !== undefined) out.contextWindow = meta.contextWindow
   if (meta.maxOutput !== undefined) out.maxOutput = meta.maxOutput
   if (meta.supportsImageInput !== undefined) out.supportsImageInput = meta.supportsImageInput

@@ -79,6 +79,7 @@ function mergeSeed(...layers: Array<ResolvedModelMetadata | null | undefined>): 
  *  effective value: pinned override or reconciled auto). */
 export function rowToMetadata(row: Row): ResolvedModelMetadata {
   const out: ResolvedModelMetadata = {}
+  if (row.displayName) out.displayName = row.displayName
   if (row.contextWindow != null) out.contextWindow = row.contextWindow
   if (row.maxOutput != null) out.maxOutput = row.maxOutput
   if (row.supportsImageInput != null) out.supportsImageInput = row.supportsImageInput
@@ -131,6 +132,28 @@ export function listRegistryByProvider(providerId: string): Row[] {
   return db.select().from(modelRegistry).where(eq(modelRegistry.providerId, providerId)).all()
 }
 
+/**
+ * Auto display label for a model — the value used unless the admin pinned one.
+ * Priority: models.dev `name` > a meaningful provider-supplied name (one that
+ * isn't just the raw id) > the raw id. Baked into the row at reconcile so the
+ * column always holds a presentable label.
+ */
+function autoDisplayName(model: LLMModel, modelsDevName: string | undefined): string {
+  if (modelsDevName) return modelsDevName
+  if (model.name && model.name !== model.id) return model.name
+  return model.id
+}
+
+/** Auto label without a live model (e.g. when an admin clears their override):
+ *  models.dev `name` for the mapped key, else the raw id. */
+function displayNameFromKey(modelsDevKey: string | null, modelId: string): string {
+  if (modelsDevKey) {
+    const m = getModelsDevByKey(modelsDevKey)
+    if (m?.name) return m.name
+  }
+  return modelId
+}
+
 // ─── reconciliation (seed + resync + new-model discovery + staleness) ───────────
 
 /**
@@ -166,7 +189,7 @@ export function reconcileProviderModels(
           id: crypto.randomUUID(),
           providerId,
           modelId: model.id,
-          displayName: model.name ?? model.id,
+          displayName: autoDisplayName(model, md?.metadata.displayName),
           mappingMode: 'auto',
           modelsDevKey: matchKey,
           matchConfidence: confidence,
@@ -190,6 +213,7 @@ export function reconcileProviderModels(
     const pinned = new Set<string>(safeParseArray(row.overriddenFields))
     const recomputed = metadataToColumns(auto)
     const patch: Partial<Row> = { stale: false, updatedAt: now, matchConfidence: confidence, modelsDevKey: matchKey }
+    if (!pinned.has('displayName')) patch.displayName = autoDisplayName(model, md?.metadata.displayName)
     for (const f of PINNABLE_FIELDS) {
       if (pinned.has(f)) continue // keep admin-pinned value
       if (f === 'thinking') patch.reasoning = recomputed.reasoning ?? null
@@ -269,7 +293,18 @@ export function updateRegistryModel(id: string, patch: RegistryEditPatch): void 
   const pinned = new Set<string>(safeParseArray(row.overriddenFields))
   const set: Partial<Row> = { updatedAt: new Date() }
 
-  if (patch.displayName !== undefined) set.displayName = patch.displayName
+  if (patch.displayName !== undefined) {
+    const dn = patch.displayName.trim()
+    if (dn) {
+      // Manual label → pin it so resync never clobbers it.
+      set.displayName = dn
+      pinned.add('displayName')
+    } else {
+      // Cleared → drop the pin and fall back to the auto label immediately.
+      pinned.delete('displayName')
+      set.displayName = displayNameFromKey(row.modelsDevKey, row.modelId)
+    }
+  }
   if (patch.enabled !== undefined) set.enabled = patch.enabled
   if ('contextWindow' in patch) { set.contextWindow = patch.contextWindow ?? null; pinned.add('contextWindow') }
   if ('maxOutput' in patch) { set.maxOutput = patch.maxOutput ?? null; pinned.add('maxOutput') }
