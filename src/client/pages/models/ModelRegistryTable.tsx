@@ -17,6 +17,7 @@ import {
   Command, CommandInput, CommandList, CommandEmpty, CommandItem,
 } from '@/client/components/ui/command'
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
+import { useProviderTypes } from '@/client/hooks/useProviderTypes'
 import { api, getErrorMessage } from '@/client/lib/api'
 
 interface RegistryModel {
@@ -47,6 +48,10 @@ const cap = (v: boolean | null) => (v == null ? '—' : v ? '✓' : '✕')
 
 export function ModelRegistryTable() {
   const { t } = useTranslation()
+  // Side-effect: registers each provider type's brand icon with <ProviderIcon>.
+  // Without it the icons fall back to the generic chip (this page is reached
+  // directly, so nothing else triggers the registration).
+  useProviderTypes()
   const [models, setModels] = useState<RegistryModel[]>([])
   const [loading, setLoading] = useState(true)
   const [resyncing, setResyncing] = useState(false)
