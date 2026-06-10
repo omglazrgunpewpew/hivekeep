@@ -1391,7 +1391,12 @@
       "confirmTooltip": "Confirm this match is correct (clears review)",
       "reset": "Reset to auto",
       "resetHint": "This model has manual overrides. Reset to drop them and follow models.dev automatically.",
-      "resetDone": "Reset to automatic"
+      "resetDone": "Reset to automatic",
+      "capYes": "Supported",
+      "capNo": "Not supported",
+      "capUnknown": "Unknown — neither the provider nor models.dev reported this",
+      "perPage": "Per page",
+      "range": "{{from}}–{{to}} of {{total}}"
     },
     "models": {
       "title": "Models & Services",

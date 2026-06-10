@@ -1391,7 +1391,12 @@
       "confirmTooltip": "Confirmer que cette correspondance est correcte (lève le « review »)",
       "reset": "Réinitialiser en auto",
       "resetHint": "Ce modèle a des valeurs manuelles. Réinitialisez pour les abandonner et suivre models.dev automatiquement.",
-      "resetDone": "Réinitialisé en auto"
+      "resetDone": "Réinitialisé en auto",
+      "capYes": "Pris en charge",
+      "capNo": "Non pris en charge",
+      "capUnknown": "Inconnu — ni le provider ni models.dev ne l'ont indiqué",
+      "perPage": "Par page",
+      "range": "{{from}}–{{to}} sur {{total}}"
     },
     "models": {
       "title": "Modèles & Services",

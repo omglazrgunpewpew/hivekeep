@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { RefreshCw, Pencil, AlertTriangle, Pin, Wand2, Search, ChevronsUpDown, Check, RotateCcw } from 'lucide-react'
+import { RefreshCw, Pencil, AlertTriangle, Pin, Wand2, Search, ChevronsUpDown, Check, RotateCcw, X, Minus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Label } from '@/client/components/ui/label'
@@ -16,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/client/components/ui/
 import {
   Command, CommandInput, CommandList, CommandEmpty, CommandItem,
 } from '@/client/components/ui/command'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { ProviderIcon } from '@/client/components/common/ProviderIcon'
 import { useProviderTypes } from '@/client/hooks/useProviderTypes'
 import { api, getErrorMessage } from '@/client/lib/api'
@@ -44,7 +45,33 @@ interface RegistryModel {
 }
 
 const fmtCtx = (n: number | null) => (n == null ? '—' : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
-const cap = (v: boolean | null) => (v == null ? '—' : v ? '✓' : '✕')
+
+/** A tri-state capability cell: ✓ supported (green), ✗ not supported (red),
+ *  — unknown/not reported (muted). The tooltip spells out the distinction
+ *  (the ✗ vs — difference isn't obvious at a glance). */
+function CapCell({ value }: { value: boolean | null }) {
+  const { t } = useTranslation()
+  let Icon = Minus
+  let cls = 'text-muted-foreground/40'
+  let tip = t('settings.modelRegistry.capUnknown', 'Unknown — neither the provider nor models.dev reported this')
+  if (value === true) {
+    Icon = Check
+    cls = 'text-success'
+    tip = t('settings.modelRegistry.capYes', 'Supported')
+  } else if (value === false) {
+    Icon = X
+    cls = 'text-destructive'
+    tip = t('settings.modelRegistry.capNo', 'Not supported')
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex justify-center"><Icon className={`size-4 ${cls}`} /></span>
+      </TooltipTrigger>
+      <TooltipContent className="text-xs">{tip}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 export function ModelRegistryTable() {
   const { t } = useTranslation()
@@ -58,6 +85,8 @@ export function ModelRegistryTable() {
   const [providerFilter, setProviderFilter] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<RegistryModel | null>(null)
+  const [page, setPage] = useState(1)
+  const [perPage, setPerPage] = useState(25)
 
   const load = useCallback(async () => {
     try {
@@ -112,6 +141,15 @@ export function ModelRegistryTable() {
   }, [models, providerFilter, query])
 
   const reviewCount = models.filter((m) => m.needsReview && !m.stale).length
+
+  // Pagination. `safePage` clamps when the filtered set shrinks below the
+  // current page so we never render an empty page.
+  useEffect(() => { setPage(1) }, [providerFilter, query, perPage])
+  const pageCount = Math.max(1, Math.ceil(filtered.length / perPage))
+  const safePage = Math.min(page, pageCount)
+  const paged = filtered.slice((safePage - 1) * perPage, safePage * perPage)
+  const rangeFrom = filtered.length === 0 ? 0 : (safePage - 1) * perPage + 1
+  const rangeTo = Math.min(safePage * perPage, filtered.length)
 
   if (loading) {
     return (
@@ -175,7 +213,7 @@ export function ModelRegistryTable() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((m) => (
+            {paged.map((m) => (
               <tr key={m.id} className="border-t border-border [&>td]:px-3 [&>td]:py-2 hover:bg-muted/30">
                 <td className="font-medium">
                   <span className={m.stale ? 'line-through opacity-60' : ''}>{m.displayName || m.modelId}</span>
@@ -196,10 +234,10 @@ export function ModelRegistryTable() {
                   </span>
                 </td>
                 <td className="text-right tabular-nums">{fmtCtx(m.contextWindow)}</td>
-                <td className="text-center">{cap(m.supportsImageInput)}</td>
-                <td className="text-center">{cap(m.supportsPdfInput)}</td>
-                <td className="text-center">{cap(m.supportsToolCall)}</td>
-                <td className="text-center">{m.reasoning?.enabled ? '✓' : m.reasoning ? '✕' : '—'}</td>
+                <td className="text-center"><CapCell value={m.supportsImageInput} /></td>
+                <td className="text-center"><CapCell value={m.supportsPdfInput} /></td>
+                <td className="text-center"><CapCell value={m.supportsToolCall} /></td>
+                <td className="text-center"><CapCell value={m.reasoning?.enabled ? true : m.reasoning ? false : null} /></td>
                 <td className="text-right tabular-nums text-muted-foreground">
                   {m.pricing ? `${m.pricing.input}·${m.pricing.output}` : '—'}
                 </td>
@@ -226,6 +264,30 @@ export function ModelRegistryTable() {
           </tbody>
         </table>
       </div>
+
+      {filtered.length > 0 && (
+        <div className="flex flex-col-reverse items-center justify-between gap-3 text-sm text-muted-foreground sm:flex-row">
+          <span className="tabular-nums">
+            {t('settings.modelRegistry.range', { from: rangeFrom, to: rangeTo, total: filtered.length, defaultValue: '{{from}}–{{to}} of {{total}}' })}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline">{t('settings.modelRegistry.perPage', 'Per page')}</span>
+            <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
+              <SelectTrigger className="h-8 w-[4.5rem]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[10, 25, 50, 100].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon-sm" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} aria-label={t('common.previous', 'Previous')}>
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="tabular-nums">{safePage} / {pageCount}</span>
+            <Button variant="outline" size="icon-sm" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)} aria-label={t('common.next', 'Next')}>
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <EditModelDialog
