@@ -1291,8 +1291,9 @@ export function ChatPanel({ agent, llmModels, modelUnavailable = false, queueSta
                 expiresAt={activeSession.expiresAt}
                 onHide={() => setQuickOpen(false)}
                 onEnd={handleQuickClose}
-                onModelChange={onModelChange}
                 onShowHistory={() => setShowQuickHistory(true)}
+                agentThinkingEnabled={thinkingEnabled}
+                agentThinkingEffort={thinkingEffort}
               />
             </Suspense>
           ) : (

@@ -348,6 +348,14 @@ export const quickSessions = sqliteTable('quick_sessions', {
   createdBy: text('created_by').notNull().references(() => user.id, { onDelete: 'cascade' }),
   title: text('title'),
   status: text('status').notNull().default('active'), // 'active' | 'closed'
+  /** Per-session LLM override (null = inherit the agent's model) — lets the
+   *  user try another model in an ephemeral session without touching the
+   *  agent's configuration (the whole point of quick sessions). */
+  model: text('model'),
+  providerId: text('provider_id').references(() => providers.id, { onDelete: 'set null' }),
+  /** Per-session thinking override (null = inherit the agent's config). */
+  thinkingEnabled: integer('thinking_enabled', { mode: 'boolean' }),
+  thinkingEffort: text('thinking_effort'), // 'low' | 'medium' | 'high' | 'max'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   closedAt: integer('closed_at', { mode: 'timestamp_ms' }),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),

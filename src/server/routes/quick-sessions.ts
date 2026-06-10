@@ -206,6 +206,10 @@ sessionRoutes.get('/:id', async (c) => {
       createdAt: (session!.createdAt as Date).getTime(),
       closedAt: session!.closedAt ? (session!.closedAt as Date).getTime() : null,
       expiresAt: session!.expiresAt ? (session!.expiresAt as Date).getTime() : null,
+      model: session!.model ?? null,
+      providerId: session!.providerId ?? null,
+      thinkingEnabled: session!.thinkingEnabled ?? null,
+      thinkingEffort: (session!.thinkingEffort as QuickSessionSummary['thinkingEffort']) ?? null,
     } satisfies QuickSessionSummary,
     messages: sessionMessages.map((m) => {
       let meta: Record<string, unknown> | null = null
@@ -231,6 +235,81 @@ sessionRoutes.get('/:id', async (c) => {
         createdAt: m.createdAt,
       }
     }),
+  })
+})
+
+// PATCH /:id — update the session's per-session LLM overrides (model/effort).
+// null clears an override back to "inherit the agent's configuration". Only
+// the session owner can change it; the next turn picks the values up.
+sessionRoutes.patch('/:id', async (c) => {
+  const user = c.get('user') as { id: string; name: string }
+  const { error, session } = await loadSession(c.req.param('id'), user.id)
+
+  if (error === 'NOT_FOUND') {
+    return c.json({ error: { code: 'SESSION_NOT_FOUND', message: 'Quick session not found' } }, 404)
+  }
+  if (error === 'FORBIDDEN') {
+    return c.json({ error: { code: 'FORBIDDEN', message: 'You do not own this session' } }, 403)
+  }
+  if (session!.status !== 'active') {
+    return c.json({ error: { code: 'SESSION_CLOSED', message: 'This quick session is closed' } }, 409)
+  }
+
+  const body = (await c.req.json().catch(() => ({}))) as {
+    model?: string | null
+    providerId?: string | null
+    thinkingEnabled?: boolean | null
+    thinkingEffort?: string | null
+  }
+
+  const set: Record<string, unknown> = {}
+  if ('model' in body) {
+    if (body.model !== null && (typeof body.model !== 'string' || !body.model.trim())) {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'model must be a non-empty string or null' } }, 400)
+    }
+    set.model = body.model
+  }
+  if ('providerId' in body) {
+    if (body.providerId !== null && typeof body.providerId !== 'string') {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'providerId must be a string or null' } }, 400)
+    }
+    set.providerId = body.providerId
+  }
+  if ('thinkingEnabled' in body) {
+    if (body.thinkingEnabled !== null && typeof body.thinkingEnabled !== 'boolean') {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: 'thinkingEnabled must be a boolean or null' } }, 400)
+    }
+    set.thinkingEnabled = body.thinkingEnabled
+  }
+  if ('thinkingEffort' in body) {
+    if (body.thinkingEffort !== null && !['low', 'medium', 'high', 'max'].includes(body.thinkingEffort as string)) {
+      return c.json({ error: { code: 'VALIDATION_ERROR', message: "thinkingEffort must be 'low' | 'medium' | 'high' | 'max' | null" } }, 400)
+    }
+    set.thinkingEffort = body.thinkingEffort
+  }
+  if (Object.keys(set).length === 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Nothing to update' } }, 400)
+  }
+
+  await db.update(quickSessions).set(set).where(eq(quickSessions.id, session!.id))
+  const updated = await db.select().from(quickSessions).where(eq(quickSessions.id, session!.id)).get()
+
+  log.debug({ sessionId: session!.id, set }, 'Quick session overrides updated')
+
+  return c.json({
+    session: {
+      id: updated!.id,
+      agentId: updated!.agentId,
+      title: updated!.title,
+      status: updated!.status as QuickSessionStatus,
+      createdAt: (updated!.createdAt as Date).getTime(),
+      closedAt: updated!.closedAt ? (updated!.closedAt as Date).getTime() : null,
+      expiresAt: updated!.expiresAt ? (updated!.expiresAt as Date).getTime() : null,
+      model: updated!.model ?? null,
+      providerId: updated!.providerId ?? null,
+      thinkingEnabled: updated!.thinkingEnabled ?? null,
+      thinkingEffort: (updated!.thinkingEffort as QuickSessionSummary['thinkingEffort']) ?? null,
+    } satisfies QuickSessionSummary,
   })
 })
 

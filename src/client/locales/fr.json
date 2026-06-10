@@ -3093,6 +3093,7 @@
       "sendFailed": "Impossible d'envoyer le message",
       "sessionExpired": "Session expirée. Veuillez en démarrer une nouvelle.",
       "stopFailed": "Impossible d'arrêter la génération",
+      "updateFailed": "Impossible de mettre à jour les réglages de la session",
       "fetchHistoryFailed": "Impossible de charger l'historique des sessions",
       "viewSessionFailed": "Impossible de charger les messages de la session"
     }

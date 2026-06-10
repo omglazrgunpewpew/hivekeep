@@ -585,6 +585,12 @@ export interface QuickSessionSummary {
   closedAt: number | null
   expiresAt: number | null
   messageCount?: number
+  /** Per-session LLM override — null means "inherit the agent's model". */
+  model?: string | null
+  providerId?: string | null
+  /** Per-session thinking override — null means "inherit the agent's config". */
+  thinkingEnabled?: boolean | null
+  thinkingEffort?: AgentThinkingEffort | null
 }
 
 // ─── Channel types ──────────────────────────────────────────────────────────

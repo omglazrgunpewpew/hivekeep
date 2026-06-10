@@ -23,8 +23,12 @@ import { useDraftMessage } from '@/client/hooks/useDraftMessage'
 import { useFileUpload } from '@/client/hooks/useFileUpload'
 import { useAuth } from '@/client/hooks/useAuth'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/client/components/ui/tooltip'
-// ModelPicker removed from quick chat to avoid changing Agent model globally (#71)
+// The composer's model/effort pickers here write PER-SESSION overrides (PATCH
+// /quick-sessions/:id) — never the Agent's own configuration. (The original
+// ModelPicker was removed in #71 precisely because it mutated the Agent
+// globally; this is the session-scoped replacement.)
 import { X, Zap, MessageSquare, LogOut, History, Pin, PinOff } from 'lucide-react'
+import type { AgentThinkingEffort } from '@/shared/types'
 import { useAutoScroll } from '@/client/hooks/useAutoScroll'
 import { cn } from '@/client/lib/utils'
 import { ContextBar } from '@/client/components/chat/ContextBar'
@@ -49,14 +53,16 @@ interface QuickChatPanelProps {
   expiresAt?: number | null
   onHide: () => void
   onEnd: (saveMemory?: boolean, memorySummary?: string) => void
-  onModelChange?: (modelId: string, providerId: string) => void
   onShowHistory?: () => void
+  /** The agent's thinking defaults — shown until the session overrides them. */
+  agentThinkingEnabled?: boolean
+  agentThinkingEffort?: AgentThinkingEffort | null
 }
 
-export function QuickChatPanel({ agentId, agentName, agentAvatarUrl, sessionId, expiresAt, onHide, onEnd, onShowHistory }: QuickChatPanelProps) {
+export function QuickChatPanel({ agentId, agentName, agentAvatarUrl, agentModel, llmModels, sessionId, expiresAt, onHide, onEnd, onShowHistory, agentThinkingEnabled, agentThinkingEffort }: QuickChatPanelProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { messages, streamingMessage, isProcessing, isStreaming, sendMessage, stopStreaming } = useQuickChat(sessionId, agentId)
+  const { messages, session, streamingMessage, isProcessing, isStreaming, sendMessage, stopStreaming, updateSessionOverrides } = useQuickChat(sessionId, agentId)
   const { toolCallsByMessage } = useToolCalls(agentId, messages)
   const { content: draftContent, setContent: setDraftContent, clearDraft } = useDraftMessage(`quick-${sessionId}`)
   const { pendingFiles, addFiles, removeFile, clearFiles, isUploading } = useFileUpload(agentId)
@@ -275,6 +281,13 @@ export function QuickChatPanel({ agentId, agentName, agentAvatarUrl, sessionId, 
         onAddFiles={addFiles}
         onRemoveFile={removeFile}
         agentId={agentId}
+        llmModels={llmModels}
+        model={session?.model ?? agentModel}
+        providerId={session?.providerId ?? null}
+        onModelChange={(modelId, providerId) => void updateSessionOverrides({ model: modelId, providerId })}
+        thinkingEnabled={session?.thinkingEnabled ?? agentThinkingEnabled ?? false}
+        thinkingEffort={session?.thinkingEffort ?? agentThinkingEffort ?? null}
+        onChangeThinking={(next) => void updateSessionOverrides({ thinkingEnabled: next.enabled, thinkingEffort: next.effort })}
       />
 
       {/* Close confirmation dialog */}

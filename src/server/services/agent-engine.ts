@@ -16,6 +16,7 @@ import {
   channels,
   tasks,
   tickets,
+  quickSessions,
 } from '@/server/db/schema'
 import { buildActiveProjectInfo } from '@/server/services/projects'
 import { getContactDisplayName } from '@/shared/contact-display'
@@ -2160,15 +2161,34 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       ? await buildActiveProjectInfo(agent.activeProjectId)
       : null
 
+    // Per-session overrides (model/provider/thinking) — quick sessions can run
+    // on a different model than the agent without touching its configuration.
+    // Null columns mean "inherit the agent's settings".
+    const qsSessionRow = await db
+      .select({
+        model: quickSessions.model,
+        providerId: quickSessions.providerId,
+        thinkingEnabled: quickSessions.thinkingEnabled,
+        thinkingEffort: quickSessions.thinkingEffort,
+      })
+      .from(quickSessions)
+      .where(eq(quickSessions.id, sessionId))
+      .get()
+    const qsModelId = qsSessionRow?.model ?? agent.model
+    // When the session overrides the model, its providerId (possibly null =
+    // auto-resolve) replaces the agent's — the agent's provider may not even
+    // serve the override model.
+    const qsProviderId = qsSessionRow?.model ? qsSessionRow.providerId : agent.providerId
+
     // Resolve LLM BEFORE buildSystemPrompt for the same reason as the
     // main queue path — the prompt's tool-gating reads
     // `qsResolved.model.maxTools`.
     let qsResolved
     try {
       const { resolveLLM } = await import('@/server/llm/core/resolve')
-      qsResolved = await resolveLLM({ modelId: agent.model, providerId: agent.providerId })
+      qsResolved = await resolveLLM({ modelId: qsModelId, providerId: qsProviderId })
     } catch (err) {
-      log.warn({ agentId, sessionId, modelId: agent.model, err }, 'No LLM provider available for quick session')
+      log.warn({ agentId, sessionId, modelId: qsModelId, err }, 'No LLM provider available for quick session')
       sseManager.sendToAgent(agentId, {
         type: 'agent:error',
         agentId,
@@ -2246,7 +2266,11 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     // `qsResolved` was set earlier (just before buildSystemPrompt).
 
     // Resolve thinking config for quick session (defaults to enabled)
-    const qsThinkingConfig = resolveThinkingConfig(agent.thinkingConfig)
+    // Session thinking override: a non-null thinkingEnabled replaces the
+    // agent's config entirely (with its own effort); null inherits.
+    const qsThinkingConfig = qsSessionRow?.thinkingEnabled != null
+      ? { enabled: qsSessionRow.thinkingEnabled, effort: (qsSessionRow.thinkingEffort as AgentThinkingConfig['effort']) ?? null }
+      : resolveThinkingConfig(agent.thinkingConfig)
     const qsProviderType = qsResolved.providerRow.type
 
     // Unified toolset resolution (same model as a main turn) then apply the

@@ -3093,6 +3093,7 @@
       "sendFailed": "Failed to send message",
       "sessionExpired": "Session expired. Please start a new one.",
       "stopFailed": "Failed to stop generation",
+      "updateFailed": "Failed to update session settings",
       "fetchHistoryFailed": "Failed to load session history",
       "viewSessionFailed": "Failed to load session messages"
     }

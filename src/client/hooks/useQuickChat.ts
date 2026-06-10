@@ -5,11 +5,12 @@ import { api } from '@/client/lib/api'
 import { useSSE } from '@/client/hooks/useSSE'
 import { useChatStreaming } from '@/client/hooks/useChatStreaming'
 import type { ChatMessage } from '@/client/hooks/useChat'
-import type { MessageFile } from '@/shared/types'
+import type { MessageFile, QuickSessionSummary } from '@/shared/types'
 
 export function useQuickChat(sessionId: string | null, agentId: string | null) {
   const { t } = useTranslation()
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [session, setSession] = useState<QuickSessionSummary | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -26,10 +27,11 @@ export function useQuickChat(sessionId: string | null, agentId: string | null) {
     }
     setIsLoading(true)
     try {
-      const data = await api.get<{ session: any; messages: ChatMessage[] }>(
+      const data = await api.get<{ session: QuickSessionSummary; messages: ChatMessage[] }>(
         `/quick-sessions/${sessionId}`,
       )
       setMessages(data.messages)
+      setSession(data.session)
     } catch {
       toast.error(t('quickSession.errors.fetchMessagesFailed', 'Failed to load messages'))
     } finally {
@@ -172,14 +174,33 @@ export function useQuickChat(sessionId: string | null, agentId: string | null) {
   // Cleanup timers on unmount
   useEffect(() => cleanup, [])
 
+  /** Update the session's per-session LLM overrides (model/provider/thinking).
+   *  null clears a field back to "inherit the agent". Optimistic via response. */
+  const updateSessionOverrides = useCallback(async (patch: {
+    model?: string | null
+    providerId?: string | null
+    thinkingEnabled?: boolean | null
+    thinkingEffort?: 'low' | 'medium' | 'high' | 'max' | null
+  }) => {
+    if (!sessionId) return
+    try {
+      const res = await api.patch<{ session: QuickSessionSummary }>(`/quick-sessions/${sessionId}`, patch)
+      setSession(res.session)
+    } catch {
+      toast.error(t('quickSession.errors.updateFailed', 'Failed to update session settings'))
+    }
+  }, [sessionId, t])
+
   return {
     messages,
+    session,
     streamingMessage,
     isLoading,
     isProcessing,
     isStreaming,
     sendMessage,
     stopStreaming,
+    updateSessionOverrides,
     refetch: fetchMessages,
   }
 }
