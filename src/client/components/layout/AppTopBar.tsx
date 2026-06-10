@@ -60,7 +60,7 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
   ]
 
   return (
-    <header className="surface-header sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b px-4">
+    <header className="surface-header sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b px-2.5 sm:gap-3 sm:px-4">
       <button
         type="button"
         className="flex shrink-0 items-center"
@@ -90,7 +90,9 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
               aria-label={item.label}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'relative flex size-8 items-center justify-center rounded-md transition-colors',
+                // size-7 keeps six items within the width five size-8 items
+                // used to take — the control only renders below md anyway.
+                'relative flex size-7 items-center justify-center rounded-md transition-colors',
                 item.active
                   ? 'bg-background text-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
@@ -113,7 +115,7 @@ export function AppTopBar({ onOpenSettings, onOpenAccount }: AppTopBarProps) {
           )
         })}
       </nav>
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 sm:gap-1">
         {user && <QueueIndicator />}
         <SSEStatusIndicator />
         {user && <SetupChecklistButton onOpenSettings={onOpenSettings} />}
