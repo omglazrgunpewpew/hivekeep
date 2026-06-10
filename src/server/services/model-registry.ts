@@ -12,7 +12,7 @@
  * Everything here is gated by the caller; this module never checks the flag.
  */
 
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { modelRegistry, providers as providersTable } from '@/server/db/schema'
 import { getModelsDevByKey, modelsDevToMetadata, resolveFromModelsDev, type MatchConfidence, type ResolvedModelMetadata } from '@/server/llm/metadata/models-dev'
@@ -426,4 +426,28 @@ export function resetModelToAuto(id: string): void {
 
 export function getRegistryRowById(id: string): Row | undefined {
   return db.select().from(modelRegistry).where(eq(modelRegistry.id, id)).get()
+}
+
+// ─── bulk actions (curation over a filtered set) ────────────────────────────────
+
+/** Enable or disable many rows at once. Like the single toggle, this also clears
+ *  the review flag (touching a row counts as reviewing it). Returns count. */
+export function bulkSetEnabled(ids: string[], enabled: boolean): number {
+  if (ids.length === 0) return 0
+  db.update(modelRegistry)
+    .set({ enabled, needsReview: false, updatedAt: new Date() })
+    .where(inArray(modelRegistry.id, ids))
+    .run()
+  return ids.length
+}
+
+/** Confirm the auto-match for many review rows at once: clear review + enable.
+ *  Only touches rows still flagged for review (mirrors the single ✓ confirm). */
+export function bulkConfirmReview(ids: string[]): number {
+  if (ids.length === 0) return 0
+  db.update(modelRegistry)
+    .set({ needsReview: false, enabled: true, updatedAt: new Date() })
+    .where(and(inArray(modelRegistry.id, ids), eq(modelRegistry.needsReview, true)))
+    .run()
+  return ids.length
 }

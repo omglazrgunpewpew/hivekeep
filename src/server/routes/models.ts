@@ -18,6 +18,8 @@ import {
   remapModel,
   unpinField,
   resetModelToAuto,
+  bulkSetEnabled,
+  bulkConfirmReview,
   getRegistryRowById,
   type RegistryEditPatch,
   type RegistryField,
@@ -141,6 +143,20 @@ modelRoutes.post('/:id/unpin', async (c) => {
   const updated = getRegistryRowById(id)!
   const prov = db.select().from(providers).where(eq(providers.id, updated.providerId)).get()
   return c.json({ model: serialize(updated, prov ?? undefined) })
+})
+
+/** Bulk action over a set of rows: enable / disable / confirm-review. */
+modelRoutes.post('/bulk', async (c) => {
+  const { ids, action } = (await c.req.json().catch(() => ({}))) as { ids?: string[]; action?: string }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'ids must be a non-empty array' } }, 400)
+  }
+  let count = 0
+  if (action === 'enable') count = bulkSetEnabled(ids, true)
+  else if (action === 'disable') count = bulkSetEnabled(ids, false)
+  else if (action === 'confirm') count = bulkConfirmReview(ids)
+  else return c.json({ error: { code: 'VALIDATION_ERROR', message: "action must be 'enable', 'disable' or 'confirm'" } }, 400)
+  return c.json({ ok: true, count })
 })
 
 /** Reset a row to fully automatic — drop every pin/manual override. */

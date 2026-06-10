@@ -83,10 +83,12 @@ export function ModelRegistryTable() {
   const [loading, setLoading] = useState(true)
   const [resyncing, setResyncing] = useState(false)
   const [providerFilter, setProviderFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState<RegistryModel | null>(null)
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(25)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -137,25 +139,52 @@ export function ModelRegistryTable() {
     }
   }
 
+  // Bulk action over the CURRENT filtered set (across pages), so it composes with
+  // the provider/status filters: e.g. filter "review" then confirm them all.
+  const bulkAction = async (action: 'enable' | 'disable' | 'confirm', ids: string[]) => {
+    if (ids.length === 0) return
+    setBulkBusy(true)
+    try {
+      await api.post('/models/bulk', { action, ids })
+      await load()
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setBulkBusy(false)
+    }
+  }
+
   const providerOptions = useMemo(() => {
     const seen = new Map<string, string>()
     for (const m of models) if (m.providerName) seen.set(m.providerId, m.providerName)
     return [...seen.entries()]
   }, [models])
 
+  const matchesStatus = (m: RegistryModel): boolean => {
+    switch (statusFilter) {
+      case 'enabled': return m.enabled
+      case 'disabled': return !m.enabled
+      case 'review': return m.needsReview && !m.stale
+      case 'unmapped': return !m.modelsDevKey
+      default: return true
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return models
       .filter((m) => providerFilter === 'all' || m.providerId === providerFilter)
-      .filter((m) => !q || m.modelId.toLowerCase().includes(q) || (m.providerName ?? '').toLowerCase().includes(q))
+      .filter(matchesStatus)
+      .filter((m) => !q || m.modelId.toLowerCase().includes(q) || (m.displayName ?? '').toLowerCase().includes(q) || (m.providerName ?? '').toLowerCase().includes(q))
       .sort((a, b) => (a.providerName ?? '').localeCompare(b.providerName ?? '') || a.modelId.localeCompare(b.modelId))
-  }, [models, providerFilter, query])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [models, providerFilter, statusFilter, query])
 
   const reviewCount = models.filter((m) => m.needsReview && !m.stale).length
 
   // Pagination. `safePage` clamps when the filtered set shrinks below the
   // current page so we never render an empty page.
-  useEffect(() => { setPage(1) }, [providerFilter, query, perPage])
+  useEffect(() => { setPage(1) }, [providerFilter, statusFilter, query, perPage])
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage))
   const safePage = Math.min(page, pageCount)
   const paged = filtered.slice((safePage - 1) * perPage, safePage * perPage)
@@ -202,11 +231,48 @@ export function ModelRegistryTable() {
             {providerOptions.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('settings.modelRegistry.statusAll', 'All statuses')}</SelectItem>
+            <SelectItem value="enabled">{t('settings.modelRegistry.statusEnabled', 'Enabled')}</SelectItem>
+            <SelectItem value="disabled">{t('settings.modelRegistry.statusDisabled', 'Disabled')}</SelectItem>
+            <SelectItem value="review">{t('settings.modelRegistry.statusReview', 'To review')}</SelectItem>
+            <SelectItem value="unmapped">{t('settings.modelRegistry.statusUnmapped', 'Unmapped')}</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('common.search', 'Search')} className="pl-8" />
         </div>
       </div>
+
+      {/* Bulk actions over the current filtered set (across pages). */}
+      {filtered.length > 0 && (() => {
+        const ids = filtered.map((m) => m.id)
+        const reviewIds = filtered.filter((m) => m.needsReview && !m.stale).map((m) => m.id)
+        const enabledN = filtered.filter((m) => m.enabled).length
+        return (
+          <div className="flex items-center gap-2 flex-wrap text-sm">
+            <span className="text-muted-foreground">
+              {t('settings.modelRegistry.bulkScope', { count: filtered.length, defaultValue: '{{count}} shown' })}
+            </span>
+            <span className="text-muted-foreground/40">·</span>
+            <Button variant="ghost" size="sm" disabled={bulkBusy || enabledN === filtered.length} onClick={() => bulkAction('enable', ids)}>
+              <Check className="size-3.5 text-success" />{t('settings.modelRegistry.bulkEnable', 'Enable all')}
+            </Button>
+            <Button variant="ghost" size="sm" disabled={bulkBusy || enabledN === 0} onClick={() => bulkAction('disable', ids)}>
+              <X className="size-3.5 text-destructive" />{t('settings.modelRegistry.bulkDisable', 'Disable all')}
+            </Button>
+            {reviewIds.length > 0 && (
+              <Button variant="ghost" size="sm" disabled={bulkBusy} onClick={() => bulkAction('confirm', reviewIds)}>
+                <Check className="size-3.5 text-amber-600" />
+                {t('settings.modelRegistry.bulkConfirm', { count: reviewIds.length, defaultValue: 'Confirm {{count}} review(s)' })}
+              </Button>
+            )}
+          </div>
+        )
+      })()}
 
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">

@@ -52,7 +52,7 @@ mock.module('@/server/db/index', () => ({ db: testDb, sqlite }))
 const reg = schemaIsReal
   ? await import('@/server/services/model-registry')
   : ({} as typeof import('@/server/services/model-registry'))
-const { reconcileProviderModels, getRegistryRow, listRegistryByProvider, rowToMetadata, updateRegistryModel, remapModel, setMappingMode, resetModelToAuto } = reg
+const { reconcileProviderModels, getRegistryRow, listRegistryByProvider, rowToMetadata, updateRegistryModel, remapModel, setMappingMode, resetModelToAuto, bulkSetEnabled, bulkConfirmReview } = reg
 const modelRegistry = (schema as typeof import('@/server/db/schema')).modelRegistry
 
 const PROVIDER = 'provider-uuid-1'
@@ -217,6 +217,31 @@ d('admin edits (Models view)', () => {
     const row = getRegistryRow(PROVIDER, 'weird-alias')!
     expect(row.needsReview).toBe(false)
     expect(row.enabled).toBe(false)
+  })
+
+  it('bulk enable/disable flips many rows and clears review', () => {
+    reconcileProviderModels(PROVIDER, 'deepseek', [{ id: 'weird-1', name: 'a' }, { id: 'weird-2', name: 'b' }])
+    const ids = [getRegistryRow(PROVIDER, 'weird-1')!.id, getRegistryRow(PROVIDER, 'weird-2')!.id]
+    expect(getRegistryRow(PROVIDER, 'weird-1')!.enabled).toBe(false) // review → disabled
+    bulkSetEnabled(ids, true)
+    expect(getRegistryRow(PROVIDER, 'weird-1')!.enabled).toBe(true)
+    expect(getRegistryRow(PROVIDER, 'weird-2')!.needsReview).toBe(false)
+    bulkSetEnabled(ids, false)
+    expect(getRegistryRow(PROVIDER, 'weird-2')!.enabled).toBe(false)
+  })
+
+  it('bulk confirm only clears review rows (and enables them)', () => {
+    reconcileProviderModels(PROVIDER, 'deepseek', [
+      { id: 'deepseek-v4-flash', name: 'DS' }, // exact → not review, enabled
+      { id: 'weird-x', name: 'x' }, // none → review, disabled
+    ])
+    const good = getRegistryRow(PROVIDER, 'deepseek-v4-flash')!
+    const rev = getRegistryRow(PROVIDER, 'weird-x')!
+    bulkConfirmReview([good.id, rev.id])
+    expect(getRegistryRow(PROVIDER, 'weird-x')!.needsReview).toBe(false)
+    expect(getRegistryRow(PROVIDER, 'weird-x')!.enabled).toBe(true)
+    // the already-confident row is untouched (still enabled, still no review)
+    expect(getRegistryRow(PROVIDER, 'deepseek-v4-flash')!.enabled).toBe(true)
   })
 
   it('resetModelToAuto drops every pin, returns to auto, and re-derives from models.dev', () => {
