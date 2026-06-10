@@ -326,6 +326,12 @@ html.js .reveal.in{opacity:1;transform:none;}
 .pchip svg{width:18px;height:18px;flex:0 0 auto;}
 .pchip .more{color:var(--ink-soft);font-weight:500;}
 
+/* "use your subscription" callout */
+.prov-sub{display:flex;align-items:center;gap:14px;margin-top:22px;padding:14px 18px;border:1px solid var(--line-strong);border-radius:var(--r-card);background:oklch(1 0 0/.025);font-size:.96rem;color:var(--ink-soft);}
+.prov-sub-marks{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;}
+.prov-sub-marks svg{width:20px;height:20px;}
+.prov-sub b{color:var(--ink);font-weight:600;}
+
 /* plugins */
 .plug-note{margin-top:30px;font-size:1.02rem;color:var(--ink-soft);max-width:60ch;}
 .plug-note b{color:var(--ink);font-weight:600;}
