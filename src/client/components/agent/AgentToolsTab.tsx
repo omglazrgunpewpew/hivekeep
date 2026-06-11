@@ -5,6 +5,7 @@ import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
 import { ToolSelector, type ToolSelectorTool } from '@/client/components/common/ToolSelector'
+import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
 import { FormDialog } from '@/client/components/common/FormDialog'
 import { useToolboxes } from '@/client/hooks/useToolboxes'
 import { useToolCatalog } from '@/client/hooks/useToolCatalog'
@@ -184,9 +185,14 @@ export function AgentToolsTab({ agentId, toolboxIds, onToolboxIdsChange, extraTo
             <p className="text-sm text-muted-foreground">{t('agent.tools.extras.empty')}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {extras.map((name) => (
-                <Badge key={name} variant="secondary" className="gap-1 pr-1 font-mono text-xs">
-                  {name}
+              {extras.map((name) => {
+                const entry = catalog.find((c) => c.name === name)
+                const fallback = typeof entry?.label === 'string' ? entry.label : entry?.label?.en ?? name
+                const friendly = t(`tools.names.${name}`, fallback)
+                return (
+                <Badge key={name} variant="secondary" className="gap-1 pr-1 text-xs">
+                  {entry && <ToolDomainIcon domain={entry.domain} className="size-3 text-muted-foreground" />}
+                  {friendly}
                   <button
                     type="button"
                     aria-label={t('agent.tools.extras.remove', { name })}
@@ -196,7 +202,8 @@ export function AgentToolsTab({ agentId, toolboxIds, onToolboxIdsChange, extraTo
                     <X className="size-3" />
                   </button>
                 </Badge>
-              ))}
+                )
+              })}
             </div>
           )}
 

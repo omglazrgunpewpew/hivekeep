@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react'
+import { memo, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/client/components/ui/button'
 import { Textarea } from '@/client/components/ui/textarea'
@@ -7,6 +7,8 @@ import { cn } from '@/client/lib/utils'
 import { RelativeTimestamp } from '@/client/components/chat/RelativeTimestamp'
 import { MarkdownContent } from '@/client/components/chat/MarkdownContent'
 import type { HumanPromptSummary, HumanPromptOptionVariant } from '@/shared/types'
+import { ToolDomainIcon } from '@/client/components/common/ToolDomainIcon'
+import { useToolCatalog } from '@/client/hooks/useToolCatalog'
 
 interface HumanPromptCardProps {
   prompt: HumanPromptSummary
@@ -51,6 +53,11 @@ export const HumanPromptCard = memo(function HumanPromptCard({
   isResponding,
 }: HumanPromptCardProps) {
   const { t } = useTranslation()
+  // Canonical tool presentation (same as ToolSelector): domain icon + translated
+  // label, raw name as sublabel when it differs.
+  const { tools: toolCatalog } = useToolCatalog()
+  const catalogByName = useMemo(() => new Map(toolCatalog.map((t) => [t.name, t])), [toolCatalog])
+
   // tool_access starts with everything pre-checked (grant-by-default, the user
   // unchecks what they refuse); multi_select starts empty.
   const [selectedValues, setSelectedValues] = useState<Set<string>>(() =>
@@ -266,12 +273,25 @@ export const HumanPromptCard = memo(function HumanPromptCard({
                 >
                   {checked && <Check className="size-3" />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="font-mono text-xs font-medium">{option.label}</span>
-                  {option.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
-                  )}
-                </div>
+                {(() => {
+                  const entry = catalogByName.get(option.value)
+                  const fallback =
+                    typeof entry?.label === 'string'
+                      ? entry.label
+                      : entry?.label?.en ?? option.label
+                  const friendly = t(`tools.names.${option.value}`, fallback)
+                  return (
+                    <>
+                      {entry && <ToolDomainIcon domain={entry.domain} className="size-4 shrink-0 text-muted-foreground" />}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium">{friendly}</span>
+                        {friendly !== option.value && (
+                          <p className="font-mono text-[11px] text-muted-foreground mt-0.5">{option.value}</p>
+                        )}
+                      </div>
+                    </>
+                  )
+                })()}
               </button>
             )
           })}
