@@ -4,6 +4,7 @@ import Avatar from '../components/Avatar.astro';
 import Providers from '../components/Providers.astro';
 import AgentDemo from '../components/AgentDemo.tsx';
 import QueenieOnboarding from '../components/QueenieOnboarding.tsx';
+import MiniAppsMarquee from '../components/MiniAppsMarquee.astro';
 import { Icon } from 'astro-icon/components';
 import agents from '../agents.json';
 import stats from '../data/stats.json';
@@ -351,6 +352,10 @@ const fxCount = fxCategories.reduce((n, c) => n + c.cards.length, 0);
       </div>
     </div>
   </section></div>
+
+  <!-- ===== mini-apps showcase (marquee) ===== -->
+  <MiniAppsMarquee />
+
   <!-- ===== 04 everywhere ===== -->
   <div class="wrap band" id="channels"><section class="section reveal">
     <div class="num"><div class="hexnum"><span class="n">04</span></div><small>Everywhere</small><span class="spine" aria-hidden="true"></span></div>
