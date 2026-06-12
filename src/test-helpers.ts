@@ -85,6 +85,14 @@ export const fullMockConfig = {
   },
 
   workspace: { baseDir: '/tmp/hivekeep-test/workspaces' },
+  workspaceFiles: {
+    maxEditableSizeMb: 5,
+    maxUploadSizeMb: 100,
+    maxCopySizeMb: 500,
+    maxCopyEntries: 5000,
+    searchMaxResults: 50,
+    searchMaxEntries: 20000,
+  },
 
   upload: {
     dir: '/tmp/hivekeep-test/uploads',

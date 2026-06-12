@@ -1,6 +1,7 @@
 import { join, sep, dirname, basename } from 'node:path'
 import { constants } from 'node:fs'
 import { lstat, realpath, readdir, open, stat } from 'node:fs/promises'
+import { mkdirSync } from 'node:fs'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { isPathBlocked } from '@/server/tools/filesystem-tools'
@@ -275,6 +276,63 @@ export async function readWorkspaceFile(agentId: string, relPath: string): Promi
   } finally {
     await handle.close()
   }
+}
+
+// ─── write ───────────────────────────────────────────────────────────────────
+
+export async function writeWorkspaceFile(
+  agentId: string,
+  relPath: string,
+  content: string,
+  opts: { baseModifiedAt?: number; createOnly?: boolean } = {},
+): Promise<{ path: string; size: number; modifiedAt: number }> {
+  const resolved = await resolveWorkspacePath(agentId, relPath, { forWrite: true })
+  if (resolved.rel === '') throw new WorkspaceFilesError('IS_DIRECTORY', 'Cannot write the workspace root')
+
+  if (Buffer.byteLength(content, 'utf8') > maxEditableBytes()) {
+    throw new WorkspaceFilesError('FILE_TOO_LARGE', `Content exceeds ${config.workspaceFiles.maxEditableSizeMb} MB`)
+  }
+
+  if (resolved.exists) {
+    const current = await lstat(resolved.abs)
+    if (current.isDirectory()) throw new WorkspaceFilesError('IS_DIRECTORY', `Path is a directory: ${resolved.rel}`)
+    if (opts.createOnly) throw new WorkspaceFilesError('DEST_EXISTS', `Already exists: ${resolved.rel}`)
+    // Optimistic concurrency: the client echoes the mtime it read; a different
+    // mtime on disk means someone (typically the agent) wrote in between.
+    if (opts.baseModifiedAt !== undefined && Math.abs(current.mtimeMs - opts.baseModifiedAt) > 1) {
+      throw new WorkspaceFilesError('CONFLICT', `File changed on disk: ${resolved.rel}`)
+    }
+  } else {
+    // New file: the leaf is user-named — enforce the name rules.
+    validateEntryName(basename(resolved.abs))
+    // Sync mkdir on purpose: fs/promises.mkdir is mock.module'd into a no-op
+    // by image-tools.test.ts and the mock leaks process-wide under bun test.
+    mkdirSync(dirname(resolved.abs), { recursive: true })
+  }
+
+  // O_NOFOLLOW write: resolveWorkspacePath refused symlink leaves, but an agent
+  // shell can plant one between the check and this op (TOCTOU, files.md § 7.2).
+  let handle
+  try {
+    handle = await open(
+      resolved.abs,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+    )
+  } catch (err) {
+    const e = err as NodeJS.ErrnoException
+    if (e.code === 'ELOOP' || e.code === 'EMLINK') throw forbidden('symlink leaf')
+    if (e.code === 'EISDIR') throw new WorkspaceFilesError('IS_DIRECTORY', 'Path is a directory')
+    throw err
+  }
+  try {
+    await handle.writeFile(content, 'utf8')
+  } finally {
+    await handle.close()
+  }
+
+  const written = await stat(resolved.abs)
+  log.info({ agentId, path: resolved.rel, size: written.size }, 'Workspace file written via Files API')
+  return { path: resolved.rel, size: written.size, modifiedAt: written.mtimeMs }
 }
 
 // ─── raw (download / inline view) ────────────────────────────────────────────

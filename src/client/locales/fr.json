@@ -3547,7 +3547,18 @@
     "editor": {
       "download": "Télécharger",
       "tooLarge": "Ce fichier texte est trop volumineux pour être édité ici ({{size}}). Téléchargez-le.",
-      "binary": "Fichier binaire ({{mime}}) — aperçu indisponible."
+      "binary": "Fichier binaire ({{mime}}) — aperçu indisponible.",
+      "edit": "Éditer",
+      "preview": "Aperçu",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "recreate": "Recréer le fichier",
+      "deletedFromDisk": "Ce fichier a été supprimé du disque pendant que vous l’éditiez.",
+      "conflict": {
+        "message": "Le fichier a changé sur le disque depuis son ouverture (probablement écrit par l’agent).",
+        "reload": "Recharger",
+        "overwrite": "Écraser"
+      }
     },
     "browseWorkspace": "Parcourir les fichiers"
   }

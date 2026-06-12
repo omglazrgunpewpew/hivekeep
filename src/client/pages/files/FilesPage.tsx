@@ -3,23 +3,25 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Folder, FolderTree, RefreshCw, Loader2, FilePlus2 } from 'lucide-react'
-import { api, getErrorMessage, ApiRequestError } from '@/client/lib/api'
 import { PageHeader } from '@/client/components/layout/PageHeader'
 import { EmptyState } from '@/client/components/common/EmptyState'
 import { AgentSelector } from '@/client/components/common/AgentSelector'
+import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
 import { Button } from '@/client/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/client/components/ui/sheet'
 import { useAgentList } from '@/client/hooks/useAgentList'
 import { useWorkspaceFiles } from '@/client/hooks/useWorkspaceFiles'
+import { useWorkspaceTabs } from '@/client/hooks/useWorkspaceTabs'
 import { WorkspaceTree } from '@/client/components/files/WorkspaceTree'
 import { WorkspaceEditor } from '@/client/components/files/WorkspaceEditor'
-import type { WorkspaceEntry, WorkspaceFileInfo } from '@/shared/types'
+import { FileTabs } from '@/client/components/files/FileTabs'
+import type { WorkspaceEntry } from '@/shared/types'
 
 const LAST_AGENT_KEY = 'files.lastAgentId'
 
 /**
- * Files section (files.md § 3): VSCode-like browser over agent workspaces.
- * Deep-linkable as /files/:agentId?path=relative/path.
+ * Files section (files.md § 3): VSCode-like browser/editor over agent
+ * workspaces. Deep-linkable as /files/:agentId?path=relative/path.
  */
 export function FilesPage() {
   const { t } = useTranslation()
@@ -33,9 +35,7 @@ export function FilesPage() {
   // Active workspace: route param > localStorage > first agent.
   const storedAgentId = localStorage.getItem(LAST_AGENT_KEY)
   const activeAgentId =
-    (routeAgentId && agents.some((a) => a.id === routeAgentId || a.slug === routeAgentId)
-      ? (agents.find((a) => a.id === routeAgentId || a.slug === routeAgentId)?.id ?? null)
-      : null) ??
+    (routeAgentId ? (agents.find((a) => a.id === routeAgentId || a.slug === routeAgentId)?.id ?? null) : null) ??
     (storedAgentId && agents.some((a) => a.id === storedAgentId) ? storedAgentId : null) ??
     agents[0]?.id ??
     null
@@ -45,66 +45,55 @@ export function FilesPage() {
   }, [activeAgentId])
 
   const { dirs, expanded, loadDir, toggleDir, expandTo, refresh } = useWorkspaceFiles(activeAgentId)
+  const tabsApi = useWorkspaceTabs(activeAgentId)
 
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [openFile, setOpenFile] = useState<WorkspaceFileInfo | null>(null)
-  const [fileLoading, setFileLoading] = useState(false)
-  const [fileError, setFileError] = useState<string | null>(null)
   const [treeSheetOpen, setTreeSheetOpen] = useState(false)
+  const [closingTab, setClosingTab] = useState<string | null>(null)
 
   const openPath = useCallback(
-    async (path: string) => {
-      if (!activeAgentId) return
+    (path: string) => {
       setSelectedPath(path)
-      setFileLoading(true)
-      setFileError(null)
-      try {
-        const file = await api.get<WorkspaceFileInfo>(
-          `/agents/${encodeURIComponent(activeAgentId)}/workspace/file?path=${encodeURIComponent(path)}`,
-        )
-        setOpenFile(file)
-        expandTo(path)
-      } catch (err) {
-        if (err instanceof ApiRequestError && err.code === 'IS_DIRECTORY') {
-          // Deep link to a folder: expand + select in the tree, no editor tab.
-          expandTo(`${path}/x`)
-          toggleDir(path)
-          setOpenFile(null)
-        } else if (err instanceof ApiRequestError && err.status === 404) {
-          // Dead deep link (file deleted since the chip/message was written).
-          toast.error(t('files.notFound', { path }))
-          expandTo(path)
-          setOpenFile(null)
-        } else {
-          setFileError(getErrorMessage(err))
-        }
-      } finally {
-        setFileLoading(false)
-      }
+      expandTo(path)
+      tabsApi.openTab(path)
     },
-    [activeAgentId, expandTo, toggleDir, t],
+    [expandTo, tabsApi],
   )
 
-  // Deep link: open ?path= once the agent is resolved.
+  // Deep link: open ?path= once the agent list resolved the workspace.
   useEffect(() => {
-    if (activeAgentId && requestedPath) void openPath(requestedPath)
+    if (!activeAgentId || !requestedPath) return
+    // A directory deep-link just expands the tree; a file opens a tab. We
+    // can't know which without asking — openTab handles the 404/dir cases by
+    // surfacing state; the cheap probe here is the ls of its parent.
+    openPath(requestedPath)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAgentId, requestedPath])
 
-  // Reset the open file when switching workspaces.
+  // Dead deep-link feedback (file vanished): the tab state flags deletedOnDisk.
   useEffect(() => {
-    setSelectedPath(null)
-    setOpenFile(null)
-    setFileError(null)
-  }, [activeAgentId])
+    if (!requestedPath) return
+    const state = tabsApi.states[requestedPath]
+    if (state?.deletedOnDisk && !state.dirty) {
+      toast.error(t('files.notFound', { path: requestedPath }))
+      tabsApi.forceCloseTab(requestedPath)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabsApi.states[requestedPath ?? '']?.deletedOnDisk])
 
   const handleSelectFile = (entry: WorkspaceEntry) => {
     setTreeSheetOpen(false)
-    void openPath(entry.path)
+    openPath(entry.path)
   }
 
-  const handleAgentChange = (id: string) => {
-    navigate(`/files/${id}`, { replace: false })
+  const handleAgentChange = (id: string) => navigate(`/files/${id}`)
+
+  const requestCloseTab = (path: string) => {
+    if (tabsApi.states[path]?.dirty) {
+      setClosingTab(path)
+    } else {
+      tabsApi.forceCloseTab(path)
+    }
   }
 
   const rootState = dirs['']
@@ -122,12 +111,7 @@ export function FilesPage() {
       </div>
       {workspaceIsEmpty ? (
         <div className="flex flex-1 items-start justify-center p-4">
-          <EmptyState
-            icon={Folder}
-            title={t('files.empty.title')}
-            description={t('files.empty.description')}
-            compact
-          />
+          <EmptyState icon={Folder} title={t('files.empty.title')} description={t('files.empty.description')} compact />
         </div>
       ) : (
         <WorkspaceTree
@@ -142,6 +126,9 @@ export function FilesPage() {
       )}
     </div>
   )
+
+  const activeTab = tabsApi.active
+  const activeState = activeTab ? tabsApi.states[activeTab] : undefined
 
   return (
     <div className="surface-base flex h-full flex-col overflow-hidden">
@@ -167,10 +154,7 @@ export function FilesPage() {
       />
 
       <div className="flex min-h-0 flex-1">
-        {/* Tree panel — fixed column on md+, Sheet below */}
-        <aside className="hidden w-64 shrink-0 border-r border-border md:flex md:flex-col lg:w-72">
-          {treePanel}
-        </aside>
+        <aside className="hidden w-64 shrink-0 border-r border-border md:flex md:flex-col lg:w-72">{treePanel}</aside>
         <Sheet open={treeSheetOpen} onOpenChange={setTreeSheetOpen}>
           <SheetContent side="left" className="w-80 p-0 md:hidden">
             <SheetTitle className="sr-only">{t('activityBar.files')}</SheetTitle>
@@ -178,7 +162,6 @@ export function FilesPage() {
           </SheetContent>
         </Sheet>
 
-        {/* Center pane */}
         <main className="flex min-w-0 flex-1 flex-col">
           {agentsLoading ? (
             <div className="flex flex-1 items-center justify-center">
@@ -188,27 +171,49 @@ export function FilesPage() {
             <div className="flex flex-1 items-center justify-center p-6">
               <EmptyState icon={Folder} title={t('files.noAgents.title')} description={t('files.noAgents.description')} />
             </div>
-          ) : fileLoading ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : fileError ? (
-            <div className="flex flex-1 items-center justify-center p-6">
-              <EmptyState icon={Folder} title={t('files.openError')} description={fileError} minimal />
-            </div>
-          ) : openFile ? (
-            <WorkspaceEditor agentId={activeAgentId} file={openFile} readOnly />
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6">
-              <EmptyState
-                icon={FilePlus2}
-                title={t('files.noFileOpen.title')}
-                description={t('files.noFileOpen.description')}
+            <>
+              <FileTabs
+                tabs={tabsApi.tabs}
+                active={activeTab}
+                dirtyPaths={new Set(Object.entries(tabsApi.states).filter(([, s]) => s.dirty).map(([p]) => p))}
+                onSelect={(path) => {
+                  setSelectedPath(path)
+                  tabsApi.focusTab(path)
+                }}
+                onClose={requestCloseTab}
               />
-            </div>
+              {activeTab && activeState ? (
+                <WorkspaceEditor
+                  agentId={activeAgentId}
+                  path={activeTab}
+                  state={activeState}
+                  onChangeDraft={(value) => tabsApi.updateDraft(activeTab, value)}
+                  onSave={(opts) => void tabsApi.save(activeTab, opts)}
+                  onReload={() => void tabsApi.reload(activeTab)}
+                />
+              ) : (
+                <div className="flex flex-1 items-center justify-center p-6">
+                  <EmptyState
+                    icon={FilePlus2}
+                    title={t('files.noFileOpen.title')}
+                    description={t('files.noFileOpen.description')}
+                  />
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
+
+      <UnsavedChangesDialog
+        open={closingTab !== null}
+        onConfirm={() => {
+          if (closingTab) tabsApi.forceCloseTab(closingTab)
+          setClosingTab(null)
+        }}
+        onCancel={() => setClosingTab(null)}
+      />
     </div>
   )
 }

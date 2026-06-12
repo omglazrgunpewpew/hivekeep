@@ -3547,7 +3547,18 @@
     "editor": {
       "download": "Download",
       "tooLarge": "This text file is too large to edit here ({{size}}). Download it instead.",
-      "binary": "Binary file ({{mime}}) — preview not available."
+      "binary": "Binary file ({{mime}}) — preview not available.",
+      "edit": "Edit",
+      "preview": "Preview",
+      "save": "Save",
+      "saved": "Saved",
+      "recreate": "Recreate file",
+      "deletedFromDisk": "This file was deleted on disk while you were editing it.",
+      "conflict": {
+        "message": "The file changed on disk since you opened it (probably written by the agent).",
+        "reload": "Reload",
+        "overwrite": "Overwrite"
+      }
     },
     "browseWorkspace": "Browse files"
   }

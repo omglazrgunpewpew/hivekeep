@@ -3,11 +3,21 @@ import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 // process-globally (mkdir becomes a no-op) and Bun cannot un-mock it — the
 // sync 'node:fs' surface is not covered by that mock. See the custom-tools
 // mock.module gotcha.
-import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, realpathSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, symlinkSync, rmSync, realpathSync, utimesSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { mock } from 'bun:test'
+import { fullMockConfig } from '../../test-helpers'
+
+// Other suites mock.module('@/server/config') and Bun's module mocks are
+// process-global — pin our own full config so test order can't starve the
+// service of config.workspaceFiles (same gotcha as fs/promises above).
+const testConfig = JSON.parse(JSON.stringify(fullMockConfig)) as typeof fullMockConfig
+mock.module('@/server/config', () => ({ config: testConfig }))
+
 import {
   resolveInRoot,
+  writeWorkspaceFile,
   normalizeRelPath,
   validateEntryName,
   WorkspaceFilesError,
@@ -117,6 +127,72 @@ describe('resolveInRoot — containment', () => {
   test('broken symlink is forbidden, not a crash', async () => {
     symlinkSync(join(outside, 'does-not-exist'), join(root, 'dangling'))
     await expectForbidden(resolveInRoot(root, 'dangling'))
+  })
+})
+
+describe('writeWorkspaceFile', () => {
+  // Point the real config at the temp dir so workspaceRootFor('agent-w') = root.
+  beforeEach(() => {
+    ;(testConfig.workspace as { baseDir: string }).baseDir = join(root, '..')
+    rmSync(root, { recursive: true, force: true })
+    mkdirSync(root, { recursive: true })
+  })
+
+  const AGENT = 'workspace' // root = <base>/workspace from the shared fixture
+
+  test('creates a file (and parents) and returns mtime', async () => {
+    const result = await writeWorkspaceFile(AGENT, 'notes/new/file.txt', 'hello')
+    expect(result.path).toBe('notes/new/file.txt')
+    expect(result.size).toBe(5)
+    expect(readFileSync(join(root, 'notes/new/file.txt'), 'utf8')).toBe('hello')
+  })
+
+  test('createOnly refuses to overwrite (DEST_EXISTS)', async () => {
+    await writeWorkspaceFile(AGENT, 'a.txt', 'one')
+    try {
+      await writeWorkspaceFile(AGENT, 'a.txt', 'two', { createOnly: true })
+      expect.unreachable()
+    } catch (err) {
+      expect((err as WorkspaceFilesError).code).toBe('DEST_EXISTS')
+    }
+    expect(readFileSync(join(root, 'a.txt'), 'utf8')).toBe('one')
+  })
+
+  test('optimistic concurrency: stale baseModifiedAt → CONFLICT', async () => {
+    const first = await writeWorkspaceFile(AGENT, 'b.txt', 'v1')
+    await writeWorkspaceFile(AGENT, 'b.txt', 'v2') // concurrent writer (the agent)
+    // Same-millisecond writes share an mtime — bump it like a real later write.
+    const bumped = new Date(first.modifiedAt + 50)
+    utimesSync(join(root, 'b.txt'), bumped, bumped)
+    try {
+      await writeWorkspaceFile(AGENT, 'b.txt', 'v3', { baseModifiedAt: first.modifiedAt })
+      expect.unreachable()
+    } catch (err) {
+      expect((err as WorkspaceFilesError).code).toBe('CONFLICT')
+    }
+    expect(readFileSync(join(root, 'b.txt'), 'utf8')).toBe('v2')
+  })
+
+  test('matching baseModifiedAt writes fine', async () => {
+    const first = await writeWorkspaceFile(AGENT, 'c.txt', 'v1')
+    const second = await writeWorkspaceFile(AGENT, 'c.txt', 'v2', { baseModifiedAt: first.modifiedAt })
+    expect(second.size).toBe(2)
+  })
+
+  test('refuses to write through a symlink leaf', async () => {
+    writeFileSync(join(outside, 'target.txt'), 'x')
+    symlinkSync(join(outside, 'target.txt'), join(root, 'link.txt'))
+    await expectForbidden(writeWorkspaceFile(AGENT, 'link.txt', 'pwned'))
+    expect(readFileSync(join(outside, 'target.txt'), 'utf8')).toBe('x')
+  })
+
+  test('rejects invalid new-file names (INVALID_NAME)', async () => {
+    try {
+      await writeWorkspaceFile(AGENT, 'dir/' + 'x'.repeat(256), 'data')
+      expect.unreachable()
+    } catch (err) {
+      expect((err as WorkspaceFilesError).code).toBe('INVALID_NAME')
+    }
   })
 })
 

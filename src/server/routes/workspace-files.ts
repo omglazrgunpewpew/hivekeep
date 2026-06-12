@@ -6,6 +6,7 @@ import {
   listWorkspaceDir,
   readWorkspaceFile,
   statWorkspaceFileForRaw,
+  writeWorkspaceFile,
 } from '@/server/services/workspace-files'
 import { isInlineSafeMime } from '@/server/services/file-kind'
 import type { AppVariables } from '@/server/app'
@@ -64,6 +65,25 @@ workspaceFilesRoutes.get('/file', async (c) => {
   try {
     const file = await readWorkspaceFile(agent.id, c.req.query('path') ?? '')
     return c.json(file)
+  } catch (err) {
+    return handleError(c, err)
+  }
+})
+
+// PUT /api/agents/:agentId/workspace/file — write text content (files.md § 6.4)
+workspaceFilesRoutes.put('/file', async (c) => {
+  const agent = requireAgent(c)
+  if (!agent) return agentNotFound(c)
+  const body = await c.req.json<{ path?: string; content?: string; baseModifiedAt?: number; createOnly?: boolean }>()
+  if (typeof body.path !== 'string' || typeof body.content !== 'string') {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'path and content are required' } }, 400)
+  }
+  try {
+    const result = await writeWorkspaceFile(agent.id, body.path, body.content, {
+      baseModifiedAt: typeof body.baseModifiedAt === 'number' ? body.baseModifiedAt : undefined,
+      createOnly: body.createOnly === true,
+    })
+    return c.json(result)
   } catch (err) {
     return handleError(c, err)
   }
