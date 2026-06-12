@@ -2953,7 +2953,8 @@
       "agents": "Agents",
       "chat": "Discussion",
       "formatting": "Mise en forme",
-      "general": "Général"
+      "general": "Général",
+      "files": "Fichiers"
     },
     "commandPalette": "Palette de commandes",
     "toggleSidebar": "Afficher/masquer la barre latérale",
@@ -2970,7 +2971,13 @@
     "formatItalic": "Italique",
     "formatCode": "Code en ligne",
     "formatCodeBlock": "Bloc de code",
-    "formatStrikethrough": "Barré"
+    "formatStrikethrough": "Barré",
+    "filesSave": "Enregistrer le fichier actif",
+    "filesQuickOpen": "Ouverture rapide d’un fichier du workspace",
+    "filesRename": "Renommer la sélection (focus arborescence)",
+    "filesDelete": "Supprimer la sélection (focus arborescence)",
+    "filesClipboard": "Copier / couper / coller (focus arborescence)",
+    "filesCloseTab": "Fermer l’onglet actif"
   },
   "theme": {
     "palette": "Palette",
@@ -3629,6 +3636,11 @@
       "snapshotNotice": "Crée une copie figée dans le file storage — les modifications ultérieures du fichier du workspace ne seront pas reflétées.",
       "submit": "Partager & copier le lien",
       "urlCopied": "Lien de partage copié dans le presse-papier"
+    },
+    "search": {
+      "placeholder": "Rechercher un fichier par nom ou chemin…",
+      "noResults": "Aucun fichier trouvé",
+      "open": "Ouverture rapide (Ctrl+P)"
     }
   }
 }

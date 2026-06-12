@@ -52,6 +52,17 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    titleKey: 'shortcuts.group.files',
+    shortcuts: [
+      { keys: [MOD, 'S'], labelKey: 'shortcuts.filesSave' },
+      { keys: [MOD, 'P'], labelKey: 'shortcuts.filesQuickOpen' },
+      { keys: ['F2'], labelKey: 'shortcuts.filesRename' },
+      { keys: ['Del'], labelKey: 'shortcuts.filesDelete' },
+      { keys: [MOD, 'C/X/V'], labelKey: 'shortcuts.filesClipboard' },
+      { keys: ['Alt', 'W'], labelKey: 'shortcuts.filesCloseTab' },
+    ],
+  },
+  {
     titleKey: 'shortcuts.group.formatting',
     shortcuts: [
       { keys: [MOD, 'B'], labelKey: 'shortcuts.formatBold' },

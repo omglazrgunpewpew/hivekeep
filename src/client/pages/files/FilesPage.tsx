@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Folder, FolderTree, RefreshCw, Loader2, FilePlus2 } from 'lucide-react'
+import { Folder, FolderTree, RefreshCw, Loader2, FilePlus2, Search } from 'lucide-react'
 import { toastError } from '@/client/lib/api'
 import { PageHeader } from '@/client/components/layout/PageHeader'
 import { EmptyState } from '@/client/components/common/EmptyState'
@@ -33,6 +33,7 @@ import { WorkspaceTree, type WorkspaceTreeActions } from '@/client/components/fi
 import { FileStorageFormDialog } from '@/client/components/file-storage/FileStorageFormDialog'
 import { WorkspaceEditor, workspaceRawUrl } from '@/client/components/files/WorkspaceEditor'
 import { FileTabs } from '@/client/components/files/FileTabs'
+import { WorkspaceQuickOpen } from '@/client/components/files/WorkspaceQuickOpen'
 import type { WorkspaceEntry } from '@/shared/types'
 
 const LAST_AGENT_KEY = 'files.lastAgentId'
@@ -64,12 +65,15 @@ export function FilesPage() {
 
   const workspace = useWorkspaceFiles(activeAgentId)
   const tabsApi = useWorkspaceTabs(activeAgentId)
+  const tabsApiRef = useRef(tabsApi)
+  tabsApiRef.current = tabsApi
 
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [treeSheetOpen, setTreeSheetOpen] = useState(false)
   const [closingTab, setClosingTab] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<WorkspaceEntry | null>(null)
   const [shareTarget, setShareTarget] = useState<WorkspaceEntry | null>(null)
+  const [quickOpenOpen, setQuickOpenOpen] = useState(false)
 
   const openPath = useCallback(
     (path: string) => {
@@ -218,6 +222,29 @@ export function FilesPage() {
     }
   }
 
+  // Page-scoped shortcuts (files.md § 3.7): Mod+P / Mod+S preventDefault the
+  // browser dialogs; Alt+W replaces the browser-reserved Ctrl+W. Mod+S inside
+  // CodeMirror is handled by the editor's own keymap.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (mod && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        setQuickOpenOpen(true)
+      } else if (mod && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        const active = tabsApiRef.current.active
+        if (active && tabsApiRef.current.states[active]?.dirty) void tabsApiRef.current.save(active)
+      } else if (e.altKey && e.key.toLowerCase() === 'w') {
+        e.preventDefault()
+        const active = tabsApiRef.current.active
+        if (active) requestCloseTabRef.current(active)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const handleSelectFile = (entry: WorkspaceEntry) => {
     setTreeSheetOpen(false)
     openPath(entry.path)
@@ -232,6 +259,8 @@ export function FilesPage() {
       tabsApi.forceCloseTab(path)
     }
   }
+  const requestCloseTabRef = useRef(requestCloseTab)
+  requestCloseTabRef.current = requestCloseTab
 
   const rootState = workspace.dirs['']
   const workspaceIsEmpty = rootState?.entries != null && rootState.entries.length === 0
@@ -283,9 +312,20 @@ export function FilesPage() {
           </Button>
         }
         actions={
-          <Button variant="ghost" size="icon-sm" onClick={workspace.refresh} aria-label={t('files.refresh')} title={t('files.refresh')}>
-            <RefreshCw className="size-4" />
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setQuickOpenOpen(true)}
+              aria-label={t('files.search.open')}
+              title={t('files.search.open')}
+            >
+              <Search className="size-4" />
+            </Button>
+            <Button variant="ghost" size="icon-sm" onClick={workspace.refresh} aria-label={t('files.refresh')} title={t('files.refresh')}>
+              <RefreshCw className="size-4" />
+            </Button>
+          </>
         }
       />
 
@@ -349,6 +389,13 @@ export function FilesPage() {
           setClosingTab(null)
         }}
         onCancel={() => setClosingTab(null)}
+      />
+
+      <WorkspaceQuickOpen
+        open={quickOpenOpen}
+        onOpenChange={setQuickOpenOpen}
+        agentId={activeAgentId}
+        onPick={(path) => openPath(path)}
       />
 
       {activeAgentId && (

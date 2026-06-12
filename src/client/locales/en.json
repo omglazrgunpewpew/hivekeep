@@ -2953,7 +2953,8 @@
       "agents": "Agents",
       "chat": "Chat",
       "formatting": "Text Formatting",
-      "general": "General"
+      "general": "General",
+      "files": "Files"
     },
     "commandPalette": "Command palette",
     "toggleSidebar": "Toggle sidebar",
@@ -2970,7 +2971,13 @@
     "formatItalic": "Italic",
     "formatCode": "Inline code",
     "formatCodeBlock": "Code block",
-    "formatStrikethrough": "Strikethrough"
+    "formatStrikethrough": "Strikethrough",
+    "filesSave": "Save the active file",
+    "filesQuickOpen": "Quick open a workspace file",
+    "filesRename": "Rename the selected entry (tree focused)",
+    "filesDelete": "Delete the selected entry (tree focused)",
+    "filesClipboard": "Copy / cut / paste (tree focused)",
+    "filesCloseTab": "Close the active tab"
   },
   "theme": {
     "palette": "Palette",
@@ -3629,6 +3636,11 @@
       "snapshotNotice": "Creates a frozen copy in the file storage — later changes to the workspace file will not be reflected.",
       "submit": "Share & copy link",
       "urlCopied": "Share link copied to clipboard"
+    },
+    "search": {
+      "placeholder": "Search a file by name or path…",
+      "noResults": "No matching file",
+      "open": "Quick open (Ctrl+P)"
     }
   }
 }
