@@ -15,7 +15,7 @@ import {
   getBaseAvatarBytes,
   hasCustomBaseAvatar,
 } from '@/server/services/image-generation'
-import { DEFAULT_AVATAR_STYLE, DEFAULT_AVATAR_SUBJECT } from '@/shared/constants'
+import { DEFAULT_AVATAR_STYLE, DEFAULT_AVATAR_SUBJECT, AGENT_LANGUAGE_NAMES } from '@/shared/constants'
 import { loadProviderConfig } from '@/server/services/provider-config'
 import { deleteMemory, createMemory, updateMemory } from '@/server/services/memory'
 import type { AgentThinkingConfig, AgentThinkingEffort, MemoryCategory, MemoryScope } from '@/shared/types'
@@ -183,7 +183,7 @@ agentRoutes.post('/generate-config', async (c) => {
     }
   }
 
-  const lang = language === 'fr' ? 'French' : 'English'
+  const lang = AGENT_LANGUAGE_NAMES[language ?? ''] ?? 'English'
 
   const systemPrompt = `You are a configuration generator for an AI assistant platform called Hivekeep. A "Agent" is a specialized AI assistant with a unique identity, personality, and expertise.
 

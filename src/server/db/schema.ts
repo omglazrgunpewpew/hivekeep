@@ -53,6 +53,9 @@ export const userProfiles = sqliteTable('user_profiles', {
   lastName: text('last_name').notNull(),
   pseudonym: text('pseudonym').notNull(),
   language: text('language').notNull().default('fr'),
+  // Language Agents speak to this user (any AGENT_LANGUAGES code — broader than
+  // the UI's SUPPORTED_LANGUAGES). Null = follow `language` (UI language).
+  agentLanguage: text('agent_language'),
   role: text('role').notNull().default('member'),
   agentOrder: text('agent_order'), // JSON array of agent IDs, e.g. '["id1","id2","id3"]'
   cronOrder: text('cron_order'), // JSON array of cron IDs, e.g. '["id1","id2","id3"]'

@@ -449,10 +449,10 @@ export async function buildContextPreview(agentId: string): Promise<ContextPrevi
   const hasCompactedHistory = activeSummaries.length > 0
 
   // User language — get from first user profile as fallback
-  let userLanguage: 'fr' | 'en' = 'fr'
-  const firstProfile = db.select({ language: userProfiles.language }).from(userProfiles).limit(1).get()
+  let userLanguage: string = 'fr'
+  const firstProfile = db.select({ language: userProfiles.language, agentLanguage: userProfiles.agentLanguage }).from(userProfiles).limit(1).get()
   if (firstProfile) {
-    userLanguage = firstProfile.language as 'fr' | 'en'
+    userLanguage = firstProfile.agentLanguage ?? firstProfile.language
   }
 
   // Active project block — mirrors agent-engine.processAgentQueue so the preview
@@ -943,9 +943,9 @@ export async function buildQuickSessionContextPreview(agentId: string, sessionId
   if (!agent) throw new Error('Agent not found')
 
   // User language
-  let userLanguage: 'fr' | 'en' = 'fr'
-  const firstProfile = db.select({ language: userProfiles.language }).from(userProfiles).limit(1).get()
-  if (firstProfile) userLanguage = firstProfile.language as 'fr' | 'en'
+  let userLanguage: string = 'fr'
+  const firstProfile = db.select({ language: userProfiles.language, agentLanguage: userProfiles.agentLanguage }).from(userProfiles).limit(1).get()
+  if (firstProfile) userLanguage = firstProfile.agentLanguage ?? firstProfile.language
 
   // Memories (use last session message as query)
   let relevantMemories: Array<{ id: string; category: string; content: string; subject: string | null; importance: number | null; updatedAt: Date | null; score: number }> = []

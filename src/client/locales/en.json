@@ -32,7 +32,7 @@
       },
       "add_embedding_provider": {
         "title": "Add an embedding provider",
-        "description": "Unlocks semantic memory search. Without it, memory falls back to keyword-only (FTS) — still functional but less accurate at finding related memories."
+        "description": "Unlocks semantic memory search. Without it, memory falls back to keyword-only (FTS): still functional but less accurate at finding related memories."
       },
       "add_image_provider": {
         "title": "Add an image provider",
@@ -48,7 +48,7 @@
       },
       "create_first_agent": {
         "title": "Create your first Agent",
-        "description": "Agents are the AI agents you actually talk to. The wizard uses your default LLM to suggest a personality from a short description — or you can configure everything manually."
+        "description": "Agents are the AI agents you actually talk to. The wizard uses your default LLM to suggest a personality from a short description, or you can configure everything manually."
       }
     }
   },
@@ -88,7 +88,8 @@
       "discard": "Discard changes"
     },
     "url": "URL",
-    "retry": "Retry"
+    "retry": "Retry",
+    "agentLanguageFollowUi": "Same as the interface"
   },
   "errors": {
     "backendUnavailable": "Unable to reach the server. Please check that the backend is running and try again.",
@@ -122,7 +123,7 @@
       "provider": "Connect your AI"
     },
     "connectAi": {
-      "why": "This provider powers your Agents and Queenie, your setup guide. Pick one built-in provider to get started — you can add more later, including plugins for other providers."
+      "why": "This provider powers your Agents and Queenie, your setup guide. Pick one built-in provider to get started. You can add more later, including plugins for other providers."
     },
     "bootstrap": {
       "title": "Connect your AI",
@@ -162,7 +163,10 @@
     "preferences": {
       "title": "Preferences",
       "subtitle": "Customize your experience",
-      "language": "Language",
+      "language": "Interface language",
+      "languageHint": "Language of menus, buttons, and pages.",
+      "agentLanguage": "Agent language",
+      "agentLanguageHint": "Language your Agents will use when talking to you. Agents can speak nearly any language, even ones the interface is not translated into.",
       "theme": "Color theme",
       "themeHint": "You can change this anytime in settings",
       "themeMode": "Appearance",
@@ -189,7 +193,7 @@
       "familyTts": "Text-to-speech",
       "familyStt": "Speech-to-text",
       "familiesLabel": "Enable for",
-      "familiesHint": "A single provider row is created with the selected capabilities. The same API key powers every family you enable — toggling them later is a row edit, not a new entry.",
+      "familiesHint": "A single provider row is created with the selected capabilities. The same API key powers every family you enable. Toggling them later is a row edit, not a new entry.",
       "type": "Provider type",
       "name": "Display name",
       "namePlaceholder": "My {{type}} account",
@@ -416,16 +420,16 @@
       "disableAll": "Disable all",
       "optIn": "Opt-in",
       "missingCapability": {
-        "image": "Needs an image provider — toggle works but the tool will return an error until one is configured.",
-        "search": "Needs a search provider — toggle works but the tool will return an error until one is configured.",
-        "tts": "Needs a text-to-speech provider — toggle works but the tool will return an error until one is configured.",
-        "stt": "Needs a speech-to-text provider — toggle works but the tool will return an error until one is configured.",
-        "embedding": "Needs an embedding provider — memory recall and storage will fail until one is configured."
+        "image": "Needs an image provider: toggle works but the tool will return an error until one is configured.",
+        "search": "Needs a search provider: toggle works but the tool will return an error until one is configured.",
+        "tts": "Needs a text-to-speech provider: toggle works but the tool will return an error until one is configured.",
+        "stt": "Needs a speech-to-text provider: toggle works but the tool will return an error until one is configured.",
+        "embedding": "Needs an embedding provider: memory recall and storage will fail until one is configured."
       },
       "toolboxesTitle": "Toolboxes",
       "manageToolboxes": "Manage toolboxes",
       "toolboxesHint": "Pick one or more toolboxes to grant this Agent its tools. A toolbox bundles tools across all sources (native, plugin, MCP, custom).",
-      "defaultsToAll": "No toolbox selected — this Agent gets the built-in 'all' toolbox (every native and custom tool).",
+      "defaultsToAll": "No toolbox selected: this Agent gets the built-in 'all' toolbox (every native and custom tool).",
       "noToolboxesTitle": "No toolboxes yet",
       "noToolboxesDescription": "Create toolboxes from Settings to grant tools to this Agent.",
       "resolvedPreviewTitle": "Granted tools",
@@ -433,7 +437,7 @@
       "resolvedPreviewEmpty": "No tools granted by the current selection.",
       "extras": {
         "title": "Individual grants",
-        "hint": "Tools granted on top of toolboxes — approved requests land here.",
+        "hint": "Tools granted on top of toolboxes: approved requests land here.",
         "add": "Add tools",
         "empty": "No individual grants.",
         "remove": "Remove {{name}}",
@@ -488,10 +492,10 @@
       "animFilling": "Messages fill the context window as the conversation progresses.",
       "animApproaching": "Context is filling up. Compaction will trigger when the threshold is reached.",
       "animCompacting": "Threshold reached! Oldest messages are being compressed into a summary.",
-      "animMerging": "Too many summaries — oldest ones are being merged together.",
+      "animMerging": "Too many summaries: oldest ones are being merged together.",
       "animDone": "Cycle complete. The process repeats indefinitely as the conversation grows.",
       "animContinuing": "Conversation continues. {{summaries}} summary(ies) preserved, new messages keep flowing.",
-      "animExplanation": "When the context window fills up, the oldest messages are compressed into dated summaries. These summaries accumulate chronologically. When too many summaries pile up, the oldest ones are merged together — keeping recent summaries detailed and older ones compressed."
+      "animExplanation": "When the context window fills up, the oldest messages are compressed into dated summaries. These summaries accumulate chronologically. When too many summaries pile up, the oldest ones are merged together, keeping recent summaries detailed and older ones compressed."
     },
     "thinking": {
       "title": "Thinking / Reasoning",
@@ -517,7 +521,7 @@
       "subjectLabel": "Subject / type",
       "subjectPlaceholder": "e.g. a small, friendly, cute robot",
       "characterLabel": "Specifics for this avatar",
-      "characterPlaceholder": "Optional — add details just for this avatar (e.g. round glasses, teal palette, holding a tiny book). Leave empty to derive everything from the Agent's identity.",
+      "characterPlaceholder": "Optional: add details just for this avatar (e.g. round glasses, teal palette, holding a tiny book). Leave empty to derive everything from the Agent's identity.",
       "autoDescription": "The Agent generates its own portrait based on its identity. Its name, role, and personality all influence the result - make sure they're filled in first.",
       "promptPlaceholder": "Describe the avatar you want...",
       "generate": "Generate",
@@ -644,7 +648,7 @@
   },
   "chat": {
     "placeholder": "How can I help you?",
-    "attachmentUnsupported": "{{model}} can't read these — skipped: {{files}}",
+    "attachmentUnsupported": "{{model}} can't read these, skipped: {{files}}",
     "send": "Send",
     "stop": "Stop generating",
     "selectAgent": "Select an Agent to start chatting",
@@ -658,7 +662,7 @@
     "streaming": "Thinking...",
     "thinkingTokens": "{{value}} tokens",
     "thinkingTokensHint": "Output tokens generated so far (updates each step)",
-    "thinkingToolsHint": "Tool calls this turn — click to view",
+    "thinkingToolsHint": "Tool calls this turn - click to view",
     "contextUsage": "Context: ~{{tokens}} / {{max}} tokens ({{percent}}%), includes system prompt, history & tools",
     "contextNoData": "Context usage will appear after the first message is processed",
     "stepLimitReached": "Response truncated: tool step limit reached. Ask me to continue.",
@@ -695,14 +699,14 @@
       "realMarkerHint": "Real context size reported by the provider on the last call.",
       "unattributedHint": "Provider-reported size beyond what the local estimator can attribute by section.",
       "dualBarHint": "The breakdown shows where tokens come from by section, calibrated to match the provider's count. The real bar is what the provider actually counted on the last call.",
-      "dualBarExplanation": "The estimate auto-calibrates against past API roundtrips for this Agent (EMA-smoothed factor), so the two bars normally agree within a few percent. They can still diverge on the very first turn (no observation yet) or right after a major content shift — give it 2-3 more turns to converge.",
+      "dualBarExplanation": "The estimate auto-calibrates against past API roundtrips for this Agent (EMA-smoothed factor), so the two bars normally agree within a few percent. They can still diverge on the very first turn (no observation yet) or right after a major content shift. Give it 2-3 more turns to converge.",
       "calibrationHint": "EMA-smoothed factor learned from past API roundtrips. Multiplied with the raw BPE count so the estimate tracks what the provider actually charges."
     },
     "cacheChip": {
       "aria": "Cache state from last turn",
       "title": "Last turn cache",
-      "hint": "{{hit}}% of input was served from cache. The cache is warm — your next message should be cheap unless the prefix changes significantly.",
-      "hintCold": "{{hit}}% of input was served from cache on the last turn — but that was {{ago}} ago, past Anthropic's ~5min ephemeral TTL. The prefix is cold; the next request re-writes it."
+      "hint": "{{hit}}% of input was served from cache. The cache is warm. Your next message should be cheap unless the prefix changes significantly.",
+      "hintCold": "{{hit}}% of input was served from cache on the last turn, but that was {{ago}} ago, past Anthropic's ~5min ephemeral TTL. The prefix is cold; the next request re-writes it."
     },
     "forceCompact": "Force compaction",
     "tooltipContext": "Context window",
@@ -740,8 +744,8 @@
       "copy": "Copy",
       "copied": "Copied",
       "generatedAt": "Generated at {{time}}",
-      "structuredHint": "Rendered view of the context sent to the LLM. Each section is color-coded to match the context bar. This is a reconstruction for inspection — the actual payload may differ slightly.",
-      "rawHint": "JSON approximation of the full payload sent to the LLM provider: system prompt, conversation history, and tool schemas. This is a reconstruction for inspection — the actual API call may differ slightly (token masking, message formatting, provider-specific adaptations).",
+      "structuredHint": "Rendered view of the context sent to the LLM. Each section is color-coded to match the context bar. This is a reconstruction for inspection: the actual payload may differ slightly.",
+      "rawHint": "JSON approximation of the full payload sent to the LLM provider: system prompt, conversation history, and tool schemas. This is a reconstruction for inspection: the actual API call may differ slightly (token masking, message formatting, provider-specific adaptations).",
       "legend": {
         "systemPrompt": "System prompt",
         "summary": "Summary",
@@ -911,7 +915,7 @@
       "thinking": "Toggle extended thinking",
       "clear": "Clear conversation",
       "help": "Show available commands",
-      "helpMessage": "/btw — inject context during streaming\n/stop — stop generation\n/regen — regenerate last response\n/compact — compact history\n/thinking — toggle extended thinking\n/clear — clear conversation",
+      "helpMessage": "/btw - inject context during streaming\n/stop - stop generation\n/regen - regenerate last response\n/compact - compact history\n/thinking - toggle extended thinking\n/clear - clear conversation",
       "noResults": "No matching commands"
     },
     "mention": {
@@ -949,19 +953,19 @@
     },
     "rewind": {
       "title": "Rewind conversation?",
-      "description_one": "This message becomes the most recent one — about {{count}} later message will be permanently deleted from the conversation and its context. This cannot be undone.",
-      "description_other": "This message becomes the most recent one — about {{count}} later messages will be permanently deleted from the conversation and its context. This cannot be undone.",
+      "description_one": "This message becomes the most recent one. About {{count}} later message will be permanently deleted from the conversation and its context. This cannot be undone.",
+      "description_other": "This message becomes the most recent one. About {{count}} later messages will be permanently deleted from the conversation and its context. This cannot be undone.",
       "confirm": "Rewind",
-      "success_one": "Rewound — {{count}} message removed",
-      "success_other": "Rewound — {{count}} messages removed"
+      "success_one": "Rewound: {{count}} message removed",
+      "success_other": "Rewound: {{count}} messages removed"
     },
     "regenerate": "Regenerate",
     "toolsBadge": {
-      "tooltip_one": "{{count}} tool available — click to list it",
-      "tooltip_other": "{{count}} tools available — click to list them"
+      "tooltip_one": "{{count}} tool available - click to list it",
+      "tooltip_other": "{{count}} tools available - click to list them"
     },
     "toolsModal": {
-      "title": "{{name}} — tools",
+      "title": "{{name}} - tools",
       "description": "Every tool currently exposed to this agent, grouped by domain.",
       "descriptionQuick": "Tools exposed in this quick session (session-restricted tools like tasks, crons and inter-agent messaging are excluded).",
       "edit": "Edit tools"
@@ -1098,7 +1102,7 @@
   },
   "customTools": {
     "title": "Custom Tools",
-    "description": "Global tools you (or your Agents) script in any language. Once created, add them to a toolbox to grant them to an Agent — they run as custom_<slug>.",
+    "description": "Global tools you (or your Agents) script in any language. Once created, add them to a toolbox to grant them to an Agent. They run as custom_<slug>.",
     "create": "New custom tool",
     "edit": "Edit custom tool",
     "empty": "No custom tools yet",
@@ -1130,8 +1134,8 @@
       "domain": "Domain",
       "parameters": "Parameters (JSON Schema)",
       "parametersHint": "JSON Schema object describing the tool's input arguments.",
-      "code": "Code — {{file}}",
-      "deps": "Dependencies — {{file}}"
+      "code": "Code - {{file}}",
+      "deps": "Dependencies - {{file}}"
     },
     "translations": {
       "title": "Translations",
@@ -1156,7 +1160,7 @@
       "required": "required",
       "commaSeparated": "Comma-separated values",
       "jsonField": "JSON",
-      "invalidJson": "Invalid JSON — showing last form values.",
+      "invalidJson": "Invalid JSON: showing last form values.",
       "outputJson": "JSON",
       "outputRender": "Render",
       "renderAfterRun": "Run a test first to preview the renderer."
@@ -1172,7 +1176,7 @@
       "placeholder": "Pick an icon",
       "search": "Search icons…",
       "noResults": "No icons match your search",
-      "truncated": "Showing first {{count}} — refine your search"
+      "truncated": "Showing first {{count}} - refine your search"
     }
   },
   "toolDomains": {
@@ -1253,11 +1257,11 @@
       "hardExcludedNote": "This tool can never run inside a task, even if a toolbox includes it."
     },
     "help": {
-      "content": "A toolbox is a named, reusable set of native tools. Assign one or more toolboxes to a task and the task can use that union of tools — on top of a mandatory core set that is always available.",
+      "content": "A toolbox is a named, reusable set of native tools. Assign one or more toolboxes to a task and the task can use that union of tools, on top of a mandatory core set that is always available.",
       "bullet1": "Built-in toolboxes (Code, Research, Ops, Scout, All tools) are read-only but can be assigned to any task.",
       "bullet2": "Create your own toolboxes to fit recurring kinds of work.",
       "bullet3": "Every task always keeps a core set of tools, regardless of the toolboxes you assign.",
-      "bullet4": "Some tools can never run inside a task — they are flagged when you build a toolbox."
+      "bullet4": "Some tools can never run inside a task. They are flagged when you build a toolbox."
     }
   },
   "settings": {
@@ -1274,7 +1278,7 @@
       "publicUrlWarning": {
         "title": "Public URL may be misconfigured",
         "body": "You're accessing Hivekeep at {{actual}}, but the configured public URL is {{configured}}. Invitation links, webhooks, and OAuth callbacks are built from the public URL, so they'll point to {{configured}} and may be unreachable.",
-        "fix": "Set PUBLIC_URL to {{actual}} and restart — Docker: -e PUBLIC_URL={{actual}} (or in your .env); native install: HIVEKEEP_PUBLIC_URL={{actual}}."
+        "fix": "Set PUBLIC_URL to {{actual}} and restart. Docker: -e PUBLIC_URL={{actual}} (or in your .env); native install: HIVEKEEP_PUBLIC_URL={{actual}}."
       },
       "interface": {
         "title": "Interface"
@@ -1285,9 +1289,9 @@
       },
       "tasks": {
         "title": "Task execution",
-        "description": "Control how many tasks run at once across all Agents. A task only holds a slot while actively executing — suspended tasks (waiting on a human, another Agent, or a sub-task) free their slot.",
+        "description": "Control how many tasks run at once across all Agents. A task only holds a slot while actively executing: suspended tasks (waiting on a human, another Agent, or a sub-task) free their slot.",
         "saved": "Task limits updated",
-        "hint": "Raising the concurrency limit immediately fills free slots from the queue. Lowering it is gradual — running tasks are never stopped, new promotions just pause until the count drops. The queue cap rejects new tasks once that many are already waiting.",
+        "hint": "Raising the concurrency limit immediately fills free slots from the queue. Lowering it is gradual: running tasks are never stopped, new promotions just pause until the count drops. The queue cap rejects new tasks once that many are already waiting.",
         "maxConcurrent": {
           "label": "Max concurrent tasks",
           "tip": "How many tasks may execute simultaneously. When full, new or resuming tasks wait in the queue and start as slots free up. Default 10."
@@ -1328,21 +1332,21 @@
       },
       "style": {
         "title": "Art style (A)",
-        "tip": "How avatars are drawn — the rendering style. Pick a preset or type your own. Shared by every generated avatar.",
+        "tip": "How avatars are drawn: the rendering style. Pick a preset or type your own. Shared by every generated avatar.",
         "placeholder": "e.g. Pixar / 3D-animation style, soft lighting",
         "hint": "A short art-style directive shared by all generated avatars."
       },
       "subject": {
         "title": "Subject / type (B)",
-        "tip": "What every avatar depicts — robot, human, animal, dragon… Pick a preset or type your own. A non-robot subject is generated text-to-image (the bundled base image is a robot).",
+        "tip": "What every avatar depicts: robot, human, animal, dragon… Pick a preset or type your own. A non-robot subject is generated text-to-image (the bundled base image is a robot).",
         "placeholder": "e.g. a small, friendly, cute robot",
         "hint": "What every generated avatar depicts."
       },
       "help": {
         "content": "Avatars are built from three axes. Two are global (set here); the third is per-Agent.",
-        "bullet1": "Art style (A) and Subject/type (B) are global — every newly generated avatar uses them for a consistent look",
+        "bullet1": "Art style (A) and Subject/type (B) are global: every newly generated avatar uses them for a consistent look",
         "bullet2": "The base image gives image-capable models a reference so avatars share the same render. Generate or upload one, then keep 'Use base image' on",
-        "bullet3": "Each Agent's own character (C) is written automatically from its identity — tweak a single avatar from the Agent's avatar picker (Manual tab) without touching these globals"
+        "bullet3": "Each Agent's own character (C) is written automatically from its identity. Tweak a single avatar from the Agent's avatar picker (Manual tab) without touching these globals"
       },
       "bulk": {
         "cardTitle": "Regenerate existing avatars",
@@ -1350,7 +1354,7 @@
         "cardHint": "Apply the current art direction to Agents created before you changed it.",
         "button": "Regenerate all avatars",
         "title": "Regenerate avatars",
-        "description": "Pick the Agents whose avatars you want to regenerate with the current art direction. Regeneration runs on the server — you can close this window once it starts.",
+        "description": "Pick the Agents whose avatars you want to regenerate with the current art direction. Regeneration runs on the server. You can close this window once it starts.",
         "model": "Image model",
         "selectAll": "Select all",
         "deselectAll": "Deselect all",
@@ -1359,7 +1363,7 @@
         "regenerate": "Regenerate ({{count}})",
         "noAgents": "No Agents to regenerate yet.",
         "running": {
-          "note": "Regeneration is running on the server — you can safely close this window, it will keep going.",
+          "note": "Regeneration is running on the server. You can safely close this window, it will keep going.",
           "progress": "{{done}} / {{total}} done",
           "failedCount": "{{count}} failed"
         },
@@ -1369,7 +1373,7 @@
         },
         "failedList": "Failed:",
         "toastDoneAllOk": "All {{count}} avatars regenerated",
-        "toastDone": "Avatar regeneration finished — {{succeeded}} done, {{failed}} failed"
+        "toastDone": "Avatar regeneration finished: {{succeeded}} done, {{failed}} failed"
       }
     },
     "providers": {
@@ -1404,7 +1408,7 @@
         "searchPlaceholder": "Filter by name or id…",
         "emptyAll": "This provider exposes nothing to browse.",
         "emptyFiltered": "Nothing matches the current filter.",
-        "searchOnlyExplain": "Search providers have no model or voice catalogue — they are called directly through the web_search tool. The capabilities above describe what this provider supports.",
+        "searchOnlyExplain": "Search providers have no model or voice catalogue: they are called directly through the web_search tool. The capabilities above describe what this provider supports.",
         "imageInput": "image-in",
         "img2img": "img2img",
         "multiImage": "multi-ref ({{count}})",
@@ -1422,22 +1426,22 @@
     },
     "modelRegistry": {
       "title": "Model registry",
-      "subtitle": "Every model exposed by your providers. Metadata (context, capabilities, pricing) is auto-filled from the community models.dev database — edit any value to pin it, or remap a wrong match.",
+      "subtitle": "Every model exposed by your providers. Metadata (context, capabilities, pricing) is auto-filled from the community models.dev database. Edit any value to pin it, or remap a wrong match.",
       "openPageTitle": "Open the model registry",
-      "openPageHint": "The full table opens on its own page — more room for context, pricing and capabilities.",
+      "openPageHint": "The full table opens on its own page: more room for context, pricing and capabilities.",
       "openPage": "Open Models page",
       "displayName": "Display name",
       "displayNameHint": "Shown everywhere a model name appears. Leave blank to use the models.dev label (falls back to the id).",
-      "reviewBanner_one": "{{count}} model to review — its models.dev match was uncertain. Click ✓ to confirm a match is right, or open a row to remap it.",
-      "reviewBanner_other": "{{count}} models to review — their models.dev match was uncertain. Click ✓ to confirm a match is right, or open a row to remap it.",
-      "reviewHint": "The models.dev match below was uncertain. Check the values look right (remap if not), then Save to confirm — that clears the review flag.",
+      "reviewBanner_one": "{{count}} model to review: its models.dev match was uncertain. Click ✓ to confirm a match is right, or open a row to remap it.",
+      "reviewBanner_other": "{{count}} models to review: their models.dev match was uncertain. Click ✓ to confirm a match is right, or open a row to remap it.",
+      "reviewHint": "The models.dev match below was uncertain. Check the values look right (remap if not), then Save to confirm: that clears the review flag.",
       "confirmTooltip": "Confirm this match is correct (clears review)",
       "reset": "Reset to auto",
       "resetHint": "This model has manual overrides. Reset to drop them and follow models.dev automatically.",
       "resetDone": "Reset to automatic",
       "capYes": "Supported",
       "capNo": "Not supported",
-      "capUnknown": "Unknown — neither the provider nor models.dev reported this",
+      "capUnknown": "Unknown: neither the provider nor models.dev reported this",
       "perPage": "Per page",
       "range": "{{from}}–{{to}} of {{total}}",
       "statusAll": "All statuses",
@@ -1451,13 +1455,13 @@
       "bulkConfirm_one": "Confirm {{count}} review",
       "bulkConfirm_other": "Confirm {{count}} reviews",
       "colEnabled": "Enabled",
-      "enabledTip": "Enabled — shown in model pickers. Click to hide it.",
-      "disabledTip": "Disabled — hidden from model pickers. Click to enable.",
+      "enabledTip": "Enabled: shown in model pickers. Click to hide it.",
+      "disabledTip": "Disabled: hidden from model pickers. Click to enable.",
       "enabledLabel": "Enabled",
       "enabledDialogHint": "Off = hidden from model pickers (the chat path still works if an Agent already uses it).",
       "snapshotRefresh": "Update models.dev",
-      "snapshotTip": "Download the latest models.dev catalogue, then re-match — picks up newly-released models without an app update.",
-      "snapshotRefreshed": "models.dev updated — {{models}} models across {{providers}} providers. Re-matching…"
+      "snapshotTip": "Download the latest models.dev catalogue, then re-match: picks up newly-released models without an app update.",
+      "snapshotRefreshed": "models.dev updated: {{models}} models across {{providers}} providers. Re-matching…"
     },
     "models": {
       "title": "Models & Services",
@@ -1469,7 +1473,7 @@
       "defaultLlmPlaceholder": "Select default LLM",
       "defaultCompacting": "Default Compacting Model",
       "defaultCompactingTip": "Model that summarizes old conversation history as the context window fills up. A small, fast model is enough.",
-      "defaultCompactingHint": "Used when an Agent's conversation grows beyond its context window — old messages get summarized to free up room. Without it, each Agent uses its own chat model for compacting (works fine but may cost more on long conversations).",
+      "defaultCompactingHint": "Used when an Agent's conversation grows beyond its context window: old messages get summarized to free up room. Without it, each Agent uses its own chat model for compacting (works fine but may cost more on long conversations).",
       "defaultCompactingPlaceholder": "Use each Agent's own model (default)",
       "defaultScout": "Default Scout Model",
       "defaultScoutTip": "A cheap, fast model the `scout` tool uses to delegate heavy read-only exploration. A small, fast model is ideal here.",
@@ -1485,11 +1489,11 @@
       "defaultSearchPlaceholder": "Auto-detect (first valid search provider)",
       "defaultTts": "Default TTS Provider",
       "defaultTtsTip": "Text-to-speech provider used by `text_to_speech` when no specific provider is passed.",
-      "defaultTtsHint": "Used by the `text_to_speech` tool to synthesize audio. The voice is always picked per call (or in a channel's config). Without it, `text_to_speech` returns 'No TTS provider configured' — no voice messages, no spoken replies.",
+      "defaultTtsHint": "Used by the `text_to_speech` tool to synthesize audio. The voice is always picked per call (or in a channel's config). Without it, `text_to_speech` returns 'No TTS provider configured': no voice messages, no spoken replies.",
       "defaultTtsPlaceholder": "Auto-detect (first valid TTS provider)",
       "defaultStt": "Default STT Provider",
       "defaultSttTip": "Speech-to-text provider used by `transcribe_audio` when no specific provider is passed.",
-      "defaultSttHint": "Used by the `transcribe_audio` tool to convert audio to text. Without it, `transcribe_audio` returns 'No STT provider configured' — no voice transcription, no voicemail-to-text on supported channels.",
+      "defaultSttHint": "Used by the `transcribe_audio` tool to convert audio to text. Without it, `transcribe_audio` returns 'No STT provider configured': no voice transcription, no voicemail-to-text on supported channels.",
       "defaultSttPlaceholder": "Auto-detect (first valid STT provider)",
       "extractionModel": "Extraction Model",
       "extractionModelTip": "Scans past conversations and picks out facts, preferences, and decisions worth saving as long-term memories. A small, fast model works well here.",
@@ -1497,12 +1501,12 @@
       "extractionModelPlaceholder": "Use each Agent's own model (default)",
       "embeddingModel": "Embedding Model",
       "embeddingModelTip": "Converts text into numerical vectors so Agents can search memories by semantic similarity. Changing the model requires re-processing every existing memory.",
-      "embeddingModelHint": "Powers semantic memory search across every Agent's memory tab and the `recall` tool. Without it, memory search falls back to keyword-only (FTS) — still works, just less precise at finding loosely related memories.",
+      "embeddingModelHint": "Powers semantic memory search across every Agent's memory tab and the `recall` tool. Without it, memory search falls back to keyword-only (FTS): still works, just less precise at finding loosely related memories.",
       "embeddingModelPlaceholder": "Select an embedding model",
       "help": {
         "content": "Default models are used as fallbacks when creating new Agents or when no specific model is configured at the Agent level.",
         "bullet1": "The default LLM is pre-selected when creating new Agents, saving time during setup",
-        "bullet2": "Compacting and extraction models can be lightweight — they don't need to be the same as your chat model",
+        "bullet2": "Compacting and extraction models can be lightweight: they don't need to be the same as your chat model",
         "bullet3": "Changing the embedding model requires re-embedding all existing memories"
       }
     },
@@ -1870,7 +1874,7 @@
       "filterAllowedValues": "Allowed values",
       "filterAllowedValuesPlaceholder": "Type a value and press Enter",
       "filterAllowedValuesTip": "Only payloads where the extracted field matches one of these values will be forwarded to the Agent.",
-      "filterAllowedValuesEmpty": "No allowed values set — all payloads will be blocked.",
+      "filterAllowedValuesEmpty": "No allowed values set: all payloads will be blocked.",
       "filterExpression": "Regex pattern",
       "filterExpressionPlaceholder": "e.g. \"completed|success\"",
       "filterExpressionTip": "A regular expression tested against the raw payload body.",
@@ -1953,7 +1957,7 @@
       "subtitle": "Connect external address books so your Agents can look up contacts (read-only).",
       "add": "Add address book",
       "addTitle": "Add an address book",
-      "addDescription": "Connect an external contacts source. Read-only — these never enter Hivekeep's own contacts.",
+      "addDescription": "Connect an external contacts source. Read-only: these never enter Hivekeep's own contacts.",
       "provider": "Provider",
       "connect": "Connect {{provider}}",
       "connected": "{{provider}} address book connected",
@@ -1964,7 +1968,7 @@
       "emptyTitle": "No address book connected",
       "emptyDescription": "Connect iCloud (or another CardDAV source) so your Agents can look up a contact's phone or email.",
       "help": {
-        "content": "Connect an external address book (e.g. iCloud via an app-specific password). Agents can then look up contacts read-only — for example to find a phone number before sending an SMS. These contacts are never copied into Hivekeep's own contacts."
+        "content": "Connect an external address book (e.g. iCloud via an app-specific password). Agents can then look up contacts read-only, for example to find a phone number before sending an SMS. These contacts are never copied into Hivekeep's own contacts."
       }
     },
     "triggers": {
@@ -1983,12 +1987,12 @@
       "conditionsHint": "Combine conditions with ALL / ANY groups, nested as needed.",
       "prompt": "Instruction",
       "promptHint": "What the agent should do when the trigger fires.",
-      "promptHintTask": "Task mode is isolated (no conversation history) — make this self-contained: include all the context the agent needs to act.",
+      "promptHintTask": "Task mode is isolated (no conversation history). Make this self-contained: include all the context the agent needs to act.",
       "promptPlaceholder": "e.g. Summarize this invoice and tell me the amount.",
       "dispatchMode": "When it fires",
       "dispatchHint": "Inject into the agent's conversation, or spawn a separate task.",
       "dispatchConversation": "In conversation",
-      "dispatchConversationDesc": "The agent receives the email in its main conversation — it keeps full history and context.",
+      "dispatchConversationDesc": "The agent receives the email in its main conversation: it keeps full history and context.",
       "dispatchTask": "As a task",
       "dispatchTaskWarning": "A task runs in an isolated session with NO conversation history. Put everything the agent needs to act in the prompt below.",
       "active": "Active",
@@ -2131,7 +2135,7 @@
       "webhook": {
         "label": "Inbound webhook URL",
         "hint": "Paste this URL into your provider's console to receive inbound messages. For Twilio: Phone Numbers → your number → Messaging → \"A message comes in\" → HTTP POST.",
-        "localhostWarning": "This points at localhost — external providers can't reach it. Set the PUBLIC_URL env var to your public HTTPS URL so signatures validate and webhooks arrive."
+        "localhostWarning": "This points at localhost: external providers can't reach it. Set the PUBLIC_URL env var to your public HTTPS URL so signatures validate and webhooks arrive."
       },
       "noUsers": "No pending users",
       "newUserPending": "New user {{name}} awaiting approval",
@@ -2299,7 +2303,7 @@
     },
     "marketplace": {
       "title": "Browse Plugins",
-      "description": "Plugins published to npm with the `hivekeep-plugin` keyword. Anyone can publish — review the package author and source repository before installing.",
+      "description": "Plugins published to npm with the `hivekeep-plugin` keyword. Anyone can publish. Review the package author and source repository before installing.",
       "refresh": "Refresh",
       "searchPlaceholder": "Search npm...",
       "allTags": "All",
@@ -2385,7 +2389,7 @@
       "channelTip": "Which stream of updates this instance follows.",
       "channelSaved": "Update channel saved",
       "channelStableDescription": "Follows official releases. Recommended for most installs.",
-      "channelEdgeDescription": "Follows the latest commit on main. May be unstable — for testing only.",
+      "channelEdgeDescription": "Follows the latest commit on main. May be unstable. For testing only.",
       "updateAvailableBadge": "{{version}} available",
       "upToDateBadge": "Up to date",
       "lastChecked": "Last checked: {{date}}"
@@ -2420,7 +2424,7 @@
     "search": "Search models...",
     "noResults": "No models found",
     "all": "All",
-    "clear": "No model — use default",
+    "clear": "No model (use default)",
     "loading": "Loading models…",
     "vision": "vision",
     "img2img": "img2img",
@@ -2434,7 +2438,10 @@
     "lastName": "Last name",
     "pseudonym": "Pseudonym",
     "pseudonymHint": "Letters, numbers, underscores, hyphens",
-    "language": "Language",
+    "language": "Interface language",
+    "languageHint": "Language of menus, buttons, and pages.",
+    "agentLanguage": "Agent language",
+    "agentLanguageHint": "Language your Agents use when talking to you. Independent from the interface language: Agents can speak languages the interface is not translated into.",
     "save": "Save changes",
     "saved": "Profile updated",
     "cancel": "Cancel",
@@ -2900,7 +2907,9 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm password",
-    "language": "Language",
+    "language": "Interface language",
+    "agentLanguage": "Agent language",
+    "agentLanguageHint": "Language the Agents will use when talking to you.",
     "avatar": "Profile photo",
     "submit": "Create account",
     "creating": "Creating your account...",
@@ -3070,8 +3079,8 @@
     "dockerTagNote": "If your compose file pins a specific version tag, change it to {{version}} (or use the latest tag) before pulling.",
     "selfUpdateInstructions": "Hivekeep will snapshot its database, download the new version and restart. If anything goes wrong, the previous version is restored automatically.",
     "adminOnly": "Only administrators can apply updates.",
-    "devModeNote": "This instance is running in development mode — update it from your git checkout.",
-    "manualInstallNote": "This install is not managed by Hivekeep — update it the same way it was installed.",
+    "devModeNote": "This instance is running in development mode. Update it from your git checkout.",
+    "manualInstallNote": "This install is not managed by Hivekeep. Update it the same way it was installed.",
     "viewOnGitHub": "View on GitHub",
     "updateButton": "Update now",
     "updateSuccess": "Updated to {{version}}!",
@@ -3178,8 +3187,8 @@
   "orphanTask": {
     "menuAction": "Start a task",
     "title": "Start a task",
-    "description": "Launch a standalone task on {{name}} — no project or ticket needed. The result is posted back into this thread when it finishes.",
-    "descriptionGeneric": "Launch a standalone task — no project or ticket needed. Pick the Agent that should run it; the result is posted back into its thread when it finishes.",
+    "description": "Launch a standalone task on {{name}}, no project or ticket needed. The result is posted back into this thread when it finishes.",
+    "descriptionGeneric": "Launch a standalone task, no project or ticket needed. Pick the Agent that should run it; the result is posted back into its thread when it finishes.",
     "agentField": "Agent",
     "agentPlaceholder": "Choose an Agent to run this task",
     "promptField": "What should this task do?",
@@ -3202,7 +3211,7 @@
   "projects": {
     "page": {
       "title": "Projects",
-      "comingSoon": "Kanban view is coming soon — backend is wired up, frontend in progress."
+      "comingSoon": "Kanban view is coming soon: backend is wired up, frontend in progress."
     },
     "sidebar": {
       "title": "Projects",
@@ -3258,7 +3267,7 @@
       "totalCount_other": "{{count}} entries",
       "pinnedCount_one": "{{count}} pinned",
       "pinnedCount_other": "{{count}} pinned",
-      "searchResults": "{{count}} match — {{total}} total",
+      "searchResults": "{{count}} match ({{total}} total)",
       "pagination": "{{from}}–{{to}} of {{total}}",
       "pinnedBadge": "Pinned",
       "byUser": "by you",
@@ -3277,16 +3286,16 @@
         "title": "How project knowledge works",
         "show": "How it works",
         "pinnedLead": "Pinned",
-        "pinned": "entries have their full content injected into every Agent's prompt automatically — no tool call. Use sparingly (max 10 per project).",
+        "pinned": "entries have their full content injected into every Agent's prompt automatically (no tool call). Use sparingly (max 10 per project).",
         "unpinnedLead": "Other entries",
         "unpinned": "show only their title in the prompt index. Agents fetch the body on demand with get_project_knowledge, or search by topic with search_project_knowledge.",
-        "scope": "All entries are shared across every Agent and ticket task on this project — treat it as a collective wiki."
+        "scope": "All entries are shared across every Agent and ticket task on this project: treat it as a collective wiki."
       },
       "empty": {
         "title": "No knowledge yet",
         "description": "Capture architectural decisions, conventions, gotchas, and domain rules here. Every Agent working on this project will see the titles in its prompt and can fetch any entry's body on demand.",
         "searchTitle": "No matches",
-        "searchDescription": "Try a different query — search uses both semantic similarity and keywords."
+        "searchDescription": "Try a different query: search uses both semantic similarity and keywords."
       },
       "dialog": {
         "createTitle": "Add project knowledge",
@@ -3294,10 +3303,10 @@
         "description": "Visible to every Agent working on this project. Every entry's title lands in the Agent's prompt; the markdown body is injected only when pinned.",
         "titleLabel": "Title",
         "titlePlaceholder": "A short, self-explanatory headline (e.g. 'Use Drizzle ORM, not Prisma')",
-        "titleHint": "This is what every Agent will see by default in its prompt — make it tell the whole story in one line.",
+        "titleHint": "This is what every Agent will see by default in its prompt. Make it tell the whole story in one line.",
         "contentLabel": "Content (Markdown)",
         "contentPlaceholder": "## Context\nWhy this matters…\n\n## Details\nCode samples, links, reasoning…",
-        "contentHint": "Free-form markdown — as long as you need. Only inlined into Agent prompts when pinned; otherwise fetched on demand.",
+        "contentHint": "Free-form markdown, as long as you need. Only inlined into Agent prompts when pinned; otherwise fetched on demand.",
         "categoryLabel": "Category (optional)",
         "categoryPlaceholder": "e.g. arch, decision, gotcha, convention",
         "pinnedLabel": "Pin to system prompt",
@@ -3338,13 +3347,13 @@
       "titleField": "Project title",
       "titlePlaceholder": "e.g. Backend refactor",
       "descriptionField": "Description",
-      "descriptionPlaceholder": "Context, goals, links, constraints — anything useful for an Agent working on this project.",
+      "descriptionPlaceholder": "Context, goals, links, constraints: anything useful for an Agent working on this project.",
       "descriptionHint": "Markdown supported. This description is injected into the system prompt of any Agent that has this project active."
     },
     "ticket": {
       "create": {
         "title": "New ticket",
-        "description": "Add a new ticket to this project. Status defaults to Backlog — drag it to another column once you're ready to work on it.",
+        "description": "Add a new ticket to this project. Status defaults to Backlog. Drag it to another column once you're ready to work on it.",
         "titleField": "Ticket title",
         "titlePlaceholder": "e.g. Fix login redirect loop",
         "descriptionField": "Description",
@@ -3366,7 +3375,7 @@
         "noTasks": "No tasks have been spawned on this ticket yet.",
         "noTasksTitle": "No tasks yet",
         "noTasksDescription": "Spawn an Agent to work on this ticket and track the run here.",
-        "notFound": "This ticket was not found — it may have been deleted.",
+        "notFound": "This ticket was not found. It may have been deleted.",
         "back": "Back to {{type}}",
         "ticketRef": "Ticket {{ref}}",
         "editAction": "Edit ticket",
@@ -3428,7 +3437,7 @@
     },
     "startTask": {
       "title": "Start a task",
-      "description": "Spawn a sub-Agent to work on this ticket. Pre-selected Agent is the one with this project active. The task runs in await mode — you'll get a turn on the Agent's thread when it finishes.",
+      "description": "Spawn a sub-Agent to work on this ticket. Pre-selected Agent is the one with this project active. The task runs in await mode: you'll get a turn on the Agent's thread when it finishes.",
       "agentField": "Which Agent should run this task?",
       "agentPlaceholder": "Select an Agent",
       "activeOnProject": "active here",
@@ -3494,13 +3503,13 @@
       "tagsSection": "Tags",
       "modelField": "Default model",
       "modelPlaceholder": "Use each Agent's own model",
-      "modelHint": "Used by sub-Agent tasks running on tickets of this project — overrides each Agent's own model. A model picked explicitly when spawning a task still wins. Leave empty to fall back to the Agent's model.",
+      "modelHint": "Used by sub-Agent tasks running on tickets of this project: overrides each Agent's own model. A model picked explicitly when spawning a task still wins. Leave empty to fall back to the Agent's model.",
       "scoutModelField": "Default scout model",
       "scoutModelPlaceholder": "Inherit (global / Agent's model)",
-      "scoutModelHint": "Cheap, fast model used by the `scout` tool for tasks on this project's tickets — overrides the global scout default. Leave empty to fall back to the global scout default, then the Agent's own model.",
+      "scoutModelHint": "Cheap, fast model used by the `scout` tool for tasks on this project's tickets: overrides the global scout default. Leave empty to fall back to the global scout default, then the Agent's own model.",
       "thinkingField": "Default reasoning effort",
       "thinkingInherit": "Use each Agent's own setting",
-      "thinkingHint": "Applied to sub-Agent tasks running on tickets of this project — overrides each Agent's own thinking config. A value chosen explicitly at task spawn still wins.",
+      "thinkingHint": "Applied to sub-Agent tasks running on tickets of this project: overrides each Agent's own thinking config. A value chosen explicitly at task spawn still wins.",
       "toolboxesField": "Default toolboxes for tasks",
       "toolboxesHint": "Toolboxes given by default to tasks started on tickets of this project. Toolboxes picked explicitly when starting a task still win. Leave empty to fall back to the built-in default.",
       "delete": "Delete project",
@@ -3511,7 +3520,7 @@
       }
     },
     "tags": {
-      "empty": "No tags yet — add some below.",
+      "empty": "No tags yet. Add some below.",
       "newLabel": "New tag label"
     },
     "github": {
@@ -3541,7 +3550,7 @@
       "statusError": "Clone failed",
       "statusBlock": {
         "none": "No clone configured yet.",
-        "cloning": "Cloning the repo in the background — sub-tasks will be blocked until this finishes.",
+        "cloning": "Cloning the repo in the background: sub-tasks will be blocked until this finishes.",
         "ready": "Local clone is ready. Sub-tasks can be spawned on this project.",
         "error": "Clone failed. Check the message below and click Retry once the issue is fixed."
       },
@@ -3554,11 +3563,11 @@
   },
   "updateProgress": {
     "title": "Update in progress",
-    "dontClose": "You can keep using Hivekeep — the update runs in the background and the page will reload when it's done.",
+    "dontClose": "You can keep using Hivekeep: the update runs in the background and the page will reload when it's done.",
     "waitingForServer": "Server is restarting… waiting for it to come back",
     "reloading": "The page will reload automatically.",
     "failedTitle": "Update failed",
-    "failedSafe": "Nothing was changed — the current version is still running.",
+    "failedSafe": "Nothing was changed. The current version is still running.",
     "rolledBackTitle": "Update rolled back",
     "rolledBackDescription": "The new version failed to start, so the previous version was restored automatically. Your data was restored from the pre-update snapshot.",
     "steps": {
@@ -3584,14 +3593,14 @@
     },
     "noAgents": {
       "title": "No agents yet",
-      "description": "Create an agent first — its workspace will show up here."
+      "description": "Create an agent first: its workspace will show up here."
     },
     "noFileOpen": {
       "title": "No file open",
       "description": "Select a file in the tree to view it."
     },
     "tree": {
-      "loadError": "Failed to load — tap to retry",
+      "loadError": "Failed to load - tap to retry",
       "emptyFolder": "empty",
       "title": "Files",
       "newFile": "New file",
@@ -3617,7 +3626,7 @@
     "editor": {
       "download": "Download",
       "tooLarge": "This text file is too large to edit here ({{size}}). Download it instead.",
-      "binary": "Binary file ({{mime}}) — preview not available.",
+      "binary": "Binary file ({{mime}}): preview not available.",
       "edit": "Edit",
       "preview": "Preview",
       "save": "Save",
@@ -3633,7 +3642,7 @@
     "browseWorkspace": "Browse files",
     "share": {
       "title": "Share file",
-      "snapshotNotice": "Creates a frozen copy in the file storage — later changes to the workspace file will not be reflected.",
+      "snapshotNotice": "Creates a frozen copy in the file storage: later changes to the workspace file will not be reflected.",
       "submit": "Share & copy link",
       "urlCopied": "Share link copied to clipboard"
     },

@@ -4,6 +4,7 @@ import { config } from '@/server/config'
 import { generateWorkspaceTree } from '@/server/services/workspace-tree'
 import type { SystemContext } from '@/server/services/system-context'
 import type { AgentKind } from '@/shared/types'
+import { AGENT_LANGUAGE_NAMES } from '@/shared/constants'
 
 // ─── Configurator (Queenie) blocks ─────────────────────────────────────────────
 // Loaded once from the bundled knowledge doc. The configurator Agent gets a
@@ -117,7 +118,8 @@ interface PromptParams {
    *  [Trigger: …] messages. Main-Agent prompt only. */
   accountTriggers?: Array<{ name: string; accountLabel: string; conditionsSummary: string; dispatchMode: 'conversation' | 'task'; folder: string }>
   globalPrompt?: string | null
-  userLanguage: 'fr' | 'en'
+  /** Agent communication language code (any AGENT_LANGUAGES code). */
+  userLanguage: string
   compactingSummaries?: Array<{
     summary: string
     firstMessageAt: Date
@@ -642,10 +644,9 @@ function buildCategoryGroupedMemories(header: string, memories: Memory[]): strin
   return `${header}\n\n${sections.join('\n\n')}`
 }
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  fr: 'French',
-  en: 'English',
-}
+// code → English name for the Language prompt block. Sourced from the shared
+// agent-language list so the picker and the prompt always agree.
+const LANGUAGE_NAMES: Record<string, string> = AGENT_LANGUAGE_NAMES
 
 // ─── Project blocks ──────────────────────────────────────────────────────────
 

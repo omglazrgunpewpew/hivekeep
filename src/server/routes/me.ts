@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/server/db/index'
 import { userProfiles, user } from '@/server/db/schema'
 import { getUnreadCountsForUser } from '@/server/services/agent-read-state'
-import { THEME_MODES, CONTRAST_MODES, PALETTE_IDS } from '@/shared/constants'
+import { THEME_MODES, CONTRAST_MODES, PALETTE_IDS, SUPPORTED_LANGUAGES, AGENT_LANGUAGE_CODES } from '@/shared/constants'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 import { config } from '@/server/config'
@@ -24,6 +24,7 @@ meRoutes.get('/', async (c) => {
       lastName: userProfiles.lastName,
       pseudonym: userProfiles.pseudonym,
       language: userProfiles.language,
+      agentLanguage: userProfiles.agentLanguage,
       role: userProfiles.role,
       avatarUrl: user.image,
       agentOrder: userProfiles.agentOrder,
@@ -60,7 +61,6 @@ meRoutes.patch('/', async (c) => {
   const body = await c.req.json()
 
   // Input validation
-  const SUPPORTED_LANGUAGES = ['en', 'fr']
   const MAX_NAME_LENGTH = 100
   const MAX_PSEUDONYM_LENGTH = 30
   const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
@@ -84,7 +84,11 @@ meRoutes.patch('/', async (c) => {
     if (typeof body.pseudonym === 'string' && body.pseudonym.length > 0 && !PSEUDONYM_REGEX.test(body.pseudonym)) errors.push('pseudonym can only contain letters, numbers, underscores, and hyphens')
   }
   if (body.language !== undefined) {
-    if (!SUPPORTED_LANGUAGES.includes(body.language)) errors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
+    if (!(SUPPORTED_LANGUAGES as readonly string[]).includes(body.language)) errors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
+  }
+  // Agent communication language (null resets to "follow UI language").
+  if (body.agentLanguage !== undefined && body.agentLanguage !== null) {
+    if (!AGENT_LANGUAGE_CODES.includes(body.agentLanguage)) errors.push('agentLanguage must be a supported agent language code')
   }
   if (body.onboardingModalDismissed !== undefined) {
     if (typeof body.onboardingModalDismissed !== 'boolean') errors.push('onboardingModalDismissed must be a boolean')
@@ -126,6 +130,7 @@ meRoutes.patch('/', async (c) => {
   if (body.lastName !== undefined) updates.lastName = body.lastName
   if (body.pseudonym !== undefined) updates.pseudonym = body.pseudonym
   if (body.language !== undefined) updates.language = body.language
+  if (body.agentLanguage !== undefined) updates.agentLanguage = body.agentLanguage
   if (body.agentOrder !== undefined) updates.agentOrder = body.agentOrder
   if (body.cronOrder !== undefined) updates.cronOrder = body.cronOrder
   if (body.onboardingModalDismissed !== undefined) updates.onboardingModalDismissed = body.onboardingModalDismissed
@@ -192,6 +197,7 @@ meRoutes.patch('/', async (c) => {
       lastName: userProfiles.lastName,
       pseudonym: userProfiles.pseudonym,
       language: userProfiles.language,
+      agentLanguage: userProfiles.agentLanguage,
       role: userProfiles.role,
       avatarUrl: user.image,
       agentOrder: userProfiles.agentOrder,

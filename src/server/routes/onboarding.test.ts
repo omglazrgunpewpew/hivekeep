@@ -388,6 +388,7 @@ describe('onboarding routes', () => {
         lastName: 'Doe',
         pseudonym: 'johnd',
         language: 'fr',
+        agentLanguage: null,
         role: 'admin',
       })
 

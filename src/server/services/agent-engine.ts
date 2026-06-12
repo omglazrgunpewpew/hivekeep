@@ -1102,7 +1102,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
     }
 
     // Get user language and speaker profile
-    let userLanguage: 'fr' | 'en' = 'fr'
+    let userLanguage: string = 'fr'
     let currentSpeaker: {
       firstName: string | null
       lastName: string | null
@@ -1151,7 +1151,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         .where(eq(userProfiles.userId, queueItem.sourceId))
         .get()
       if (profile) {
-        userLanguage = profile.language as 'fr' | 'en'
+        userLanguage = profile.agentLanguage ?? profile.language
         const speakerData: NonNullable<typeof currentSpeaker> = {
           firstName: profile.firstName,
           lastName: profile.lastName,
@@ -1170,11 +1170,11 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       // greeting falls back to the default ('fr') and can mismatch the user's
       // actual language on the next (user) turn.
       const owner = await db
-        .select({ language: userProfiles.language })
+        .select({ language: userProfiles.language, agentLanguage: userProfiles.agentLanguage })
         .from(userProfiles)
         .where(eq(userProfiles.userId, agent.createdBy))
         .get()
-      if (owner) userLanguage = owner.language as 'fr' | 'en'
+      if (owner) userLanguage = owner.agentLanguage ?? owner.language
     }
 
     // Only propagate userId when the source is actually a user (not an agent or task)
@@ -2163,14 +2163,14 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     }
 
     // Get user language
-    let userLanguage: 'fr' | 'en' = 'fr'
+    let userLanguage: string = 'fr'
     if (queueItem.sourceType === 'user' && queueItem.sourceId) {
       const profile = await db
         .select()
         .from(userProfiles)
         .where(eq(userProfiles.userId, queueItem.sourceId))
         .get()
-      if (profile) userLanguage = profile.language as 'fr' | 'en'
+      if (profile) userLanguage = profile.agentLanguage ?? profile.language
     }
 
     // Retrieve relevant memories (read-only) via hybrid search

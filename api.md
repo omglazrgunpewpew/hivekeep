@@ -77,7 +77,8 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
   firstName: string
   lastName: string
   pseudonym: string
-  language: 'fr' | 'en'
+  language: string             // langue de l'UI — un code de SUPPORTED_LANGUAGES
+  agentLanguage: string | null // langue parlée par les Agents (code AGENT_LANGUAGES) ; null = suit `language`
   role: 'admin' | 'user'
   avatarUrl: string | null
 }
@@ -91,7 +92,8 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
   firstName?: string
   lastName?: string
   pseudonym?: string
-  language?: 'fr' | 'en'
+  language?: string             // un code de SUPPORTED_LANGUAGES
+  agentLanguage?: string | null // un code de AGENT_LANGUAGES ; null = suivre la langue de l'UI
   password?: { current: string, new: string }
 }
 

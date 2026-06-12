@@ -65,7 +65,8 @@ Extension du `user` Better Auth avec les champs spécifiques Hivekeep.
 | `first_name` | text | NOT NULL | Prénom |
 | `last_name` | text | NOT NULL | Nom |
 | `pseudonym` | text | NOT NULL | Pseudonyme affiché dans le chat |
-| `language` | text | NOT NULL, DEFAULT 'fr' | 'fr' ou 'en' |
+| `language` | text | NOT NULL, DEFAULT 'fr' | Langue de l'UI (code de `SUPPORTED_LANGUAGES`) |
+| `agent_language` | text | | Langue parlée par les Agents (code de `AGENT_LANGUAGES`, plus large que l'UI) ; NULL = suit `language` |
 | `role` | text | NOT NULL, DEFAULT 'member' | 'admin' ou 'member' |
 | `agent_order` | text | | JSON array des IDs de Agents (ordre d'affichage) |
 | `cron_order` | text | | JSON array des IDs de crons (ordre d'affichage) |

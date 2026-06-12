@@ -7,7 +7,7 @@ import { PasswordInput } from '@/client/components/ui/password-input'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { Slider } from '@/client/components/ui/slider'
-import { LanguageSelector } from '@/client/components/common/LanguageSelector'
+import { LanguageSelector, AgentLanguageSelector } from '@/client/components/common/LanguageSelector'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { getUserInitials } from '@/client/lib/utils'
 import { FormField, FormRow } from '@/client/components/common/FormField'
@@ -40,6 +40,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
   const [lastName, setLastName] = useState(user?.lastName ?? '')
   const [pseudonym, setPseudonym] = useState(user?.pseudonym ?? '')
   const [language, setLanguage] = useState<string>(user?.language ?? 'en')
+  const [agentLanguage, setAgentLanguage] = useState<string | null>(user?.agentLanguage ?? null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl ?? null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -63,6 +64,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
       setLastName(user.lastName ?? '')
       setPseudonym(user.pseudonym ?? '')
       setLanguage(user.language ?? 'en')
+      setAgentLanguage(user.agentLanguage ?? null)
       setAvatarPreview(user.avatarUrl)
       setAvatarFile(null)
       setShowPassword(false)
@@ -164,7 +166,7 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
     setIsLoading(true)
 
     try {
-      await api.patch('/me', { firstName, lastName, pseudonym, language })
+      await api.patch('/me', { firstName, lastName, pseudonym, language, agentLanguage })
 
       if (avatarFile) {
         const formData = new FormData()
@@ -359,8 +361,12 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
               />
             </FormField>
 
-            <FormField label={t('account.language')}>
+            <FormField label={t('account.language')} hint={t('account.languageHint')}>
               <LanguageSelector value={language} onValueChange={setLanguage} />
+            </FormField>
+
+            <FormField label={t('account.agentLanguage')} hint={t('account.agentLanguageHint')}>
+              <AgentLanguageSelector value={agentLanguage} onValueChange={setAgentLanguage} />
             </FormField>
 
             {/* Password change section */}

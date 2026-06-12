@@ -8,7 +8,8 @@ export interface ModelRef {
 
 export type UserRole = 'admin' | 'member'
 
-export type Language = 'en' | 'fr'
+/** UI translation language codes (see SUPPORTED_LANGUAGES in constants.ts). */
+export type Language = 'en' | 'fr' | 'es' | 'de' | 'pt-BR' | 'zh-CN' | 'ja' | 'ru' | 'it' | 'pl'
 
 // ─── Notification types ────────────────────────────────────────────────────
 

@@ -9,7 +9,7 @@ import { Label } from '@/client/components/ui/label'
 import { Alert, AlertDescription } from '@/client/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/client/components/ui/avatar'
 import { AlertCircle, Camera, Loader2, ArrowLeft } from 'lucide-react'
-import { LanguageSelector } from '@/client/components/common/LanguageSelector'
+import { LanguageSelector, AgentLanguageSelector } from '@/client/components/common/LanguageSelector'
 import { getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
 
@@ -32,6 +32,8 @@ export function InvitePage() {
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [language, setLanguage] = useState('en')
+  // null = Agents follow the UI language
+  const [agentLanguage, setAgentLanguage] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -115,6 +117,7 @@ export function InvitePage() {
           lastName,
           pseudonym,
           language,
+          agentLanguage,
           invitationToken: token,
         }),
       })
@@ -329,10 +332,17 @@ export function InvitePage() {
               </div>
             </div>
 
-            {/* Language */}
+            {/* Interface language */}
             <div className="space-y-2">
               <Label>{t('invite.language')}</Label>
               <LanguageSelector value={language} onValueChange={setLanguage} />
+            </div>
+
+            {/* Agent communication language */}
+            <div className="space-y-2">
+              <Label>{t('invite.agentLanguage')}</Label>
+              <AgentLanguageSelector value={agentLanguage} onValueChange={setAgentLanguage} />
+              <p className="text-xs text-muted-foreground">{t('invite.agentLanguageHint')}</p>
             </div>
 
             {/* Submit */}

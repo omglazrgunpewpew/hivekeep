@@ -37,6 +37,7 @@ import { AlertTriangle, Archive, ArrowLeft, Bot, Brain, Camera, Loader2, Network
 import { UnsavedChangesDialog } from '@/client/components/common/UnsavedChangesDialog'
 import { useUnsavedChanges } from '@/client/hooks/useUnsavedChanges'
 import { useSSE } from '@/client/hooks/useSSE'
+import { useAuth } from '@/client/hooks/useAuth'
 import { useHasCapability } from '@/client/hooks/useHasCapability'
 import { cn } from '@/client/lib/utils'
 import { api, getErrorMessage, toastError } from '@/client/lib/api'
@@ -237,6 +238,7 @@ export function AgentFormModal({
   onOpenSettings,
 }: AgentFormModalProps) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
 
   const isEdit = !!agent
   const defaultCharacter = t('agent.defaults.character')
@@ -520,7 +522,7 @@ export function AgentFormModal({
     try {
       const config = await onGenerateAgentConfig({
         description: wizardDescription.trim(),
-        language: i18n.language,
+        language: user?.agentLanguage ?? i18n.language,
       })
 
       applyGeneratedConfig(config)
@@ -551,7 +553,7 @@ export function AgentFormModal({
       const config = await onGenerateAgentConfig({
         refinement: refineText.trim(),
         currentConfig: { name, role, character, expertise, model },
-        language: i18n.language,
+        language: user?.agentLanguage ?? i18n.language,
       })
 
       applyGeneratedConfig(config)

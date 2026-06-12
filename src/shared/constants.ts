@@ -1,7 +1,69 @@
 // Shared constants used by both client and server
 // 🤖 Hivekeep — Where AI agents collaborate!
 
-export const SUPPORTED_LANGUAGES = ['en', 'fr'] as const
+/** UI translation languages — every code here must have a matching
+ *  src/client/locales/<code>.json shipped with the app. */
+export const SUPPORTED_LANGUAGES = ['en', 'fr', 'es', 'de', 'pt-BR', 'zh-CN', 'ja', 'ru', 'it', 'pl'] as const
+
+// ─── Agent communication languages ──────────────────────────────────────────
+// Languages a user can ask Agents to speak (user_profiles.agent_language).
+// Decoupled from SUPPORTED_LANGUAGES (UI translations): LLMs speak far more
+// languages than the UI ships, so this list is intentionally broad.
+// `name` is the English name (injected into the system prompt); `nativeName`
+// is what the picker displays.
+export const AGENT_LANGUAGES = [
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+  { code: 'bg', name: 'Bulgarian', nativeName: 'Български' },
+  { code: 'ca', name: 'Catalan', nativeName: 'Català' },
+  { code: 'zh-CN', name: 'Chinese (Simplified)', nativeName: '简体中文' },
+  { code: 'zh-TW', name: 'Chinese (Traditional)', nativeName: '繁體中文' },
+  { code: 'hr', name: 'Croatian', nativeName: 'Hrvatski' },
+  { code: 'cs', name: 'Czech', nativeName: 'Čeština' },
+  { code: 'da', name: 'Danish', nativeName: 'Dansk' },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands' },
+  { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'et', name: 'Estonian', nativeName: 'Eesti' },
+  { code: 'fi', name: 'Finnish', nativeName: 'Suomi' },
+  { code: 'fr', name: 'French', nativeName: 'Français' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch' },
+  { code: 'el', name: 'Greek', nativeName: 'Ελληνικά' },
+  { code: 'he', name: 'Hebrew', nativeName: 'עברית' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'hu', name: 'Hungarian', nativeName: 'Magyar' },
+  { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어' },
+  { code: 'lv', name: 'Latvian', nativeName: 'Latviešu' },
+  { code: 'lt', name: 'Lithuanian', nativeName: 'Lietuvių' },
+  { code: 'ms', name: 'Malay', nativeName: 'Bahasa Melayu' },
+  { code: 'no', name: 'Norwegian', nativeName: 'Norsk' },
+  { code: 'fa', name: 'Persian', nativeName: 'فارسی' },
+  { code: 'pl', name: 'Polish', nativeName: 'Polski' },
+  { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)' },
+  { code: 'pt-PT', name: 'Portuguese (Portugal)', nativeName: 'Português (Portugal)' },
+  { code: 'ro', name: 'Romanian', nativeName: 'Română' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
+  { code: 'sr', name: 'Serbian', nativeName: 'Српски' },
+  { code: 'sk', name: 'Slovak', nativeName: 'Slovenčina' },
+  { code: 'sl', name: 'Slovenian', nativeName: 'Slovenščina' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
+  { code: 'sv', name: 'Swedish', nativeName: 'Svenska' },
+  { code: 'th', name: 'Thai', nativeName: 'ไทย' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
+] as const
+
+export type AgentLanguageCode = (typeof AGENT_LANGUAGES)[number]['code']
+
+export const AGENT_LANGUAGE_CODES: readonly string[] = AGENT_LANGUAGES.map((l) => l.code)
+
+/** code → English name, for prompt injection ("You MUST respond in …"). */
+export const AGENT_LANGUAGE_NAMES: Record<string, string> = Object.fromEntries(
+  AGENT_LANGUAGES.map((l) => [l.code, l.name]),
+)
 
 // ─── Appearance preferences (DB-backed via user_profiles, see /api/me) ──────────
 // PALETTE_IDS already lives lower in this file. THEME_MODES / CONTRAST_MODES are

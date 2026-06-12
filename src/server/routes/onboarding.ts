@@ -6,7 +6,7 @@ import { auth } from '@/server/auth/index'
 import { createLogger } from '@/server/logger'
 import { createContact, findContactByLinkedUserId } from '@/server/services/contacts'
 import { validateInvitation, markInvitationUsed } from '@/server/services/invitations'
-import { SUPPORTED_LANGUAGES } from '@/shared/constants'
+import { SUPPORTED_LANGUAGES, AGENT_LANGUAGE_CODES } from '@/shared/constants'
 
 const log = createLogger('routes:onboarding')
 const onboardingRoutes = new Hono()
@@ -81,11 +81,12 @@ onboardingRoutes.post('/profile', async (c) => {
   }
 
   const body = await c.req.json()
-  const { firstName, lastName, pseudonym, language, invitationToken } = body as {
+  const { firstName, lastName, pseudonym, language, agentLanguage, invitationToken } = body as {
     firstName: string
     lastName?: string
     pseudonym: string
     language: string
+    agentLanguage?: string | null
     invitationToken?: string
   }
 
@@ -114,6 +115,7 @@ onboardingRoutes.post('/profile', async (c) => {
   if (trimmedPseudonym.length > MAX_PSEUDONYM_LENGTH) validationErrors.push(`pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`)
   if (trimmedPseudonym.length > 0 && !PSEUDONYM_REGEX.test(trimmedPseudonym)) validationErrors.push('pseudonym can only contain letters, numbers, underscores, and hyphens')
   if (language && !SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) validationErrors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
+  if (agentLanguage != null && !AGENT_LANGUAGE_CODES.includes(agentLanguage)) validationErrors.push('agentLanguage must be a supported agent language code')
 
   if (validationErrors.length > 0) {
     return c.json(
@@ -154,6 +156,7 @@ onboardingRoutes.post('/profile', async (c) => {
     lastName: trimmedLastName,
     pseudonym: trimmedPseudonym,
     language: language || 'en',
+    agentLanguage: agentLanguage ?? null,
     role,
   })
 
@@ -192,6 +195,7 @@ onboardingRoutes.post('/profile', async (c) => {
     lastName: trimmedLastName,
     pseudonym: trimmedPseudonym,
     language: language || 'en',
+    agentLanguage: agentLanguage ?? null,
     role,
   }, 201)
 })

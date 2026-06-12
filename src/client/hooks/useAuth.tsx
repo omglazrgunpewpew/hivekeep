@@ -9,7 +9,10 @@ interface UserProfile {
   firstName: string
   lastName: string
   pseudonym: string
-  language: 'en' | 'fr'
+  /** Interface (UI translation) language — one of SUPPORTED_LANGUAGES. */
+  language: string
+  /** Language Agents speak to this user (AGENT_LANGUAGES code). Null = follow `language`. */
+  agentLanguage?: string | null
   role: 'admin' | 'member'
   avatarUrl: string | null
   agentOrder: string | null

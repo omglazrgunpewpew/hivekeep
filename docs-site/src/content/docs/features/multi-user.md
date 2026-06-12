@@ -16,7 +16,7 @@ The first person to complete onboarding becomes the **admin**. Onboarding is min
 A few specifics from how accounts are actually created:
 
 - Onboarding is open only while no admin exists. The principle is "completed equals an admin exists": once an admin profile is present, the public onboarding path is closed and new accounts require an invitation.
-- A new account needs both a Better Auth login (email and password, minimum 8 characters) and a Hivekeep **profile** (first name, last name, pseudonym, language). A login without a profile cannot reach any protected route; the middleware blocks it until onboarding is complete.
+- A new account needs both a Better Auth login (email and password, minimum 8 characters) and a Hivekeep **profile** (first name, last name, pseudonym, interface language, and optionally the Agent language). A login without a profile cannot reach any protected route; the middleware blocks it until onboarding is complete.
 - Every account that completes onboarding is currently created with the `admin` role. In practice this means the household members you invite can also manage global configuration, not just chat.
 
 :::note
@@ -46,7 +46,7 @@ Understanding the boundary matters when several people use the same instance.
 **Tied to the individual:**
 
 - **Login and session.** Each person has their own credentials and cookie session.
-- **Profile and preferences.** First name, last name, pseudonym, language, and appearance settings (theme, palette, contrast) are stored per profile so they sync across that person's devices.
+- **Profile and preferences.** First name, last name, pseudonym, interface language, Agent language (the language Agents speak to you — independent from the UI translation), and appearance settings (theme, palette, contrast) are stored per profile so they sync across that person's devices.
 - **The author tag on each message.** Every message records its source, and a user message carries the identity of the person who sent it.
 
 ## How Agents recognise who is speaking

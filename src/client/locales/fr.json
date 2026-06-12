@@ -32,7 +32,7 @@
       },
       "add_embedding_provider": {
         "title": "Ajouter un fournisseur embedding",
-        "description": "Active la recherche sémantique dans la mémoire. Sans ça, la mémoire fonctionne en keyword-only (FTS) — opérationnel mais moins précis pour retrouver des souvenirs liés."
+        "description": "Active la recherche sémantique dans la mémoire. Sans ça, la mémoire fonctionne en keyword-only (FTS) : opérationnel mais moins précis pour retrouver des souvenirs liés."
       },
       "add_image_provider": {
         "title": "Ajouter un fournisseur d'image",
@@ -48,7 +48,7 @@
       },
       "create_first_agent": {
         "title": "Créer ton premier Agent",
-        "description": "Les Agents sont les agents IA avec qui tu discutes. Le wizard utilise ton LLM par défaut pour suggérer une personnalité depuis une courte description — ou tu peux tout configurer manuellement."
+        "description": "Les Agents sont les agents IA avec qui tu discutes. Le wizard utilise ton LLM par défaut pour suggérer une personnalité depuis une courte description, ou tu peux tout configurer manuellement."
       }
     }
   },
@@ -88,7 +88,8 @@
       "discard": "Abandonner"
     },
     "url": "URL",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "agentLanguageFollowUi": "Identique à l'interface"
   },
   "errors": {
     "backendUnavailable": "Impossible de joindre le serveur. Vérifiez que le backend est en cours d'exécution et réessayez.",
@@ -122,7 +123,7 @@
       "provider": "Connectez votre IA"
     },
     "connectAi": {
-      "why": "Ce fournisseur alimente tes Agents et Queenie, ton guide de configuration. Commence par un fournisseur intégré — tu pourras en ajouter d'autres plus tard, et des plugins pour encore plus de fournisseurs."
+      "why": "Ce fournisseur alimente tes Agents et Queenie, ton guide de configuration. Commence par un fournisseur intégré. Tu pourras en ajouter d'autres plus tard, et des plugins pour encore plus de fournisseurs."
     },
     "bootstrap": {
       "title": "Connecte ton IA",
@@ -162,7 +163,10 @@
     "preferences": {
       "title": "Préférences",
       "subtitle": "Personnalisez votre expérience",
-      "language": "Langue",
+      "language": "Langue de l'interface",
+      "languageHint": "Langue des menus, boutons et pages.",
+      "agentLanguage": "Langue des agents",
+      "agentLanguageHint": "Langue que vos agents utiliseront pour vous parler. Les agents peuvent parler presque toutes les langues, même celles dans lesquelles l'interface n'est pas traduite.",
       "theme": "Thème de couleur",
       "themeHint": "Modifiable à tout moment dans les paramètres",
       "themeMode": "Apparence",
@@ -189,7 +193,7 @@
       "familyTts": "Synthèse vocale",
       "familyStt": "Transcription vocale",
       "familiesLabel": "Activer pour",
-      "familiesHint": "Une seule ligne fournisseur est créée avec les capacités sélectionnées. La même clé API alimente toutes les familles activées — les basculer plus tard est une édition de ligne, pas une nouvelle entrée.",
+      "familiesHint": "Une seule ligne fournisseur est créée avec les capacités sélectionnées. La même clé API alimente toutes les familles activées. Les basculer plus tard est une édition de ligne, pas une nouvelle entrée.",
       "type": "Type de fournisseur",
       "name": "Nom d'affichage",
       "namePlaceholder": "Mon compte {{type}}",
@@ -416,16 +420,16 @@
       "disableAll": "Tout désactiver",
       "optIn": "Activation manuelle",
       "missingCapability": {
-        "image": "Nécessite un fournisseur d'image — la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
-        "search": "Nécessite un fournisseur de recherche — la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
-        "tts": "Nécessite un fournisseur de synthèse vocale — la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
-        "stt": "Nécessite un fournisseur de reconnaissance vocale — la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
-        "embedding": "Nécessite un fournisseur d'embedding — le rappel et l'enregistrement en mémoire échoueront tant qu'aucun n'est configuré."
+        "image": "Nécessite un fournisseur d'image : la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
+        "search": "Nécessite un fournisseur de recherche : la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
+        "tts": "Nécessite un fournisseur de synthèse vocale : la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
+        "stt": "Nécessite un fournisseur de reconnaissance vocale : la bascule fonctionne mais l'outil renverra une erreur tant qu'aucun n'est configuré.",
+        "embedding": "Nécessite un fournisseur d'embedding : le rappel et l'enregistrement en mémoire échoueront tant qu'aucun n'est configuré."
       },
       "toolboxesTitle": "Boîtes à outils",
       "manageToolboxes": "Gérer les boîtes à outils",
       "toolboxesHint": "Choisissez une ou plusieurs boîtes à outils pour accorder ses outils à cet Agent. Une boîte regroupe des outils de toutes les sources (natifs, plugin, MCP, personnalisés).",
-      "defaultsToAll": "Aucune boîte sélectionnée — cet Agent utilise la boîte intégrée « all » (tous les outils natifs et custom).",
+      "defaultsToAll": "Aucune boîte sélectionnée : cet Agent utilise la boîte intégrée « all » (tous les outils natifs et custom).",
       "noToolboxesTitle": "Aucune boîte à outils",
       "noToolboxesDescription": "Créez des boîtes à outils depuis les Réglages pour accorder des outils à cet Agent.",
       "resolvedPreviewTitle": "Outils accordés",
@@ -433,7 +437,7 @@
       "resolvedPreviewEmpty": "Aucun outil accordé par la sélection actuelle.",
       "extras": {
         "title": "Accès individuels",
-        "hint": "Outils accordés en plus des boîtes à outils — les demandes approuvées arrivent ici.",
+        "hint": "Outils accordés en plus des boîtes à outils : les demandes approuvées arrivent ici.",
         "add": "Ajouter des outils",
         "empty": "Aucun accès individuel.",
         "remove": "Retirer {{name}}",
@@ -484,10 +488,10 @@
       "animFilling": "Les messages remplissent la fenêtre de contexte au fil de la conversation.",
       "animApproaching": "Le contexte se remplit. La compaction se déclenchera au seuil.",
       "animCompacting": "Seuil atteint ! Les messages les plus anciens sont compressés en un résumé.",
-      "animMerging": "Trop de résumés — les plus anciens sont fusionnés entre eux.",
+      "animMerging": "Trop de résumés : les plus anciens sont fusionnés entre eux.",
       "animDone": "Cycle terminé. Le processus se répète indéfiniment au fil de la conversation.",
       "animContinuing": "La conversation continue. {{summaries}} résumé(s) conservé(s), les nouveaux messages arrivent.",
-      "animExplanation": "Quand la fenêtre de contexte se remplit, les messages les plus anciens sont compressés en résumés datés. Ces résumés s'accumulent chronologiquement. Quand il y en a trop, les plus anciens sont fusionnés entre eux — les résumés récents restent détaillés, les anciens sont compressés.",
+      "animExplanation": "Quand la fenêtre de contexte se remplit, les messages les plus anciens sont compressés en résumés datés. Ces résumés s'accumulent chronologiquement. Quand il y en a trop, les plus anciens sont fusionnés entre eux : les résumés récents restent détaillés, les anciens sont compressés.",
       "modeDefault": "Utiliser le défaut global",
       "modeAgentOwn": "Utiliser le modèle de l'Agent",
       "modeCustom": "Modèle personnalisé",
@@ -517,7 +521,7 @@
       "subjectLabel": "Sujet / type",
       "subjectPlaceholder": "ex. un petit robot mignon et sympathique",
       "characterLabel": "Spécificités de cet avatar",
-      "characterPlaceholder": "Facultatif — ajoutez des détails propres à cet avatar (ex. lunettes rondes, palette turquoise, tenant un petit livre). Laissez vide pour tout déduire de l'identité de l'Agent.",
+      "characterPlaceholder": "Facultatif : ajoutez des détails propres à cet avatar (ex. lunettes rondes, palette turquoise, tenant un petit livre). Laissez vide pour tout déduire de l'identité de l'Agent.",
       "autoDescription": "L'Agent génère son propre portrait à partir de son identité. Son nom, son rôle et sa personnalité influencent le résultat - assurez-vous de les remplir d'abord.",
       "promptPlaceholder": "Décrivez l'avatar souhaité...",
       "generate": "Générer",
@@ -644,7 +648,7 @@
   },
   "chat": {
     "placeholder": "Comment puis-je vous aider ?",
-    "attachmentUnsupported": "{{model}} ne peut pas les lire — ignorés : {{files}}",
+    "attachmentUnsupported": "{{model}} ne peut pas les lire, ignorés : {{files}}",
     "send": "Envoyer",
     "stop": "Arrêter la génération",
     "selectAgent": "Sélectionnez un Agent pour commencer",
@@ -658,7 +662,7 @@
     "streaming": "Réflexion...",
     "thinkingTokens": "{{value}} tokens",
     "thinkingTokensHint": "Tokens générés jusqu'ici (mis à jour à chaque étape)",
-    "thinkingToolsHint": "Outils utilisés ce tour — cliquer pour voir",
+    "thinkingToolsHint": "Outils utilisés ce tour - cliquer pour voir",
     "contextUsage": "Contexte : ~{{tokens}} / {{max}} tokens ({{percent}} %), inclut prompt système, historique et outils",
     "contextNoData": "L'utilisation du contexte apparaîtra après le premier message traité",
     "stepLimitReached": "Réponse tronquée : limite d'étapes atteinte. Demandez-moi de continuer.",
@@ -695,14 +699,14 @@
       "realMarkerHint": "Taille de contexte réelle retournée par le provider lors du dernier appel.",
       "unattributedHint": "Taille rapportée par le provider qui dépasse ce que l'estimateur local peut attribuer par section.",
       "dualBarHint": "Le détail par section est calibré pour correspondre au compte du provider. La barre réelle est ce que le provider a effectivement compté lors du dernier appel.",
-      "dualBarExplanation": "L'estimation s'auto-calibre sur les retours API passés de cet Agent (facteur lissé EMA), donc les deux barres convergent à quelques pourcents près. Elles peuvent diverger au tout premier tour (pas encore d'observation) ou juste après un changement majeur de contenu — laisse 2-3 tours pour qu'elles se rejoignent.",
+      "dualBarExplanation": "L'estimation s'auto-calibre sur les retours API passés de cet Agent (facteur lissé EMA), donc les deux barres convergent à quelques pourcents près. Elles peuvent diverger au tout premier tour (pas encore d'observation) ou juste après un changement majeur de contenu. Laisse 2-3 tours pour qu'elles se rejoignent.",
       "calibrationHint": "Facteur lissé EMA appris des retours API. Multiplié avec le compte BPE brut pour que l'estimation suive ce que le provider facture réellement."
     },
     "cacheChip": {
       "aria": "État du cache au dernier tour",
       "title": "Cache (dernier tour)",
-      "hint": "{{hit}}% de l'input venait du cache. Le cache est encore chaud — ta prochaine requête devrait être peu chère sauf si le préfixe change beaucoup.",
-      "hintCold": "{{hit}}% de l'input venait du cache au dernier tour — mais c'était il y a {{ago}}, au-delà du TTL éphémère de ~5min d'Anthropic. Le préfixe est froid ; ta prochaine requête réécrit le préfixe."
+      "hint": "{{hit}}% de l'input venait du cache. Le cache est encore chaud. Ta prochaine requête devrait être peu chère sauf si le préfixe change beaucoup.",
+      "hintCold": "{{hit}}% de l'input venait du cache au dernier tour, mais c'était il y a {{ago}}, au-delà du TTL éphémère de ~5min d'Anthropic. Le préfixe est froid ; ta prochaine requête réécrit le préfixe."
     },
     "forceCompact": "Forcer la compaction",
     "tooltipContext": "Fenêtre de contexte",
@@ -740,8 +744,8 @@
       "copy": "Copier",
       "copied": "Copié",
       "generatedAt": "Généré à {{time}}",
-      "structuredHint": "Vue rendue du contexte envoyé au LLM. Chaque section est colorée pour correspondre à la barre de contexte. C'est une reconstruction pour inspection — le payload réel peut différer légèrement.",
-      "rawHint": "Approximation JSON du payload complet envoyé au fournisseur LLM : prompt système, historique de conversation et schémas d'outils. C'est une reconstruction pour inspection — l'appel API réel peut différer légèrement (masquage de tokens, formatage des messages, adaptations spécifiques au fournisseur).",
+      "structuredHint": "Vue rendue du contexte envoyé au LLM. Chaque section est colorée pour correspondre à la barre de contexte. C'est une reconstruction pour inspection : le payload réel peut différer légèrement.",
+      "rawHint": "Approximation JSON du payload complet envoyé au fournisseur LLM : prompt système, historique de conversation et schémas d'outils. C'est une reconstruction pour inspection : l'appel API réel peut différer légèrement (masquage de tokens, formatage des messages, adaptations spécifiques au fournisseur).",
       "legend": {
         "systemPrompt": "Prompt système",
         "summary": "Résumé",
@@ -911,7 +915,7 @@
       "thinking": "Activer/désactiver la réflexion étendue",
       "clear": "Effacer la conversation",
       "help": "Afficher les commandes disponibles",
-      "helpMessage": "/btw — injecter du contexte pendant le streaming\n/stop — arrêter la génération\n/regen — régénérer la dernière réponse\n/compact — compacter l'historique\n/thinking — activer/désactiver la réflexion étendue\n/clear — effacer la conversation",
+      "helpMessage": "/btw - injecter du contexte pendant le streaming\n/stop - arrêter la génération\n/regen - régénérer la dernière réponse\n/compact - compacter l'historique\n/thinking - activer/désactiver la réflexion étendue\n/clear - effacer la conversation",
       "noResults": "Aucune commande correspondante"
     },
     "mention": {
@@ -949,21 +953,21 @@
     },
     "rewind": {
       "title": "Revenir en arrière ?",
-      "description_one": "Ce message devient le plus récent — environ {{count}} message ultérieur sera définitivement supprimé de la conversation et de son contexte. Irréversible.",
-      "description_other": "Ce message devient le plus récent — environ {{count}} messages ultérieurs seront définitivement supprimés de la conversation et de son contexte. Irréversible.",
+      "description_one": "Ce message devient le plus récent. Environ {{count}} message ultérieur sera définitivement supprimé de la conversation et de son contexte. Irréversible.",
+      "description_other": "Ce message devient le plus récent. Environ {{count}} messages ultérieurs seront définitivement supprimés de la conversation et de son contexte. Irréversible.",
       "confirm": "Revenir en arrière",
-      "success_one": "Retour effectué — {{count}} message supprimé",
-      "success_other": "Retour effectué — {{count}} messages supprimés"
+      "success_one": "Retour effectué : {{count}} message supprimé",
+      "success_other": "Retour effectué : {{count}} messages supprimés"
     },
     "regenerate": "Régénérer",
     "toolsBadge": {
-      "tooltip_one": "{{count}} outil disponible — cliquez pour le lister",
-      "tooltip_other": "{{count}} outils disponibles — cliquez pour les lister"
+      "tooltip_one": "{{count}} outil disponible - cliquez pour le lister",
+      "tooltip_other": "{{count}} outils disponibles - cliquez pour les lister"
     },
     "toolsModal": {
-      "title": "{{name}} — outils",
+      "title": "{{name}} - outils",
       "description": "Tous les outils actuellement exposés à cet agent, groupés par domaine.",
-      "descriptionQuick": "Outils exposés dans cette session rapide (les outils restreints en session — tâches, crons, messagerie inter-agents — sont exclus).",
+      "descriptionQuick": "Outils exposés dans cette session rapide. Les outils restreints en session (tâches, crons, messagerie inter-agents) sont exclus.",
       "edit": "Modifier les outils"
     },
     "mobileInfo": {
@@ -1098,7 +1102,7 @@
   },
   "customTools": {
     "title": "Outils personnalisés",
-    "description": "Des outils globaux que toi (ou tes Agents) scriptez dans n'importe quel langage. Une fois créés, ajoute-les à une boîte à outils pour les accorder à un Agent — ils s'exécutent sous le nom custom_<slug>.",
+    "description": "Des outils globaux que toi (ou tes Agents) scriptez dans n'importe quel langage. Une fois créés, ajoute-les à une boîte à outils pour les accorder à un Agent. Ils s'exécutent sous le nom custom_<slug>.",
     "create": "Nouvel outil",
     "edit": "Modifier l'outil",
     "empty": "Aucun outil personnalisé",
@@ -1130,8 +1134,8 @@
       "domain": "Domaine",
       "parameters": "Paramètres (JSON Schema)",
       "parametersHint": "Objet JSON Schema décrivant les arguments d'entrée de l'outil.",
-      "code": "Code — {{file}}",
-      "deps": "Dépendances — {{file}}"
+      "code": "Code - {{file}}",
+      "deps": "Dépendances - {{file}}"
     },
     "translations": {
       "title": "Traductions",
@@ -1156,7 +1160,7 @@
       "required": "requis",
       "commaSeparated": "Valeurs séparées par des virgules",
       "jsonField": "JSON",
-      "invalidJson": "JSON invalide — affichage des dernières valeurs du formulaire.",
+      "invalidJson": "JSON invalide : affichage des dernières valeurs du formulaire.",
       "outputJson": "JSON",
       "outputRender": "Rendu",
       "renderAfterRun": "Lance d'abord un test pour prévisualiser le renderer."
@@ -1172,7 +1176,7 @@
       "placeholder": "Choisir une icône",
       "search": "Rechercher des icônes…",
       "noResults": "Aucune icône ne correspond à ta recherche",
-      "truncated": "Affichage des {{count}} premières — affine ta recherche"
+      "truncated": "Affichage des {{count}} premières - affine ta recherche"
     }
   },
   "toolDomains": {
@@ -1253,11 +1257,11 @@
       "hardExcludedNote": "Cet outil ne peut jamais s'exécuter dans une tâche, même si une boîte l'inclut."
     },
     "help": {
-      "content": "Une boîte à outils est un jeu d'outils natifs nommé et réutilisable. Assigne une ou plusieurs boîtes à une tâche et celle-ci pourra utiliser l'union de ces outils — en plus d'un socle toujours disponible.",
+      "content": "Une boîte à outils est un jeu d'outils natifs nommé et réutilisable. Assigne une ou plusieurs boîtes à une tâche et celle-ci pourra utiliser l'union de ces outils, en plus d'un socle toujours disponible.",
       "bullet1": "Les boîtes intégrées (Code, Recherche, Ops, Exploration, Tous les outils) sont en lecture seule mais assignables à n'importe quelle tâche.",
       "bullet2": "Crée tes propres boîtes pour coller à tes types de travail récurrents.",
       "bullet3": "Chaque tâche conserve toujours un socle d'outils, quelles que soient les boîtes assignées.",
-      "bullet4": "Certains outils ne peuvent jamais s'exécuter dans une tâche — ils sont signalés quand tu construis une boîte."
+      "bullet4": "Certains outils ne peuvent jamais s'exécuter dans une tâche. Ils sont signalés quand tu construis une boîte."
     }
   },
   "settings": {
@@ -1274,7 +1278,7 @@
       "publicUrlWarning": {
         "title": "L'URL publique est peut-être mal configurée",
         "body": "Tu accèdes à Hivekeep via {{actual}}, mais l'URL publique configurée est {{configured}}. Les liens d'invitation, les webhooks et les callbacks OAuth sont construits à partir de l'URL publique : ils pointeront vers {{configured}} et risquent d'être injoignables.",
-        "fix": "Définis PUBLIC_URL sur {{actual}} puis redémarre — Docker : -e PUBLIC_URL={{actual}} (ou dans ton .env) ; install natif : HIVEKEEP_PUBLIC_URL={{actual}}."
+        "fix": "Définis PUBLIC_URL sur {{actual}} puis redémarre. Docker : -e PUBLIC_URL={{actual}} (ou dans ton .env) ; install natif : HIVEKEEP_PUBLIC_URL={{actual}}."
       },
       "interface": {
         "title": "Interface"
@@ -1285,9 +1289,9 @@
       },
       "tasks": {
         "title": "Exécution des tâches",
-        "description": "Contrôlez combien de tâches s'exécutent simultanément pour l'ensemble des Agents. Une tâche n'occupe un emplacement que pendant son exécution active — les tâches suspendues (en attente d'un humain, d'un autre Agent ou d'une sous-tâche) libèrent leur emplacement.",
+        "description": "Contrôlez combien de tâches s'exécutent simultanément pour l'ensemble des Agents. Une tâche n'occupe un emplacement que pendant son exécution active : les tâches suspendues (en attente d'un humain, d'un autre Agent ou d'une sous-tâche) libèrent leur emplacement.",
         "saved": "Limites des tâches mises à jour",
-        "hint": "Augmenter la limite de concurrence remplit immédiatement les emplacements libres depuis la file d'attente. La diminuer est progressif — les tâches en cours ne sont jamais arrêtées, les nouvelles promotions se mettent simplement en pause jusqu'à ce que le compte baisse. Le plafond de la file rejette les nouvelles tâches une fois ce nombre déjà en attente.",
+        "hint": "Augmenter la limite de concurrence remplit immédiatement les emplacements libres depuis la file d'attente. La diminuer est progressif : les tâches en cours ne sont jamais arrêtées, les nouvelles promotions se mettent simplement en pause jusqu'à ce que le compte baisse. Le plafond de la file rejette les nouvelles tâches une fois ce nombre déjà en attente.",
         "maxConcurrent": {
           "label": "Tâches simultanées max",
           "tip": "Combien de tâches peuvent s'exécuter en même temps. Quand c'est plein, les tâches nouvelles ou reprises attendent dans la file et démarrent à mesure que des emplacements se libèrent. Par défaut 10."
@@ -1328,21 +1332,21 @@
       },
       "style": {
         "title": "Style artistique (A)",
-        "tip": "La façon dont les avatars sont dessinés — le style de rendu. Choisissez un préréglage ou saisissez le vôtre. Partagé par chaque avatar généré.",
+        "tip": "La façon dont les avatars sont dessinés : le style de rendu. Choisissez un préréglage ou saisissez le vôtre. Partagé par chaque avatar généré.",
         "placeholder": "ex. style Pixar / animation 3D, éclairage doux",
         "hint": "Une courte directive de style partagée par tous les avatars générés."
       },
       "subject": {
         "title": "Sujet / type (B)",
-        "tip": "Ce que représente chaque avatar — robot, humain, animal, dragon… Choisissez un préréglage ou saisissez le vôtre. Un sujet non-robot est généré en texte-vers-image (l'image de base fournie est un robot).",
+        "tip": "Ce que représente chaque avatar : robot, humain, animal, dragon… Choisissez un préréglage ou saisissez le vôtre. Un sujet non-robot est généré en texte-vers-image (l'image de base fournie est un robot).",
         "placeholder": "ex. un petit robot mignon et sympathique",
         "hint": "Ce que représente chaque avatar généré."
       },
       "help": {
         "content": "Les avatars sont construits selon trois axes. Deux sont globaux (réglés ici) ; le troisième est propre à chaque Agent.",
-        "bullet1": "Le style artistique (A) et le sujet/type (B) sont globaux — chaque nouvel avatar généré les utilise pour un rendu cohérent",
+        "bullet1": "Le style artistique (A) et le sujet/type (B) sont globaux : chaque nouvel avatar généré les utilise pour un rendu cohérent",
         "bullet2": "L'image de base donne aux modèles compatibles une référence pour que les avatars partagent le même rendu. Générez-en une ou importez-la, puis gardez « Utiliser l'image de base » activé",
-        "bullet3": "Le caractère propre à chaque Agent (C) est écrit automatiquement à partir de son identité — ajustez un avatar précis depuis le sélecteur d'avatar de l'Agent (onglet Manuel) sans toucher à ces réglages globaux"
+        "bullet3": "Le caractère propre à chaque Agent (C) est écrit automatiquement à partir de son identité. Ajustez un avatar précis depuis le sélecteur d'avatar de l'Agent (onglet Manuel) sans toucher à ces réglages globaux"
       },
       "bulk": {
         "cardTitle": "Régénérer les avatars existants",
@@ -1350,7 +1354,7 @@
         "cardHint": "Appliquez la direction artistique actuelle aux Agents créés avant que vous ne la modifiiez.",
         "button": "Régénérer tous les avatars",
         "title": "Régénérer les avatars",
-        "description": "Choisissez les Agents dont vous voulez régénérer l'avatar avec la direction artistique actuelle. La régénération s'exécute sur le serveur — vous pouvez fermer cette fenêtre une fois qu'elle a démarré.",
+        "description": "Choisissez les Agents dont vous voulez régénérer l'avatar avec la direction artistique actuelle. La régénération s'exécute sur le serveur. Vous pouvez fermer cette fenêtre une fois qu'elle a démarré.",
         "model": "Modèle d'image",
         "selectAll": "Tout sélectionner",
         "deselectAll": "Tout désélectionner",
@@ -1359,7 +1363,7 @@
         "regenerate": "Régénérer ({{count}})",
         "noAgents": "Aucun Agent à régénérer pour l'instant.",
         "running": {
-          "note": "La régénération s'exécute sur le serveur — vous pouvez fermer cette fenêtre sans risque, elle continuera.",
+          "note": "La régénération s'exécute sur le serveur. Vous pouvez fermer cette fenêtre sans risque, elle continuera.",
           "progress": "{{done}} / {{total}} terminé(s)",
           "failedCount": "{{count}} en échec"
         },
@@ -1369,7 +1373,7 @@
         },
         "failedList": "En échec :",
         "toastDoneAllOk": "Les {{count}} avatars ont été régénérés",
-        "toastDone": "Régénération des avatars terminée — {{succeeded}} réussi(s), {{failed}} en échec"
+        "toastDone": "Régénération des avatars terminée : {{succeeded}} réussi(s), {{failed}} en échec"
       }
     },
     "providers": {
@@ -1404,7 +1408,7 @@
         "searchPlaceholder": "Filtrer par nom ou identifiant…",
         "emptyAll": "Ce fournisseur n'a rien à parcourir.",
         "emptyFiltered": "Aucun élément ne correspond au filtre actuel.",
-        "searchOnlyExplain": "Les fournisseurs de recherche n'ont pas de catalogue de modèles ou de voix — ils sont appelés directement via l'outil web_search. Les capacités ci-dessus décrivent ce que ce fournisseur supporte.",
+        "searchOnlyExplain": "Les fournisseurs de recherche n'ont pas de catalogue de modèles ou de voix : ils sont appelés directement via l'outil web_search. Les capacités ci-dessus décrivent ce que ce fournisseur supporte.",
         "imageInput": "image-in",
         "img2img": "img2img",
         "multiImage": "multi-ref ({{count}})",
@@ -1422,22 +1426,22 @@
     },
     "modelRegistry": {
       "title": "Registre de modèles",
-      "subtitle": "Tous les modèles exposés par vos providers. Les métadonnées (contexte, capacités, tarifs) sont préremplies depuis la base communautaire models.dev — modifiez une valeur pour la figer, ou corrigez un mauvais mapping.",
+      "subtitle": "Tous les modèles exposés par vos providers. Les métadonnées (contexte, capacités, tarifs) sont préremplies depuis la base communautaire models.dev. Modifiez une valeur pour la figer, ou corrigez un mauvais mapping.",
       "openPageTitle": "Ouvrir le registre de modèles",
-      "openPageHint": "Le tableau complet s'ouvre sur sa propre page — plus de place pour le contexte, les tarifs et les capacités.",
+      "openPageHint": "Le tableau complet s'ouvre sur sa propre page : plus de place pour le contexte, les tarifs et les capacités.",
       "openPage": "Ouvrir la page Modèles",
       "displayName": "Libellé",
       "displayNameHint": "Affiché partout où apparaît un nom de modèle. Laissez vide pour utiliser le libellé models.dev (à défaut, l'id).",
-      "reviewBanner_one": "{{count}} modèle à vérifier — sa correspondance models.dev était incertaine. Cliquez ✓ pour confirmer qu'elle est bonne, ou ouvrez la ligne pour la remapper.",
-      "reviewBanner_other": "{{count}} modèles à vérifier — leur correspondance models.dev était incertaine. Cliquez ✓ pour confirmer qu'elle est bonne, ou ouvrez la ligne pour la remapper.",
-      "reviewHint": "La correspondance models.dev ci-dessous était incertaine. Vérifiez que les valeurs semblent justes (remappez sinon), puis Enregistrez pour confirmer — ça lève le « review ».",
+      "reviewBanner_one": "{{count}} modèle à vérifier : sa correspondance models.dev était incertaine. Cliquez ✓ pour confirmer qu'elle est bonne, ou ouvrez la ligne pour la remapper.",
+      "reviewBanner_other": "{{count}} modèles à vérifier : leur correspondance models.dev était incertaine. Cliquez ✓ pour confirmer qu'elle est bonne, ou ouvrez la ligne pour la remapper.",
+      "reviewHint": "La correspondance models.dev ci-dessous était incertaine. Vérifiez que les valeurs semblent justes (remappez sinon), puis Enregistrez pour confirmer : ça lève le « review ».",
       "confirmTooltip": "Confirmer que cette correspondance est correcte (lève le « review »)",
       "reset": "Réinitialiser en auto",
       "resetHint": "Ce modèle a des valeurs manuelles. Réinitialisez pour les abandonner et suivre models.dev automatiquement.",
       "resetDone": "Réinitialisé en auto",
       "capYes": "Pris en charge",
       "capNo": "Non pris en charge",
-      "capUnknown": "Inconnu — ni le provider ni models.dev ne l'ont indiqué",
+      "capUnknown": "Inconnu : ni le provider ni models.dev ne l'ont indiqué",
       "perPage": "Par page",
       "range": "{{from}}–{{to}} sur {{total}}",
       "statusAll": "Tous les statuts",
@@ -1451,13 +1455,13 @@
       "bulkConfirm_one": "Confirmer {{count}} review",
       "bulkConfirm_other": "Confirmer {{count}} reviews",
       "colEnabled": "Activé",
-      "enabledTip": "Activé — visible dans les sélecteurs de modèles. Cliquez pour le masquer.",
-      "disabledTip": "Désactivé — masqué des sélecteurs de modèles. Cliquez pour l'activer.",
+      "enabledTip": "Activé : visible dans les sélecteurs de modèles. Cliquez pour le masquer.",
+      "disabledTip": "Désactivé : masqué des sélecteurs de modèles. Cliquez pour l'activer.",
       "enabledLabel": "Activé",
       "enabledDialogHint": "Désactivé = masqué des sélecteurs (le chat continue de fonctionner si un Agent l'utilise déjà).",
       "snapshotRefresh": "Mettre à jour models.dev",
-      "snapshotTip": "Télécharge le dernier catalogue models.dev, puis re-mappe — récupère les modèles récents sans mise à jour de l'app.",
-      "snapshotRefreshed": "models.dev mis à jour — {{models}} modèles sur {{providers}} providers. Re-mapping…"
+      "snapshotTip": "Télécharge le dernier catalogue models.dev, puis re-mappe : récupère les modèles récents sans mise à jour de l'app.",
+      "snapshotRefreshed": "models.dev mis à jour : {{models}} modèles sur {{providers}} providers. Re-mapping…"
     },
     "models": {
       "title": "Modèles & Services",
@@ -1469,7 +1473,7 @@
       "defaultLlmPlaceholder": "Sélectionner le LLM par défaut",
       "defaultCompacting": "Modèle de compaction par défaut",
       "defaultCompactingTip": "Modèle qui résume les anciennes conversations quand la fenêtre de contexte se remplit. Un petit modèle rapide suffit.",
-      "defaultCompactingHint": "Utilisé quand la conversation d'un Agent dépasse sa fenêtre de contexte — les vieux messages sont résumés pour faire de la place. Sans ça, chaque Agent utilise son propre modèle de chat (fonctionne mais peut coûter plus cher sur de longues conversations).",
+      "defaultCompactingHint": "Utilisé quand la conversation d'un Agent dépasse sa fenêtre de contexte : les vieux messages sont résumés pour faire de la place. Sans ça, chaque Agent utilise son propre modèle de chat (fonctionne mais peut coûter plus cher sur de longues conversations).",
       "defaultCompactingPlaceholder": "Utiliser le modèle de chaque Agent (par défaut)",
       "defaultScout": "Modèle d'exploration par défaut",
       "defaultScoutTip": "Un modèle rapide et économique que l'outil `scout` utilise pour déléguer une exploration lourde en lecture seule. Un petit modèle rapide est idéal ici.",
@@ -1485,11 +1489,11 @@
       "defaultSearchPlaceholder": "Détection auto (premier provider de recherche valide)",
       "defaultTts": "Provider TTS par défaut",
       "defaultTtsTip": "Provider de synthèse vocale utilisé par `text_to_speech` quand aucun provider n'est passé.",
-      "defaultTtsHint": "Utilisé par l'outil `text_to_speech` pour synthétiser l'audio. La voix est toujours choisie à l'appel (ou dans la config d'un channel). Sans ça, `text_to_speech` renvoie « No TTS provider configured » — pas de vocaux, pas de réponses parlées.",
+      "defaultTtsHint": "Utilisé par l'outil `text_to_speech` pour synthétiser l'audio. La voix est toujours choisie à l'appel (ou dans la config d'un channel). Sans ça, `text_to_speech` renvoie « No TTS provider configured » : pas de vocaux, pas de réponses parlées.",
       "defaultTtsPlaceholder": "Détection auto (premier provider TTS valide)",
       "defaultStt": "Provider STT par défaut",
       "defaultSttTip": "Provider de transcription vocale utilisé par `transcribe_audio` quand aucun provider n'est passé.",
-      "defaultSttHint": "Utilisé par l'outil `transcribe_audio` pour convertir l'audio en texte. Sans ça, `transcribe_audio` renvoie « No STT provider configured » — pas de transcription vocale, pas de vocal-vers-texte sur les channels qui le supportent.",
+      "defaultSttHint": "Utilisé par l'outil `transcribe_audio` pour convertir l'audio en texte. Sans ça, `transcribe_audio` renvoie « No STT provider configured » : pas de transcription vocale, pas de vocal-vers-texte sur les channels qui le supportent.",
       "defaultSttPlaceholder": "Détection auto (premier provider STT valide)",
       "extractionModel": "Modèle d'extraction",
       "extractionModelTip": "Analyse les conversations passées et identifie les faits, préférences et décisions qui méritent d'être sauvegardés comme souvenirs long-terme. Un petit modèle rapide suffit.",
@@ -1497,12 +1501,12 @@
       "extractionModelPlaceholder": "Utiliser le modèle de chaque Agent (par défaut)",
       "embeddingModel": "Modèle d'embedding",
       "embeddingModelTip": "Convertit le texte en vecteurs numériques pour que les Agents cherchent dans leurs souvenirs par similarité sémantique. Changer le modèle nécessite de retraiter chaque souvenir existant.",
-      "embeddingModelHint": "Alimente la recherche sémantique dans le tab Mémoire de chaque Agent et l'outil `recall`. Sans ça, la recherche de mémoire tombe sur du keyword-only (FTS) — fonctionne, juste moins précis pour trouver des souvenirs liés indirectement.",
+      "embeddingModelHint": "Alimente la recherche sémantique dans le tab Mémoire de chaque Agent et l'outil `recall`. Sans ça, la recherche de mémoire tombe sur du keyword-only (FTS) : fonctionne, juste moins précis pour trouver des souvenirs liés indirectement.",
       "embeddingModelPlaceholder": "Sélectionner un modèle d'embedding",
       "help": {
         "content": "Les modèles par défaut servent de valeurs de repli lors de la création de nouveaux Agents ou quand aucun modèle spécifique n'est configuré au niveau de l'Agent.",
         "bullet1": "Le LLM par défaut est pré-sélectionné lors de la création de nouveaux Agents, ce qui fait gagner du temps",
-        "bullet2": "Les modèles de compaction et d'extraction peuvent être légers — pas besoin du même modèle que le chat",
+        "bullet2": "Les modèles de compaction et d'extraction peuvent être légers : pas besoin du même modèle que le chat",
         "bullet3": "Changer le modèle d'embedding nécessite de re-indexer tous les souvenirs existants"
       }
     },
@@ -1870,7 +1874,7 @@
       "filterAllowedValues": "Valeurs autorisées",
       "filterAllowedValuesPlaceholder": "Saisissez une valeur et appuyez sur Entrée",
       "filterAllowedValuesTip": "Seuls les payloads dont le champ extrait correspond à l'une de ces valeurs seront transmis à l'Agent.",
-      "filterAllowedValuesEmpty": "Aucune valeur autorisée — tous les payloads seront bloqués.",
+      "filterAllowedValuesEmpty": "Aucune valeur autorisée : tous les payloads seront bloqués.",
       "filterExpression": "Expression régulière",
       "filterExpressionPlaceholder": "ex. \"completed|success\"",
       "filterExpressionTip": "Une expression régulière testée sur le corps brut du payload.",
@@ -1953,7 +1957,7 @@
       "subtitle": "Connecte des carnets d'adresses externes pour que tes Agents puissent consulter les contacts (lecture seule).",
       "add": "Ajouter un carnet",
       "addTitle": "Ajouter un carnet d'adresses",
-      "addDescription": "Connecte une source de contacts externe. Lecture seule — n'entre jamais dans les contacts de Hivekeep.",
+      "addDescription": "Connecte une source de contacts externe. Lecture seule : n'entre jamais dans les contacts de Hivekeep.",
       "provider": "Fournisseur",
       "connect": "Connecter {{provider}}",
       "connected": "Carnet {{provider}} connecté",
@@ -1964,7 +1968,7 @@
       "emptyTitle": "Aucun carnet d'adresses connecté",
       "emptyDescription": "Connecte iCloud (ou une autre source CardDAV) pour que tes Agents puissent retrouver le téléphone ou l'email d'un contact.",
       "help": {
-        "content": "Connecte un carnet d'adresses externe (ex. iCloud via un mot de passe d'application). Les Agents peuvent alors consulter les contacts en lecture seule — par exemple retrouver un numéro avant d'envoyer un SMS. Ces contacts ne sont jamais copiés dans les contacts de Hivekeep."
+        "content": "Connecte un carnet d'adresses externe (ex. iCloud via un mot de passe d'application). Les Agents peuvent alors consulter les contacts en lecture seule, par exemple retrouver un numéro avant d'envoyer un SMS. Ces contacts ne sont jamais copiés dans les contacts de Hivekeep."
       }
     },
     "triggers": {
@@ -1983,12 +1987,12 @@
       "conditionsHint": "Combine les conditions avec des groupes TOUTES / AU MOINS UNE, imbriqués si besoin.",
       "prompt": "Instruction",
       "promptHint": "Ce que l'agent doit faire quand le déclencheur se déclenche.",
-      "promptHintTask": "Le mode tâche est isolé (sans historique de conversation) — rends ce prompt auto-suffisant : inclus tout le contexte dont l'agent a besoin pour agir.",
+      "promptHintTask": "Le mode tâche est isolé (sans historique de conversation). Rends ce prompt auto-suffisant : inclus tout le contexte dont l'agent a besoin pour agir.",
       "promptPlaceholder": "ex. Résume cette facture et indique-moi le montant.",
       "dispatchMode": "Au déclenchement",
       "dispatchHint": "Injecter dans la conversation de l'agent, ou créer une tâche séparée.",
       "dispatchConversation": "Dans la conversation",
-      "dispatchConversationDesc": "L'agent reçoit le mail dans sa conversation principale — il garde tout son historique et son contexte.",
+      "dispatchConversationDesc": "L'agent reçoit le mail dans sa conversation principale : il garde tout son historique et son contexte.",
       "dispatchTask": "En tâche",
       "dispatchTaskWarning": "Une tâche s'exécute en session isolée, SANS l'historique de la conversation. Mets dans le prompt ci-dessous tout ce dont l'agent a besoin pour agir.",
       "active": "Actif",
@@ -2131,7 +2135,7 @@
       "webhook": {
         "label": "URL du webhook entrant",
         "hint": "Collez cette URL dans la console de votre fournisseur pour recevoir les messages entrants. Pour Twilio : Numéros de téléphone → votre numéro → Messaging → « A message comes in » → HTTP POST.",
-        "localhostWarning": "Cette URL pointe vers localhost — les fournisseurs externes ne peuvent pas l'atteindre. Définissez la variable d'env PUBLIC_URL avec votre URL HTTPS publique pour que les signatures soient valides et que les webhooks arrivent."
+        "localhostWarning": "Cette URL pointe vers localhost : les fournisseurs externes ne peuvent pas l'atteindre. Définissez la variable d'env PUBLIC_URL avec votre URL HTTPS publique pour que les signatures soient valides et que les webhooks arrivent."
       },
       "noUsers": "Aucun utilisateur en attente",
       "newUserPending": "Nouvel utilisateur {{name}} en attente d'approbation",
@@ -2299,7 +2303,7 @@
     },
     "marketplace": {
       "title": "Explorer les plugins",
-      "description": "Plugins publiés sur npm avec le mot-clé `hivekeep-plugin`. N'importe qui peut publier — vérifiez l'auteur et le dépôt source avant d'installer.",
+      "description": "Plugins publiés sur npm avec le mot-clé `hivekeep-plugin`. N'importe qui peut publier. Vérifiez l'auteur et le dépôt source avant d'installer.",
       "refresh": "Actualiser",
       "searchPlaceholder": "Rechercher sur npm...",
       "allTags": "Tous",
@@ -2385,7 +2389,7 @@
       "channelTip": "Le flux de mises à jour suivi par cette instance.",
       "channelSaved": "Canal de mise à jour enregistré",
       "channelStableDescription": "Suit les releases officielles. Recommandé pour la plupart des installations.",
-      "channelEdgeDescription": "Suit le dernier commit de main. Potentiellement instable — pour les tests uniquement.",
+      "channelEdgeDescription": "Suit le dernier commit de main. Potentiellement instable. Pour les tests uniquement.",
       "updateAvailableBadge": "{{version}} disponible",
       "upToDateBadge": "À jour",
       "lastChecked": "Dernière vérification : {{date}}"
@@ -2420,7 +2424,7 @@
     "search": "Rechercher un modèle...",
     "noResults": "Aucun modèle trouvé",
     "all": "Tous",
-    "clear": "Aucun modèle — utiliser le défaut",
+    "clear": "Aucun modèle (utiliser le défaut)",
     "loading": "Chargement des modèles…",
     "vision": "vision",
     "img2img": "img2img",
@@ -2434,7 +2438,10 @@
     "lastName": "Nom",
     "pseudonym": "Pseudonyme",
     "pseudonymHint": "Lettres, chiffres, underscores, tirets",
-    "language": "Langue",
+    "language": "Langue de l'interface",
+    "languageHint": "Langue des menus, boutons et pages.",
+    "agentLanguage": "Langue des agents",
+    "agentLanguageHint": "Langue que vos agents utilisent pour vous parler. Indépendante de la langue de l'interface : les agents peuvent parler des langues dans lesquelles l'interface n'est pas traduite.",
     "save": "Enregistrer",
     "saved": "Profil mis à jour",
     "cancel": "Annuler",
@@ -2900,7 +2907,9 @@
     "email": "Email",
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
-    "language": "Langue",
+    "language": "Langue de l'interface",
+    "agentLanguage": "Langue des agents",
+    "agentLanguageHint": "Langue que les agents utiliseront pour vous parler.",
     "avatar": "Photo de profil",
     "submit": "Créer le compte",
     "creating": "Création du compte...",
@@ -3070,8 +3079,8 @@
     "dockerTagNote": "Si votre fichier compose épingle un tag de version précis, remplacez-le par {{version}} (ou utilisez le tag latest) avant de puller.",
     "selfUpdateInstructions": "Hivekeep va sauvegarder sa base de données, télécharger la nouvelle version et redémarrer. En cas de problème, la version précédente est restaurée automatiquement.",
     "adminOnly": "Seuls les administrateurs peuvent appliquer les mises à jour.",
-    "devModeNote": "Cette instance tourne en mode développement — mettez-la à jour depuis votre checkout git.",
-    "manualInstallNote": "Cette installation n'est pas gérée par Hivekeep — mettez-la à jour comme elle a été installée.",
+    "devModeNote": "Cette instance tourne en mode développement. Mettez-la à jour depuis votre checkout git.",
+    "manualInstallNote": "Cette installation n'est pas gérée par Hivekeep. Mettez-la à jour comme elle a été installée.",
     "viewOnGitHub": "Voir sur GitHub",
     "updateButton": "Mettre à jour",
     "updateSuccess": "Mis à jour vers {{version}} !",
@@ -3178,8 +3187,8 @@
   "orphanTask": {
     "menuAction": "Lancer une tâche",
     "title": "Lancer une tâche",
-    "description": "Lance une tâche autonome sur {{name}} — sans projet ni ticket. Le résultat est déposé dans ce fil quand elle se termine.",
-    "descriptionGeneric": "Lance une tâche autonome — sans projet ni ticket. Choisis l'Agent qui doit l'exécuter ; le résultat est déposé dans son fil quand elle se termine.",
+    "description": "Lance une tâche autonome sur {{name}}, sans projet ni ticket. Le résultat est déposé dans ce fil quand elle se termine.",
+    "descriptionGeneric": "Lance une tâche autonome, sans projet ni ticket. Choisis l'Agent qui doit l'exécuter ; le résultat est déposé dans son fil quand elle se termine.",
     "agentField": "Agent",
     "agentPlaceholder": "Choisir un Agent pour exécuter cette tâche",
     "promptField": "Que doit faire cette tâche ?",
@@ -3202,7 +3211,7 @@
   "projects": {
     "page": {
       "title": "Projets",
-      "comingSoon": "La vue kanban arrive bientôt — le backend est prêt, le frontend en cours."
+      "comingSoon": "La vue kanban arrive bientôt : le backend est prêt, le frontend en cours."
     },
     "sidebar": {
       "title": "Projets",
@@ -3258,7 +3267,7 @@
       "totalCount_other": "{{count}} entrées",
       "pinnedCount_one": "{{count}} épinglée",
       "pinnedCount_other": "{{count}} épinglées",
-      "searchResults": "{{count}} résultat(s) — {{total}} au total",
+      "searchResults": "{{count}} résultat(s) ({{total}} au total)",
       "pagination": "{{from}}–{{to}} sur {{total}}",
       "pinnedBadge": "Épinglé",
       "byUser": "par vous",
@@ -3277,16 +3286,16 @@
         "title": "Comment fonctionne le savoir projet",
         "show": "Comment ça marche",
         "pinnedLead": "Épinglées",
-        "pinned": "leur contenu complet est injecté dans le prompt de chaque Agent, automatiquement — aucun outil à appeler. À utiliser avec parcimonie (max 10 par projet).",
+        "pinned": "leur contenu complet est injecté dans le prompt de chaque Agent, automatiquement (aucun outil à appeler). À utiliser avec parcimonie (max 10 par projet).",
         "unpinnedLead": "Les autres entrées",
         "unpinned": "n'affichent que leur titre dans l'index du prompt. Les Agents récupèrent le contenu à la demande avec get_project_knowledge, ou recherchent par sujet avec search_project_knowledge.",
-        "scope": "Toutes les entrées sont partagées entre chaque Agent et chaque task de ticket sur ce projet — considérez ça comme un wiki collectif."
+        "scope": "Toutes les entrées sont partagées entre chaque Agent et chaque task de ticket sur ce projet : considérez ça comme un wiki collectif."
       },
       "empty": {
         "title": "Aucun savoir pour l'instant",
         "description": "Capturez ici les décisions d'architecture, conventions, pièges et règles métier. Chaque Agent travaillant sur ce projet verra les titres dans son prompt et pourra récupérer le contenu de n'importe quelle entrée à la demande.",
         "searchTitle": "Aucun résultat",
-        "searchDescription": "Essayez une autre requête — la recherche combine similarité sémantique et mots-clés."
+        "searchDescription": "Essayez une autre requête : la recherche combine similarité sémantique et mots-clés."
       },
       "dialog": {
         "createTitle": "Ajouter un savoir projet",
@@ -3294,10 +3303,10 @@
         "description": "Visible par chaque Agent travaillant sur ce projet. Le titre de chaque entrée apparaît dans le prompt de l'Agent ; le contenu markdown n'est injecté que si l'entrée est épinglée.",
         "titleLabel": "Titre",
         "titlePlaceholder": "Un titre court et explicite (ex. « Utiliser Drizzle ORM, pas Prisma »)",
-        "titleHint": "C'est ce que chaque Agent verra par défaut dans son prompt — fais en sorte qu'il raconte toute l'histoire en une ligne.",
+        "titleHint": "C'est ce que chaque Agent verra par défaut dans son prompt. Fais en sorte qu'il raconte toute l'histoire en une ligne.",
         "contentLabel": "Contenu (Markdown)",
         "contentPlaceholder": "## Contexte\nPourquoi c'est important…\n\n## Détails\nExemples de code, liens, raisonnement…",
-        "contentHint": "Markdown libre — aussi long que nécessaire. Injecté dans le prompt des Agents seulement si épinglé ; sinon récupéré à la demande.",
+        "contentHint": "Markdown libre, aussi long que nécessaire. Injecté dans le prompt des Agents seulement si épinglé ; sinon récupéré à la demande.",
         "categoryLabel": "Catégorie (optionnel)",
         "categoryPlaceholder": "ex. arch, décision, piège, convention",
         "pinnedLabel": "Épingler au prompt système",
@@ -3338,13 +3347,13 @@
       "titleField": "Titre du projet",
       "titlePlaceholder": "ex. Refonte backend",
       "descriptionField": "Description",
-      "descriptionPlaceholder": "Contexte, objectifs, liens, contraintes — tout ce qui sera utile à un Agent travaillant sur ce projet.",
+      "descriptionPlaceholder": "Contexte, objectifs, liens, contraintes : tout ce qui sera utile à un Agent travaillant sur ce projet.",
       "descriptionHint": "Markdown supporté. Cette description est injectée dans le prompt système de tout Agent ayant ce projet actif."
     },
     "ticket": {
       "create": {
         "title": "Nouveau ticket",
-        "description": "Ajoute un nouveau ticket à ce projet. Le statut par défaut est Backlog — déplace-le vers une autre colonne quand tu es prêt à le travailler.",
+        "description": "Ajoute un nouveau ticket à ce projet. Le statut par défaut est Backlog. Déplace-le vers une autre colonne quand tu es prêt à le travailler.",
         "titleField": "Titre du ticket",
         "titlePlaceholder": "ex. Corriger la boucle de redirection au login",
         "descriptionField": "Description",
@@ -3366,7 +3375,7 @@
         "noTasks": "Aucune tâche n'a encore été lancée sur ce ticket.",
         "noTasksTitle": "Aucune tâche pour l'instant",
         "noTasksDescription": "Lance un Agent sur ce ticket pour suivre son exécution ici.",
-        "notFound": "Ce ticket est introuvable — il a peut-être été supprimé.",
+        "notFound": "Ce ticket est introuvable. Il a peut-être été supprimé.",
         "back": "Retour au/à la {{type}}",
         "ticketRef": "Ticket {{ref}}",
         "editAction": "Modifier le ticket",
@@ -3428,7 +3437,7 @@
     },
     "startTask": {
       "title": "Démarrer une tâche",
-      "description": "Spawn un sub-Agent pour travailler sur ce ticket. L'Agent présélectionné est celui qui a ce projet actif. La tâche tourne en mode await — tu auras un turn sur le thread de l'Agent quand elle se termine.",
+      "description": "Spawn un sub-Agent pour travailler sur ce ticket. L'Agent présélectionné est celui qui a ce projet actif. La tâche tourne en mode await : tu auras un turn sur le thread de l'Agent quand elle se termine.",
       "agentField": "Quel Agent doit exécuter cette tâche ?",
       "agentPlaceholder": "Sélectionner un Agent",
       "activeOnProject": "actif ici",
@@ -3494,13 +3503,13 @@
       "tagsSection": "Tags",
       "modelField": "Modèle par défaut",
       "modelPlaceholder": "Utiliser le modèle propre à chaque Agent",
-      "modelHint": "Utilisé par les sub-Agents lancés sur les tickets de ce projet — remplace le modèle propre à chaque Agent. Un modèle choisi explicitement au lancement d'une task reste prioritaire. Laisser vide pour retomber sur le modèle de l'Agent.",
+      "modelHint": "Utilisé par les sub-Agents lancés sur les tickets de ce projet : remplace le modèle propre à chaque Agent. Un modèle choisi explicitement au lancement d'une task reste prioritaire. Laisser vide pour retomber sur le modèle de l'Agent.",
       "scoutModelField": "Modèle d'exploration par défaut",
       "scoutModelPlaceholder": "Héritage (global / modèle de l'Agent)",
-      "scoutModelHint": "Modèle rapide et économique utilisé par l'outil `scout` pour les tâches sur les tickets de ce projet — remplace le scout par défaut global. Laisser vide pour retomber sur le scout par défaut global, puis le modèle de l'Agent.",
+      "scoutModelHint": "Modèle rapide et économique utilisé par l'outil `scout` pour les tâches sur les tickets de ce projet : remplace le scout par défaut global. Laisser vide pour retomber sur le scout par défaut global, puis le modèle de l'Agent.",
       "thinkingField": "Effort de raisonnement par défaut",
       "thinkingInherit": "Utiliser le réglage propre à chaque Agent",
-      "thinkingHint": "Appliqué aux sub-Agents lancés sur les tickets de ce projet — remplace la config de thinking propre à chaque Agent. Une valeur choisie explicitement au lancement d'une task reste prioritaire.",
+      "thinkingHint": "Appliqué aux sub-Agents lancés sur les tickets de ce projet : remplace la config de thinking propre à chaque Agent. Une valeur choisie explicitement au lancement d'une task reste prioritaire.",
       "toolboxesField": "Boîtes à outils par défaut des tâches",
       "toolboxesHint": "Boîtes à outils attribuées par défaut aux tâches lancées sur les tickets de ce projet. Les boîtes choisies explicitement au lancement d'une tâche restent prioritaires. Laisser vide pour retomber sur la boîte par défaut intégrée.",
       "delete": "Supprimer le projet",
@@ -3511,7 +3520,7 @@
       }
     },
     "tags": {
-      "empty": "Aucun tag pour le moment — ajoutes-en ci-dessous.",
+      "empty": "Aucun tag pour le moment. Ajoutes-en ci-dessous.",
       "newLabel": "Nouveau label"
     },
     "github": {
@@ -3541,7 +3550,7 @@
       "statusError": "Échec du clone",
       "statusBlock": {
         "none": "Aucun clone configuré pour l'instant.",
-        "cloning": "Clonage du dépôt en arrière-plan — les sub-tasks seront bloquées tant que ce n'est pas fini.",
+        "cloning": "Clonage du dépôt en arrière-plan : les sub-tasks seront bloquées tant que ce n'est pas fini.",
         "ready": "Le clone local est prêt. Les sub-tasks peuvent être lancées sur ce projet.",
         "error": "Le clone a échoué. Regarde le message ci-dessous et clique sur Réessayer une fois le problème corrigé."
       },
@@ -3554,11 +3563,11 @@
   },
   "updateProgress": {
     "title": "Mise à jour en cours",
-    "dontClose": "Vous pouvez continuer à utiliser Hivekeep — la mise à jour s'exécute en arrière-plan et la page se rechargera à la fin.",
+    "dontClose": "Vous pouvez continuer à utiliser Hivekeep : la mise à jour s'exécute en arrière-plan et la page se rechargera à la fin.",
     "waitingForServer": "Redémarrage du serveur… en attente de son retour",
     "reloading": "La page va se recharger automatiquement.",
     "failedTitle": "Échec de la mise à jour",
-    "failedSafe": "Rien n'a été modifié — la version actuelle tourne toujours.",
+    "failedSafe": "Rien n'a été modifié. La version actuelle tourne toujours.",
     "rolledBackTitle": "Mise à jour annulée (rollback)",
     "rolledBackDescription": "La nouvelle version n'a pas réussi à démarrer : la version précédente a été restaurée automatiquement, ainsi que la sauvegarde de la base de données.",
     "steps": {
@@ -3584,14 +3593,14 @@
     },
     "noAgents": {
       "title": "Pas encore d'agent",
-      "description": "Créez d'abord un agent — son workspace apparaîtra ici."
+      "description": "Créez d'abord un agent : son workspace apparaîtra ici."
     },
     "noFileOpen": {
       "title": "Aucun fichier ouvert",
       "description": "Sélectionnez un fichier dans l’arborescence pour le consulter."
     },
     "tree": {
-      "loadError": "Échec du chargement — réessayer",
+      "loadError": "Échec du chargement - réessayer",
       "emptyFolder": "vide",
       "title": "Fichiers",
       "newFile": "Nouveau fichier",
@@ -3617,7 +3626,7 @@
     "editor": {
       "download": "Télécharger",
       "tooLarge": "Ce fichier texte est trop volumineux pour être édité ici ({{size}}). Téléchargez-le.",
-      "binary": "Fichier binaire ({{mime}}) — aperçu indisponible.",
+      "binary": "Fichier binaire ({{mime}}) : aperçu indisponible.",
       "edit": "Éditer",
       "preview": "Aperçu",
       "save": "Enregistrer",
@@ -3633,7 +3642,7 @@
     "browseWorkspace": "Parcourir les fichiers",
     "share": {
       "title": "Partager le fichier",
-      "snapshotNotice": "Crée une copie figée dans le file storage — les modifications ultérieures du fichier du workspace ne seront pas reflétées.",
+      "snapshotNotice": "Crée une copie figée dans le file storage : les modifications ultérieures du fichier du workspace ne seront pas reflétées.",
       "submit": "Partager & copier le lien",
       "urlCopied": "Lien de partage copié dans le presse-papier"
     },

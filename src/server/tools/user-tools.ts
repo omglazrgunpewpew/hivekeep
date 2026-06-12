@@ -30,6 +30,7 @@ export const listUsersTool: ToolRegistration = {
             firstName: userProfiles.firstName,
             lastName: userProfiles.lastName,
             language: userProfiles.language,
+            agentLanguage: userProfiles.agentLanguage,
             role: userProfiles.role,
           })
           .from(user)
@@ -66,6 +67,7 @@ export const getUserTool: ToolRegistration = {
             pseudonym: userProfiles.pseudonym,
             email: user.email,
             language: userProfiles.language,
+            agentLanguage: userProfiles.agentLanguage,
             role: userProfiles.role,
             avatarUrl: user.image,
           })
@@ -84,6 +86,7 @@ export const getUserTool: ToolRegistration = {
               pseudonym: userProfiles.pseudonym,
               email: user.email,
               language: userProfiles.language,
+              agentLanguage: userProfiles.agentLanguage,
               role: userProfiles.role,
               avatarUrl: user.image,
             })
