@@ -6,16 +6,17 @@ import { Cron } from 'croner'
 type SSESubscriber = (event: string, data: unknown) => void
 
 class AppEventEmitter {
-  private subscribers = new Set<SSESubscriber>()
+  private subscribers = new Map<SSESubscriber, string | null>()
 
-  emit(event: string, data?: unknown): void {
-    for (const sub of this.subscribers) {
+  emit(event: string, data?: unknown, opts?: { userId?: string }): void {
+    for (const [sub, userId] of this.subscribers) {
+      if (opts?.userId && userId !== opts.userId) continue
       try { sub(event, data) } catch { /* ignore dead subscribers */ }
     }
   }
 
-  _subscribe(fn: SSESubscriber): () => void {
-    this.subscribers.add(fn)
+  _subscribe(fn: SSESubscriber, userId?: string): () => void {
+    this.subscribers.set(fn, userId ?? null)
     return () => { this.subscribers.delete(fn) }
   }
 
@@ -104,6 +105,27 @@ describe('AppEventEmitter', () => {
   it('handles emit with no subscribers gracefully', () => {
     // Should not throw
     expect(() => emitter.emit('lonely-event', { data: true })).not.toThrow()
+  })
+
+  it('targets a single user when emit passes { userId }', () => {
+    const alice: string[] = []
+    const aliceTab2: string[] = []
+    const bob: string[] = []
+    const anon: string[] = []
+
+    emitter._subscribe((event) => alice.push(event), 'user-alice')
+    emitter._subscribe((event) => aliceTab2.push(event), 'user-alice')
+    emitter._subscribe((event) => bob.push(event), 'user-bob')
+    emitter._subscribe((event) => anon.push(event))
+
+    emitter.emit('for-alice', null, { userId: 'user-alice' })
+    emitter.emit('for-everyone')
+
+    // Targeted event reaches every connection of that user, nobody else
+    expect(alice).toEqual(['for-alice', 'for-everyone'])
+    expect(aliceTab2).toEqual(['for-alice', 'for-everyone'])
+    expect(bob).toEqual(['for-everyone'])
+    expect(anon).toEqual(['for-everyone'])
   })
 
   it('does not allow duplicate subscriptions of the same function', () => {

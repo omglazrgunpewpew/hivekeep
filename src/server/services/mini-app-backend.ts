@@ -59,18 +59,19 @@ const notifyTimestamps = new Map<string, number[]>()
 type SSESubscriber = (event: string, data: unknown) => void
 
 class AppEventEmitter {
-  private subscribers = new Set<SSESubscriber>()
+  private subscribers = new Map<SSESubscriber, string | null>() // fn → userId (null = unknown)
 
-  /** Emit an event to all connected SSE clients */
-  emit(event: string, data?: unknown): void {
-    for (const sub of this.subscribers) {
+  /** Emit an event to connected SSE clients, optionally targeting a single user */
+  emit(event: string, data?: unknown, opts?: { userId?: string }): void {
+    for (const [sub, userId] of this.subscribers) {
+      if (opts?.userId && userId !== opts.userId) continue
       try { sub(event, data) } catch { /* ignore dead subscribers */ }
     }
   }
 
-  /** Internal: add a subscriber (used by SSE route) */
-  _subscribe(fn: SSESubscriber): () => void {
-    this.subscribers.add(fn)
+  /** Internal: add a subscriber (used by SSE route), tagged with the session user */
+  _subscribe(fn: SSESubscriber, userId?: string): () => void {
+    this.subscribers.set(fn, userId ?? null)
     return () => { this.subscribers.delete(fn) }
   }
 
@@ -130,8 +131,11 @@ export interface MiniAppBackendContext {
   }
   /** Push real-time events to connected frontend clients via SSE */
   events: {
-    /** Emit a named event with optional data to all connected clients */
-    emit: (event: string, data?: unknown) => void
+    /**
+     * Emit a named event with optional data to connected clients.
+     * Pass { userId } to deliver only to that user's connections.
+     */
+    emit: (event: string, data?: unknown, opts?: { userId?: string }) => void
     /** Number of currently connected SSE clients */
     readonly subscriberCount: number
   }
@@ -155,10 +159,18 @@ export interface MiniAppBackendContext {
   }
 }
 
+/** Sender info passed to onClientEvent */
+export interface ClientEventMeta {
+  userId: string
+  userName: string | null
+}
+
 interface BackendModule {
   default?: (ctx: MiniAppBackendContext) => Hono
   onStart?: (ctx: MiniAppBackendContext) => void | Promise<void>
   onStop?: (ctx: MiniAppBackendContext) => void | Promise<void>
+  /** Receives events sent from the frontend via Hivekeep.events.send() */
+  onClientEvent?: (ctx: MiniAppBackendContext, event: string, data: unknown, meta: ClientEventMeta) => unknown
 }
 
 interface BackendInstance {
@@ -309,7 +321,7 @@ function buildContext(params: {
       clear: () => storageClear(appId),
     },
     events: {
-      emit: (event: string, data?: unknown) => emitter.emit(event, data),
+      emit: (event: string, data?: unknown, opts?: { userId?: string }) => emitter.emit(event, data, opts),
       get subscriberCount() { return emitter.subscriberCount },
     },
     schedule: (name: string, cronExpr: string, handler: () => void | Promise<void>) => {
@@ -583,6 +595,38 @@ export function getBackendStatus(appId: string): {
           nextRunAt: job.nextRun()?.getTime() ?? null,
         }))
       : [],
+  }
+}
+
+// ─── Client events (frontend → backend) ─────────────────────────────────────
+
+const ON_CLIENT_EVENT_TIMEOUT_MS = 10_000
+
+/**
+ * Deliver an event sent by the app's frontend (Hivekeep.events.send) to the
+ * backend's onClientEvent export. Returns whether a handler ran and its result.
+ */
+export async function handleClientEvent(
+  appId: string,
+  event: string,
+  data: unknown,
+  meta: ClientEventMeta,
+): Promise<{ handled: boolean; result?: unknown; error?: string }> {
+  const instance = await loadBackend(appId)
+  if (!instance || typeof instance.module.onClientEvent !== 'function') {
+    return { handled: false }
+  }
+
+  try {
+    const result = await Promise.race([
+      Promise.resolve(instance.module.onClientEvent(instance.ctx, event, data, meta)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`onClientEvent timed out after ${ON_CLIENT_EVENT_TIMEOUT_MS}ms`)), ON_CLIENT_EVENT_TIMEOUT_MS)),
+    ])
+    return { handled: true, result }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    pushBackendConsole(appId, 'error', [`onClientEvent("${event}") failed: ${message}`])
+    return { handled: true, error: message }
   }
 }
 

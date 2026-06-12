@@ -28,7 +28,7 @@ import {
   generateMiniAppIcon,
 } from '@/server/services/mini-apps'
 import { ImageGenerationError } from '@/server/services/image-generation'
-import { handleBackendRequest, getAppEmitter } from '@/server/services/mini-app-backend'
+import { handleBackendRequest, handleClientEvent, getAppEmitter } from '@/server/services/mini-app-backend'
 import { pushConsoleEntry, getConsoleEntries, clearConsoleEntries, markServed } from '@/server/services/mini-app-console'
 import {
   buildDefaultManifest,
@@ -715,6 +715,7 @@ miniAppRoutes.get('/:id/events', async (c) => {
     return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
   }
 
+  const user = c.get('user') as { id: string } | undefined
   const emitter = getAppEmitter(appId)
 
   // Create a readable stream that pushes SSE events
@@ -734,7 +735,8 @@ miniAppRoutes.get('/:id/events', async (c) => {
         }
       }, 30_000)
 
-      // Subscribe to app events
+      // Subscribe to app events, tagged with the session user so the backend
+      // can target a single user via ctx.events.emit(event, data, { userId })
       const unsubscribe = emitter._subscribe((event: string, data: unknown) => {
         try {
           const payload = JSON.stringify({ event, data, timestamp: Date.now() })
@@ -744,7 +746,7 @@ miniAppRoutes.get('/:id/events', async (c) => {
           clearInterval(pingInterval)
           unsubscribe()
         }
-      })
+      }, user?.id)
 
       // Clean up when the client disconnects
       c.req.raw.signal.addEventListener('abort', () => {
@@ -763,6 +765,34 @@ miniAppRoutes.get('/:id/events', async (c) => {
       'X-Accel-Buffering': 'no',
     },
   })
+})
+
+// Upstream client events: frontend Hivekeep.events.send() → backend onClientEvent()
+miniAppRoutes.post('/:id/client-event', async (c) => {
+  const appId = c.req.param('id')
+  const app = await getMiniAppRow(appId)
+  if (!app) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'App not found' } }, 404)
+  }
+  if (!app.hasBackend) {
+    return c.json({ error: { code: 'NO_BACKEND', message: 'This app has no backend. Write a _server.js file to add one.' } }, 404)
+  }
+
+  const body = await c.req.json<{ event?: string; data?: unknown }>().catch(() => null)
+  if (!body || typeof body.event !== 'string' || !body.event.trim()) {
+    return c.json({ error: { code: 'INVALID_BODY', message: 'event (string) is required' } }, 400)
+  }
+
+  const user = c.get('user') as { id: string; name?: string }
+  const result = await handleClientEvent(appId, body.event, body.data, {
+    userId: user.id,
+    userName: user.name ?? null,
+  })
+
+  if (result.error) {
+    return c.json({ error: { code: 'CLIENT_EVENT_ERROR', message: result.error } }, 500)
+  }
+  return c.json({ handled: result.handled, result: result.result ?? null })
 })
 
 // ─── Backend API proxy ──────────────────────────────────────────────────────
