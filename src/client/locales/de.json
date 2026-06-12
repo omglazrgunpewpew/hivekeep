@@ -501,9 +501,8 @@
       "title": "Thinking / Reasoning",
       "description": "Wenn aktiviert, denken kompatible Modelle vor der Antwort Schritt für Schritt nach. Das kann die Qualität bei komplexen Aufgaben verbessern, verbraucht aber mehr Tokens. Nicht alle Modelle unterstützen diese Funktion.",
       "enableLabel": "Erweitertes Denken aktivieren",
-      "budgetLabel": "Token-Budget",
-      "budgetPlaceholder": "Adaptiv (Provider-Standard)",
-      "budgetHint": "Maximale Tokens, die das Modell zum Nachdenken nutzen darf. Leer lassen für den adaptiven Modus."
+      "effortLabel": "Reasoning-Aufwand",
+      "effortHint": "Die Stufen sind auf das beschränkt, was das gewählte Modell unterstützt. Höhere Stufen denken länger nach und verbrauchen mehr Tokens."
     },
     "avatar": {
       "title": "Avatar wählen",
@@ -833,11 +832,15 @@
       "title": "Reasoning-Aufwand",
       "effort": {
         "off": "Aus",
+        "on": "Aktiviert",
+        "minimal": "Minimal",
         "low": "Niedrig",
         "medium": "Mittel",
         "high": "Hoch",
+        "xhigh": "Sehr hoch",
         "max": "Max"
-      }
+      },
+      "unsupported": "Dieses Modell unterstützt kein Reasoning."
     },
     "thinkingToggle": "Thinking",
     "thinkingEnable": "Erweitertes Denken für diesen Agenten aktivieren",

@@ -481,6 +481,10 @@ providerRoutes.get('/models', async (c) => {
     contextWindow?: number
     /** Maximum output tokens. Populated when the provider's API exposes it. */
     maxOutput?: number
+    /** LLM-family only — reasoning support after registry enrichment.
+     *  Absent = not a reasoning model (or unknown); `efforts: []` = reasoning
+     *  toggle-only (no granularity). Drives the effort selectors client-side. */
+    thinking?: { efforts: string[]; note?: string }
   }
 
   const allProviders = await db.select().from(providers).all()
@@ -527,6 +531,7 @@ providerRoutes.get('/models', async (c) => {
               // (text-only model) without blocking on `undefined` (unknown).
               ...(enriched && enriched.supportsImageInput !== undefined ? { supportsImageInput: enriched.supportsImageInput } : {}),
               ...(enriched && enriched.supportsPdfInput !== undefined ? { supportsPdfInput: enriched.supportsPdfInput } : {}),
+              ...(enriched?.thinking ? { thinking: enriched.thinking } : {}),
               ...(m.capability === 'image' ? { maxImageInputs: m.maxImageInputs ?? 0 } : {}),
               ...(m.contextWindow ? { contextWindow: m.contextWindow } : {}),
               ...(m.maxOutput != null ? { maxOutput: m.maxOutput } : {}),

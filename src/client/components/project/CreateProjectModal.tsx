@@ -5,7 +5,6 @@ import { FormField } from '@/client/components/common/FormField'
 import { Input } from '@/client/components/ui/input'
 import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { Label } from '@/client/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
 import { useModels } from '@/client/hooks/useModels'
@@ -14,6 +13,7 @@ import { VaultPatPicker } from '@/client/components/project/VaultPatPicker'
 import { GithubRepoPicker } from '@/client/components/project/GithubRepoPicker'
 import { getErrorMessage } from '@/client/lib/api'
 import { choiceToConfig, type ThinkingChoice } from '@/client/lib/thinking-choice'
+import { ThinkingEffortSelect } from '@/client/components/common/ThinkingEffortSelect'
 import { toast } from 'sonner'
 import type { AgentThinkingConfig } from '@/shared/types'
 
@@ -173,26 +173,11 @@ export function CreateProjectModal({ open, onOpenChange, onCreate, onCreated }: 
       </FormField>
 
       <FormField label={t('projects.edit.thinkingField')} hint={t('projects.edit.thinkingHint')}>
-        <Select
+        <ThinkingEffortSelect
           value={thinkingChoice}
-          onValueChange={(v) => setThinkingChoice(v as ThinkingChoice)}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="inherit">
-              <span className="italic text-muted-foreground">
-                {t('projects.edit.thinkingInherit')}
-              </span>
-            </SelectItem>
-            <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
-            <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
-            <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
-            <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
-            <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
-          </SelectContent>
-        </Select>
+          onChange={setThinkingChoice}
+          inheritLabel={t('projects.edit.thinkingInherit')}
+        />
       </FormField>
 
       {/* Default toolboxes for tasks started on this project's tickets.

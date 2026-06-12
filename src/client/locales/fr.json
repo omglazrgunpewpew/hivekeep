@@ -501,9 +501,8 @@
       "title": "Réflexion / Raisonnement",
       "description": "Lorsqu'elle est activée, les modèles compatibles raisonnent étape par étape avant de répondre. Cela peut améliorer la qualité pour les tâches complexes mais consomme plus de tokens. Tous les modèles ne supportent pas cette fonctionnalité.",
       "enableLabel": "Activer la réflexion étendue",
-      "budgetLabel": "Budget de tokens",
-      "budgetPlaceholder": "Adaptatif (défaut du fournisseur)",
-      "budgetHint": "Nombre maximum de tokens que le modèle peut utiliser pour raisonner. Laisser vide pour le mode adaptatif."
+      "effortLabel": "Effort de raisonnement",
+      "effortHint": "Les niveaux proposés sont limités à ce que le modèle sélectionné prend en charge. Les niveaux élevés raisonnent plus longtemps et consomment plus de tokens."
     },
     "avatar": {
       "title": "Choisir l'avatar",
@@ -833,11 +832,15 @@
       "title": "Niveau de réflexion",
       "effort": {
         "off": "Désactivé",
+        "on": "Activé",
+        "minimal": "Minimal",
         "low": "Faible",
         "medium": "Moyen",
         "high": "Élevé",
+        "xhigh": "Très élevé",
         "max": "Maximum"
-      }
+      },
+      "unsupported": "Ce modèle ne prend pas en charge le raisonnement."
     },
     "thinkingToggle": "Réflexion",
     "thinkingEnable": "Activer la réflexion étendue pour cet Agent",

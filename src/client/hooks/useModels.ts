@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '@/client/lib/api'
 import { useSSE } from '@/client/hooks/useSSE'
+import type { AgentThinkingEffort } from '@/shared/types'
 
 /** Model as returned by GET /api/providers/models */
 export interface ProviderModel {
@@ -22,6 +23,10 @@ export interface ProviderModel {
   contextWindow?: number
   /** Maximum output tokens. Populated when the provider's API exposes it. */
   maxOutput?: number
+  /** LLM-family only — reasoning support after registry enrichment.
+   *  Absent = not a reasoning model (or unknown); `efforts: []` = reasoning
+   *  toggle-only (no granularity). Drives the effort selectors. */
+  thinking?: { efforts: AgentThinkingEffort[]; note?: string }
 }
 
 /**

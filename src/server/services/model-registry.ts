@@ -21,6 +21,7 @@ import { getLLMProvider } from '@/server/llm/llm/registry'
 import { loadProviderConfig } from '@/server/services/provider-config'
 import { createLogger } from '@/server/logger'
 import type { LLMModel, ThinkingEffort } from '@/server/llm/llm/types'
+import { THINKING_EFFORT_ORDER } from '@/server/llm/llm/types'
 
 const log = createLogger('model-registry')
 
@@ -381,8 +382,13 @@ export function updateRegistryModel(id: string, patch: RegistryEditPatch): void 
   if ('supportsPdfInput' in patch) { set.supportsPdfInput = patch.supportsPdfInput ?? null; pinned.add('supportsPdfInput') }
   if ('supportsToolCall' in patch) { set.supportsToolCall = patch.supportsToolCall ?? null; pinned.add('supportsToolCall') }
   if ('thinking' in patch) {
+    // Sanitize the admin's free-text effort list: keep only known levels, in
+    // canonical order (the UI sends a comma-separated string split client-side).
+    const efforts = patch.thinking
+      ? THINKING_EFFORT_ORDER.filter((e) => (patch.thinking!.efforts as readonly string[]).includes(e))
+      : []
     set.reasoning = patch.thinking
-      ? JSON.stringify({ enabled: true, efforts: patch.thinking.efforts })
+      ? JSON.stringify({ enabled: true, efforts })
       : JSON.stringify({ enabled: false, efforts: [] })
     pinned.add('thinking')
   }

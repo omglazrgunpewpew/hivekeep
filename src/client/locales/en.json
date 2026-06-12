@@ -501,9 +501,8 @@
       "title": "Thinking / Reasoning",
       "description": "When enabled, compatible models will reason step-by-step before responding. This can improve quality for complex tasks but uses more tokens. Not all models support this feature.",
       "enableLabel": "Enable extended thinking",
-      "budgetLabel": "Token budget",
-      "budgetPlaceholder": "Adaptive (provider default)",
-      "budgetHint": "Maximum tokens the model can use for reasoning. Leave empty for adaptive mode."
+      "effortLabel": "Reasoning effort",
+      "effortHint": "Levels are limited to what the selected model supports. Higher levels reason longer and use more tokens."
     },
     "avatar": {
       "title": "Choose avatar",
@@ -833,11 +832,15 @@
       "title": "Reasoning effort",
       "effort": {
         "off": "Off",
+        "on": "Enabled",
+        "minimal": "Minimal",
         "low": "Low",
         "medium": "Medium",
         "high": "High",
+        "xhigh": "Extra high",
         "max": "Max"
-      }
+      },
+      "unsupported": "This model does not support reasoning."
     },
     "thinkingToggle": "Thinking",
     "thinkingEnable": "Enable extended thinking for this Agent",

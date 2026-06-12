@@ -43,15 +43,12 @@ import { cn } from '@/client/lib/utils'
 import { api, getErrorMessage, toastError } from '@/client/lib/api'
 import type { AgentCompactingConfig, AgentThinkingConfig } from '@/shared/types'
 import type { GeneratedAgentConfig } from '@/client/hooks/useAgents'
+import type { ProviderModel } from '@/client/hooks/useModels'
+import { modelReasoningInfo, clampEffort } from '@/client/lib/model-efforts'
+import { ThinkingEffortSelect } from '@/client/components/common/ThinkingEffortSelect'
+import type { ThinkingChoice } from '@/client/lib/thinking-choice'
 
-interface Model {
-  id: string
-  name: string
-  providerId: string
-  providerName: string
-  providerType: string
-  capability: string
-}
+type Model = ProviderModel
 
 interface AgentDetail {
   id: string
@@ -316,6 +313,26 @@ export function AgentFormModal({
   const currentExtraTools = useMemo(() => JSON.stringify(extraToolNames ?? null), [extraToolNames])
   const currentCompacting = useMemo(() => JSON.stringify(normalizeCompactingConfig(compactingConfig)), [compactingConfig])
   const currentThinking = useMemo(() => JSON.stringify(thinkingConfig ?? null), [thinkingConfig])
+
+  // Reasoning support of the Agent's CURRENT model (form state, so switching
+  // the model in the General tab immediately re-scopes the effort options).
+  // Model not in the catalogue -> 'unknown' -> generic ladder (fail-open).
+  const agentModelReasoning = useMemo(
+    () => modelReasoningInfo(llmModels.find((m) => m.id === model && (!providerId || m.providerId === providerId))),
+    [model, providerId, llmModels],
+  )
+  // Clamp a stored effort the newly selected model can't reach.
+  useEffect(() => {
+    if (!thinkingConfig?.enabled || !thinkingConfig.effort) return
+    if (agentModelReasoning.kind !== 'levels') return
+    if (agentModelReasoning.efforts.includes(thinkingConfig.effort)) return
+    const clamped = clampEffort(thinkingConfig.effort, agentModelReasoning)
+    if (clamped) {
+      setThinkingConfig({ enabled: true, effort: clamped })
+      markDirty()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agentModelReasoning])
 
   const generalDirty = currentGeneral !== initialGeneral || avatarFile != null
   const toolsDirty = currentToolboxIds !== initialToolboxIds || currentExtraTools !== initialExtraTools
@@ -1425,26 +1442,28 @@ export function AgentFormModal({
                             />
                           </div>
 
-                          {thinkingConfig?.enabled && (
+                          {agentModelReasoning.kind === 'unsupported' && (
+                            <p className="text-xs text-muted-foreground">{t('chat.thinkingPicker.unsupported')}</p>
+                          )}
+
+                          {thinkingConfig?.enabled && agentModelReasoning.kind !== 'toggle' && agentModelReasoning.kind !== 'unsupported' && (
                             <FormField
-                              label={t('agent.thinking.budgetLabel')}
-                              htmlFor="thinking-budget"
-                              hint={t('agent.thinking.budgetHint')}
+                              label={t('agent.thinking.effortLabel')}
+                              hint={t('agent.thinking.effortHint')}
                             >
-                              <Input
-                                id="thinking-budget"
-                                type="number"
-                                min={1024}
-                                step={1024}
-                                placeholder={t('agent.thinking.budgetPlaceholder')}
-                                value={thinkingConfig?.budgetTokens ?? ''}
-                                onChange={(e) => {
-                                  const val = e.target.value ? Number(e.target.value) : null
-                                  setThinkingConfig({ ...thinkingConfig, enabled: true, budgetTokens: val })
+                              <ThinkingEffortSelect
+                                value={(thinkingConfig.effort ?? 'medium') as ThinkingChoice}
+                                onChange={(v) => {
+                                  if (v === 'inherit' || v === 'off' || v === 'on') return
+                                  setThinkingConfig({ enabled: true, effort: v })
                                   markDirty()
                                 }}
+                                reasoning={agentModelReasoning}
                               />
                             </FormField>
+                          )}
+                          {agentModelReasoning.note && (
+                            <p className="text-xs text-muted-foreground">{agentModelReasoning.note}</p>
                           )}
 
                           <div className="flex items-center gap-2 pt-2">

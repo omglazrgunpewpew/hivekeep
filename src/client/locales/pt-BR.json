@@ -501,9 +501,8 @@
       "title": "Raciocínio",
       "description": "Quando habilitado, modelos compatíveis raciocinam passo a passo antes de responder. Isso pode melhorar a qualidade em tarefas complexas, mas usa mais tokens. Nem todos os modelos suportam este recurso.",
       "enableLabel": "Habilitar raciocínio estendido",
-      "budgetLabel": "Orçamento de tokens",
-      "budgetPlaceholder": "Adaptativo (padrão do provedor)",
-      "budgetHint": "Máximo de tokens que o modelo pode usar para raciocinar. Deixe vazio para o modo adaptativo."
+      "effortLabel": "Esforço de raciocínio",
+      "effortHint": "Os níveis são limitados ao que o modelo selecionado suporta. Níveis mais altos raciocinam por mais tempo e usam mais tokens."
     },
     "avatar": {
       "title": "Escolher avatar",
@@ -833,11 +832,15 @@
       "title": "Esforço de raciocínio",
       "effort": {
         "off": "Desligado",
+        "on": "Ativado",
+        "minimal": "Mínimo",
         "low": "Baixo",
         "medium": "Médio",
         "high": "Alto",
+        "xhigh": "Muito alto",
         "max": "Máximo"
-      }
+      },
+      "unsupported": "Este modelo não oferece suporte a raciocínio."
     },
     "thinkingToggle": "Raciocínio",
     "thinkingEnable": "Habilitar raciocínio estendido para este Agente",

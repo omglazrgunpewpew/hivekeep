@@ -20,6 +20,8 @@ import type { PendingFile } from '@/client/hooks/useFileUpload'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ThinkingEffortPicker } from '@/client/components/chat/ThinkingEffortPicker'
 import type { AgentThinkingEffort } from '@/shared/types'
+import type { ProviderModel } from '@/client/hooks/useModels'
+import { modelReasoningInfo } from '@/client/lib/model-efforts'
 
 export interface MessageInputHandle {
   focus: () => void
@@ -63,7 +65,7 @@ interface MessageInputProps {
   activeProjectSlug?: string | null
   // ── Generation controls (relocated from the conversation header) ──
   /** Models available for the model picker. When omitted the picker is hidden. */
-  llmModels?: { id: string; name: string; providerId: string; providerName: string; providerType: string; capability: string; supportsImageInput?: boolean; supportsPdfInput?: boolean }[]
+  llmModels?: ProviderModel[]
   /** Currently selected model id. */
   model?: string
   /** Provider id backing the selected model (disambiguates same-id models). */
@@ -823,6 +825,9 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
                 enabled={thinkingEnabled}
                 effort={thinkingEffort}
                 onChange={onChangeThinking}
+                reasoning={llmModels && model
+                  ? modelReasoningInfo(llmModels.find((m) => m.id === model && (!providerId || m.providerId === providerId)))
+                  : undefined}
                 compact
               />
             )}

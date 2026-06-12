@@ -12,7 +12,6 @@ import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSele
 import { useToolboxes } from '@/client/hooks/useToolboxes'
 import { AgentSelector } from '@/client/components/common/AgentSelector'
 import { AgentSelectItem, type AgentOption } from '@/client/components/common/AgentSelectItem'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/client/components/ui/select'
 import type { AgentThinkingEffort } from '@/shared/types'
 import { Switch } from '@/client/components/ui/switch'
 import { Sparkles, Trash2, Bell, AlertTriangle } from 'lucide-react'
@@ -24,21 +23,16 @@ import { getErrorMessage } from '@/client/lib/api'
 import { cronToHuman, isISODatetime } from '@/client/lib/cron-human'
 import { cronNextRuns } from '@/client/lib/cron-next'
 import type { CronSummary } from '@/shared/types'
-
-interface LLMModel {
-  id: string
-  name: string
-  providerId: string
-  providerName: string
-  providerType: string
-  capability: string
-}
+import type { ProviderModel } from '@/client/hooks/useModels'
+import { modelReasoningInfo, clampEffort } from '@/client/lib/model-efforts'
+import { ThinkingEffortSelect } from '@/client/components/common/ThinkingEffortSelect'
+import type { ThinkingChoice } from '@/client/lib/thinking-choice'
 
 interface CronFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   agents: AgentOption[]
-  llmModels: LLMModel[]
+  llmModels: ProviderModel[]
   cron?: CronSummary | null
   /** Pre-fill values for create mode (used when duplicating). */
   defaults?: Partial<CronSummary> | null
@@ -107,6 +101,38 @@ export function CronFormModal({
   const [selectedToolboxIds, setSelectedToolboxIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Effort options follow the model override's registry metadata. No override →
+  // the executing model is resolved server-side (target agent / defaults), so
+  // offer the generic ladder and let the provider clamp at run time.
+  const modelReasoning = useMemo(
+    () => (model
+      ? modelReasoningInfo(llmModels.find((m) => m.id === model && (!modelProviderId || m.providerId === modelProviderId)))
+      : undefined),
+    [model, modelProviderId, llmModels],
+  )
+  // Toggle-only models have no effort dial: an enabled cron shows as 'on'.
+  const thinkingChoice: ThinkingChoice = thinkingEffort === 'off'
+    ? 'off'
+    : modelReasoning?.kind === 'toggle' ? 'on' : thinkingEffort
+  const handleThinkingChoice = (v: ThinkingChoice) => {
+    // 'on' (toggle-only) keeps a concrete effort in state — the provider
+    // ignores granularity for those models; 'inherit' never offered here.
+    if (v === 'off') setThinkingEffort('off')
+    else if (v === 'on') setThinkingEffort('medium')
+    else if (v !== 'inherit') setThinkingEffort(v)
+    markDirty()
+  }
+  // Clamp a stale effort when the model override changes under it.
+  useEffect(() => {
+    if (!modelReasoning || thinkingEffort === 'off') return
+    if (modelReasoning.kind === 'unsupported') { setThinkingEffort('off'); return }
+    if (modelReasoning.kind === 'levels' && !modelReasoning.efforts.includes(thinkingEffort)) {
+      const clamped = clampEffort(thinkingEffort, modelReasoning)
+      if (clamped) setThinkingEffort(clamped)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelReasoning])
 
   // Populate form when editing or reset for create
   useEffect(() => {
@@ -480,21 +506,11 @@ export function CronFormModal({
             </>
           }
         >
-          <Select
-            value={thinkingEffort}
-            onValueChange={(v) => { setThinkingEffort(v as AgentThinkingEffort | 'off'); markDirty() }}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="off">{t('chat.thinkingPicker.effort.off')}</SelectItem>
-              <SelectItem value="low">{t('chat.thinkingPicker.effort.low')}</SelectItem>
-              <SelectItem value="medium">{t('chat.thinkingPicker.effort.medium')}</SelectItem>
-              <SelectItem value="high">{t('chat.thinkingPicker.effort.high')}</SelectItem>
-              <SelectItem value="max">{t('chat.thinkingPicker.effort.max')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <ThinkingEffortSelect
+            value={thinkingChoice}
+            onChange={handleThinkingChoice}
+            reasoning={modelReasoning}
+          />
         </FormField>
 
         {/* Toolboxes */}

@@ -612,7 +612,7 @@ function EditModelDialog({ model, onClose, onSaved }: {
             <Toggle label={t('settings.modelRegistry.reasoning', 'Reasoning model')} checked={reasoning} onChange={setReasoning} />
             {reasoning && (
               <Field label={t('settings.modelRegistry.efforts', 'Reasoning efforts (comma-separated)')}>
-                <Input value={efforts} onChange={(e) => setEfforts(e.target.value)} placeholder="low, medium, high, max" />
+                <Input value={efforts} onChange={(e) => setEfforts(e.target.value)} placeholder="minimal, low, medium, high, xhigh, max" />
               </Field>
             )}
             <Toggle label={t('settings.modelRegistry.manual', 'Manual (freeze — never auto-synced)')} checked={manual} onChange={setManual} />

@@ -501,9 +501,8 @@
       "title": "Razonamiento",
       "description": "Cuando está activado, los modelos compatibles razonan paso a paso antes de responder. Puede mejorar la calidad en tareas complejas, pero usa más tokens. No todos los modelos lo admiten.",
       "enableLabel": "Activar razonamiento extendido",
-      "budgetLabel": "Presupuesto de tokens",
-      "budgetPlaceholder": "Adaptativo (valor del proveedor)",
-      "budgetHint": "Máximo de tokens que el modelo puede usar para razonar. Déjalo vacío para el modo adaptativo."
+      "effortLabel": "Esfuerzo de razonamiento",
+      "effortHint": "Los niveles se limitan a lo que admite el modelo seleccionado. Los niveles altos razonan más tiempo y usan más tokens."
     },
     "avatar": {
       "title": "Elegir avatar",
@@ -833,11 +832,15 @@
       "title": "Esfuerzo de razonamiento",
       "effort": {
         "off": "Desactivado",
+        "on": "Activado",
+        "minimal": "Mínimo",
         "low": "Bajo",
         "medium": "Medio",
         "high": "Alto",
+        "xhigh": "Muy alto",
         "max": "Máximo"
-      }
+      },
+      "unsupported": "Este modelo no admite razonamiento."
     },
     "thinkingToggle": "Razonamiento",
     "thinkingEnable": "Activar razonamiento extendido para este Agente",

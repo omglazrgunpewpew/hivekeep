@@ -501,9 +501,8 @@
       "title": "思考 / 推理",
       "description": "启用后，兼容的模型会在回答前逐步推理。这可以提升复杂任务的质量，但会消耗更多 token。并非所有模型都支持此功能。",
       "enableLabel": "启用扩展思考",
-      "budgetLabel": "Token 预算",
-      "budgetPlaceholder": "自适应（提供商默认）",
-      "budgetHint": "模型可用于推理的最大 token 数。留空表示自适应模式。"
+      "effortLabel": "推理强度",
+      "effortHint": "可选等级仅限于所选模型支持的范围。等级越高，推理时间越长，消耗的 token 越多。"
     },
     "avatar": {
       "title": "选择头像",
@@ -833,11 +832,15 @@
       "title": "推理强度",
       "effort": {
         "off": "关闭",
+        "on": "已启用",
+        "minimal": "极低",
         "low": "低",
         "medium": "中",
         "high": "高",
+        "xhigh": "超高",
         "max": "最高"
-      }
+      },
+      "unsupported": "该模型不支持推理。"
     },
     "thinkingToggle": "思考",
     "thinkingEnable": "为此智能体启用扩展思考",

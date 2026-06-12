@@ -501,9 +501,8 @@
       "title": "Ragionamento",
       "description": "Se abilitato, i modelli compatibili ragioneranno passo dopo passo prima di rispondere. Può migliorare la qualità nei compiti complessi ma consuma più token. Non tutti i modelli supportano questa funzione.",
       "enableLabel": "Abilita il ragionamento esteso",
-      "budgetLabel": "Budget di token",
-      "budgetPlaceholder": "Adattivo (default del provider)",
-      "budgetHint": "Token massimi che il modello può usare per ragionare. Lascia vuoto per la modalità adattiva."
+      "effortLabel": "Sforzo di ragionamento",
+      "effortHint": "I livelli sono limitati a quelli supportati dal modello selezionato. I livelli più alti ragionano più a lungo e usano più token."
     },
     "avatar": {
       "title": "Scegli l'avatar",
@@ -833,11 +832,15 @@
       "title": "Sforzo di ragionamento",
       "effort": {
         "off": "Off",
+        "on": "Attivato",
+        "minimal": "Minimo",
         "low": "Basso",
         "medium": "Medio",
         "high": "Alto",
+        "xhigh": "Molto alto",
         "max": "Massimo"
-      }
+      },
+      "unsupported": "Questo modello non supporta il ragionamento."
     },
     "thinkingToggle": "Ragionamento",
     "thinkingEnable": "Abilita il ragionamento esteso per questo Agente",

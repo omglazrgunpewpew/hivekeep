@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { FormDialog } from '@/client/components/common/FormDialog'
@@ -8,6 +8,7 @@ import { MarkdownEditor } from '@/client/components/ui/markdown-editor'
 import { ToolboxMultiSelect } from '@/client/components/toolbox/ToolboxMultiSelect'
 import { ModelPicker, modelPickerValue } from '@/client/components/common/ModelPicker'
 import { ThinkingEffortSelect } from '@/client/components/common/ThinkingEffortSelect'
+import { modelReasoningInfo, clampEffort } from '@/client/lib/model-efforts'
 import { AgentSelector } from '@/client/components/common/AgentSelector'
 import { useToolboxes } from '@/client/hooks/useToolboxes'
 import { useModels } from '@/client/hooks/useModels'
@@ -58,6 +59,29 @@ export function OrphanTaskDialog({ open, onOpenChange, agentId, agentName }: Orp
   const [providerId, setProviderId] = useState('')
   const [thinkingChoice, setThinkingChoice] = useState<ThinkingChoice>('inherit')
   const [submitting, setSubmitting] = useState(false)
+
+  // Effort options follow the model override's registry metadata; no override →
+  // generic ladder (the executing model is resolved server-side at spawn).
+  const modelReasoning = useMemo(
+    () => (model
+      ? modelReasoningInfo(llmModels.find((m) => m.id === model && (!providerId || m.providerId === providerId)))
+      : undefined),
+    [model, providerId, llmModels],
+  )
+  // Clamp a stale choice when the model override changes under it.
+  useEffect(() => {
+    if (!modelReasoning || thinkingChoice === 'inherit' || thinkingChoice === 'off') return
+    if (modelReasoning.kind === 'unsupported') { setThinkingChoice('off'); return }
+    if (modelReasoning.kind === 'toggle') { setThinkingChoice('on'); return }
+    if (modelReasoning.kind === 'levels') {
+      if (thinkingChoice === 'on') { setThinkingChoice('medium'); return }
+      if (!modelReasoning.efforts.includes(thinkingChoice)) {
+        const clamped = clampEffort(thinkingChoice, modelReasoning)
+        if (clamped) setThinkingChoice(clamped)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelReasoning])
 
   // Resolve the effective target. In fixed mode it's the prop; in picker mode
   // it's whatever the user selected (name looked up from the Agent list for the
@@ -211,6 +235,7 @@ export function OrphanTaskDialog({ open, onOpenChange, agentId, agentName }: Orp
       <FormField label={t('orphanTask.thinkingField')} hint={t('orphanTask.thinkingHelp')}>
         <ThinkingEffortSelect
           value={thinkingChoice}
+          reasoning={modelReasoning}
           onChange={setThinkingChoice}
           inheritLabel={t('orphanTask.thinkingInherit')}
           disabled={submitting}

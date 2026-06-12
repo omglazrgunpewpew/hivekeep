@@ -503,9 +503,8 @@
       "title": "Myślenie / Rozumowanie",
       "description": "Po włączeniu zgodne modele będą rozumować krok po kroku przed udzieleniem odpowiedzi. Może to poprawić jakość przy złożonych zadaniach, ale zużywa więcej tokenów. Nie wszystkie modele obsługują tę funkcję.",
       "enableLabel": "Włącz rozszerzone myślenie",
-      "budgetLabel": "Budżet tokenów",
-      "budgetPlaceholder": "Adaptacyjny (domyślny dostawcy)",
-      "budgetHint": "Maksymalna liczba tokenów, jaką model może przeznaczyć na rozumowanie. Zostaw puste dla trybu adaptacyjnego."
+      "effortLabel": "Wysiłek rozumowania",
+      "effortHint": "Dostępne poziomy są ograniczone do tych obsługiwanych przez wybrany model. Wyższe poziomy rozumują dłużej i zużywają więcej tokenów."
     },
     "avatar": {
       "title": "Wybierz awatar",
@@ -837,11 +836,15 @@
       "title": "Poziom rozumowania",
       "effort": {
         "off": "Wył.",
+        "on": "Włączone",
+        "minimal": "Minimalny",
         "low": "Niski",
         "medium": "Średni",
         "high": "Wysoki",
+        "xhigh": "Bardzo wysoki",
         "max": "Maks."
-      }
+      },
+      "unsupported": "Ten model nie obsługuje rozumowania."
     },
     "thinkingToggle": "Myślenie",
     "thinkingEnable": "Włącz rozszerzone myślenie dla tego Agenta",
