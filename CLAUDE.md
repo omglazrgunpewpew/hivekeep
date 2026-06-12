@@ -17,6 +17,7 @@ Read these files **before starting any phase**. They are the source of truth.
 | `prompt-system.md` | How the Agent system prompt is assembled (blocks 1-12) |
 | `compacting.md` | Compacting algorithm + memory extraction pipeline |
 | `queenie.md` | **Conversational onboarding** spec — the `Queenie` configurator Agent, vault-centralized secrets, secure-input tools, avatar-style customization (Phase 27) |
+| `files.md` | **Files section** spec — workspace file browser/editor (tree + tabs + CodeMirror), workspace REST API + `workspace:changed` SSE, share-to-file-storage, chat integrations (`@` file palette, clickable paths) |
 
 ## Tech stack
 

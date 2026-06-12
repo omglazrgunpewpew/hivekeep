@@ -3165,7 +3165,8 @@
     "tasks": "Tasks",
     "crons": "Scheduled Tasks",
     "apps": "Mini-Apps",
-    "models": "Models"
+    "models": "Models",
+    "files": "Files"
   },
   "orphanTask": {
     "menuAction": "Start a task",
@@ -3563,5 +3564,45 @@
       "assets": "Preparing frontend assets",
       "restart": "Restarting"
     }
+  },
+  "files": {
+    "selectWorkspace": "Select a workspace",
+    "openTree": "Browse files",
+    "refresh": "Refresh",
+    "notFound": "File not found: {{path}}",
+    "openError": "Could not open this file",
+    "empty": {
+      "title": "This workspace is empty",
+      "description": "Files created by this agent will appear here."
+    },
+    "noAgents": {
+      "title": "No agents yet",
+      "description": "Create an agent first — its workspace will show up here."
+    },
+    "noFileOpen": {
+      "title": "No file open",
+      "description": "Select a file in the tree to view it."
+    },
+    "tree": {
+      "loadError": "Failed to load — tap to retry",
+      "emptyFolder": "empty"
+    },
+    "editor": {
+      "download": "Download",
+      "tooLarge": "This text file is too large to edit here ({{size}}). Download it instead.",
+      "binary": "Binary file ({{mime}}) — preview not available.",
+      "edit": "Edit",
+      "preview": "Preview",
+      "save": "Save",
+      "saved": "Saved",
+      "recreate": "Recreate file",
+      "deletedFromDisk": "This file was deleted on disk while you were editing it.",
+      "conflict": {
+        "message": "The file changed on disk since you opened it (probably written by the agent).",
+        "reload": "Reload",
+        "overwrite": "Overwrite"
+      }
+    },
+    "browseWorkspace": "Browse files"
   }
 }

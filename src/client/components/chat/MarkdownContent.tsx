@@ -14,6 +14,9 @@ interface MarkdownContentProps {
   content: string
   /** Whether the content lives inside a user bubble (primary bg) */
   isUser?: boolean
+  /** Drop the chat-scoped remark plugins (ticket mentions, …) — used when
+   *  MarkdownContent renders outside a conversation (e.g. Files md preview). */
+  disableChatPlugins?: boolean
   className?: string
 }
 
@@ -71,12 +74,13 @@ function hasMathExpressions(content: string): boolean {
 }
 
 /** Hook to get remark+rehype plugins, loading heavy ones on demand */
-function useLazyPlugins(content: string): LazyPlugins {
+function useLazyPlugins(content: string, disableChatPlugins = false): LazyPlugins {
   const needsHighlight = useMemo(() => hasCodeBlocks(content), [content])
   const needsMath = useMemo(() => hasMathExpressions(content), [content])
+  const basePlugins = disableChatPlugins ? [remarkGfm] : defaultRemarkPlugins
 
   const [plugins, setPlugins] = useState<LazyPlugins>(() => {
-    const remark: UnifiedPlugin[] = [...defaultRemarkPlugins]
+    const remark: UnifiedPlugin[] = [...basePlugins]
     const rehype: UnifiedPlugin[] = []
     if (needsMath && cachedRemarkMath) remark.push(cachedRemarkMath)
     if (needsHighlight && cachedRehypeHighlight) rehype.push(cachedRehypeHighlight)
@@ -101,7 +105,7 @@ function useLazyPlugins(content: string): LazyPlugins {
     if (promises.length > 0) {
       Promise.all(promises).then(() => {
         if (cancelled) return
-        const remark: UnifiedPlugin[] = [...defaultRemarkPlugins]
+        const remark: UnifiedPlugin[] = [...basePlugins]
         const rehype: UnifiedPlugin[] = []
         if (needsMath && cachedRemarkMath) remark.push(cachedRemarkMath)
         if (needsHighlight && cachedRehypeHighlight) rehype.push(cachedRehypeHighlight)
@@ -109,7 +113,7 @@ function useLazyPlugins(content: string): LazyPlugins {
         setPlugins({ remarkPlugins: remark, rehypePlugins: rehype })
       })
     } else {
-      const remark: UnifiedPlugin[] = [...defaultRemarkPlugins]
+      const remark: UnifiedPlugin[] = [...basePlugins]
       const rehype: UnifiedPlugin[] = []
       if (needsMath && cachedRemarkMath) remark.push(cachedRemarkMath)
       if (needsHighlight && cachedRehypeHighlight) rehype.push(cachedRehypeHighlight)
@@ -118,7 +122,8 @@ function useLazyPlugins(content: string): LazyPlugins {
     }
 
     return () => { cancelled = true }
-  }, [needsHighlight, needsMath])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsHighlight, needsMath, disableChatPlugins])
 
   return plugins
 }
@@ -495,9 +500,10 @@ const markdownComponents: any = {
 function MarkdownRenderer({
   content,
   isUser,
+  disableChatPlugins,
   className,
 }: MarkdownContentProps) {
-  const { remarkPlugins, rehypePlugins } = useLazyPlugins(content)
+  const { remarkPlugins, rehypePlugins } = useLazyPlugins(content, disableChatPlugins)
 
   return (
     <div
@@ -523,6 +529,7 @@ function MarkdownRenderer({
 export const MarkdownContent = memo(function MarkdownContent({
   content,
   isUser = false,
+  disableChatPlugins = false,
   className,
 }: MarkdownContentProps) {
   // Strip leading whitespace — LLMs sometimes start with \n
@@ -545,5 +552,5 @@ export const MarkdownContent = memo(function MarkdownContent({
     )
   }
 
-  return <MarkdownRenderer content={trimmed} isUser={isUser} className={className} />
+  return <MarkdownRenderer content={trimmed} isUser={isUser} disableChatPlugins={disableChatPlugins} className={className} />
 })

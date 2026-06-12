@@ -3165,7 +3165,8 @@
     "tasks": "Tâches",
     "crons": "Tâches planifiées",
     "apps": "Mini-apps",
-    "models": "Modèles"
+    "models": "Modèles",
+    "files": "Fichiers"
   },
   "orphanTask": {
     "menuAction": "Lancer une tâche",
@@ -3563,5 +3564,45 @@
       "assets": "Préparation des assets frontend",
       "restart": "Redémarrage"
     }
+  },
+  "files": {
+    "selectWorkspace": "Choisir un workspace",
+    "openTree": "Parcourir les fichiers",
+    "refresh": "Rafraîchir",
+    "notFound": "Fichier introuvable : {{path}}",
+    "openError": "Impossible d'ouvrir ce fichier",
+    "empty": {
+      "title": "Ce workspace est vide",
+      "description": "Les fichiers créés par cet agent apparaîtront ici."
+    },
+    "noAgents": {
+      "title": "Pas encore d'agent",
+      "description": "Créez d'abord un agent — son workspace apparaîtra ici."
+    },
+    "noFileOpen": {
+      "title": "Aucun fichier ouvert",
+      "description": "Sélectionnez un fichier dans l’arborescence pour le consulter."
+    },
+    "tree": {
+      "loadError": "Échec du chargement — réessayer",
+      "emptyFolder": "vide"
+    },
+    "editor": {
+      "download": "Télécharger",
+      "tooLarge": "Ce fichier texte est trop volumineux pour être édité ici ({{size}}). Téléchargez-le.",
+      "binary": "Fichier binaire ({{mime}}) — aperçu indisponible.",
+      "edit": "Éditer",
+      "preview": "Aperçu",
+      "save": "Enregistrer",
+      "saved": "Enregistré",
+      "recreate": "Recréer le fichier",
+      "deletedFromDisk": "Ce fichier a été supprimé du disque pendant que vous l’éditiez.",
+      "conflict": {
+        "message": "Le fichier a changé sur le disque depuis son ouverture (probablement écrit par l’agent).",
+        "reload": "Recharger",
+        "overwrite": "Écraser"
+      }
+    },
+    "browseWorkspace": "Parcourir les fichiers"
   }
 }

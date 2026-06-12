@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, FolderKanban, ListTodo, CalendarClock, Blocks, Boxes } from 'lucide-react'
+import { Home, FolderKanban, ListTodo, CalendarClock, Folder, Blocks, Boxes } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { useTasksContext } from '@/client/contexts/TasksContext'
 import { useAuth } from '@/client/hooks/useAuth'
@@ -25,11 +25,12 @@ const ITEMS: ActivityBarItem[] = [
   { matchPrefix: '/projects', navigateTo: '/projects', icon: FolderKanban, labelKey: 'activityBar.projects' },
   { matchPrefix: '/tasks', navigateTo: '/tasks', icon: ListTodo, labelKey: 'activityBar.tasks', badge: true },
   { matchPrefix: '/crons', navigateTo: '/crons', icon: CalendarClock, labelKey: 'activityBar.crons' },
+  { matchPrefix: '/files', navigateTo: '/files', icon: Folder, labelKey: 'activityBar.files' },
   { matchPrefix: '/mini-apps', navigateTo: '/mini-apps', icon: Blocks, labelKey: 'activityBar.apps' },
   { matchPrefix: '/models', navigateTo: '/models', icon: Boxes, labelKey: 'activityBar.models', adminOnly: true },
 ]
 
-const SECTION_PREFIXES = ['/projects', '/tasks', '/crons', '/mini-apps', '/models']
+const SECTION_PREFIXES = ['/projects', '/tasks', '/crons', '/files', '/mini-apps', '/models']
 
 export function ActivityBar() {
   const { t } = useTranslation()
