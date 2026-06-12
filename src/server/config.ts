@@ -555,8 +555,10 @@ export const config = {
     /** Scrollback kept server-side per session, replayed on reattach (KB). */
     scrollbackKb: Number(process.env.HIVEKEEP_TERMINAL_SCROLLBACK_KB ?? 256),
     /** How long a detached session (no client connected) survives before the
-     *  shell is killed (seconds). Covers navigation away / brief disconnects. */
-    detachedTtlSec: Number(process.env.HIVEKEEP_TERMINAL_DETACHED_TTL_SEC ?? 600),
+     *  shell is killed (seconds). 0 (default) = sessions persist until closed
+     *  from the sidebar or the shell exits (tmux-like; they still die with the
+     *  server process). Set > 0 to auto-reap idle detached sessions. */
+    detachedTtlSec: Number(process.env.HIVEKEEP_TERMINAL_DETACHED_TTL_SEC ?? 0),
     /** Hard cap of concurrently running PTY sessions across all users. */
     maxSessions: Number(process.env.HIVEKEEP_TERMINAL_MAX_SESSIONS ?? 10),
   },

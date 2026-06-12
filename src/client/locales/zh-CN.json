@@ -3208,6 +3208,16 @@
     "disabled": {
       "title": "终端已禁用",
       "description": "此实例已关闭该功能。设置 HIVEKEEP_TERMINAL_ENABLED=true 并重启服务器即可启用。"
+    },
+    "sessions": {
+      "title": "会话",
+      "empty": "没有活动会话",
+      "rename": "重命名",
+      "close": "关闭会话",
+      "closeConfirmTitle": "关闭 {{name}}？",
+      "closeConfirmDescription": "该 shell 以及其中运行的所有程序都将被终止。",
+      "attached": "已连接",
+      "detached": "已分离"
     }
   },
   "orphanTask": {

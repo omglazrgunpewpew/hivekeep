@@ -3235,6 +3235,16 @@
     "disabled": {
       "title": "Терминал отключен",
       "description": "Эта функция отключена на данном экземпляре. Установите HIVEKEEP_TERMINAL_ENABLED=true и перезапустите сервер, чтобы включить её."
+    },
+    "sessions": {
+      "title": "Сессии",
+      "empty": "Нет активных сессий",
+      "rename": "Переименовать",
+      "close": "Закрыть сессию",
+      "closeConfirmTitle": "Закрыть {{name}}?",
+      "closeConfirmDescription": "Оболочка и всё, что в ней запущено, будут остановлены.",
+      "attached": "Подключена",
+      "detached": "Отсоединена"
     }
   },
   "orphanTask": {

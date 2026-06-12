@@ -60,9 +60,9 @@ mock.module('bun-pty', () => ({
   },
 }))
 
-const { config } = await import('@/server/config')
-// The config object is typed readonly; tests shrink the caps to keep fixtures small.
-const terminalConfig = config.terminal as { scrollbackKb: number; maxSessions: number }
+// getTerminalConfig falls back to built-in defaults when another test file
+// mocks @/server/config without the terminal section — never reach into
+// config.terminal directly here.
 const {
   createSession,
   attach,
@@ -71,7 +71,13 @@ const {
   resize,
   destroySession,
   getSession,
+  getTerminalConfig,
+  listSessions,
+  renameSession,
+  killSession,
 } = await import('@/server/services/terminal-sessions')
+
+const terminalConfig = getTerminalConfig()
 
 describe('terminal-sessions', () => {
   beforeEach(() => {
@@ -122,9 +128,37 @@ describe('terminal-sessions', () => {
     const session = createSession('user-1', 80, 24)
     expect(attach(session.id, 'intruder', () => {}, () => {})).toBeNull()
     expect(getSession(session.id, 'intruder')).toBeNull()
+    expect(renameSession(session.id, 'intruder', 'mine now')).toBeNull()
+    expect(killSession(session.id, 'intruder')).toBe(false)
 
     write(session.id, 'intruder', 'rm -rf /\r')
     expect(spawned[0]!.written).toEqual([])
+  })
+
+  it('lists only the live sessions of the owner, with generated names', () => {
+    const a = createSession('user-1', 80, 24)
+    const b = createSession('user-1', 80, 24)
+    createSession('user-2', 80, 24)
+
+    const mine = listSessions('user-1')
+    expect(mine.map((s) => s.id)).toEqual([a.id, b.id])
+    expect(mine.map((s) => s.name)).toEqual(['Session 1', 'Session 2'])
+    expect(mine.every((s) => !s.attached)).toBe(true)
+
+    attach(a.id, 'user-1', () => {}, () => {})
+    expect(listSessions('user-1').find((s) => s.id === a.id)!.attached).toBe(true)
+
+    // A killed session disappears from the list.
+    expect(killSession(b.id, 'user-1')).toBe(true)
+    expect(listSessions('user-1').map((s) => s.id)).toEqual([a.id])
+  })
+
+  it('renames a session (trimmed, length-capped)', () => {
+    const session = createSession('user-1', 80, 24)
+    const renamed = renameSession(session.id, 'user-1', '  claude code prod  ')
+    expect(renamed!.name).toBe('claude code prod')
+    expect(renameSession(session.id, 'user-1', '   ')).toBeNull()
+    expect(listSessions('user-1')[0]!.name).toBe('claude code prod')
   })
 
   it('destroys the session and notifies the attached client when the shell exits', () => {
@@ -147,12 +181,16 @@ describe('terminal-sessions', () => {
     expect(getSession(session.id, 'user-1')).toBeNull()
   })
 
-  it('a stale sink cannot steal the session from the client that replaced it', () => {
+  it('a takeover notifies the replaced client, whose stale sink cannot steal the session back', () => {
     const session = createSession('user-1', 80, 24)
     const sinkA = () => {}
+    let aReplaced = false
     const received: string[] = []
-    attach(session.id, 'user-1', sinkA, () => {})
+    attach(session.id, 'user-1', sinkA, () => {}, () => {
+      aReplaced = true
+    })
     attach(session.id, 'user-1', (d) => received.push(d), () => {})
+    expect(aReplaced).toBe(true)
 
     // The old socket closing must not detach the new client.
     detach(session.id, sinkA)

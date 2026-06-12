@@ -9,11 +9,19 @@ The typical moment: an Agent just wrote files to its workspace, a cron failed, o
 
 Terminal is **admin-only**: the entry only appears for admin users, and the server rejects non-admin connections regardless of what the client does.
 
-## Sessions survive navigation
+## Persistent sessions, on every device
 
-Each browser tab gets its own shell session. If you navigate to another section, briefly lose connectivity, or your phone locks, the shell keeps running server-side: coming back reattaches to the same session and replays its recent output. A detached session is kept alive for 10 minutes by default (`HIVEKEEP_TERMINAL_DETACHED_TTL_SEC`), then the shell is killed.
+Terminal works like a lightweight tmux. Shells run server-side and **survive disconnects**: close the laptop, open Hivekeep on your phone, and the sessions sidebar shows the same running shells — pick one and you are back where you left off, recent output replayed. This is ideal for long-running interactive work, like driving one or more `claude code` instances directly on the machine that hosts Hivekeep.
 
-The **New session** button kills the current shell and starts a fresh one.
+The sidebar lists your sessions (sessions are private to each user). From there you can:
+
+- **Create** a new session (the + button) — each gets an auto name like "Session 2", rename it to something meaningful ("claude code prod") via the row menu.
+- **Switch** between sessions — a green dot marks sessions that currently have a client attached.
+- **Close** a session (row menu, with confirmation) — this kills the shell and everything running in it.
+
+A session only ends when its shell exits, when you close it from the sidebar, or when the server restarts (sessions live in process memory). If you prefer idle detached sessions to be reaped automatically, set `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` to a number of seconds (off by default).
+
+One session has one viewer at a time: attaching from a second device takes the stream over from the first (last one wins), it does not mirror to both. The replaced device shows a disconnected state with a Reconnect button to take the session back.
 
 ## What runs where
 
@@ -35,5 +43,5 @@ A web terminal is equivalent to giving shell access on the server. Hivekeep miti
 | `HIVEKEEP_TERMINAL_ENABLED` | `true` | Kill-switch for the whole feature. |
 | `HIVEKEEP_TERMINAL_SHELL` | `$SHELL`, then `/bin/bash` | Shell binary spawned for each session. |
 | `HIVEKEEP_TERMINAL_SCROLLBACK_KB` | `256` | Output kept server-side per session, replayed on reattach. |
-| `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` | `600` | Lifetime of a session with no client connected. |
+| `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` | `0` (never) | Auto-kill a session after this long with no client connected. `0` keeps detached sessions until explicitly closed. |
 | `HIVEKEEP_TERMINAL_MAX_SESSIONS` | `10` | Cap of concurrently running shells across all users. |

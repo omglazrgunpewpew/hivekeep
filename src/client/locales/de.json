@@ -3208,6 +3208,16 @@
     "disabled": {
       "title": "Terminal ist deaktiviert",
       "description": "Diese Funktion ist auf dieser Instanz deaktiviert. Setze HIVEKEEP_TERMINAL_ENABLED=true und starte den Server neu, um sie zu aktivieren."
+    },
+    "sessions": {
+      "title": "Sitzungen",
+      "empty": "Keine aktiven Sitzungen",
+      "rename": "Umbenennen",
+      "close": "Sitzung schließen",
+      "closeConfirmTitle": "{{name}} schließen?",
+      "closeConfirmDescription": "Die Shell und alles, was darin läuft, wird beendet.",
+      "attached": "Verbunden",
+      "detached": "Getrennt"
     }
   },
   "orphanTask": {

@@ -109,6 +109,7 @@ export type SSEEventType =
   | 'update:progress'
   | 'update:finished'
   | 'log:entry'
+  | 'terminal:sessions-changed'
   | 'card:updated'
   | 'agent:active-project'
   | 'project:created'

@@ -3208,6 +3208,16 @@
     "disabled": {
       "title": "Terminal is disabled",
       "description": "This feature is turned off on this instance. Set HIVEKEEP_TERMINAL_ENABLED=true and restart the server to enable it."
+    },
+    "sessions": {
+      "title": "Sessions",
+      "empty": "No active sessions",
+      "rename": "Rename",
+      "close": "Close session",
+      "closeConfirmTitle": "Close {{name}}?",
+      "closeConfirmDescription": "The shell and everything running in it will be killed.",
+      "attached": "Connected",
+      "detached": "Detached"
     }
   },
   "orphanTask": {

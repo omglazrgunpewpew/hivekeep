@@ -3208,6 +3208,16 @@
     "disabled": {
       "title": "ターミナルは無効です",
       "description": "この機能はこのインスタンスで無効化されています。HIVEKEEP_TERMINAL_ENABLED=true を設定してサーバーを再起動すると有効になります。"
+    },
+    "sessions": {
+      "title": "セッション",
+      "empty": "アクティブなセッションはありません",
+      "rename": "名前を変更",
+      "close": "セッションを閉じる",
+      "closeConfirmTitle": "{{name}} を閉じますか？",
+      "closeConfirmDescription": "シェルとその中で実行中のすべてのプロセスが終了します。",
+      "attached": "接続中",
+      "detached": "切り離し済み"
     }
   },
   "orphanTask": {

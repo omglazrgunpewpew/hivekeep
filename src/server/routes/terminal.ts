@@ -3,7 +3,6 @@ import { createBunWebSocket } from 'hono/bun'
 import type { ServerWebSocket } from 'bun'
 import type { Context, Next } from 'hono'
 import { eq } from 'drizzle-orm'
-import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import { db } from '@/server/db/index'
 import { userProfiles } from '@/server/db/schema'
@@ -13,6 +12,10 @@ import {
   createSession,
   destroySession,
   detach,
+  getTerminalConfig,
+  killSession,
+  listSessions,
+  renameSession,
   resize,
   write,
 } from '@/server/services/terminal-sessions'
@@ -34,7 +37,7 @@ const terminalRoutes = new Hono<{ Variables: AppVariables }>()
 
 /** Admin-only + feature-flag gate (the session itself is checked by authMiddleware). */
 async function requireTerminalAccess(c: Context<{ Variables: AppVariables }>, next: Next) {
-  if (!config.terminal.enabled) {
+  if (!getTerminalConfig().enabled) {
     return c.json({ error: { code: 'TERMINAL_DISABLED', message: 'The terminal feature is disabled on this instance' } }, 403)
   }
   const user = c.get('user')
@@ -52,7 +55,32 @@ async function requireTerminalAccess(c: Context<{ Variables: AppVariables }>, ne
 terminalRoutes.use('*', requireTerminalAccess)
 
 // Lets the page distinguish "disabled instance" from transient WS failures.
-terminalRoutes.get('/status', (c) => c.json({ enabled: true, shell: config.terminal.shell }))
+terminalRoutes.get('/status', (c) => c.json({ enabled: true, shell: getTerminalConfig().shell }))
+
+// Sessions sidebar: list the caller's live sessions (any device can reattach).
+terminalRoutes.get('/sessions', (c) => {
+  const user = c.get('user')
+  return c.json({ sessions: listSessions(user.id) })
+})
+
+terminalRoutes.patch('/sessions/:id', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const name = typeof (body as { name?: unknown }).name === 'string' ? (body as { name: string }).name : ''
+  const renamed = renameSession(c.req.param('id'), user.id, name)
+  if (!renamed) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Terminal session not found or invalid name' } }, 404)
+  }
+  return c.json({ session: renamed })
+})
+
+terminalRoutes.delete('/sessions/:id', (c) => {
+  const user = c.get('user')
+  if (!killSession(c.req.param('id'), user.id)) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Terminal session not found' } }, 404)
+  }
+  return c.json({ success: true })
+})
 
 terminalRoutes.get(
   '/ws',
@@ -79,11 +107,22 @@ terminalRoutes.get(
           send({ type: 'exit' })
           sessionId = null
         }
+        // Another client (tab/device) took the session over — tell this one
+        // honestly instead of letting its terminal silently stop updating.
+        const onReplaced = () => {
+          send({ type: 'detached' })
+          sessionId = null
+          try {
+            ws.close()
+          } catch {
+            // Already closing.
+          }
+        }
 
         // Reattach when the client brings a still-alive session id; otherwise
         // spawn a fresh shell. Scrollback is replayed before any live output.
         if (requestedId) {
-          const scrollback = attach(requestedId, user.id, sink, onClosed)
+          const scrollback = attach(requestedId, user.id, sink, onClosed, onReplaced)
           if (scrollback !== null) {
             sessionId = requestedId
             send({ type: 'ready', sessionId, resumed: true })
@@ -103,7 +142,7 @@ terminalRoutes.get(
           return
         }
         sessionId = session.id
-        attach(session.id, user.id, sink, onClosed)
+        attach(session.id, user.id, sink, onClosed, onReplaced)
         send({ type: 'ready', sessionId, resumed: false })
       },
 

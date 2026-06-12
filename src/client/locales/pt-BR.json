@@ -3208,6 +3208,16 @@
     "disabled": {
       "title": "O terminal está desativado",
       "description": "Este recurso está desativado nesta instância. Defina HIVEKEEP_TERMINAL_ENABLED=true e reinicie o servidor para ativá-lo."
+    },
+    "sessions": {
+      "title": "Sessões",
+      "empty": "Nenhuma sessão ativa",
+      "rename": "Renomear",
+      "close": "Encerrar sessão",
+      "closeConfirmTitle": "Encerrar {{name}}?",
+      "closeConfirmDescription": "O shell e tudo o que estiver rodando nele serão encerrados.",
+      "attached": "Conectada",
+      "detached": "Desanexada"
     }
   },
   "orphanTask": {

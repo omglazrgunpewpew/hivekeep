@@ -1331,3 +1331,17 @@ export interface WorkspaceFileInfo {
   /** Only set when kind === 'text'. */
   content: string | null
 }
+
+// ─── Terminal (admin web terminal — see api.md "Terminal") ──────────────────
+
+/** A live PTY session as shown in the Terminal page's sessions sidebar. */
+export interface TerminalSessionDTO {
+  id: string
+  name: string
+  /** Unix ms. */
+  createdAt: number
+  /** Unix ms — last PTY output or client input. */
+  lastActiveAt: number
+  /** True while a client (any device) is connected to this session. */
+  attached: boolean
+}

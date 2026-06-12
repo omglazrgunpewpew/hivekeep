@@ -1693,7 +1693,9 @@ Dernière tentative de mise à jour (journal persistant `data/update/journal.jso
 
 ## Terminal (admin uniquement)
 
-Terminal web sur la machine hôte (ou le conteneur sous Docker). Section `/terminal`, réservée aux admins. Un shell (PTY, `bun-pty`) par session ; une session survit à une déconnexion WebSocket pendant `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` (le scrollback est rejoué au rattachement). Désactivable globalement via `HIVEKEEP_TERMINAL_ENABLED=false`.
+Terminal web sur la machine hôte (ou le conteneur sous Docker). Section `/terminal`, réservée aux admins. Modèle type tmux : chaque session est un shell (PTY, `bun-pty`) côté serveur, scopé à son propriétaire, qui **survit aux déconnexions WebSocket** — on peut fermer le navigateur et se rattacher depuis un autre appareil (le scrollback est rejoué). Une session ne meurt que quand son shell sort, quand l'utilisateur la ferme depuis la sidebar, ou (si `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` > 0, désactivé par défaut) après être restée détachée trop longtemps. Les sessions vivent en mémoire : un restart du serveur les tue. Désactivable globalement via `HIVEKEEP_TERMINAL_ENABLED=false`.
+
+Tout changement de cycle de vie (création, attache/détache, renommage, mort) émet `terminal:sessions-changed` (SSE, scope user) avec la liste fraîche — c'est ce qui synchronise la sidebar entre appareils.
 
 ### `GET /api/terminal/status`
 
@@ -1701,6 +1703,29 @@ Sonde la disponibilité de la fonctionnalité (la page l'appelle avant d'ouvrir 
 
 **Response 200** : `{ "enabled": true, "shell": "/bin/bash" }`
 **403 `TERMINAL_DISABLED`** si désactivé par env var. **403 `FORBIDDEN`** si non-admin.
+
+### `GET /api/terminal/sessions`
+
+Liste les sessions vivantes de l'utilisateur courant (triées par date de création).
+
+**Response 200**
+```json
+{
+  "sessions": [
+    { "id": "…", "name": "Session 1", "createdAt": 1765000000000, "lastActiveAt": 1765000050000, "attached": true }
+  ]
+}
+```
+
+`attached` : un client (n'importe quel appareil) est actuellement connecté à cette session.
+
+### `PATCH /api/terminal/sessions/:id`
+
+Renomme une session. Body : `{ "name": "claude code prod" }` (trim, max 60 caractères). → `{ "session": { … } }`. **404 `NOT_FOUND`** si la session n'existe pas, n'appartient pas à l'appelant, ou si le nom est vide.
+
+### `DELETE /api/terminal/sessions/:id`
+
+Tue le shell et détruit la session (bouton « fermer » de la sidebar). Si un client y est attaché, il reçoit le message WS `exit`. → `{ "success": true }`. **404 `NOT_FOUND`** sinon.
 
 ### `GET /api/terminal/ws`
 
@@ -1724,6 +1749,7 @@ Upgrade WebSocket (cookie de session Better Auth requis, mêmes gardes que `/sta
 | `ready` | `{ "type": "ready", "sessionId": "…", "resumed": false }` | Session attachée. Si `resumed: true`, le scrollback complet suit dans un message `output` |
 | `output` | `{ "type": "output", "data": "…" }` | Sortie brute du PTY (séquences ANSI incluses) |
 | `exit` | `{ "type": "exit" }` | Le shell s'est terminé (exit, kill ou TTL) ; la session n'existe plus |
+| `detached` | `{ "type": "detached" }` | Un autre client (onglet/appareil) a pris la session (last one wins) ; le serveur ferme ensuite ce socket. La session vit toujours — se reconnecter avec son id la reprend |
 | `error` | `{ "type": "error", "code": "TERMINAL_MAX_SESSIONS" }` | Création refusée (cap `HIVEKEEP_TERMINAL_MAX_SESSIONS` atteint), le serveur ferme ensuite le socket |
 
 ## SSE
@@ -1808,6 +1834,11 @@ Connexion SSE **globale** (une seule par client). Le serveur multiplex les évé
 { event: 'project-tag:created', data: { tag: { id: string, label: string, color: string }, projectId: string } }
 { event: 'project-tag:updated', data: { tag: { id: string, label: string, color: string }, projectId: string } }
 { event: 'project-tag:deleted', data: { tagId: string, projectId: string } }
+
+// Sessions du terminal admin changées (création / attache / détache / renommage /
+// mort) — scope user (sendToUser) : seul le propriétaire reçoit. Le payload porte
+// la liste fraîche complète (la sidebar remplace, pas de merge nécessaire).
+{ event: 'terminal:sessions-changed', data: { sessions: TerminalSessionDTO[] } }
 
 // Mises à jour de la plateforme
 // Nouvelle version détectée par le cron de check (émis une seule fois par version)
