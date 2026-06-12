@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: 'Wtyczki',
     features: 'Funkcje',
-    household: 'Domowa ekipa',
+    household: 'Ul',
     why: 'Dlaczego Hivekeep',
     docs: 'Dokumentacja',
     github: 'GitHub ↗',
@@ -199,7 +199,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: 'Przykłady',
-      heading: 'Zbuduj ekipę skrojoną pod twoje życie.',
+      heading: 'Zbuduj ul skrojony pod twoje życie.',
       p1: 'Hivekeep przychodzi z jednym agentem: <b>Queenie</b>, twoją przewodniczką po konfiguracji. Resztę tworzysz sam, albo po prostu prosisz Queenie, by zbudowała ją za ciebie. Każdy agent dostaje własne imię, dziedzinę, pamięć, narzędzia i wygenerowany awatar.',
       p2: 'Awatary powstają w <b>domyślnym stylu graficznym</b> Hivekeep, więc świeży ul od razu wygląda jak komplet. Chcesz własnego klimatu? Ustaw raz <b>własny styl awatarów</b>, pixel art, akwarela, twoja marka, a każdy agent wygeneruje się w nim na nowo, więc cały zespół trzyma jeden motyw.',
       examplesNote: 'Kilka przykładów tego, co budują ludzie →',

@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: 'Plugins',
     features: 'Fonctionnalités',
-    household: 'La maisonnée',
+    household: 'La ruche',
     why: 'Pourquoi Hivekeep',
     docs: 'Docs',
     github: 'GitHub ↗',
@@ -199,7 +199,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: 'Exemples',
-      heading: "Construis une maisonnée à l'image de ta vie.",
+      heading: "Construis une ruche à l'image de ta vie.",
       p1: "Hivekeep arrive avec un seul agent : <b>Queenie</b>, ton guide de configuration. Tu crées les autres, ou tu demandes simplement à Queenie de les construire pour toi. Chacun reçoit son nom, son domaine, sa mémoire, ses outils et un avatar généré.",
       p2: "Les avatars suivent le <b>style graphique par défaut</b> de Hivekeep : une ruche toute neuve a déjà l'air d'une collection assortie. Envie de ton propre look ? Définis une fois un <b>style d'avatar personnalisé</b> (pixel art, aquarelle, ta propre identité visuelle) et chaque agent est régénéré dans ce style : toute ton équipe reste raccord.",
       examplesNote: 'Quelques exemples de ce que les gens construisent →',

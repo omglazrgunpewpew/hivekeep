@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: 'Plugin',
     features: 'Funzionalità',
-    household: 'La famiglia',
+    household: "L'alveare",
     why: 'Perché Hivekeep',
     docs: 'Docs',
     github: 'GitHub ↗',
@@ -199,7 +199,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: 'Esempi',
-      heading: 'Costruisci una famiglia su misura per la tua vita.',
+      heading: 'Costruisci un alveare su misura per la tua vita.',
       p1: 'Hivekeep arriva con un solo agente: <b>Queenie</b>, la tua guida alla configurazione. Gli altri li crei tu, o chiedi a Queenie di costruirli per te. Ognuno ha il suo nome, il suo dominio, memoria, strumenti e un avatar generato.',
       p2: 'Gli avatar nascono nello <b>stile grafico predefinito</b> di Hivekeep, così un alveare appena nato sembra già un set coordinato. Vuoi un look tutto tuo? Imposta una volta sola uno <b>stile avatar personalizzato</b>, pixel art, acquerello, il tuo brand, e ogni agente si rigenera in quello stile: tutto il team resta in tema.',
       examplesNote: 'Qualche esempio di cosa costruiscono le persone →',

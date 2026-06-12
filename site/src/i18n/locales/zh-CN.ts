@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: '插件',
     features: '功能特性',
-    household: '智能体之家',
+    household: '蜂巢',
     why: '为什么选 Hivekeep',
     docs: '文档',
     github: 'GitHub ↗',
@@ -201,7 +201,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: '示例',
-      heading: '为你的生活，组建一个智能体之家。',
+      heading: '为你的生活，打造一个蜂巢。',
       p1: 'Hivekeep 出厂只带一个智能体：<b>Queenie</b>，你的配置向导。其余的由你来创建，或者直接让 Queenie 替你搭建。每个智能体都有自己的名字、领域、记忆、工具，以及一张生成的头像。',
       p2: '头像默认采用 Hivekeep 的<b>统一画风</b>，新蜂巢一上来就像一套整齐的阵容。想要自己的风格？设置一次<b>自定义头像画风</b>（像素风、水彩、你的品牌风格），所有智能体都会按它重新生成，整个团队始终风格统一。',
       examplesNote: '看看大家都搭建了什么 →',

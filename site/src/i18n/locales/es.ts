@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: 'Plugins',
     features: 'Funciones',
-    household: 'El hogar',
+    household: 'La colmena',
     why: 'Por qué Hivekeep',
     docs: 'Docs',
     github: 'GitHub ↗',
@@ -199,7 +199,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: 'Ejemplos',
-      heading: 'Monta un hogar a la medida de tu vida.',
+      heading: 'Monta una colmena a la medida de tu vida.',
       p1: 'Hivekeep viene con un solo agente: <b>Queenie</b>, tu guía de configuración. El resto lo creas tú, o simplemente le pides a Queenie que los construya por ti. Cada uno recibe su propio nombre, dominio, memoria, herramientas y un avatar generado.',
       p2: 'Los avatares llegan con el <b>estilo artístico por defecto</b> de Hivekeep, así que una colmena recién creada ya parece un conjunto. ¿Quieres tu propio look? Define una vez un <b>estilo de avatar personalizado</b>, pixel art, acuarela, tu propia marca, y cada agente se regenera con él, para que todo tu equipo siga el mismo tema.',
       examplesNote: 'Algunos ejemplos de lo que la gente construye →',

@@ -21,7 +21,7 @@ const dict: typeof en = {
   nav: {
     plugins: 'Plugins',
     features: 'Features',
-    household: 'Der Haushalt',
+    household: 'Der Bienenstock',
     why: 'Warum Hivekeep',
     docs: 'Doku',
     github: 'GitHub ↗',
@@ -199,7 +199,7 @@ const dict: typeof en = {
 
     s8household: {
       stage: 'Beispiele',
-      heading: 'Bau dir einen Haushalt für dein Leben.',
+      heading: 'Bau dir einen Bienenstock für dein Leben.',
       p1: 'Hivekeep kommt mit einem Agenten: <b>Queenie</b>, deinem Setup-Guide. Den Rest erstellst du selbst, oder du bittest einfach Queenie darum. Jeder bekommt einen eigenen Namen, ein Fachgebiet, Gedächtnis, Tools und einen generierten Avatar.',
       p2: 'Avatare kommen im <b>Standard-Stil von Hivekeep</b>, sodass ein frischer Bienenstock direkt wie aus einem Guss aussieht. Du willst deinen eigenen Look? Lege einmal einen <b>eigenen Avatar-Stil</b> fest, Pixel Art, Aquarell, deine eigene Marke, und jeder Agent wird darin neu generiert. So bleibt dein ganzes Team im Thema.',
       examplesNote: 'Ein paar Beispiele, was Leute bauen →',

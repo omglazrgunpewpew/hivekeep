@@ -29,7 +29,7 @@ export default {
   nav: {
     features: 'Features',
     plugins: 'Plugins',
-    household: 'The household',
+    household: 'The hive',
     why: 'Why Hivekeep',
     docs: 'Docs',
     github: 'GitHub ↗',
@@ -209,7 +209,7 @@ export default {
 
     s8household: {
       stage: 'Examples',
-      heading: 'Build a household for your life.',
+      heading: 'Build a hive for your life.',
       p1: 'Hivekeep ships with one Agent: <b>Queenie</b>, your setup guide. You create the rest, or just ask Queenie to build them for you. Each one gets its own name, domain, memory, tools, and a generated avatar.',
       p2: "Avatars come in Hivekeep's <b>default art style</b>, so a fresh hive already looks like a set. Want your own look? Set a <b>custom avatar style</b> once, pixel art, watercolor, your own brand, and every Agent regenerates in it, so your whole team stays on theme.",
       examplesNote: 'A few examples of what people build →',
