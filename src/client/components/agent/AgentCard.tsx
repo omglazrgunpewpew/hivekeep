@@ -1,5 +1,6 @@
 import { forwardRef, useState, type HTMLAttributes } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/client/components/ui/badge'
 import { cn } from '@/client/lib/utils'
 import { useIsMobile } from '@/client/hooks/use-mobile'
@@ -23,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/client/components/ui/alert-dialog'
-import { AlertTriangle, Bot, Coins, Download, GripVertical, Loader2, Network, Settings2, Trash2, Crown } from 'lucide-react'
+import { AlertTriangle, Bot, Coins, Download, Folder, GripVertical, Loader2, Network, Settings2, Trash2, Crown } from 'lucide-react'
 
 export interface AgentCardProps extends HTMLAttributes<HTMLDivElement> {
   id: string
@@ -60,6 +61,7 @@ const MAX_VISIBLE_BADGES = 5
 const MAX_VISIBLE_BADGES_MOBILE = 3
 
 export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function AgentCard({
+  id,
   name,
   role,
   avatarUrl,
@@ -84,6 +86,7 @@ export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function Age
   ...rest
 }, ref) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const isMobile = useIsMobile()
   // Inside the narrow mobile drawer, show fewer icons and collapse the rest
@@ -104,6 +107,7 @@ export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function Age
         modelUnavailable && !isSelected && 'opacity-60',
         extraClassName,
       )}
+      id={id}
       {...rest}
     >
       {/* Selected accent bar */}
@@ -284,6 +288,11 @@ export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function Age
               {t('sidebar.agents.contextMenu.viewUsage')}
             </ContextMenuItem>
           )}
+          {/* Browse this Agent's workspace in the Files section */}
+          <ContextMenuItem onClick={() => navigate(`/files/${id}`)}>
+            <Folder className="size-4" />
+            {t('files.browseWorkspace')}
+          </ContextMenuItem>
           {onDelete && (
             <>
               <ContextMenuSeparator />

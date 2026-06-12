@@ -1,5 +1,6 @@
 import { useState, useMemo, memo, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useIsMobile } from '@/client/hooks/use-mobile'
 import { ChatAvatar } from '@/client/components/chat/ChatAvatar'
 import { Button } from '@/client/components/ui/button'
@@ -26,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/client/components/ui/alert-dialog'
-import { AlertTriangle, Bot, Settings, Pencil, MessageSquare, Loader2, Wrench, Archive, Zap, FileText, FileJson, Search, Trash2, MoreHorizontal, Coins, ListPlus } from 'lucide-react'
+import { AlertTriangle, Bot, Settings, Pencil, MessageSquare, Loader2, Wrench, Archive, Zap, FileText, FileJson, Search, Trash2, MoreHorizontal, Coins, ListPlus, Folder } from 'lucide-react'
 import { cn } from '@/client/lib/utils'
 import { ContextBar } from '@/client/components/chat/ContextBar'
 import { ConversationStats } from '@/client/components/chat/ConversationStats'
@@ -168,6 +169,7 @@ export const ConversationHeader = memo(function ConversationHeader({
   leading,
 }: ConversationHeaderProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const [mobileInfoOpen, setMobileInfoOpen] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
@@ -521,6 +523,11 @@ export const ConversationHeader = memo(function ConversationHeader({
               {t('orphanTask.menuAction')}
             </DropdownMenuItem>
           )}
+          {/* Browse this Agent's workspace in the Files section */}
+          <DropdownMenuItem onClick={() => navigate(`/files/${agentId}`)}>
+            <Folder className="mr-2 size-4" />
+            {t('files.browseWorkspace')}
+          </DropdownMenuItem>
           {(onForceCompact || onExportMarkdown || onExportJSON) && <DropdownMenuSeparator />}
           {onForceCompact && (
             <DropdownMenuItem onClick={onForceCompact} disabled={isCompacting}>

@@ -17,6 +17,7 @@ const ChatPage = lazy(() => import('@/client/pages/chat/ChatPage').then(m => ({ 
 const ProjectsPage = lazy(() => import('@/client/pages/projects/ProjectsPage').then(m => ({ default: m.ProjectsPage })))
 const TasksPage = lazy(() => import('@/client/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const CronsPage = lazy(() => import('@/client/pages/crons/CronsPage').then(m => ({ default: m.CronsPage })))
+const FilesPage = lazy(() => import('@/client/pages/files/FilesPage').then(m => ({ default: m.FilesPage })))
 const MiniAppsPage = lazy(() => import('@/client/pages/mini-apps/MiniAppsPage').then(m => ({ default: m.MiniAppsPage })))
 const ModelRegistryPage = lazy(() => import('@/client/pages/models/ModelRegistryPage').then(m => ({ default: m.ModelRegistryPage })))
 const LoginPage = lazy(() => import('@/client/pages/login/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -219,6 +220,8 @@ function AuthenticatedShell() {
                 />
                 <Route path="/tasks" element={<TasksPage />} />
                 <Route path="/crons" element={<CronsPage />} />
+                <Route path="/files" element={<FilesPage />} />
+                <Route path="/files/:agentId" element={<FilesPage />} />
                 <Route path="/mini-apps" element={<MiniAppsPage />} />
                 <Route path="/models" element={<ModelRegistryPage />} />
                 <Route
