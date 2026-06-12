@@ -197,10 +197,6 @@ export function TerminalPage() {
       } else if (msg.type === 'exit') {
         setActiveBoth(null)
         setStatusBoth('ended')
-      } else if (msg.type === 'detached') {
-        // Another device took this session over (last one wins). Keep activeId
-        // so the Reconnect button can take it back.
-        setStatusBoth('disconnected')
       } else if (msg.type === 'error') {
         term.writeln(`\r\n${t('terminal.maxSessions')}`)
         setActiveBoth(null)

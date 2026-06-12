@@ -1731,14 +1731,14 @@ Tue le shell et détruit la session (bouton « fermer » de la sidebar). Si un c
 
 Upgrade WebSocket (cookie de session Better Auth requis, mêmes gardes que `/status`).
 
-**Query params** : `cols`, `rows` (taille initiale), `sessionId` (optionnel — rattache une session détachée encore vivante du même utilisateur ; sinon un nouveau shell est créé).
+**Query params** : `cols`, `rows` (taille initiale), `sessionId` (optionnel — rattache une session encore vivante du même utilisateur ; sinon un nouveau shell est créé). Plusieurs clients (onglets/appareils) peuvent s'attacher **simultanément** à la même session : la sortie est miroir vers tous, l'entrée de chacun va au PTY.
 
 **Messages client → serveur** (JSON) :
 
 | Type | Payload | Effet |
 |---|---|---|
 | `input` | `{ "type": "input", "data": "ls\r" }` | Écrit sur le PTY |
-| `resize` | `{ "type": "resize", "cols": 120, "rows": 32 }` | Redimensionne le PTY |
+| `resize` | `{ "type": "resize", "cols": 120, "rows": 32 }` | Déclare la taille de CE client ; le PTY est dimensionné au plus petit client attaché (façon tmux) |
 | `kill` | `{ "type": "kill" }` | Tue le shell et détruit la session |
 | `ping` | `{ "type": "ping" }` | Keepalive (ignoré côté serveur) |
 
@@ -1749,7 +1749,6 @@ Upgrade WebSocket (cookie de session Better Auth requis, mêmes gardes que `/sta
 | `ready` | `{ "type": "ready", "sessionId": "…", "resumed": false }` | Session attachée. Si `resumed: true`, le scrollback complet suit dans un message `output` |
 | `output` | `{ "type": "output", "data": "…" }` | Sortie brute du PTY (séquences ANSI incluses) |
 | `exit` | `{ "type": "exit" }` | Le shell s'est terminé (exit, kill ou TTL) ; la session n'existe plus |
-| `detached` | `{ "type": "detached" }` | Un autre client (onglet/appareil) a pris la session (last one wins) ; le serveur ferme ensuite ce socket. La session vit toujours — se reconnecter avec son id la reprend |
 | `error` | `{ "type": "error", "code": "TERMINAL_MAX_SESSIONS" }` | Création refusée (cap `HIVEKEEP_TERMINAL_MAX_SESSIONS` atteint), le serveur ferme ensuite le socket |
 
 ## SSE

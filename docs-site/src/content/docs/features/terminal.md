@@ -21,7 +21,7 @@ The sidebar lists your sessions (sessions are private to each user). From there 
 
 A session only ends when its shell exits, when you close it from the sidebar, or when the server restarts (sessions live in process memory). If you prefer idle detached sessions to be reaped automatically, set `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` to a number of seconds (off by default).
 
-One session has one viewer at a time: attaching from a second device takes the stream over from the first (last one wins), it does not mirror to both. The replaced device shows a disconnected state with a Reconnect button to take the session back.
+Several tabs or devices can view the **same session at once**: output mirrors to every attached client and any of them can type, exactly like a shared tmux session. As in tmux, the terminal is sized to the smallest attached viewer so line wrapping stays coherent everywhere.
 
 ## What runs where
 

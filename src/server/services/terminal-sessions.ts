@@ -44,6 +44,12 @@ export function getTerminalConfig(): typeof TERMINAL_DEFAULTS {
  *  died between the create and the attach) — without it they would leak. */
 const ORPHAN_GRACE_MS = 60_000
 
+interface TerminalClient {
+  onClosed: () => void
+  cols: number
+  rows: number
+}
+
 export interface TerminalSession {
   id: string
   userId: string
@@ -53,12 +59,9 @@ export interface TerminalSession {
   lastActiveAt: number
   /** Bounded scrollback replayed on (re)attach. */
   scrollback: string
-  /** Currently attached client sink, if any (one client per session). */
-  sink: ((data: string) => void) | null
-  /** Notified when the session is destroyed while a client is attached. */
-  onClosed: (() => void) | null
-  /** Notified when another client takes the session over (last one wins). */
-  onReplaced: (() => void) | null
+  /** Attached clients, keyed by their sink — output is mirrored to all of
+   *  them (tmux-style), and the PTY is sized to the smallest viewer. */
+  clients: Map<(data: string) => void, TerminalClient>
   /** True once a client has attached at least once (orphan-grace bookkeeping). */
   everAttached: boolean
   /** Pending kill timer while no client is attached. */
@@ -74,7 +77,24 @@ function toDTO(session: TerminalSession): TerminalSessionDTO {
     name: session.name,
     createdAt: session.createdAt,
     lastActiveAt: session.lastActiveAt,
-    attached: session.sink !== null,
+    attached: session.clients.size > 0,
+  }
+}
+
+/** Mirrored viewing (tmux-style): the PTY is sized to the smallest attached
+ *  client so every viewer sees coherent line wrapping. */
+function applyClientSizes(session: TerminalSession) {
+  if (session.exited || session.clients.size === 0) return
+  let cols = Infinity
+  let rows = Infinity
+  for (const client of session.clients.values()) {
+    cols = Math.min(cols, client.cols)
+    rows = Math.min(rows, client.rows)
+  }
+  try {
+    session.pty.resize(Math.max(2, cols), Math.max(2, rows))
+  } catch (err) {
+    log.warn({ err, sessionId: session.id }, 'Terminal resize failed')
   }
 }
 
@@ -147,9 +167,7 @@ export function createSession(userId: string, cols: number, rows: number): Termi
     createdAt: Date.now(),
     lastActiveAt: Date.now(),
     scrollback: '',
-    sink: null,
-    onClosed: null,
-    onReplaced: null,
+    clients: new Map(),
     everAttached: false,
     detachTimer: null,
     exited: false,
@@ -159,13 +177,13 @@ export function createSession(userId: string, cols: number, rows: number): Termi
   pty.onData((data) => {
     session.lastActiveAt = Date.now()
     appendScrollback(session, data)
-    session.sink?.(data)
+    for (const sink of session.clients.keys()) sink(data)
   })
   pty.onExit(({ exitCode }) => {
     log.info({ sessionId: id, exitCode }, 'Terminal shell exited')
     session.exited = true
-    // Let the attached client render the exit before the session disappears.
-    session.sink?.(`\r\n[process exited with code ${exitCode}]\r\n`)
+    // Let the attached clients render the exit before the session disappears.
+    for (const sink of session.clients.keys()) sink(`\r\n[process exited with code ${exitCode}]\r\n`)
     destroySession(id)
   })
 
@@ -178,28 +196,25 @@ export function createSession(userId: string, cols: number, rows: number): Termi
   return session
 }
 
-/** Claim the session for a connected client. Returns the scrollback to replay. */
+/** Register a client on the session (any number of tabs/devices can view the
+ *  same session simultaneously). Returns the scrollback to replay. */
 export function attach(
   sessionId: string,
   userId: string,
   sink: (data: string) => void,
   onClosed: () => void,
-  onReplaced?: () => void,
+  cols = 80,
+  rows = 24,
 ): string | null {
   const session = sessions.get(sessionId)
   if (!session || session.exited || session.userId !== userId) return null
-  // Single attachment, last one wins: a newer client (another tab or device)
-  // takes the session over. The previous client is told it was replaced so it
-  // can show a disconnected state instead of a terminal that silently stops.
-  if (session.sink && session.onReplaced) session.onReplaced()
-  session.sink = sink
-  session.onClosed = onClosed
-  session.onReplaced = onReplaced ?? null
+  session.clients.set(sink, { onClosed, cols, rows })
   session.everAttached = true
   if (session.detachTimer) {
     clearTimeout(session.detachTimer)
     session.detachTimer = null
   }
+  applyClientSizes(session)
   notifySessionsChanged(userId)
   return session.scrollback
 }
@@ -207,16 +222,15 @@ export function attach(
 export function detach(sessionId: string, sink: (data: string) => void) {
   const session = sessions.get(sessionId)
   if (!session) return
-  // Only the currently attached sink may detach — a stale socket closing must
-  // not steal the session from the client that replaced it.
-  if (session.sink !== sink) return
-  session.sink = null
-  session.onClosed = null
-  session.onReplaced = null
-  if (!session.exited) {
+  if (!session.clients.delete(sink)) return
+  if (session.exited) return
+  if (session.clients.size === 0) {
     armDetachTimer(session)
-    notifySessionsChanged(session.userId)
+  } else {
+    // A small viewer leaving may free the PTY to grow back.
+    applyClientSizes(session)
   }
+  notifySessionsChanged(session.userId)
 }
 
 export function write(sessionId: string, userId: string, data: string) {
@@ -226,14 +240,14 @@ export function write(sessionId: string, userId: string, data: string) {
   session.pty.write(data)
 }
 
-export function resize(sessionId: string, userId: string, cols: number, rows: number) {
+export function resize(sessionId: string, userId: string, sink: (data: string) => void, cols: number, rows: number) {
   const session = sessions.get(sessionId)
   if (!session || session.exited || session.userId !== userId) return
-  try {
-    session.pty.resize(Math.max(2, cols), Math.max(2, rows))
-  } catch (err) {
-    log.warn({ err, sessionId }, 'Terminal resize failed')
-  }
+  const client = session.clients.get(sink)
+  if (!client) return
+  client.cols = cols
+  client.rows = rows
+  applyClientSizes(session)
 }
 
 export function renameSession(sessionId: string, userId: string, name: string): TerminalSessionDTO | null {
@@ -259,10 +273,8 @@ export function destroySession(sessionId: string) {
   if (!session) return
   sessions.delete(sessionId)
   if (session.detachTimer) clearTimeout(session.detachTimer)
-  session.onClosed?.()
-  session.onClosed = null
-  session.onReplaced = null
-  session.sink = null
+  for (const client of session.clients.values()) client.onClosed()
+  session.clients.clear()
   if (!session.exited) {
     session.exited = true
     try {

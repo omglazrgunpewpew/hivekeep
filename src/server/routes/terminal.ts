@@ -107,27 +107,16 @@ terminalRoutes.get(
           send({ type: 'exit' })
           sessionId = null
         }
-        // Another client (tab/device) took the session over — tell this one
-        // honestly instead of letting its terminal silently stop updating.
-        const onReplaced = () => {
-          send({ type: 'detached' })
-          sessionId = null
-          try {
-            ws.close()
-          } catch {
-            // Already closing.
-          }
-        }
 
         // Reattach when the client brings a still-alive session id; otherwise
         // spawn a fresh shell. Scrollback is replayed before any live output.
+        // Several tabs/devices may attach to the same session (mirrored).
         if (requestedId) {
-          const scrollback = attach(requestedId, user.id, sink, onClosed, onReplaced)
+          const scrollback = attach(requestedId, user.id, sink, onClosed, cols, rows)
           if (scrollback !== null) {
             sessionId = requestedId
             send({ type: 'ready', sessionId, resumed: true })
             if (scrollback) send({ type: 'output', data: scrollback })
-            resize(sessionId, user.id, cols, rows)
             return
           }
         }
@@ -142,7 +131,7 @@ terminalRoutes.get(
           return
         }
         sessionId = session.id
-        attach(session.id, user.id, sink, onClosed, onReplaced)
+        attach(session.id, user.id, sink, onClosed, cols, rows)
         send({ type: 'ready', sessionId, resumed: false })
       },
 
@@ -157,7 +146,7 @@ terminalRoutes.get(
         if (msg.type === 'input' && typeof msg.data === 'string') {
           write(sessionId, user.id, msg.data)
         } else if (msg.type === 'resize') {
-          resize(sessionId, user.id, Number(msg.cols) || 80, Number(msg.rows) || 24)
+          if (sink) resize(sessionId, user.id, sink, Number(msg.cols) || 80, Number(msg.rows) || 24)
         } else if (msg.type === 'kill') {
           destroySession(sessionId)
         }

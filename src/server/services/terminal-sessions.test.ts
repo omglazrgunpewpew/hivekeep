@@ -93,7 +93,8 @@ describe('terminal-sessions', () => {
     expect(spawned[0]!.rows).toBe(40)
 
     const received: string[] = []
-    const scrollback = attach(session.id, 'user-1', (d) => received.push(d), () => {})
+    const sink = (d: string) => received.push(d)
+    const scrollback = attach(session.id, 'user-1', sink, () => {})
     expect(scrollback).toBe('')
 
     write(session.id, 'user-1', 'ls\r')
@@ -102,7 +103,7 @@ describe('terminal-sessions', () => {
     spawned[0]!.emitData('file-a  file-b\r\n')
     expect(received).toEqual(['file-a  file-b\r\n'])
 
-    resize(session.id, 'user-1', 120, 30)
+    resize(session.id, 'user-1', sink, 120, 30)
     expect(spawned[0]!.cols).toBe(120)
     expect(spawned[0]!.rows).toBe(30)
   })
@@ -181,21 +182,44 @@ describe('terminal-sessions', () => {
     expect(getSession(session.id, 'user-1')).toBeNull()
   })
 
-  it('a takeover notifies the replaced client, whose stale sink cannot steal the session back', () => {
+  it('mirrors output to every attached client; one leaving does not detach the others', () => {
     const session = createSession('user-1', 80, 24)
-    const sinkA = () => {}
-    let aReplaced = false
-    const received: string[] = []
-    attach(session.id, 'user-1', sinkA, () => {}, () => {
-      aReplaced = true
-    })
-    attach(session.id, 'user-1', (d) => received.push(d), () => {})
-    expect(aReplaced).toBe(true)
+    const receivedA: string[] = []
+    const receivedB: string[] = []
+    const sinkA = (d: string) => receivedA.push(d)
+    const sinkB = (d: string) => receivedB.push(d)
+    attach(session.id, 'user-1', sinkA, () => {})
+    attach(session.id, 'user-1', sinkB, () => {})
 
-    // The old socket closing must not detach the new client.
+    spawned[0]!.emitData('both')
+    expect(receivedA).toEqual(['both'])
+    expect(receivedB).toEqual(['both'])
+
     detach(session.id, sinkA)
-    spawned[0]!.emitData('still-here')
-    expect(received).toEqual(['still-here'])
+    spawned[0]!.emitData('only-b')
+    expect(receivedA).toEqual(['both'])
+    expect(receivedB).toEqual(['both', 'only-b'])
+    expect(listSessions('user-1')[0]!.attached).toBe(true)
+  })
+
+  it('sizes the PTY to the smallest attached viewer (tmux-style)', () => {
+    const session = createSession('user-1', 140, 40)
+    const sinkA = () => {}
+    const sinkB = () => {}
+    attach(session.id, 'user-1', sinkA, () => {}, 140, 40)
+    attach(session.id, 'user-1', sinkB, () => {}, 100, 30)
+    expect(spawned[0]!.cols).toBe(100)
+    expect(spawned[0]!.rows).toBe(30)
+
+    // The bigger viewer shrinking below the other one wins the min.
+    resize(session.id, 'user-1', sinkA, 90, 35)
+    expect(spawned[0]!.cols).toBe(90)
+    expect(spawned[0]!.rows).toBe(30)
+
+    // The small viewer leaving lets the PTY grow back.
+    detach(session.id, sinkB)
+    expect(spawned[0]!.cols).toBe(90)
+    expect(spawned[0]!.rows).toBe(35)
   })
 
   it('caps the number of concurrent sessions', () => {
