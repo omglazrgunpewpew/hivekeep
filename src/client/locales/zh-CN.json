@@ -2789,7 +2789,8 @@
       "get_project_knowledge": "获取项目知识",
       "update_project_knowledge": "更新项目知识",
       "delete_project_knowledge": "删除项目知识",
-      "pin_project_knowledge": "置顶项目知识"
+      "pin_project_knowledge": "置顶项目知识",
+      "get_mini_app_backend_status": "迷你应用后端状态"
     },
     "renderers": {
       "rawJson": "原始 JSON",

@@ -2789,7 +2789,8 @@
       "get_project_knowledge": "プロジェクトナレッジを取得",
       "update_project_knowledge": "プロジェクトナレッジを更新",
       "delete_project_knowledge": "プロジェクトナレッジを削除",
-      "pin_project_knowledge": "プロジェクトナレッジをピン留め"
+      "pin_project_knowledge": "プロジェクトナレッジをピン留め",
+      "get_mini_app_backend_status": "ミニアプリバックエンドの状態"
     },
     "renderers": {
       "rawJson": "生のJSON",

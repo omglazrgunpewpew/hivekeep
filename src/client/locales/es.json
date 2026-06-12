@@ -2789,7 +2789,8 @@
       "get_project_knowledge": "Obtener conocimiento de proyecto",
       "update_project_knowledge": "Actualizar conocimiento de proyecto",
       "delete_project_knowledge": "Eliminar conocimiento de proyecto",
-      "pin_project_knowledge": "Fijar conocimiento de proyecto"
+      "pin_project_knowledge": "Fijar conocimiento de proyecto",
+      "get_mini_app_backend_status": "Estado del backend de Mini-App"
     },
     "renderers": {
       "rawJson": "JSON bruto",

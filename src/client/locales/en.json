@@ -2789,7 +2789,8 @@
       "get_project_knowledge": "Get Project Knowledge",
       "update_project_knowledge": "Update Project Knowledge",
       "delete_project_knowledge": "Delete Project Knowledge",
-      "pin_project_knowledge": "Pin Project Knowledge"
+      "pin_project_knowledge": "Pin Project Knowledge",
+      "get_mini_app_backend_status": "Mini-App Backend Status"
     },
     "renderers": {
       "rawJson": "Raw JSON",

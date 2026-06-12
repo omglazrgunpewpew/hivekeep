@@ -2813,7 +2813,8 @@
       "get_project_knowledge": "Получить знание проекта",
       "update_project_knowledge": "Обновить знание проекта",
       "delete_project_knowledge": "Удалить знание проекта",
-      "pin_project_knowledge": "Закрепить знание проекта"
+      "pin_project_knowledge": "Закрепить знание проекта",
+      "get_mini_app_backend_status": "Статус бэкенда мини-приложения"
     },
     "renderers": {
       "rawJson": "Сырой JSON",

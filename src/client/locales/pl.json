@@ -2807,7 +2807,8 @@
       "get_project_knowledge": "Pobierz wiedzę projektu",
       "update_project_knowledge": "Aktualizuj wiedzę projektu",
       "delete_project_knowledge": "Usuń wiedzę projektu",
-      "pin_project_knowledge": "Przypnij wiedzę projektu"
+      "pin_project_knowledge": "Przypnij wiedzę projektu",
+      "get_mini_app_backend_status": "Status backendu mini-aplikacji"
     },
     "renderers": {
       "rawJson": "Surowy JSON",

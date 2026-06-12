@@ -894,6 +894,56 @@ export const getMiniAppConsoleTool: ToolRegistration = {
     }),
 }
 
+// ─── get_mini_app_backend_status ─────────────────────────────────────────────
+
+export const getMiniAppBackendStatusTool: ToolRegistration = {
+  availability: ['main'],
+  readOnly: true,
+  concurrencySafe: true,
+  create: () =>
+    tool({
+      description:
+        'Inspect the runtime state of a mini app backend (_server.js): whether an instance is ' +
+        'loaded, background mode, scheduled jobs (ctx.schedule) with next run times, active managed ' +
+        'timers, connected SSE subscribers, and the capability permission state (requested in ' +
+        'app.json vs granted by the user).',
+      inputSchema: z.object({
+        app_id: z.string(),
+      }),
+      execute: async ({ app_id }) => {
+        const existing = await getMiniApp(app_id)
+        if (!existing) return { error: 'App not found' }
+
+        const { getBackendStatus } = await import('@/server/services/mini-app-backend')
+        const { getMiniAppPermissions } = await import('@/server/services/mini-apps')
+        const status = getBackendStatus(app_id)
+        const permissions = await getMiniAppPermissions(app_id)
+
+        return {
+          hasBackend: existing.hasBackend,
+          loaded: status.loaded,
+          background: status.background,
+          loadedAt: status.loadedAt ? new Date(status.loadedAt).toISOString() : null,
+          loadedVersion: status.version,
+          currentVersion: existing.version,
+          jobs: status.jobs.map((j) => ({
+            name: j.name,
+            pattern: j.pattern,
+            nextRunAt: j.nextRunAt ? new Date(j.nextRunAt).toISOString() : null,
+          })),
+          activeTimers: status.activeTimers,
+          sseSubscribers: status.sseSubscribers,
+          permissions,
+          note: !existing.hasBackend
+            ? 'This app has no backend (_server.js).'
+            : !status.loaded
+              ? 'Backend not loaded — it loads on first request, or at boot/after edits when app.json has "background": true.'
+              : undefined,
+        }
+      },
+    }),
+}
+
 // ─── reload_mini_app ─────────────────────────────────────────────────────────
 
 export const reloadMiniAppTool: ToolRegistration = {
