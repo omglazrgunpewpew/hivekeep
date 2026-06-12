@@ -25,6 +25,7 @@ function placeholderUsage(key: string): string {
   return (
     `Insert this placeholder verbatim in any tool argument; the real value replaces it at execution time — you never see, and never need, the raw value. ` +
     `For shell commands and scripts, pass it as an environment variable (e.g. \`${key}={{secret:${key}}} bun run script.ts\`, then read process.env.${key}) and never hardcode secrets into files. ` +
+    `Transforms: {{secret:${key}|base64}} (e.g. Basic auth) and {{secret:${key}|urlencode}} (query strings). ` +
     `Placeholders from earlier in the conversation stay valid — reuse them directly.`
   )
 }

@@ -287,7 +287,7 @@ export async function executeSingleTool(
         // Shell-like tools: the value rides the subprocess env, never the
         // command string (ps, history, bash error messages).
         execArgs = rewritePlaceholdersToEnvRefs(tc.args)
-        secretEnv = buildSecretEnv(resolved)
+        secretEnv = buildSecretEnv(tc.args, resolved)
       } else {
         execArgs = substitutePlaceholders(tc.args, resolved)
       }

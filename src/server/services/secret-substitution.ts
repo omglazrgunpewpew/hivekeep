@@ -14,7 +14,18 @@
  * creating an import cycle, and so the pure functions are trivially testable.
  */
 
-export const SECRET_PLACEHOLDER_PATTERN = /\{\{secret:([A-Z][A-Z0-9_]*)\}\}/g
+export const SECRET_PLACEHOLDER_PATTERN = /\{\{secret:([A-Z][A-Z0-9_]*)(?:\|(base64|urlencode))?\}\}/g
+
+export type SecretTransform = 'base64' | 'urlencode'
+
+/** Apply an optional placeholder transform. Two transforms cover the common
+ *  derivations (Basic auth, query-string embedding); anything fancier is a
+ *  script reading the secret from the env. */
+export function applyTransform(value: string, transform?: SecretTransform): string {
+  if (transform === 'base64') return Buffer.from(value, 'utf-8').toString('base64')
+  if (transform === 'urlencode') return encodeURIComponent(value)
+  return value
+}
 
 /** Secrets shorter than this are never scanned for in tool outputs — the
  *  false-positive rate on tiny strings would shred legitimate output. The
@@ -78,22 +89,33 @@ export async function resolvePlaceholderSecrets(
   return { resolved, missing }
 }
 
-/** Replace each `{{secret:KEY}}` in every string leaf with its resolved
- *  value. Single-pass and non-recursive by construction: a secret value that
- *  itself contains a placeholder motif is NOT re-expanded (String.replace
- *  does not rescan its own output), so there is no expansion chain to abuse.
- *  Unresolved keys are left verbatim — callers must fail closed before. */
+/** Replace each `{{secret:KEY}}` / `{{secret:KEY|transform}}` in every string
+ *  leaf with its resolved (optionally transformed) value. Single-pass and
+ *  non-recursive by construction: a secret value that itself contains a
+ *  placeholder motif is NOT re-expanded (String.replace does not rescan its
+ *  own output), so there is no expansion chain to abuse. Unresolved keys are
+ *  left verbatim — callers must fail closed before. Transformed values are
+ *  noted in the hot cache under their exact placeholder so output redaction
+ *  maps them back (a leaked base64 of a secret is still a leak). */
 export function substitutePlaceholders(args: unknown, resolved: Map<string, string>): unknown {
   return mapJsonStrings(args, (s) =>
-    s.replace(SECRET_PLACEHOLDER_PATTERN, (whole, key: string) => resolved.get(key) ?? whole),
+    s.replace(SECRET_PLACEHOLDER_PATTERN, (whole, key: string, transform?: SecretTransform) => {
+      const raw = resolved.get(key)
+      if (raw === undefined) return whole
+      const value = applyTransform(raw, transform)
+      if (transform) noteHotValue(whole, value)
+      return value
+    }),
   )
 }
 
 /** Env variable name carrying an expanded secret for `secretsViaEnv` tools.
- *  Vault keys are SCREAMING_SNAKE_CASE so the mapping is direct. The prefix
- *  is reserved — documented in the run_shell tool description. */
-export function toEnvName(key: string): string {
-  return `HIVEKEEP_SECRET_${key}`
+ *  Vault keys are SCREAMING_SNAKE_CASE so the mapping is direct; transforms
+ *  get a suffixed variable (`HIVEKEEP_SECRET_KEY_BASE64`). The prefix is
+ *  reserved — documented in the run_shell tool description. */
+export function toEnvName(key: string, transform?: SecretTransform): string {
+  const suffix = transform === 'base64' ? '_BASE64' : transform === 'urlencode' ? '_URLENC' : ''
+  return `HIVEKEEP_SECRET_${key}${suffix}`
 }
 
 /** For `secretsViaEnv` tools (run_shell): rewrite each `{{secret:KEY}}` to
@@ -103,41 +125,66 @@ export function toEnvName(key: string): string {
  *  expansion by design (taught in the tool description). */
 export function rewritePlaceholdersToEnvRefs(args: unknown): unknown {
   return mapJsonStrings(args, (s) =>
-    s.replace(SECRET_PLACEHOLDER_PATTERN, (_whole, key: string) => `\${${toEnvName(key)}}`),
+    s.replace(SECRET_PLACEHOLDER_PATTERN, (_whole, key: string, transform?: SecretTransform) => `\${${toEnvName(key, transform)}}`),
   )
 }
 
-/** Build the env map delivered via `options.secretEnv`. */
-export function buildSecretEnv(resolved: Map<string, string>): Record<string, string> {
-  return Object.fromEntries([...resolved].map(([key, value]) => [toEnvName(key), value]))
+/** Build the env map delivered via `options.secretEnv` — one variable per
+ *  (key, transform) pair actually referenced in the original args. */
+export function buildSecretEnv(args: unknown, resolved: Map<string, string>): Record<string, string> {
+  const env: Record<string, string> = {}
+  mapJsonStrings(args, (s) => {
+    for (const m of s.matchAll(SECRET_PLACEHOLDER_PATTERN)) {
+      const [whole, key, transform] = m as unknown as [string, string, SecretTransform | undefined]
+      const raw = resolved.get(key)
+      if (raw === undefined) continue
+      const value = applyTransform(raw, transform)
+      if (transform) noteHotValue(whole, value)
+      env[toEnvName(key, transform)] = value
+    }
+    return s
+  })
+  return env
 }
 
 // ─── Hot cache & output redaction ────────────────────────────────────────────
 
 /** Decrypted values of secrets expanded at least once since boot, keyed by
- *  vault key. Tool outputs are scanned against this cache (the secret that
- *  leaks is almost always the one just used) — never against the full vault,
- *  which would mean decrypting everything on every tool call. */
+ *  the exact placeholder label (`{{secret:KEY}}`, `{{secret:KEY|base64}}`).
+ *  Tool outputs are scanned against this cache (the secret that leaks is
+ *  almost always the one just used) — never against the full vault, which
+ *  would mean decrypting everything on every tool call. */
 const hotSecrets = new Map<string, string>()
 
 export function noteHotSecret(key: string, value: string): void {
-  if (value.length < MIN_REDACTABLE_SECRET_LENGTH) return
-  hotSecrets.set(key, value)
+  noteHotValue(placeholderFor(key), value)
 }
 
-/** Invalidate one key, or the whole cache when called without arguments
- *  (key renames make per-key invalidation unreliable — clearing is cheap). */
+/** Cache a value under its exact placeholder label (raw or transformed). */
+export function noteHotValue(label: string, value: string): void {
+  if (value.length < MIN_REDACTABLE_SECRET_LENGTH) return
+  hotSecrets.set(label, value)
+}
+
+/** Invalidate one key (all its labels, transforms included), or the whole
+ *  cache when called without arguments (key renames make per-key
+ *  invalidation unreliable — clearing is cheap). */
 export function invalidateHotSecrets(key?: string): void {
-  if (key === undefined) hotSecrets.clear()
-  else hotSecrets.delete(key)
+  if (key === undefined) {
+    hotSecrets.clear()
+    return
+  }
+  for (const label of [...hotSecrets.keys()]) {
+    if (label === placeholderFor(key) || label.startsWith(`{{secret:${key}|`)) hotSecrets.delete(label)
+  }
 }
 
 /** Replace every known secret value occurring in `s` with its placeholder.
  *  Literal replacement (no regex built from the value), multi-line safe. */
 export function redactKnownSecrets(s: string): string {
   let out = s
-  for (const [key, value] of hotSecrets) {
-    if (out.includes(value)) out = out.replaceAll(value, placeholderFor(key))
+  for (const [label, value] of hotSecrets) {
+    if (out.includes(value)) out = out.replaceAll(value, label)
   }
   return out
 }

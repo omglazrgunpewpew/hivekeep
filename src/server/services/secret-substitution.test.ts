@@ -63,6 +63,23 @@ describe('substitutePlaceholders', () => {
     expect(out).toBe('x={{secret:MISSING}}')
   })
 
+  it('applies |base64 and |urlencode transforms', () => {
+    const resolved = new Map([['CREDS', 'user:pass word']])
+    const out = substitutePlaceholders(
+      { auth: 'Basic {{secret:CREDS|base64}}', url: 'https://x?t={{secret:CREDS|urlencode}}', raw: '{{secret:CREDS}}' },
+      resolved,
+    ) as { auth: string; url: string; raw: string }
+    expect(out.auth).toBe(`Basic ${Buffer.from('user:pass word').toString('base64')}`)
+    expect(out.url).toBe(`https://x?t=${encodeURIComponent('user:pass word')}`)
+    expect(out.raw).toBe('user:pass word')
+  })
+
+  it('redacts leaked TRANSFORMED values back to their transformed placeholder', () => {
+    const b64 = Buffer.from('user:pass word').toString('base64')
+    substitutePlaceholders({ a: '{{secret:CREDS|base64}}' }, new Map([['CREDS', 'user:pass word']]))
+    expect(redactKnownSecrets(`leaked: ${b64}`)).toBe('leaked: {{secret:CREDS|base64}}')
+  })
+
   it('is single-pass: a secret value containing a placeholder motif is not re-expanded', () => {
     const out = substitutePlaceholders(
       'v={{secret:EVIL}}',
@@ -75,16 +92,21 @@ describe('substitutePlaceholders', () => {
 describe('env-ref rewrite (secretsViaEnv tools)', () => {
   it('rewrites placeholders to ${HIVEKEEP_SECRET_*} references, never the value', () => {
     const out = rewritePlaceholdersToEnvRefs({
-      command: 'GITHUB_TOKEN={{secret:GITHUB_TOKEN}} bun run x.ts && echo "{{secret:OTHER}}"',
+      command: 'GITHUB_TOKEN={{secret:GITHUB_TOKEN}} bun run x.ts && echo "{{secret:OTHER}}" "{{secret:OTHER|base64}}"',
     }) as { command: string }
     expect(out.command).toBe(
-      'GITHUB_TOKEN=${HIVEKEEP_SECRET_GITHUB_TOKEN} bun run x.ts && echo "${HIVEKEEP_SECRET_OTHER}"',
+      'GITHUB_TOKEN=${HIVEKEEP_SECRET_GITHUB_TOKEN} bun run x.ts && echo "${HIVEKEEP_SECRET_OTHER}" "${HIVEKEEP_SECRET_OTHER_BASE64}"',
     )
   })
 
-  it('builds the secretEnv map with prefixed names', () => {
-    expect(buildSecretEnv(new Map([['GH', 'value-123456']]))).toEqual({ HIVEKEEP_SECRET_GH: 'value-123456' })
+  it('builds the secretEnv map with prefixed names, one var per (key, transform)', () => {
+    const args = { command: 'a={{secret:GH}} b={{secret:GH|base64}}' }
+    expect(buildSecretEnv(args, new Map([['GH', 'value-123456']]))).toEqual({
+      HIVEKEEP_SECRET_GH: 'value-123456',
+      HIVEKEEP_SECRET_GH_BASE64: Buffer.from('value-123456').toString('base64'),
+    })
     expect(toEnvName('A_B')).toBe('HIVEKEEP_SECRET_A_B')
+    expect(toEnvName('A_B', 'urlencode')).toBe('HIVEKEEP_SECRET_A_B_URLENC')
   })
 })
 
