@@ -17,6 +17,32 @@ interface StepIdentityProps {
 
 type FieldName = 'firstName' | 'lastName' | 'email' | 'pseudonym' | 'password' | 'passwordConfirm'
 
+const MAX_NAME_LENGTH = 100
+const MAX_PSEUDONYM_LENGTH = 30
+const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
+
+function validateProfileFields(input: {
+  firstName: string
+  lastName: string
+  pseudonym: string
+}): Partial<Record<FieldName, string>> {
+  const fields: Partial<Record<FieldName, string>> = {}
+  const firstName = input.firstName.trim()
+  const lastName = input.lastName.trim()
+  const pseudonym = input.pseudonym.trim()
+
+  if (!firstName) fields.firstName = 'firstName cannot be empty'
+  else if (firstName.length > MAX_NAME_LENGTH) fields.firstName = `firstName must be under ${MAX_NAME_LENGTH} characters`
+
+  if (lastName.length > MAX_NAME_LENGTH) fields.lastName = `lastName must be under ${MAX_NAME_LENGTH} characters`
+
+  if (!pseudonym || pseudonym.length < 2) fields.pseudonym = 'pseudonym must be at least 2 characters'
+  else if (pseudonym.length > MAX_PSEUDONYM_LENGTH) fields.pseudonym = `pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`
+  else if (!PSEUDONYM_REGEX.test(pseudonym)) fields.pseudonym = 'pseudonym can only contain letters, numbers, underscores, and hyphens'
+
+  return fields
+}
+
 /**
  * Translate the Better Auth body field name into the local form
  * field name. Better Auth's sign-up body uses { name, email, password };
@@ -111,6 +137,21 @@ function extractFieldErrors(err: unknown): {
   return { fields, fallback }
 }
 
+function isExistingUserError(err: unknown): boolean {
+  const message = getErrorMessage(err).toLowerCase()
+  const o = err as { code?: unknown; error?: { code?: unknown } }
+  const code = typeof o?.code === 'string'
+    ? o.code
+    : typeof o?.error?.code === 'string'
+      ? o.error.code
+      : ''
+  return (
+    code === 'USER_ALREADY_EXISTS' ||
+    message.includes('already') ||
+    message.includes('exists')
+  )
+}
+
 export function StepIdentity({ onComplete }: StepIdentityProps) {
   const { t, i18n } = useTranslation()
   const { register, login } = useAuth()
@@ -157,6 +198,12 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
     setError('')
     setFieldErrors({})
 
+    const profileErrors = validateProfileFields({ firstName, lastName, pseudonym })
+    if (Object.keys(profileErrors).length > 0) {
+      setFieldErrors(profileErrors)
+      return
+    }
+
     if (password !== passwordConfirm) {
       setFieldErrors({ passwordConfirm: t('onboarding.identity.passwordMismatch') })
       return
@@ -176,8 +223,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
         // If registration fails because email already exists, try logging in instead.
         // This handles the case where registration succeeded but profile creation
         // failed on a previous attempt, leaving the user stuck.
-        const regMsg = getErrorMessage(regErr) || ''
-        if (regMsg.toLowerCase().includes('already') || regMsg.toLowerCase().includes('exists')) {
+        if (isExistingUserError(regErr)) {
           await login(email, password)
         } else {
           throw regErr

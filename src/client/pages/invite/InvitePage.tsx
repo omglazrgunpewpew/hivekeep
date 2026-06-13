@@ -13,6 +13,29 @@ import { LanguageSelector, AgentLanguageSelector } from '@/client/components/com
 import { getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
 
+const MAX_NAME_LENGTH = 100
+const MAX_PSEUDONYM_LENGTH = 30
+const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
+
+function validateProfileFields(input: {
+  firstName: string
+  lastName: string
+  pseudonym: string
+}): string | null {
+  const firstName = input.firstName.trim()
+  const lastName = input.lastName.trim()
+  const pseudonym = input.pseudonym.trim()
+
+  if (!firstName) return 'firstName cannot be empty'
+  if (firstName.length > MAX_NAME_LENGTH) return `firstName must be under ${MAX_NAME_LENGTH} characters`
+  if (lastName.length > MAX_NAME_LENGTH) return `lastName must be under ${MAX_NAME_LENGTH} characters`
+  if (!pseudonym || pseudonym.length < 2) return 'pseudonym must be at least 2 characters'
+  if (pseudonym.length > MAX_PSEUDONYM_LENGTH) return `pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`
+  if (!PSEUDONYM_REGEX.test(pseudonym)) return 'pseudonym can only contain letters, numbers, underscores, and hyphens'
+
+  return null
+}
+
 export function InvitePage() {
   const { t, i18n } = useTranslation()
   const { token } = useParams<{ token: string }>()
@@ -69,6 +92,12 @@ export function InvitePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    const profileError = validateProfileFields({ firstName, lastName, pseudonym })
+    if (profileError) {
+      setError(profileError)
+      return
+    }
 
     if (password !== passwordConfirm) {
       setError(t('invite.passwordMismatch'))
