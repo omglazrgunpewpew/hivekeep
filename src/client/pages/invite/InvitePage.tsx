@@ -12,29 +12,8 @@ import { AlertCircle, Camera, Loader2, ArrowLeft } from 'lucide-react'
 import { LanguageSelector, AgentLanguageSelector } from '@/client/components/common/LanguageSelector'
 import { getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
-
-const MAX_NAME_LENGTH = 100
-const MAX_PSEUDONYM_LENGTH = 30
-const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
-
-function validateProfileFields(input: {
-  firstName: string
-  lastName: string
-  pseudonym: string
-}): string | null {
-  const firstName = input.firstName.trim()
-  const lastName = input.lastName.trim()
-  const pseudonym = input.pseudonym.trim()
-
-  if (!firstName) return 'firstName cannot be empty'
-  if (firstName.length > MAX_NAME_LENGTH) return `firstName must be under ${MAX_NAME_LENGTH} characters`
-  if (lastName.length > MAX_NAME_LENGTH) return `lastName must be under ${MAX_NAME_LENGTH} characters`
-  if (!pseudonym || pseudonym.length < 2) return 'pseudonym must be at least 2 characters'
-  if (pseudonym.length > MAX_PSEUDONYM_LENGTH) return `pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`
-  if (!PSEUDONYM_REGEX.test(pseudonym)) return 'pseudonym can only contain letters, numbers, underscores, and hyphens'
-
-  return null
-}
+import { validateProfileFields } from '@/shared/profile-validation'
+import { translateProfileErrorCode } from '@/client/lib/profile-validation-i18n'
 
 export function InvitePage() {
   const { t, i18n } = useTranslation()
@@ -93,9 +72,12 @@ export function InvitePage() {
     e.preventDefault()
     setError('')
 
-    const profileError = validateProfileFields({ firstName, lastName, pseudonym })
-    if (profileError) {
-      setError(profileError)
+    const { issues } = validateProfileFields(
+      { firstName, lastName, pseudonym },
+      { require: ['firstName', 'pseudonym'] },
+    )
+    if (issues.length > 0) {
+      setError(translateProfileErrorCode(t, issues[0]!.code))
       return
     }
 

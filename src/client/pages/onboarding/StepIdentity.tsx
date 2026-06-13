@@ -10,38 +10,14 @@ import { AlertCircle, Camera, Loader2 } from 'lucide-react'
 import { useAuth } from '@/client/hooks/useAuth'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
+import { validateProfileFields } from '@/shared/profile-validation'
+import { translateProfileErrorCode } from '@/client/lib/profile-validation-i18n'
 
 interface StepIdentityProps {
   onComplete: () => void
 }
 
 type FieldName = 'firstName' | 'lastName' | 'email' | 'pseudonym' | 'password' | 'passwordConfirm'
-
-const MAX_NAME_LENGTH = 100
-const MAX_PSEUDONYM_LENGTH = 30
-const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
-
-function validateProfileFields(input: {
-  firstName: string
-  lastName: string
-  pseudonym: string
-}): Partial<Record<FieldName, string>> {
-  const fields: Partial<Record<FieldName, string>> = {}
-  const firstName = input.firstName.trim()
-  const lastName = input.lastName.trim()
-  const pseudonym = input.pseudonym.trim()
-
-  if (!firstName) fields.firstName = 'firstName cannot be empty'
-  else if (firstName.length > MAX_NAME_LENGTH) fields.firstName = `firstName must be under ${MAX_NAME_LENGTH} characters`
-
-  if (lastName.length > MAX_NAME_LENGTH) fields.lastName = `lastName must be under ${MAX_NAME_LENGTH} characters`
-
-  if (!pseudonym || pseudonym.length < 2) fields.pseudonym = 'pseudonym must be at least 2 characters'
-  else if (pseudonym.length > MAX_PSEUDONYM_LENGTH) fields.pseudonym = `pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`
-  else if (!PSEUDONYM_REGEX.test(pseudonym)) fields.pseudonym = 'pseudonym can only contain letters, numbers, underscores, and hyphens'
-
-  return fields
-}
 
 /**
  * Translate the Better Auth body field name into the local form
@@ -198,8 +174,15 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
     setError('')
     setFieldErrors({})
 
-    const profileErrors = validateProfileFields({ firstName, lastName, pseudonym })
-    if (Object.keys(profileErrors).length > 0) {
+    const { issues } = validateProfileFields(
+      { firstName, lastName, pseudonym },
+      { require: ['firstName', 'pseudonym'] },
+    )
+    if (issues.length > 0) {
+      const profileErrors: Partial<Record<FieldName, string>> = {}
+      for (const issue of issues) {
+        if (!profileErrors[issue.field]) profileErrors[issue.field] = translateProfileErrorCode(t, issue.code)
+      }
       setFieldErrors(profileErrors)
       return
     }

@@ -3717,5 +3717,16 @@
   },
   "topbar": {
     "updateAvailable": "更新"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "请填写名字",
+      "firstNameTooLong": "名字必须少于 {{max}} 个字符",
+      "lastNameTooLong": "姓氏必须少于 {{max}} 个字符",
+      "pseudonymEmpty": "请填写昵称",
+      "pseudonymTooShort": "昵称至少需要 2 个字符",
+      "pseudonymTooLong": "昵称必须少于 {{max}} 个字符",
+      "pseudonymInvalidChars": "昵称只能包含字母、数字、下划线和连字符"
+    }
   }
 }

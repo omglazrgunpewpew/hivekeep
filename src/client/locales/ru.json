@@ -3764,5 +3764,16 @@
   },
   "topbar": {
     "updateAvailable": "Обновить"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "Имя обязательно",
+      "firstNameTooLong": "Имя должно быть короче {{max}} символов",
+      "lastNameTooLong": "Фамилия должна быть короче {{max}} символов",
+      "pseudonymEmpty": "Псевдоним обязателен",
+      "pseudonymTooShort": "Псевдоним должен содержать не менее 2 символов",
+      "pseudonymTooLong": "Псевдоним должен быть короче {{max}} символов",
+      "pseudonymInvalidChars": "Псевдоним может содержать только буквы, цифры, символы подчёркивания и дефисы"
+    }
   }
 }

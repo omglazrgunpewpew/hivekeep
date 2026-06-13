@@ -3717,5 +3717,16 @@
   },
   "topbar": {
     "updateAvailable": "更新"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "名は必須です",
+      "firstNameTooLong": "名は{{max}}文字未満にしてください",
+      "lastNameTooLong": "姓は{{max}}文字未満にしてください",
+      "pseudonymEmpty": "ニックネームは必須です",
+      "pseudonymTooShort": "ニックネームは2文字以上にしてください",
+      "pseudonymTooLong": "ニックネームは{{max}}文字未満にしてください",
+      "pseudonymInvalidChars": "ニックネームには英数字、アンダースコア、ハイフンのみ使用できます"
+    }
   }
 }

@@ -3717,5 +3717,16 @@
   },
   "topbar": {
     "updateAvailable": "Update"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "First name is required",
+      "firstNameTooLong": "First name must be under {{max}} characters",
+      "lastNameTooLong": "Last name must be under {{max}} characters",
+      "pseudonymEmpty": "Pseudonym is required",
+      "pseudonymTooShort": "Pseudonym must be at least 2 characters",
+      "pseudonymTooLong": "Pseudonym must be under {{max}} characters",
+      "pseudonymInvalidChars": "Pseudonym can only contain letters, numbers, underscores, and hyphens"
+    }
   }
 }
