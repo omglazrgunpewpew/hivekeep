@@ -46,6 +46,7 @@ import {
   buildLlmApi,
   buildAgentApi,
   buildChannelsApi,
+  buildPlatformApi,
   guardedFetch,
   parseGrantedPermissions,
   parseRequestedPermissions,
@@ -55,6 +56,7 @@ import {
   type MiniAppLlmApi,
   type MiniAppAgentApi,
   type MiniAppChannelsApi,
+  type MiniAppPlatformApi,
 } from '@/server/services/mini-app-capabilities'
 import { sseManager } from '@/server/sse/index'
 
@@ -190,6 +192,8 @@ export interface MiniAppBackendContext {
   agent: MiniAppAgentApi
   /** Platform messaging channels (SMS, Telegram, Discord…) — gated by "channels:send" */
   channels: MiniAppChannelsApi
+  /** Manage platform resources (contacts, projects, tickets, crons) — gated by "platform:<resource>:<read|write>" */
+  platform: MiniAppPlatformApi
   /** SSRF-guarded fetch (http/https only, private hosts blocked, 30s timeout) */
   fetch: (url: string, options?: RequestInit) => Promise<Response>
   /** Scoped file storage under the app's `_data/` dir (excluded from snapshots) */
@@ -483,6 +487,7 @@ function buildContext(params: {
     llm: buildLlmApi(capabilityParams),
     agent: buildAgentApi(capabilityParams),
     channels: buildChannelsApi(capabilityParams),
+    platform: buildPlatformApi(capabilityParams),
     fetch: (url: string, options?: RequestInit) => guardedFetch(url, options),
     files: buildFilesApi(appDir),
     log: {

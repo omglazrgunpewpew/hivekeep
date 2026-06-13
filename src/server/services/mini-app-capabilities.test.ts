@@ -52,6 +52,22 @@ function checkEventAccess(granted: string[], eventType: string): { code: string 
   return null
 }
 
+// Background ctx.platform path parsing + method→operation mapping (replicated).
+const BACKGROUND_PLATFORM_RESOURCES = new Set(['contacts', 'projects', 'tickets', 'crons'])
+function parseBackgroundPlatform(method: string, path: string) {
+  const url = new URL(path.startsWith('/') ? path : `/${path}`, 'http://x')
+  const segments = url.pathname.replace(/^\/+/, '').split('/')
+  const resource = segments[0] ?? ''
+  const id = segments[1] ? decodeURIComponent(segments[1]) : null
+  let op: string
+  if (method === 'GET' || method === 'HEAD') op = id ? 'get' : 'list'
+  else if (method === 'POST') op = 'create'
+  else if (method === 'PUT' || method === 'PATCH') op = 'update'
+  else if (method === 'DELETE') op = 'remove'
+  else op = 'unsupported'
+  return { resource, id, op, query: url.searchParams }
+}
+
 function resolvePlatformResource(subPath: string, method: string): { resource: string; mode: 'read' | 'write' } | null {
   const resource = subPath.replace(/^\/+/, '').split('/')[0]?.split('?')[0] ?? ''
   if (!resource) return null
@@ -206,6 +222,44 @@ describe('Event subscription: access decision', () => {
   it('denies a subscribable event without the matching permission', () => {
     expect(checkEventAccess([], 'task:done')?.code).toBe('PERMISSION_REQUIRED')
     expect(checkEventAccess(['events:contact'], 'task:done')?.code).toBe('PERMISSION_REQUIRED')
+  })
+})
+
+describe('Background ctx.platform: path + method mapping', () => {
+  it('maps method + id presence to a CRUD operation', () => {
+    expect(parseBackgroundPlatform('GET', '/contacts').op).toBe('list')
+    expect(parseBackgroundPlatform('GET', '/contacts/c-1').op).toBe('get')
+    expect(parseBackgroundPlatform('POST', '/contacts').op).toBe('create')
+    expect(parseBackgroundPlatform('PATCH', '/contacts/c-1').op).toBe('update')
+    expect(parseBackgroundPlatform('PUT', '/contacts/c-1').op).toBe('update')
+    expect(parseBackgroundPlatform('DELETE', '/contacts/c-1').op).toBe('remove')
+  })
+
+  it('extracts resource, id (decoded) and query', () => {
+    const p = parseBackgroundPlatform('GET', '/tickets?projectId=p%201&status=todo')
+    expect(p.resource).toBe('tickets')
+    expect(p.id).toBeNull()
+    expect(p.query.get('projectId')).toBe('p 1')
+    expect(p.query.get('status')).toBe('todo')
+
+    const g = parseBackgroundPlatform('GET', '/contacts/c%2F1')
+    expect(g.resource).toBe('contacts')
+    expect(g.id).toBe('c/1')
+  })
+
+  it('reuses the platform:<resource>:<mode> permission model (write implies read)', () => {
+    // The background dispatcher gates with checkPlatformAccess, same as the gateway.
+    expect(checkPlatformAccess(['platform:contacts:read'], 'contacts', 'read')).toBeNull()
+    expect(checkPlatformAccess(['platform:contacts:write'], 'contacts', 'read')).toBeNull()
+    expect(checkPlatformAccess(['platform:contacts:read'], 'contacts', 'write')?.code).toBe('PERMISSION_REQUIRED')
+  })
+
+  it('only registered resources are reachable in background', () => {
+    expect(BACKGROUND_PLATFORM_RESOURCES.has('contacts')).toBe(true)
+    expect(BACKGROUND_PLATFORM_RESOURCES.has('tickets')).toBe(true)
+    // notifications/providers/etc. have no background binding
+    expect(BACKGROUND_PLATFORM_RESOURCES.has('notifications')).toBe(false)
+    expect(BACKGROUND_PLATFORM_RESOURCES.has('providers')).toBe(false)
   })
 
   it('accepts well-formed secret permissions', () => {

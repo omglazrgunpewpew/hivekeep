@@ -369,6 +369,63 @@ export function buildFilesApi(appDir: string): MiniAppFilesApi {
   }
 }
 
+// ─── Platform API (background, service-backed) ───────────────────────────────
+
+export interface MiniAppPlatformApi {
+  /** GET a platform resource: "/contacts" (list) or "/contacts/<id>" (one). */
+  get: <T = unknown>(path: string) => Promise<T>
+  /** Create a platform resource: post("/contacts", {...}). */
+  post: <T = unknown>(path: string, body?: unknown) => Promise<T>
+  /** Update a platform resource: put("/contacts/<id>", {...}). */
+  put: <T = unknown>(path: string, body?: unknown) => Promise<T>
+  /** Update a platform resource: patch("/contacts/<id>", {...}). */
+  patch: <T = unknown>(path: string, body?: unknown) => Promise<T>
+  /** Delete a platform resource: delete("/contacts/<id>"). */
+  delete: <T = unknown>(path: string) => Promise<T>
+}
+
+/**
+ * ctx.platform — background, service-backed access to platform resources, gated
+ * by `platform:<resource>:<read|write>`. Unlike the frontend gateway (broad,
+ * user-session, denylist), this is an explicit allowlist of resources × CRUD
+ * (see mini-app-platform-resources.ts), the right trust model for unattended code.
+ */
+export function buildPlatformApi(params: BuildCapabilitiesParams): MiniAppPlatformApi {
+  const run = async (method: string, path: string, body?: unknown): Promise<unknown> => {
+    const url = new URL(path.startsWith('/') ? path : `/${path}`, 'http://x')
+    const segments = url.pathname.replace(/^\/+/, '').split('/')
+    const resource = segments[0] ?? ''
+    const id = segments[1] ? decodeURIComponent(segments[1]) : null
+    if (!resource) throw new Error('platform: a resource path is required, e.g. "/contacts"')
+
+    const { isBackgroundPlatformResource, dispatchBackgroundPlatform } = await import('@/server/services/mini-app-platform-resources')
+    if (!isBackgroundPlatformResource(resource)) {
+      throw new Error(`platform: resource "${resource}" is not available from a background mini-app.`)
+    }
+
+    const mode: 'read' | 'write' = method === 'GET' || method === 'HEAD' ? 'read' : 'write'
+    const denial = checkPlatformAccess(params.granted, resource, mode)
+    if (denial) throw new Error(`platform: ${denial.message}`)
+
+    return dispatchBackgroundPlatform({
+      resource,
+      method,
+      id,
+      query: url.searchParams,
+      body: body as Record<string, unknown> | undefined,
+      agentId: params.agentId,
+    })
+  }
+
+  return {
+    get: (path) => run('GET', path) as never,
+    post: (path, body) => run('POST', path, body) as never,
+    put: (path, body) => run('PUT', path, body) as never,
+    patch: (path, body) => run('PATCH', path, body) as never,
+    delete: (path) => run('DELETE', path) as never,
+  }
+}
+
 // ─── Gated capabilities ──────────────────────────────────────────────────────
 
 export interface MiniAppSecretsApi {
