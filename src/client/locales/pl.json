@@ -3755,5 +3755,16 @@
   },
   "topbar": {
     "updateAvailable": "Aktualizuj"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "Imię jest wymagane",
+      "firstNameTooLong": "Imię musi mieć mniej niż {{max}} znaków",
+      "lastNameTooLong": "Nazwisko musi mieć mniej niż {{max}} znaków",
+      "pseudonymEmpty": "Pseudonim jest wymagany",
+      "pseudonymTooShort": "Pseudonim musi mieć co najmniej 2 znaki",
+      "pseudonymTooLong": "Pseudonim musi mieć mniej niż {{max}} znaków",
+      "pseudonymInvalidChars": "Pseudonim może zawierać tylko litery, cyfry, podkreślenia i myślniki"
+    }
   }
 }

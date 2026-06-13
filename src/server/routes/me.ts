@@ -4,6 +4,8 @@ import { db } from '@/server/db/index'
 import { userProfiles, user } from '@/server/db/schema'
 import { getUnreadCountsForUser } from '@/server/services/agent-read-state'
 import { THEME_MODES, CONTRAST_MODES, PALETTE_IDS, SUPPORTED_LANGUAGES, AGENT_LANGUAGE_CODES } from '@/shared/constants'
+import { validateProfileFields } from '@/shared/profile-validation'
+import { profileIssueMessage } from '@/server/lib/profile-validation-messages'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
 import { config } from '@/server/config'
@@ -61,28 +63,16 @@ meRoutes.patch('/', async (c) => {
   const body = await c.req.json()
 
   // Input validation
-  const MAX_NAME_LENGTH = 100
-  const MAX_PSEUDONYM_LENGTH = 30
-  const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
-
   const errors: string[] = []
 
-  if (body.firstName !== undefined) {
-    if (typeof body.firstName !== 'string') errors.push('firstName must be a string')
-    else body.firstName = body.firstName.trim()
-    if (typeof body.firstName === 'string' && body.firstName.length > MAX_NAME_LENGTH) errors.push(`firstName must be under ${MAX_NAME_LENGTH} characters`)
-  }
-  if (body.lastName !== undefined) {
-    if (typeof body.lastName !== 'string') errors.push('lastName must be a string')
-    else body.lastName = body.lastName.trim()
-    if (typeof body.lastName === 'string' && body.lastName.length > MAX_NAME_LENGTH) errors.push(`lastName must be under ${MAX_NAME_LENGTH} characters`)
-  }
-  if (body.pseudonym !== undefined) {
-    if (typeof body.pseudonym !== 'string') errors.push('pseudonym must be a string')
-    else body.pseudonym = body.pseudonym.trim()
-    if (typeof body.pseudonym === 'string' && body.pseudonym.length > MAX_PSEUDONYM_LENGTH) errors.push(`pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`)
-    if (typeof body.pseudonym === 'string' && body.pseudonym.length > 0 && !PSEUDONYM_REGEX.test(body.pseudonym)) errors.push('pseudonym can only contain letters, numbers, underscores, and hyphens')
-  }
+  // Name/pseudonym trio via the shared validator. PATCH is partial, so nothing
+  // is required; format rules (incl. pseudonym min length) apply to any present,
+  // non-empty value. Trimmed values are written back for the present fields.
+  const { issues: profileIssues, values: profileValues } = validateProfileFields(body, { require: [] })
+  for (const issue of profileIssues) errors.push(profileIssueMessage(issue))
+  if (body.firstName !== undefined) body.firstName = profileValues.firstName
+  if (body.lastName !== undefined) body.lastName = profileValues.lastName
+  if (body.pseudonym !== undefined) body.pseudonym = profileValues.pseudonym
   if (body.language !== undefined) {
     if (!(SUPPORTED_LANGUAGES as readonly string[]).includes(body.language)) errors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
   }

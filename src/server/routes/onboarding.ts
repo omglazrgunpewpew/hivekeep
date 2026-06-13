@@ -7,6 +7,8 @@ import { createLogger } from '@/server/logger'
 import { createContact, findContactByLinkedUserId } from '@/server/services/contacts'
 import { validateInvitation, markInvitationUsed } from '@/server/services/invitations'
 import { SUPPORTED_LANGUAGES, AGENT_LANGUAGE_CODES } from '@/shared/constants'
+import { validateProfileFields } from '@/shared/profile-validation'
+import { profileIssueMessage } from '@/server/lib/profile-validation-messages'
 
 const log = createLogger('routes:onboarding')
 const onboardingRoutes = new Hono()
@@ -90,30 +92,17 @@ onboardingRoutes.post('/profile', async (c) => {
     invitationToken?: string
   }
 
-  if (!firstName || !pseudonym) {
-    return c.json(
-      { error: { code: 'VALIDATION_ERROR', message: 'firstName and pseudonym are required' } },
-      400,
-    )
-  }
+  // Validate and sanitize the name/pseudonym trio via the shared validator
+  // (signup requires firstName + pseudonym). Language checks stay here since
+  // they depend on server-side constants and aren't part of the shared trio.
+  const { issues, values } = validateProfileFields(
+    { firstName, lastName, pseudonym },
+    { require: ['firstName', 'pseudonym'] },
+  )
+  const { firstName: trimmedFirstName, lastName: trimmedLastName, pseudonym: trimmedPseudonym } = values
 
-  // Validate and sanitize fields (same rules as PATCH /api/me)
-  const MAX_NAME_LENGTH = 100
-  const MAX_PSEUDONYM_LENGTH = 30
-  const PSEUDONYM_REGEX = /^[a-zA-Z0-9_-]+$/
+  const validationErrors: string[] = issues.map(profileIssueMessage)
 
-  const trimmedFirstName = String(firstName).trim()
-  const trimmedLastName = String(lastName ?? '').trim()
-  const trimmedPseudonym = String(pseudonym).trim()
-
-  const validationErrors: string[] = []
-
-  if (!trimmedFirstName) validationErrors.push('firstName cannot be empty')
-  if (trimmedFirstName.length > MAX_NAME_LENGTH) validationErrors.push(`firstName must be under ${MAX_NAME_LENGTH} characters`)
-  if (trimmedLastName.length > MAX_NAME_LENGTH) validationErrors.push(`lastName must be under ${MAX_NAME_LENGTH} characters`)
-  if (!trimmedPseudonym || trimmedPseudonym.length < 2) validationErrors.push('pseudonym must be at least 2 characters')
-  if (trimmedPseudonym.length > MAX_PSEUDONYM_LENGTH) validationErrors.push(`pseudonym must be under ${MAX_PSEUDONYM_LENGTH} characters`)
-  if (trimmedPseudonym.length > 0 && !PSEUDONYM_REGEX.test(trimmedPseudonym)) validationErrors.push('pseudonym can only contain letters, numbers, underscores, and hyphens')
   if (language && !SUPPORTED_LANGUAGES.includes(language as typeof SUPPORTED_LANGUAGES[number])) validationErrors.push(`language must be one of: ${SUPPORTED_LANGUAGES.join(', ')}`)
   if (agentLanguage != null && !AGENT_LANGUAGE_CODES.includes(agentLanguage)) validationErrors.push('agentLanguage must be a supported agent language code')
 

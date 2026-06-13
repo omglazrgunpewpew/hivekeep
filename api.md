@@ -99,7 +99,12 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
 
 // Response 200
 { ...same as GET /api/me }
+
+// Error 400 (un ou plusieurs champs invalides)
+{ error: { code: "VALIDATION_ERROR", message: "..." } }
 ```
+
+> **Validation du trio nom/pseudonyme** (règles partagées via `src/shared/profile-validation.ts`, communes à `PATCH /api/me` et `POST /api/onboarding/profile`) : `firstName` / `lastName` <= 100 caractères, `pseudonym` entre 2 et 30 caractères et limité à `[a-zA-Z0-9_-]`. Les valeurs sont trimées avant écriture. `PATCH /api/me` est partiel : aucun champ n'est requis, mais tout champ présent et non vide est validé avec ces mêmes règles (un `pseudonym` d'un seul caractère est donc rejeté ici aussi). Le signup (`POST /api/onboarding/profile`) exige en plus `firstName` + `pseudonym` non vides.
 
 ### `POST /api/me/avatar`
 

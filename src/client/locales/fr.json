@@ -3717,5 +3717,16 @@
   },
   "topbar": {
     "updateAvailable": "Mise à jour"
+  },
+  "validation": {
+    "profile": {
+      "firstNameEmpty": "Le prénom est obligatoire",
+      "firstNameTooLong": "Le prénom doit comporter moins de {{max}} caractères",
+      "lastNameTooLong": "Le nom doit comporter moins de {{max}} caractères",
+      "pseudonymEmpty": "Le pseudonyme est obligatoire",
+      "pseudonymTooShort": "Le pseudonyme doit comporter au moins 2 caractères",
+      "pseudonymTooLong": "Le pseudonyme doit comporter moins de {{max}} caractères",
+      "pseudonymInvalidChars": "Le pseudonyme ne peut contenir que des lettres, des chiffres, des tirets bas et des traits d’union"
+    }
   }
 }

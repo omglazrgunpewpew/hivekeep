@@ -12,6 +12,8 @@ import { AlertCircle, Camera, Loader2, ArrowLeft } from 'lucide-react'
 import { LanguageSelector, AgentLanguageSelector } from '@/client/components/common/LanguageSelector'
 import { getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
+import { validateProfileFields } from '@/shared/profile-validation'
+import { translateProfileErrorCode } from '@/client/lib/profile-validation-i18n'
 
 export function InvitePage() {
   const { t, i18n } = useTranslation()
@@ -69,6 +71,15 @@ export function InvitePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    const { issues } = validateProfileFields(
+      { firstName, lastName, pseudonym },
+      { require: ['firstName', 'pseudonym'] },
+    )
+    if (issues.length > 0) {
+      setError(translateProfileErrorCode(t, issues[0]!.code))
+      return
+    }
 
     if (password !== passwordConfirm) {
       setError(t('invite.passwordMismatch'))

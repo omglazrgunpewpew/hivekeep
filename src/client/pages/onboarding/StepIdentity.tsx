@@ -10,6 +10,8 @@ import { AlertCircle, Camera, Loader2 } from 'lucide-react'
 import { useAuth } from '@/client/hooks/useAuth'
 import { api, getErrorMessage } from '@/client/lib/api'
 import { getUserInitials } from '@/client/lib/utils'
+import { validateProfileFields } from '@/shared/profile-validation'
+import { translateProfileErrorCode } from '@/client/lib/profile-validation-i18n'
 
 interface StepIdentityProps {
   onComplete: () => void
@@ -111,6 +113,21 @@ function extractFieldErrors(err: unknown): {
   return { fields, fallback }
 }
 
+function isExistingUserError(err: unknown): boolean {
+  const message = getErrorMessage(err).toLowerCase()
+  const o = err as { code?: unknown; error?: { code?: unknown } }
+  const code = typeof o?.code === 'string'
+    ? o.code
+    : typeof o?.error?.code === 'string'
+      ? o.error.code
+      : ''
+  return (
+    code === 'USER_ALREADY_EXISTS' ||
+    message.includes('already') ||
+    message.includes('exists')
+  )
+}
+
 export function StepIdentity({ onComplete }: StepIdentityProps) {
   const { t, i18n } = useTranslation()
   const { register, login } = useAuth()
@@ -157,6 +174,19 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
     setError('')
     setFieldErrors({})
 
+    const { issues } = validateProfileFields(
+      { firstName, lastName, pseudonym },
+      { require: ['firstName', 'pseudonym'] },
+    )
+    if (issues.length > 0) {
+      const profileErrors: Partial<Record<FieldName, string>> = {}
+      for (const issue of issues) {
+        if (!profileErrors[issue.field]) profileErrors[issue.field] = translateProfileErrorCode(t, issue.code)
+      }
+      setFieldErrors(profileErrors)
+      return
+    }
+
     if (password !== passwordConfirm) {
       setFieldErrors({ passwordConfirm: t('onboarding.identity.passwordMismatch') })
       return
@@ -176,8 +206,7 @@ export function StepIdentity({ onComplete }: StepIdentityProps) {
         // If registration fails because email already exists, try logging in instead.
         // This handles the case where registration succeeded but profile creation
         // failed on a previous attempt, leaving the user stuck.
-        const regMsg = getErrorMessage(regErr) || ''
-        if (regMsg.toLowerCase().includes('already') || regMsg.toLowerCase().includes('exists')) {
+        if (isExistingUserError(regErr)) {
           await login(email, password)
         } else {
           throw regErr

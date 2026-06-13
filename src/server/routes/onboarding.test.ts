@@ -361,6 +361,59 @@ describe('onboarding routes', () => {
       expect(body.error.code).toBe('VALIDATION_ERROR')
     })
 
+    it('returns 400 for a one-character pseudonym (the onboarding bug)', async () => {
+      mockGetSession = mock(() => Promise.resolve(fakeSession))
+      mockDbSelect = mock(() => makeChain(null))
+
+      const res = await app.request(
+        jsonRequest('/api/onboarding/profile', {
+          firstName: 'John',
+          lastName: 'Doe',
+          pseudonym: 'a',
+        }),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+      // No auth user side effects: profile insert must not run on validation failure.
+      expect(mockDbInsert).not.toHaveBeenCalled()
+    })
+
+    it('returns 400 for a pseudonym with invalid characters', async () => {
+      mockGetSession = mock(() => Promise.resolve(fakeSession))
+      mockDbSelect = mock(() => makeChain(null))
+
+      const res = await app.request(
+        jsonRequest('/api/onboarding/profile', {
+          firstName: 'John',
+          lastName: 'Doe',
+          pseudonym: 'john doe',
+        }),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+    })
+
+    it('returns 400 for an over-long pseudonym', async () => {
+      mockGetSession = mock(() => Promise.resolve(fakeSession))
+      mockDbSelect = mock(() => makeChain(null))
+
+      const res = await app.request(
+        jsonRequest('/api/onboarding/profile', {
+          firstName: 'John',
+          lastName: 'Doe',
+          pseudonym: 'a'.repeat(31),
+        }),
+      )
+
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+    })
+
     it('creates admin profile for first user (no admin exists)', async () => {
       mockGetSession = mock(() => Promise.resolve(fakeSession))
 
