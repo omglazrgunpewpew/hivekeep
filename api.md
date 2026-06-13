@@ -1,21 +1,21 @@
-# Hivekeep — Contrats API
+# Hivekeep API Contracts
 
-> ⚠️ **Partiellement obsolète.** Ce document décrit les contrats REST tels qu'imaginés avant le refactor providers/plugins/images. Routes qui ont changé depuis :
-> - `POST/PATCH /api/providers` : payload `families[]` au lieu de `family`, capacité multiple par row (`capabilities[]`)
-> - `GET /api/providers/:id` : nouveau (retourne `safeConfig` pour le pré-remplissage du formulaire d'édition)
-> - `GET /api/providers/:id/models` : nouveau (browser modal)
-> - `POST /api/providers/:id/test` : accepte maintenant un body `{ config: {...} }` optionnel pour tester une config partielle sans réencoder les secrets
-> - Tools image (`generate_image`, `list_image_models`, nouveau `describe_image_model`) : payload différent (`imageUrls[]`, `params`, `maxImageInputs`)
+> ⚠️ **Partially outdated.** This document describes the REST contracts as envisioned before the providers/plugins/images refactor. Routes that have changed since:
+> - `POST/PATCH /api/providers`: `families[]` payload instead of `family`, multiple capabilities per row (`capabilities[]`)
+> - `GET /api/providers/:id`: new (returns `safeConfig` for pre-filling the edit form)
+> - `GET /api/providers/:id/models`: new (browser modal)
+> - `POST /api/providers/:id/test`: now accepts an optional `{ config: {...} }` body to test a partial config without re-encoding the secrets
+> - Image tools (`generate_image`, `list_image_models`, new `describe_image_model`): different payload (`imageUrls[]`, `params`, `maxImageInputs`)
 >
-> Le **code des routes** dans `src/server/routes/` fait foi. Quand un contrat ici contredit la route, c'est ce fichier qui est obsolète. À utiliser comme référence d'intention, pas comme spec stricte.
+> The **route code** in `src/server/routes/` is authoritative. When a contract here contradicts the route, it's this file that is outdated. Use it as a reference of intent, not as a strict spec.
 
-Toutes les routes retournent du JSON. Les erreurs suivent le format standard :
+All routes return JSON. Errors follow the standard format:
 
 ```json
-{ "error": { "code": "ERROR_CODE", "message": "Description lisible" } }
+{ "error": { "code": "ERROR_CODE", "message": "Human-readable description" } }
 ```
 
-Authentification : cookie HTTP-only géré par Better Auth, vérifié par middleware sur toutes les routes `/api/*` (sauf `/api/auth/*`).
+Authentication: HTTP-only cookie managed by Better Auth, verified by middleware on all `/api/*` routes (except `/api/auth/*`).
 
 ---
 
@@ -23,7 +23,7 @@ Authentification : cookie HTTP-only géré par Better Auth, vérifié par middle
 
 ### `POST /api/auth/register`
 
-Créé automatiquement par Better Auth.
+Created automatically by Better Auth.
 
 ```typescript
 // Request
@@ -56,7 +56,7 @@ Créé automatiquement par Better Auth.
 
 ### `GET /api/onboarding/status`
 
-Vérifie si l'onboarding initial a été complété. **`completed` est strictement `hasAdmin`** — la redesign onboarding (Phase 1) a découplé `completed` de la configuration des providers. Les champs `hasLlm` / `hasEmbedding` restent renvoyés a titre informatif (utilisés par la setup checklist du dashboard) mais ne gatent plus l'accès a l'app.
+Checks whether the initial onboarding has been completed. **`completed` is strictly `hasAdmin`.** The onboarding redesign (Phase 1) decoupled `completed` from the provider configuration. The `hasLlm` / `hasEmbedding` fields are still returned for informational purposes (used by the dashboard setup checklist) but no longer gate access to the app.
 
 ```typescript
 // Response 200
@@ -65,7 +65,7 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
 
 ---
 
-## Compte
+## Account
 
 ### `GET /api/me`
 
@@ -77,8 +77,8 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
   firstName: string
   lastName: string
   pseudonym: string
-  language: string             // langue de l'UI — un code de SUPPORTED_LANGUAGES
-  agentLanguage: string | null // langue parlée par les Agents (code AGENT_LANGUAGES) ; null = suit `language`
+  language: string             // UI language: a code from SUPPORTED_LANGUAGES
+  agentLanguage: string | null // language spoken by the Agents (AGENT_LANGUAGES code); null = follows `language`
   role: 'admin' | 'user'
   avatarUrl: string | null
 }
@@ -87,31 +87,31 @@ Vérifie si l'onboarding initial a été complété. **`completed` est stricteme
 ### `PATCH /api/me`
 
 ```typescript
-// Request (tous les champs optionnels)
+// Request (all fields optional)
 {
   firstName?: string
   lastName?: string
   pseudonym?: string
-  language?: string             // un code de SUPPORTED_LANGUAGES
-  agentLanguage?: string | null // un code de AGENT_LANGUAGES ; null = suivre la langue de l'UI
+  language?: string             // a code from SUPPORTED_LANGUAGES
+  agentLanguage?: string | null // a code from AGENT_LANGUAGES; null = follow the UI language
   password?: { current: string, new: string }
 }
 
 // Response 200
 { ...same as GET /api/me }
 
-// Error 400 (un ou plusieurs champs invalides)
+// Error 400 (one or more invalid fields)
 { error: { code: "VALIDATION_ERROR", message: "..." } }
 ```
 
-> **Validation du trio nom/pseudonyme** (règles partagées via `src/shared/profile-validation.ts`, communes à `PATCH /api/me` et `POST /api/onboarding/profile`) : `firstName` / `lastName` <= 100 caractères, `pseudonym` entre 2 et 30 caractères et limité à `[a-zA-Z0-9_-]`. Les valeurs sont trimées avant écriture. `PATCH /api/me` est partiel : aucun champ n'est requis, mais tout champ présent et non vide est validé avec ces mêmes règles (un `pseudonym` d'un seul caractère est donc rejeté ici aussi). Le signup (`POST /api/onboarding/profile`) exige en plus `firstName` + `pseudonym` non vides.
+> **Name/pseudonym trio validation** (rules shared via `src/shared/profile-validation.ts`, common to `PATCH /api/me` and `POST /api/onboarding/profile`): `firstName` / `lastName` <= 100 characters, `pseudonym` between 2 and 30 characters and limited to `[a-zA-Z0-9_-]`. Values are trimmed before writing. `PATCH /api/me` is partial: no field is required, but any field present and non-empty is validated with these same rules (a single-character `pseudonym` is therefore rejected here too). Signup (`POST /api/onboarding/profile`) additionally requires non-empty `firstName` + `pseudonym`.
 
 ### `POST /api/me/avatar`
 
-Upload multipart/form-data.
+Multipart/form-data upload.
 
 ```typescript
-// Request: FormData avec champ "file"
+// Request: FormData with a "file" field
 
 // Response 200
 { avatarUrl: string }
@@ -151,12 +151,12 @@ Upload multipart/form-data.
 { provider: { id: string, name: string, type: string, capabilities: string[], isValid: boolean } }
 ```
 
-> Le serveur teste la connexion et détecte les capacités avant de retourner.
+> The server tests the connection and detects the capabilities before returning.
 
 ### `PATCH /api/providers/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 { name?: string, config?: { apiKey?: string, baseUrl?: string } }
 
 // Response 200
@@ -169,13 +169,13 @@ Upload multipart/form-data.
 // Response 200
 { success: true }
 
-// Error 409 si c'est le dernier provider couvrant une capacité requise (llm ou embedding)
+// Error 409 if it's the last provider covering a required capability (llm or embedding)
 { error: { code: "PROVIDER_REQUIRED", message: "..." } }
 ```
 
 ### `POST /api/providers/:id/test`
 
-Teste la connexion au provider.
+Tests the connection to the provider.
 
 ```typescript
 // Response 200
@@ -184,25 +184,25 @@ Teste la connexion au provider.
 
 ### `GET /api/providers/models`
 
-Liste tous les modèles disponibles a travers tous les providers configurés.
+Lists all available models across all configured providers.
 
 ```typescript
 // Response 200
 {
   models: Array<{
-    id: string              // ex: 'claude-sonnet-4-20250514'
-    name: string            // ex: 'Claude Sonnet 4'
+    id: string              // e.g. 'claude-sonnet-4-20250514'
+    name: string            // e.g. 'Claude Sonnet 4'
     providerId: string
     providerType: string
     capability: 'llm' | 'embedding' | 'image' | 'search'
-    supportsImageInput?: boolean   // llm only — tri-state (absent = inconnu)
-    supportsPdfInput?: boolean     // llm only — tri-state (absent = inconnu)
+    supportsImageInput?: boolean   // llm only: tri-state (absent = unknown)
+    supportsPdfInput?: boolean     // llm only: tri-state (absent = unknown)
     maxImageInputs?: number        // image only
     contextWindow?: number
     maxOutput?: number
-    // llm only — support reasoning après enrichissement registry.
-    // Absent = pas un modèle de reasoning ; efforts: [] = toggle on/off
-    // sans granularité. Pilote les sélecteurs d'effort côté client.
+    // llm only: reasoning support after registry enrichment.
+    // Absent = not a reasoning model; efforts: [] = on/off toggle
+    // without granularity. Drives the client-side effort selectors.
     thinking?: {
       efforts: Array<'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'>
       note?: string
@@ -227,7 +227,7 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
     avatarUrl: string | null
     model: string
     createdAt: number
-    // Pas de character/expertise ici (trop volumineux pour la liste)
+    // No character/expertise here (too large for the list)
   }>
 }
 ```
@@ -246,8 +246,8 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
   model: string
   workspacePath: string
   mcpServers: Array<{ id: string, name: string }>
-  queueSize: number          // nombre de messages en attente
-  isProcessing: boolean      // en train de traiter un message
+  queueSize: number          // number of pending messages
+  isProcessing: boolean      // currently processing a message
   createdAt: number
 }
 ```
@@ -264,10 +264,10 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
   model: string
   mcpServerIds?: string[]
   avatar?: 'upload' | 'generate' | 'prompt'
-  avatarPrompt?: string       // si avatar === 'prompt'
+  avatarPrompt?: string       // if avatar === 'prompt'
 }
 
-// Si avatar === 'upload', utiliser POST /api/agents/:id/avatar après création
+// If avatar === 'upload', use POST /api/agents/:id/avatar after creation
 
 // Response 201
 { agent: { ...same as GET /api/agents/:id } }
@@ -276,7 +276,7 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 ### `PATCH /api/agents/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 {
   name?: string
   role?: string
@@ -285,8 +285,8 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
   model?: string
   mcpServerIds?: string[]
   toolboxIds?: string[] | null
-  // Grants individuels (en plus des toolboxes) : ajouts manuels + demandes
-  // request_tool_access approuvées. [] ou null efface tout.
+  // Individual grants (in addition to toolboxes): manual additions + approved
+  // request_tool_access requests. [] or null clears everything.
   extraToolNames?: string[] | null
 }
 
@@ -303,12 +303,12 @@ Liste tous les modèles disponibles a travers tous les providers configurés.
 
 ### `POST /api/agents/:id/avatar`
 
-Upload ou génération d'avatar.
+Avatar upload or generation.
 
 ```typescript
-// Mode upload : FormData avec champ "file"
-// Mode generate : { mode: 'generate' }
-// Mode prompt : { mode: 'prompt', prompt: string }
+// Upload mode: FormData with a "file" field
+// Generate mode: { mode: 'generate' }
+// Prompt mode: { mode: 'prompt', prompt: string }
 
 // Response 200
 { avatarUrl: string }
@@ -316,18 +316,18 @@ Upload ou génération d'avatar.
 
 ### `GET /api/agents/:id/context-preview`
 
-Reconstruit et retourne le contexte LLM complet tel qu'il serait envoyé au modèle.
-Utile pour le debugging et la transparence. Accepte des query params optionnels pour les tâches et sessions rapides.
+Rebuilds and returns the full LLM context exactly as it would be sent to the model.
+Useful for debugging and transparency. Accepts optional query params for tasks and quick sessions.
 
 ```typescript
-// Query params optionnels :
-// ?taskId={string}     — contexte d'une tâche spécifique
-// ?sessionId={string}  — contexte d'une session rapide
+// Optional query params:
+// ?taskId={string}     - context of a specific task
+// ?sessionId={string}  - context of a quick session
 
 // Response 200
 {
-  systemPrompt: string           // Prompt système complet (avec outils en annexe)
-  compactingSummary: string | null // Résumé de compacting (null si pas de compacting)
+  systemPrompt: string           // Full system prompt (with tools appended)
+  compactingSummary: string | null // Compacting summary (null if no compacting)
   rawPayload: {
     system: string
     messages: Array<{
@@ -349,7 +349,7 @@ Utile pour le debugging et la transparence. Accepte des query params optionnels 
     tools: number
     total: number
   }
-  contextWindow: number          // Taille max du contexte du modèle (en tokens)
+  contextWindow: number          // Max context size of the model (in tokens)
   messageCount: number
   generatedAt: number
 }
@@ -357,7 +357,7 @@ Utile pour le debugging et la transparence. Accepte des query params optionnels 
 
 ### `PATCH /api/agents/:id/active-project`
 
-Définit le projet actif du Agent. Le contexte du projet sera injecté dans le bloc volatile du prompt système aux tours suivants. Voir `projects.md` § 4.
+Sets the Agent's active project. The project context will be injected into the volatile block of the system prompt on subsequent turns. See `projects.md` § 4.
 
 ```typescript
 // Request
@@ -367,11 +367,11 @@ Définit le projet actif du Agent. Le contexte du projet sera injecté dans le b
 { activeProjectId: string | null }
 
 // Errors
-// 404 — { error: { code: 'PROJECT_NOT_FOUND', message: '...' } }
-// 404 — { error: { code: 'KIN_NOT_FOUND', message: '...' } }
+// 404: { error: { code: 'PROJECT_NOT_FOUND', message: '...' } }
+// 404: { error: { code: 'KIN_NOT_FOUND', message: '...' } }
 ```
 
-Un event SSE `agent:active-project` est émis à tous les clients connectés (utile pour synchroniser les chips "Projet actif" dans les autres onglets / vues).
+An `agent:active-project` SSE event is emitted to all connected clients (useful for syncing the "Active project" chips in other tabs / views).
 
 ---
 
@@ -379,33 +379,33 @@ Un event SSE `agent:active-project` est émis à tous les clients connectés (ut
 
 ### `POST /api/agents/:id/messages`
 
-Envoie un message a un Agent. Déclenche le traitement et le streaming SSE de la réponse.
+Sends a message to an Agent. Triggers processing and SSE streaming of the response.
 
 ```typescript
 // Request
 {
   content: string
-  fileIds?: string[]        // IDs de fichiers déjà uploadés
-  clientMessageId?: string  // Token de réconciliation optimiste (≤100 chars, PAS la PK).
-                            // Ré-émis tel quel dans l'événement SSE chat:message du
-                            // message utilisateur : le client émetteur réconcilie sa
-                            // bulle optimiste, les autres appareils l'ajoutent.
+  fileIds?: string[]        // IDs of already-uploaded files
+  clientMessageId?: string  // Optimistic reconciliation token (≤100 chars, NOT the PK).
+                            // Re-emitted as-is in the chat:message SSE event for the
+                            // user message: the emitting client reconciles its
+                            // optimistic bubble, other devices add it.
 }
 
 // Response 202
-{ messageId: string, queuePosition: number }   // messageId = id du queue item, ≠ PK du message
+{ messageId: string, queuePosition: number }   // messageId = queue item id, ≠ message PK
 ```
 
-> La réponse du Agent arrive via SSE (pas dans cette response HTTP).
-> Le message utilisateur lui-même est aussi diffusé en temps réel via `chat:message`
-> (sync multi-appareils / multi-membres), avec `clientMessageId` pour la réconciliation.
+> The Agent's response arrives via SSE (not in this HTTP response).
+> The user message itself is also broadcast in real time via `chat:message`
+> (multi-device / multi-member sync), with `clientMessageId` for reconciliation.
 
 ### `GET /api/agents/:id/messages`
 
-Historique paginé des messages.
+Paginated message history.
 
 ```typescript
-// Query params : ?before={messageId}&limit={number, default 50}
+// Query params: ?before={messageId}&limit={number, default 50}
 
 // Response 200
 {
@@ -427,35 +427,35 @@ Historique paginé des messages.
 
 ### `GET /api/agents/:id/tools`
 
-Le toolset RÉSOLU de l'Agent — l'ensemble exact d'outils qu'un tour recevrait (natifs + plugins + MCP + customs, après filtrage par toolbox). `?quick=1` renvoie la variante quick-session (sans les outils exclus en session : tâches, crons, inter-agents…). Alimente le badge outils du composer et sa modal de listing (le client groupe par domaine via `/api/tools/domains`).
+The Agent's RESOLVED toolset: the exact set of tools a turn would receive (native + plugins + MCP + customs, after toolbox filtering). `?quick=1` returns the quick-session variant (without the tools excluded in a session: tasks, crons, inter-agent...). Feeds the composer's tools badge and its listing modal (the client groups by domain via `/api/tools/domains`).
 
 ```typescript
 // Response 200
-{ tools: Array<{ name: string, description: string }> }  // triés par nom
+{ tools: Array<{ name: string, description: string }> }  // sorted by name
 ```
 
 ### `POST /api/agents/:id/messages/inject`
 
-Injecte un message dans la conversation en cours. Si le Agent est en train de streamer une réponse, le stream est interrompu (la réponse partielle est sauvegardée) et le message injecté est mis en file d'attente en priorité haute. Utilisé pour la commande `/btw` et la promotion de messages depuis la queue.
+Injects a message into the ongoing conversation. If the Agent is currently streaming a response, the stream is interrupted (the partial response is saved) and the injected message is queued at high priority. Used by the `/btw` command and the promotion of messages from the queue.
 
 ```typescript
 // Request
 {
   content: string
-  queueItemId?: string    // Si promotion depuis la queue, supprime l'item original
+  queueItemId?: string    // If promotion from the queue, removes the original item
 }
 
 // Response 202
 {
   messageId: string
   queuePosition: number
-  injected: boolean       // true si un stream actif a été interrompu
+  injected: boolean       // true if an active stream was interrupted
 }
 ```
 
 ### `DELETE /api/agents/:id/messages/:messageId`
 
-Supprime un seul message de la conversation principale (économie de contexte). La ligne porte son step complet (tool calls + résultats dans le JSON `toolCalls`), donc l'historique LLM reste bien formé. Refusé pendant qu'un tour est en cours (409 `AGENT_BUSY`). Nettoyage en cascade : fichiers joints supprimés, références `human_prompts`/`memories` nullifiées, bornes des résumés de compaction réparées (le cutoff temporel reste intact). Émet `chat:messages-deleted`.
+Deletes a single message from the main conversation (context savings). The row carries its complete step (tool calls + results in the `toolCalls` JSON), so the LLM history stays well-formed. Refused while a turn is in progress (409 `AGENT_BUSY`). Cascade cleanup: attached files deleted, `human_prompts`/`memories` references nulled, compaction summary boundaries repaired (the time cutoff stays intact). Emits `chat:messages-deleted`.
 
 ```typescript
 // Response 200
@@ -464,7 +464,7 @@ Supprime un seul message de la conversation principale (économie de contexte). 
 
 ### `POST /api/agents/:id/messages/rewind`
 
-Rewind : le message cible devient le plus récent — tout ce qui le suit (y compris les messages cachés de contexte) est supprimé, et les résumés de compaction couvrant la zone supprimée sont retirés. Refusé pendant un tour en cours (409). Émet `chat:messages-deleted` avec la liste des ids.
+Rewind: the target message becomes the most recent one. Everything after it (including hidden context messages) is deleted, and the compaction summaries covering the deleted zone are removed. Refused during an in-progress turn (409). Emits `chat:messages-deleted` with the list of ids.
 
 ```typescript
 // Request
@@ -476,14 +476,14 @@ Rewind : le message cible devient le plus récent — tout ce qui le suit (y com
 
 ---
 
-## Tâches
+## Tasks
 
 ### `GET /api/tasks`
 
-Liste toutes les tâches en cours.
+Lists all ongoing tasks.
 
 ```typescript
-// Query params : ?status={pending|in_progress|paused|completed|failed|cancelled}&agentId={string}
+// Query params: ?status={pending|in_progress|paused|completed|failed|cancelled}&agentId={string}
 
 // Response 200
 {
@@ -503,7 +503,7 @@ Liste toutes les tâches en cours.
 
 ### `GET /api/tasks/:id`
 
-Détail d'une tâche avec ses messages.
+Details of a task with its messages.
 
 ```typescript
 // Response 200
@@ -522,34 +522,34 @@ Détail d'une tâche avec ses messages.
 
 ### `POST /api/tasks/:id/pause`
 
-Met en pause une tâche en cours d'exécution. La tâche conserve son état et peut être reprise ultérieurement.
+Pauses a running task. The task keeps its state and can be resumed later.
 
 ```typescript
 // Response 200
 { success: true }
 
-// Response 409 — tâche non en cours
+// Response 409: task not running
 { error: { code: 'TASK_NOT_PAUSABLE', message: 'Task is not currently running' } }
 ```
 
 ### `POST /api/tasks/:id/resume`
 
-Reprend une tâche en pause, avec un message optionnel injecté dans le contexte.
+Resumes a paused task, with an optional message injected into the context.
 
 ```typescript
-// Request (optionnel)
+// Request (optional)
 { message?: string }
 
 // Response 200
 { success: true }
 
-// Response 409 — tâche non en pause
+// Response 409: task not paused
 { error: { code: 'TASK_NOT_PAUSED', message: 'Task is not paused' } }
 ```
 
 ### `POST /api/tasks/:id/inject`
 
-Injecte un message dans une tâche en cours d'exécution. Si la tâche est en train de streamer, le stream est interrompu et relancé avec le message additionnel.
+Injects a message into a running task. If the task is streaming, the stream is interrupted and restarted with the additional message.
 
 ```typescript
 // Request
@@ -558,18 +558,18 @@ Injecte un message dans une tâche en cours d'exécution. Si la tâche est en tr
 // Response 202
 { success: true, injected: boolean }
 
-// Response 400 — contenu vide
+// Response 400: empty content
 { error: { code: 'EMPTY_CONTENT', message: 'Message content is required' } }
 
-// Response 409 — injection échouée
+// Response 409: injection failed
 { error: { code: 'INJECT_FAILED', message: string } }
 ```
 
 ---
 
-## Projets
+## Projects
 
-Voir `projects.md` pour la spec complète.
+See `projects.md` for the full spec.
 
 ### `GET /api/projects`
 
@@ -584,7 +584,7 @@ Voir `projects.md` pour la spec complète.
     openTicketCount: number      // status !== 'done'
     createdAt: number
     updatedAt: number
-    // description omise pour la liste (peut être volumineuse)
+    // description omitted for the list (can be large)
   }>
 }
 ```
@@ -621,15 +621,15 @@ Voir `projects.md` pour la spec complète.
 { project: { ...same as GET /api/projects/:id } }
 ```
 
-> Le seed `DEFAULT_PROJECT_TAGS` (bug / feature / chore / doc) est appliqué côté serveur. L'utilisateur peut ensuite modifier librement via les routes tags.
+> The `DEFAULT_PROJECT_TAGS` seed (bug / feature / chore / doc) is applied server-side. The user can then freely modify them via the tag routes.
 
 ### `PATCH /api/projects/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 {
   title?: string
-  description?: string     // remplace tout
+  description?: string     // replaces everything
   githubUrl?: string | null
 }
 
@@ -639,7 +639,7 @@ Voir `projects.md` pour la spec complète.
 
 ### `DELETE /api/projects/:id`
 
-Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. Les tasks historiques liées voient leur `ticketId` mis à NULL (historique préservé dans les threads des Agents). Les Agents qui avaient ce projet en `activeProjectId` voient leur valeur mise à NULL.
+Hard delete with cascade: all of the project's tickets and tags are deleted. Linked historical tasks have their `ticketId` set to NULL (history preserved in the Agents' threads). Agents that had this project as `activeProjectId` have their value set to NULL.
 
 ```typescript
 // Response 200
@@ -670,13 +670,13 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
 { tag: { id, label, color, createdAt } }
 
 // Errors
-// 409 — { error: { code: 'TAG_LABEL_TAKEN', message: 'A tag with this label already exists in this project' } }
+// 409: { error: { code: 'TAG_LABEL_TAKEN', message: 'A tag with this label already exists in this project' } }
 ```
 
 ### `PATCH /api/tags/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 { label?: string, color?: string }
 
 // Response 200
@@ -697,7 +697,7 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
 ### `GET /api/projects/:projectId/tickets`
 
 ```typescript
-// Query params : ?status={...}&tagId={...}&limit={...}&offset={...}
+// Query params: ?status={...}&tagId={...}&limit={...}&offset={...}
 
 // Response 200
 {
@@ -705,12 +705,12 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
     id: string
     projectId: string
     title: string
-    description: string         // tronquée à 500 chars pour la liste
+    description: string         // truncated to 500 chars for the list
     status: 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'done'
     position: number
     tags: Array<{ id: string, label: string, color: string }>
-    taskCount: number           // nombre total de tasks liées au ticket
-    runningTaskCount: number    // tasks status in_progress/pending/queued
+    taskCount: number           // total number of tasks linked to the ticket
+    runningTaskCount: number    // tasks with status in_progress/pending/queued
     createdAt: number
     updatedAt: number
   }>
@@ -727,7 +727,7 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
     id: string
     projectId: string
     title: string
-    description: string         // complète
+    description: string         // full
     status: 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'done'
     position: number
     tags: Array<{ id: string, label: string, color: string }>
@@ -764,13 +764,13 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
 ### `PATCH /api/tickets/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 {
   title?: string
   description?: string
   status?: 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'done'
-  position?: number          // si fourni : place à cette position. Sinon : max+1024 dans la colonne du nouveau status.
-  tagIds?: string[]          // remplace l'ensemble (PUT-like)
+  position?: number          // if provided: place at this position. Otherwise: max+1024 in the column of the new status.
+  tagIds?: string[]          // replaces the whole set (PUT-like)
 }
 
 // Response 200
@@ -784,16 +784,16 @@ Hard delete avec cascade : tous les tickets et tags du projet sont supprimés. L
 { success: true }
 ```
 
-> Les tasks historiques liées ne sont pas supprimées : leur `ticketId` est mis à NULL pour préserver l'audit trail dans les threads.
+> Linked historical tasks are not deleted: their `ticketId` is set to NULL to preserve the audit trail in the threads.
 
 ### `POST /api/tickets/:id/start-task`
 
-Spawn un sub-Agent pour travailler sur le ticket. Le `agentId` du Agent parent doit être passé explicitement (pas de défaut implicite — cf. `projects.md` § 4). **Toujours en mode `await`** : le mode `async` n'est pas autorisé pour les tasks liées à un ticket (sinon le ticket resterait figé sans turn de cloture, cf. `projects.md` § 5).
+Spawns a sub-Agent to work on the ticket. The parent Agent's `agentId` must be passed explicitly (no implicit default, cf. `projects.md` § 4). **Always in `await` mode**: `async` mode is not allowed for ticket-linked tasks (otherwise the ticket would stay frozen with no closing turn, cf. `projects.md` § 5).
 
 ```typescript
 // Request
 {
-  agentId: string              // Agent qui spawn la task (= parent_agent_id)
+  agentId: string              // Agent spawning the task (= parent_agent_id)
 }
 
 // Response 201
@@ -809,13 +809,13 @@ Spawn un sub-Agent pour travailler sur le ticket. Le `agentId` du Agent parent d
 }
 
 // Errors
-// 404 — { error: { code: 'TICKET_NOT_FOUND', message: '...' } }
-// 404 — { error: { code: 'KIN_NOT_FOUND', message: '...' } }
+// 404: { error: { code: 'TICKET_NOT_FOUND', message: '...' } }
+// 404: { error: { code: 'KIN_NOT_FOUND', message: '...' } }
 ```
 
-Effets de bord :
-- **Aucun effet sur le ticket** (status / position / tags inchangés — c'est au Agent ou à l'utilisateur de gérer le statut manuellement)
-- Un event SSE `task:status` est émis pour la nouvelle task
+Side effects:
+- **No effect on the ticket** (status / position / tags unchanged: it's up to the Agent or the user to manage the status manually)
+- A `task:status` SSE event is emitted for the new task
 
 ---
 
@@ -824,7 +824,7 @@ Effets de bord :
 ### `GET /api/crons`
 
 ```typescript
-// Query params : ?agentId={string}
+// Query params: ?agentId={string}
 
 // Response 200
 {
@@ -837,7 +837,7 @@ Effets de bord :
     taskDescription: string
     targetAgentId: string | null
     model: string | null
-    toolboxIds: string[]        // IDs de toolboxes; [] = surface native complète ('all')
+    toolboxIds: string[]        // toolbox IDs; [] = full native surface ('all')
     isActive: boolean
     requiresApproval: boolean
     lastTriggeredAt: number | null
@@ -857,7 +857,7 @@ Effets de bord :
   taskDescription: string
   targetAgentId?: string
   model?: string
-  toolboxIds?: string[]         // toolset natif des tâches spawnées; omis = 'all'
+  toolboxIds?: string[]         // native toolset of the spawned tasks; omitted = 'all'
 }
 
 // Response 201
@@ -867,7 +867,7 @@ Effets de bord :
 ### `PATCH /api/crons/:id`
 
 ```typescript
-// Request (tous optionnels)
+// Request (all optional)
 {
   name?: string
   schedule?: string
@@ -875,7 +875,7 @@ Effets de bord :
   targetAgentId?: string
   model?: string
   isActive?: boolean
-  toolboxIds?: string[] | null  // [] ou null efface la restriction (retour à 'all')
+  toolboxIds?: string[] | null  // [] or null clears the restriction (back to 'all')
 }
 
 // Response 200
@@ -891,7 +891,7 @@ Effets de bord :
 
 ### `POST /api/crons/:id/approve`
 
-Approuve un cron créé par un Agent (qui nécessite validation).
+Approves a cron created by an Agent (which requires validation).
 
 ```typescript
 // Response 200
@@ -939,47 +939,47 @@ Approuve un cron créé par un Agent (qui nécessite validation).
 
 ## Custom Tools & Tool Domains
 
-Outils custom **globaux** (scripts authored via l'UI ou les Agents) et domaines dynamiques. Voir `schema.md`.
+**Global** custom tools (scripts authored via the UI or the Agents) and dynamic domains. See `schema.md`.
 
 ### `GET /api/tools/catalog`
-Catalogue agnostique de tous les outils grantables (native / plugin / mcp / custom). Les entrées custom sont globales (`custom_<slug>`, `domain` = leur `domain_slug`, `enabled`).
+Agnostic catalog of all grantable tools (native / plugin / mcp / custom). Custom entries are global (`custom_<slug>`, `domain` = their `domain_slug`, `enabled`).
 
 ### `GET /api/tools/domains`
-Map `name → domain` (registry + `custom_<slug> → domain_slug`), pour colorer les badges de tool-call.
+Map `name → domain` (registry + `custom_<slug> → domain_slug`), used to color the tool-call badges.
 
 ### `GET /api/tools/domain-meta`
-`{ domains: [{ slug, icon, bg, text, border, builtin, labelKey, label }] }` — métadonnées de rendu (built-in + custom) hydratées par le client.
+`{ domains: [{ slug, icon, bg, text, border, builtin, labelKey, label }] }`: rendering metadata (built-in + custom) hydrated by the client.
 
 ### `GET /api/tools/custom-tool-names`
-`{ "custom_<slug>": { "name": "<nom localisé>", "hasRenderer": <bool> } }` — par outil custom : nom d'affichage résolu pour la langue UI de l'utilisateur courant (`user_profiles.language`) + présence d'un renderer de résultat (fichier `renderer.tsx`/`.jsx`/`.js`, détecté sur disque). UI-only (best-effort) : le client l'hydrate au boot pour afficher un nom humain dans les tool-calls du chat au lieu du `custom_<slug>` brut, et pour décider de charger ou non le renderer.
+`{ "custom_<slug>": { "name": "<localized name>", "hasRenderer": <bool> } }`: per custom tool, the display name resolved for the current user's UI language (`user_profiles.language`) + presence of a result renderer (`renderer.tsx`/`.jsx`/`.js` file, detected on disk). UI-only (best-effort): the client hydrates it at boot to show a human name in the chat tool-calls instead of the raw `custom_<slug>`, and to decide whether to load the renderer.
 
 ### `GET|POST|PATCH|DELETE /api/tool-domains[/:slug]`
-CRUD des domaines d'outils. Built-in read-only ; suppression bloquée si le domaine est utilisé (`TOOL_DOMAIN_IN_USE`).
+CRUD for tool domains. Built-in are read-only; deletion is blocked if the domain is in use (`TOOL_DOMAIN_IN_USE`).
 
 ### `GET|POST|PATCH|DELETE /api/custom-tools[/:slug]`
-CRUD des outils custom globaux. Création via l'UI → `created_by='user'`, actif immédiatement. POST/PATCH acceptent `translations` (objet localisé `{ "<locale>": { name?, description?, parameters?: { "<param>": { label?, description? } } } }`) ; GET le renvoie (parsé). UI-only : les traductions n'affectent jamais la définition d'outil envoyée au LLM.
+CRUD for global custom tools. Created via the UI → `created_by='user'`, active immediately. POST/PATCH accept `translations` (localized object `{ "<locale>": { name?, description?, parameters?: { "<param>": { label?, description? } } } }`); GET returns it (parsed). UI-only: translations never affect the tool definition sent to the LLM.
 
 ### `GET /api/custom-tools/:slug/file?path=…` · `PUT /api/custom-tools/:slug/files`
-Lire / écrire un fichier dans le dossier géré de l'outil (`{ path, content }`).
+Read / write a file in the tool's managed folder (`{ path, content }`).
 
 ### `GET /api/custom-tools/:slug/renderer.js`
-Module ESM bundlé côté serveur du **renderer de résultat** optionnel de l'outil (export par défaut = composant React). Source : `renderer.tsx` (fallback `renderer.jsx`/`renderer.js`) dans le dossier de l'outil, bundlé via Bun (JSX classique, react/react-dom mappés sur l'instance React de l'hôte `window.__HIVEKEEP_REACT__`). Le client le charge à la volée (`React.lazy(import(url))`) dans la vue détaillée du tool-call. Cache mémoire côté serveur (clé slug + mtime) ; réponse avec `ETag` (revalidation `304`). `404 NO_RENDERER` si l'outil n'a pas de renderer ; `500` (module qui throw au chargement, avec le message de build) en cas d'échec de bundling — le client retombe alors sur l'affichage JSON via son ErrorBoundary. Authentifié comme toutes les routes `/api/*`. Contexte hôte (privilèges complets, pas d'isolation) : acceptable car les outils custom sont de confiance (self-hosted) et le renderer ne sert qu'à l'affichage.
+Server-side bundled ESM module of the tool's optional **result renderer** (default export = React component). Source: `renderer.tsx` (fallback `renderer.jsx`/`renderer.js`) in the tool's folder, bundled via Bun (classic JSX, react/react-dom mapped onto the host's React instance `window.__HIVEKEEP_REACT__`). The client loads it on the fly (`React.lazy(import(url))`) in the tool-call detail view. Server-side memory cache (key slug + mtime); response with `ETag` (`304` revalidation). `404 NO_RENDERER` if the tool has no renderer; `500` (module that throws on load, with the build message) on bundling failure: the client then falls back to the JSON display via its ErrorBoundary. Authenticated like all `/api/*` routes. Host context (full privileges, no isolation): acceptable because custom tools are trusted (self-hosted) and the renderer is only for display.
 
 ### `POST /api/custom-tools/:slug/setup`
-Installe les dépendances (`requirements.txt` → `.venv` + pip ; `package.json` → `bun install`).
+Installs the dependencies (`requirements.txt` → `.venv` + pip; `package.json` → `bun install`).
 
 ### `POST /api/custom-tools/:slug/test`
-Exécute l'outil avec des args de test (`{ args }`) → `{ success, output, error, exitCode, executionTime }`.
+Runs the tool with test args (`{ args }`) → `{ success, output, error, exitCode, executionTime }`.
 
 ---
 
 ## Vault
 
-Les agents n'accèdent aux secrets que par **placeholder** `{{secret:KEY}}` (substitué à l'exécution des tools — voir `vault-placeholders.md`). Les routes ci-dessous servent l'UI d'administration.
+Agents only access secrets through the `{{secret:KEY}}` **placeholder** (substituted at tool execution time, see `vault-placeholders.md`). The routes below serve the admin UI.
 
 ### `GET /api/vault`
 
-Liste les secrets (clés uniquement, jamais les valeurs). `lastUsedAt` est stampé à chaque expansion de placeholder.
+Lists the secrets (keys only, never the values). `lastUsedAt` is stamped on every placeholder expansion.
 
 ```typescript
 // Response 200
@@ -994,18 +994,18 @@ Liste les secrets (clés uniquement, jamais les valeurs). `lastUsedAt` est stamp
 }
 ```
 
-### Scoping par secret (entries)
+### Per-secret scoping (entries)
 
-`POST /api/vault/entries` et `PATCH /api/vault/entries/:id` acceptent deux champs optionnels, retournés par `GET /api/vault/entries` :
+`POST /api/vault/entries` and `PATCH /api/vault/entries/:id` accept two optional fields, returned by `GET /api/vault/entries`:
 
 ```typescript
 {
-  allowedTools?: string[] | null  // tools autorisés à expandre ce secret (null = tous)
-  allowedHosts?: string[] | null  // hôtes autorisés pour les tools porteurs d'URL, wildcard *.domaine supporté (null = tous)
+  allowedTools?: string[] | null  // tools allowed to expand this secret (null = all)
+  allowedHosts?: string[] | null  // hosts allowed for URL-bearing tools, wildcard *.domain supported (null = all)
 }
 ```
 
-Une expansion hors périmètre est refusée avant exécution (fail-closed) et émet `vault:secret-used` avec `violation: { type: 'tool-scope' | 'host-scope' }` sur le bus d'événements.
+An out-of-scope expansion is refused before execution (fail-closed) and emits `vault:secret-used` with `violation: { type: 'tool-scope' | 'host-scope' }` on the event bus.
 
 ### `POST /api/vault`
 
@@ -1040,10 +1040,10 @@ Une expansion hors périmètre est refusée avant exécution (fail-closed) et é
 
 ### `POST /api/files/upload`
 
-Upload multipart/form-data.
+Multipart/form-data upload.
 
 ```typescript
-// Request: FormData avec champ "file" + "agentId"
+// Request: FormData with a "file" field + "agentId"
 
 // Response 201
 { file: { id: string, name: string, mimeType: string, size: number, url: string } }
@@ -1051,102 +1051,102 @@ Upload multipart/form-data.
 
 ---
 
-## Workspace files (section Files)
+## Workspace files (Files section)
 
-Routes de la section **Files** (explorateur/éditeur de workspaces — voir `files.md`). Montées sous `/api/agents/:agentId/workspace` ; `:agentId` accepte un id ou un slug. Agent introuvable → `404 KIN_NOT_FOUND`. Tous les `path` sont **relatifs à la racine du workspace** et strictement confinés (pas de chemin absolu, pas de `..`, pas d'évasion par symlink — feuille comprise).
+Routes of the **Files** section (workspace browser/editor, see `files.md`). Mounted under `/api/agents/:agentId/workspace`; `:agentId` accepts an id or a slug. Agent not found → `404 KIN_NOT_FOUND`. All `path` values are **relative to the workspace root** and strictly confined (no absolute path, no `..`, no symlink escape, leaf included).
 
-Codes d'erreur communs : `KIN_NOT_FOUND` (404), `PATH_FORBIDDEN` (400), `FILE_NOT_FOUND` (404), `IS_DIRECTORY` (400), `NOT_A_DIRECTORY` (400), `FILE_TOO_LARGE` (413), `INVALID_NAME` (400), `DEST_EXISTS` (409), `CONFLICT` (409), `COPY_TOO_LARGE` (413).
+Common error codes: `KIN_NOT_FOUND` (404), `PATH_FORBIDDEN` (400), `FILE_NOT_FOUND` (404), `IS_DIRECTORY` (400), `NOT_A_DIRECTORY` (400), `FILE_TOO_LARGE` (413), `INVALID_NAME` (400), `DEST_EXISTS` (409), `CONFLICT` (409), `COPY_TOO_LARGE` (413).
 
 ### `GET /api/agents/:agentId/workspace/ls`
 
-Liste un dossier (lazy — jamais d'arbre récursif).
+Lists a folder (lazy: never a recursive tree).
 
 ```typescript
-// Query params : ?path=docs/reports        (défaut : racine "")
+// Query params: ?path=docs/reports        (default: root "")
 
 // Response 200
 {
   path: string,
   entries: Array<{
     name: string,
-    path: string,              // relatif à la racine
+    path: string,              // relative to the root
     type: 'file' | 'dir',
-    size: number,              // 0 pour les dirs
+    size: number,              // 0 for dirs
     modifiedAt: number,        // Unix ms
     isSymlink: boolean
   }>
 }
-// Workspace pas encore créé → 200 { path: "", entries: [] } (création lazy)
+// Workspace not created yet → 200 { path: "", entries: [] } (lazy creation)
 
-// Error 404 FILE_NOT_FOUND (sous-dossier inexistant) · 400 NOT_A_DIRECTORY · 400 PATH_FORBIDDEN
+// Error 404 FILE_NOT_FOUND (nonexistent subfolder) · 400 NOT_A_DIRECTORY · 400 PATH_FORBIDDEN
 ```
 
-> Tri serveur : dossiers d'abord, puis alphabétique insensible à la casse. Tout est listé, dotfiles compris (pas de filtre d'ignore).
+> Server-side sort: folders first, then case-insensitive alphabetical. Everything is listed, dotfiles included (no ignore filter).
 
 ### `GET /api/agents/:agentId/workspace/file`
 
-Lecture d'un fichier : métadonnées + contenu texte.
+Reads a file: metadata + text content.
 
 ```typescript
-// Query params : ?path=docs/report.md
+// Query params: ?path=docs/report.md
 
 // Response 200
 {
   path: string,
   name: string,
   size: number,
-  modifiedAt: number,          // ← à renvoyer dans le PUT (concurrence optimiste)
-  mimeType: string,            // deviné par extension
+  modifiedAt: number,          // ← to be returned in the PUT (optimistic concurrency)
+  mimeType: string,            // guessed by extension
   kind: 'text' | 'image' | 'pdf' | 'binary' | 'too-large',
-  content: string | null       // null sauf kind === 'text'
+  content: string | null       // null unless kind === 'text'
 }
 
 // Error 404 FILE_NOT_FOUND · 400 IS_DIRECTORY · 400 PATH_FORBIDDEN
 ```
 
-> `kind: 'too-large'` = fichier texte au-delà de `workspaceFiles.maxEditableSizeMb` (téléchargement seulement). `binary` = null-byte détecté dans les 8 premiers Ko.
+> `kind: 'too-large'` = text file beyond `workspaceFiles.maxEditableSizeMb` (download only). `binary` = null-byte detected in the first 8 KB.
 
 ### `PUT /api/agents/:agentId/workspace/file`
 
-Écriture d'un fichier texte (crée le fichier et ses dossiers parents si absents). Émet `workspace:changed`.
+Writes a text file (creates the file and its parent folders if missing). Emits `workspace:changed`.
 
 ```typescript
 // Request
 {
   path: string,
-  content: string,             // texte uniquement
-  baseModifiedAt?: number,     // mtime lu par le client ; absent = écrasement forcé
-  createOnly?: boolean         // true = création stricte (« Nouveau fichier »)
+  content: string,             // text only
+  baseModifiedAt?: number,     // mtime read by the client; absent = forced overwrite
+  createOnly?: boolean         // true = strict creation ("New file")
 }
 
 // Response 200
 { path: string, size: number, modifiedAt: number }
 
-// Error 409 — concurrence optimiste : le mtime disque a changé depuis la lecture
-// (typiquement : l'agent a écrit le même fichier entre temps)
+// Error 409: optimistic concurrency: the disk mtime changed since the read
+// (typically: the agent wrote the same file in the meantime)
 { error: { code: 'CONFLICT', message: '...' } }
-// Error 409 — createOnly et le chemin existe déjà
+// Error 409: createOnly and the path already exists
 { error: { code: 'DEST_EXISTS', message: '...' } }
 // Error 413 FILE_TOO_LARGE · 400 PATH_FORBIDDEN · 400 INVALID_NAME · 400 IS_DIRECTORY
 ```
 
 ### `GET /api/agents/:agentId/workspace/raw`
 
-Stream des octets bruts (téléchargement / viewers image & PDF).
+Streams the raw bytes (download / image & PDF viewers).
 
 ```typescript
-// Query params : ?path=images/chart.png&inline=1
+// Query params: ?path=images/chart.png&inline=1
 
-// Response 200 : stream binaire
-//   Content-Type: <mime>                   (deviné par extension)
+// Response 200: binary stream
+//   Content-Type: <mime>                   (guessed by extension)
 //   Content-Length: <size>
-//   X-Content-Type-Options: nosniff        (toujours)
-//   Content-Disposition: attachment (défaut) | inline (si inline=1 ET MIME dans l'allowlist)
+//   X-Content-Type-Options: nosniff        (always)
+//   Content-Disposition: attachment (default) | inline (if inline=1 AND MIME in the allowlist)
 
 // Error 404 FILE_NOT_FOUND · 400 IS_DIRECTORY · 400 PATH_FORBIDDEN
 ```
 
-> **Allowlist inline** : `image/*` **sauf `image/svg+xml` et tout `image/*+xml`** (un SVG inline exécuterait ses scripts dans l'origine authentifiée), `application/pdf`, `text/plain`. Tout le reste — y compris SVG et `text/html` — est servi en `attachment`. Les réponses inline portent en plus `Content-Security-Policy: default-src 'none'; sandbox`.
+> **Inline allowlist**: `image/*` **except `image/svg+xml` and any `image/*+xml`** (an inline SVG would execute its scripts in the authenticated origin), `application/pdf`, `text/plain`. Everything else, including SVG and `text/html`, is served as `attachment`. Inline responses additionally carry `Content-Security-Policy: default-src 'none'; sandbox`.
 
 ### `POST /api/agents/:agentId/workspace/mkdir`
 
@@ -1162,15 +1162,15 @@ Stream des octets bruts (téléchargement / viewers image & PDF).
 
 ### `POST /api/agents/:agentId/workspace/move`
 
-Renommer / déplacer (renommer = move dans le même dossier). Inter-workspace via `fromAgentId`.
+Rename / move (rename = move within the same folder). Cross-workspace via `fromAgentId`.
 
 ```typescript
 // Request
 {
   from: string,
   to: string,
-  fromAgentId?: string         // id ou slug ≠ :agentId = déplacement inter-workspace (couper/coller).
-                               // `from` est validé contre la racine de fromAgentId, `to` contre celle de :agentId
+  fromAgentId?: string         // id or slug ≠ :agentId = cross-workspace move (cut/paste).
+                               // `from` is validated against the root of fromAgentId, `to` against the root of :agentId
 }
 
 // Response 200
@@ -1181,27 +1181,27 @@ Renommer / déplacer (renommer = move dans le même dossier). Inter-workspace vi
 
 ### `POST /api/agents/:agentId/workspace/copy`
 
-Même contrat que `move` ; collision résolue par suffixe automatique ` (copy)` / ` (copy 2)` …
+Same contract as `move`; collision resolved by automatic suffix ` (copy)` / ` (copy 2)` …
 
 ```typescript
 // Request
 { from: string, to: string, fromAgentId?: string }
 
 // Response 200
-{ from: string, to: string }   // to = chemin final, suffixé le cas échéant
+{ from: string, to: string }   // to = final path, suffixed if applicable
 
-// Error 413 — budget de copie récursive dépassé (octets workspaceFiles.maxCopySizeMb
-// OU entrées workspaceFiles.maxCopyEntries) ; copie streamée, abort en cours, copie partielle nettoyée
+// Error 413: recursive copy budget exceeded (bytes workspaceFiles.maxCopySizeMb
+// OR entries workspaceFiles.maxCopyEntries); streamed copy, abort in progress, partial copy cleaned up
 { error: { code: 'COPY_TOO_LARGE', message: '...' } }
 // Error 404 FILE_NOT_FOUND · 400 INVALID_NAME · 400 PATH_FORBIDDEN
 ```
 
 ### `DELETE /api/agents/:agentId/workspace/file`
 
-Supprime un fichier OU un dossier (récursif).
+Deletes a file OR a folder (recursive).
 
 ```typescript
-// Query params : ?path=docs/old
+// Query params: ?path=docs/old
 
 // Response 200
 { deleted: true, path: string }
@@ -1211,66 +1211,66 @@ Supprime un fichier OU un dossier (récursif).
 
 ### `POST /api/agents/:agentId/workspace/upload`
 
-Upload multipart dans un dossier du workspace.
+Multipart upload into a workspace folder.
 
 ```typescript
 // Request: multipart/form-data
-//   file: File          (répétable — multi-upload)
-//   path: string        (dossier destination, défaut racine "")
+//   file: File          (repeatable: multi-upload)
+//   path: string        (destination folder, default root "")
 
-// Response 201 — échec partiel possible : les fichiers acceptés sont écrits,
-// les refusés sont listés dans `errors`
+// Response 201: partial failure possible: accepted files are written,
+// rejected ones are listed in `errors`
 {
   files: Array<{ path: string, size: number, modifiedAt: number }>,
-  errors: Array<{ name: string, code: string }>    // ex. FILE_TOO_LARGE, INVALID_NAME
+  errors: Array<{ name: string, code: string }>    // e.g. FILE_TOO_LARGE, INVALID_NAME
 }
 
-// Error 400 NOT_A_DIRECTORY · 400 PATH_FORBIDDEN · 400 VALIDATION_ERROR (aucun fichier)
+// Error 400 NOT_A_DIRECTORY · 400 PATH_FORBIDDEN · 400 VALIDATION_ERROR (no file)
 ```
 
-> Le filename multipart est contrôlé par le client : seul son **basename** survit (tout chemin embarqué est strippé), et le nom est validé (`INVALID_NAME`). Collision : suffixe automatique ` (copy N)` — un upload n'écrase jamais silencieusement. Cap `workspaceFiles.maxUploadSizeMb` par fichier.
+> The multipart filename is controlled by the client: only its **basename** survives (any embedded path is stripped), and the name is validated (`INVALID_NAME`). Collision: automatic suffix ` (copy N)`: an upload never silently overwrites. Cap `workspaceFiles.maxUploadSizeMb` per file.
 
 ### `GET /api/agents/:agentId/workspace/search`
 
-Recherche de fichiers par nom/chemin (substring insensible à la casse). Sert la palette `@` du chat et le quick-open (Ctrl+P).
+Searches files by name/path (case-insensitive substring). Serves the chat `@` palette and quick-open (Ctrl+P).
 
 ```typescript
-// Query params : ?q=rapport&limit=20      (limit défaut 20, cap workspaceFiles.searchMaxResults)
+// Query params: ?q=report&limit=20      (limit default 20, cap workspaceFiles.searchMaxResults)
 
 // Response 200
 { hits: Array<{ path: string, name: string, size: number, modifiedAt: number }> }
 ```
 
-> Walk serveur borné par `workspaceFiles.searchMaxEntries` ; ne descend jamais dans un répertoire symlinké ; ignore les dossiers lourds (`node_modules`, `.git`, …).
+> Server-side walk bounded by `workspaceFiles.searchMaxEntries`; never descends into a symlinked directory; ignores heavy folders (`node_modules`, `.git`, …).
 
 ### `POST /api/agents/:agentId/workspace/resolve-paths`
 
-Vérification d'existence batchée — utilisée par les chips de chemins cliquables du chat.
+Batched existence check, used by the clickable path chips in chat.
 
 ```typescript
 // Request
-{ paths: string[] }            // ≤ 50 (tronqué au-delà)
+{ paths: string[] }            // ≤ 50 (truncated beyond that)
 
 // Response 200
-{ existing: string[] }         // sous-ensemble qui existe (fichiers seulement)
+{ existing: string[] }         // subset that exists (files only)
 ```
 
-> Les chemins invalides (traversal) sont silencieusement absents de `existing` — pas d'erreur, ce sont des candidats de regex.
+> Invalid paths (traversal) are silently absent from `existing`: no error, they are regex candidates.
 
 ### `POST /api/file-storage/from-workspace`
 
-Partage : snapshot d'un fichier de workspace vers le file-storage (sémantique identique au tool `store_file` — copie figée, pas de lien vivant).
+Share: snapshot of a workspace file into file-storage (same semantics as the `store_file` tool: frozen copy, not a live link).
 
 ```typescript
 // Request
 {
-  agentId: string,             // id ou slug
-  path: string,                // relatif au workspace
-  name?: string,               // défaut : basename
+  agentId: string,             // id or slug
+  path: string,                // relative to the workspace
+  name?: string,               // default: basename
   description?: string,
-  isPublic?: boolean,          // défaut true
+  isPublic?: boolean,          // default true
   password?: string,
-  expiresIn?: number,          // MINUTES — même unité que POST /api/file-storage et store_file
+  expiresIn?: number,          // MINUTES: same unit as POST /api/file-storage and store_file
   readAndBurn?: boolean
 }
 
@@ -1278,24 +1278,24 @@ Partage : snapshot d'un fichier de workspace vers le file-storage (sémantique i
 {
   file: {
     id: string, name: string, originalName: string, mimeType: string, size: number,
-    url: string,               // URL de partage {publicUrl}/s/{token}
+    url: string,               // share URL {publicUrl}/s/{token}
     isPublic: boolean, hasPassword: boolean, readAndBurn: boolean,
     expiresAt: number | null
   }
 }
 
 // Error 404 KIN_NOT_FOUND · 404 FILE_NOT_FOUND · 400 PATH_FORBIDDEN
-// Error 413 FILE_TOO_LARGE (limite file-storage FILE_STORAGE_MAX_SIZE)
+// Error 413 FILE_TOO_LARGE (file-storage limit FILE_STORAGE_MAX_SIZE)
 ```
 
 ---
 
-## Memories (gestion via UI)
+## Memories (management via UI)
 
 ### `GET /api/agents/:id/memories`
 
 ```typescript
-// Query params : ?category={fact|preference|decision|knowledge}&subject={string}&limit={number}
+// Query params: ?category={fact|preference|decision|knowledge}&subject={string}&limit={number}
 
 // Response 200
 {
@@ -1320,11 +1320,11 @@ Partage : snapshot d'un fichier de workspace vers le file-storage (sémantique i
 
 ---
 
-## Compacting (gestion via UI)
+## Compacting (management via UI)
 
 ### `POST /api/agents/:id/compacting/purge`
 
-Réinitialise le compacting (supprime le snapshot actif).
+Resets the compacting (deletes the active snapshot).
 
 ```typescript
 // Response 200
@@ -1333,7 +1333,7 @@ Réinitialise le compacting (supprime le snapshot actif).
 
 ### `GET /api/agents/:id/compacting/snapshots`
 
-Liste les snapshots pour le rollback.
+Lists the snapshots for rollback.
 
 ```typescript
 // Response 200
@@ -1361,7 +1361,7 @@ Liste les snapshots pour le rollback.
 
 ## Settings
 
-Routes d'administration pour les paramètres globaux de la plateforme (admin uniquement).
+Admin routes for the platform's global settings (admin only).
 
 ### `GET /api/settings/global-prompt`
 
@@ -1382,7 +1382,7 @@ Routes d'administration pour les paramètres globaux de la plateforme (admin uni
 
 ### `GET /api/settings/models`
 
-Endpoint legacy (extraction + embedding uniquement).
+Legacy endpoint (extraction + embedding only).
 
 ```typescript
 // Response 200
@@ -1391,7 +1391,7 @@ Endpoint legacy (extraction + embedding uniquement).
 
 ### `GET /api/settings/default-models`
 
-Retourne tous les modèles/services par défaut en un seul payload.
+Returns all default models/services in a single payload.
 
 ```typescript
 // Response 200
@@ -1462,7 +1462,7 @@ Retourne tous les modèles/services par défaut en un seul payload.
 
 ### `PUT /api/settings/default-search`
 
-Search providers have no companion "model" — body is provider-only.
+Search providers have no companion "model": the body is provider-only.
 
 ```typescript
 // Request
@@ -1476,30 +1476,30 @@ The current default is read from `GET /api/settings/default-models` (see `defaul
 
 ### `GET /api/settings/dismissed-setup-items`
 
-Liste des item IDs de la setup checklist que l'utilisateur a explicitement skippés. Stockage **global** (pas per-user) sous `app_settings.dismissed_setup_items` — Hivekeep est un produit individuel ou petit groupe avec configuration partagée.
+List of the setup checklist item IDs the user has explicitly skipped. **Global** storage (not per-user) under `app_settings.dismissed_setup_items`: Hivekeep is an individual or small-group product with shared configuration.
 
 ```typescript
 // Response 200
 { items: string[] }
 ```
 
-Item IDs reconnus côté UI : `add_llm_provider`, `set_default_llm`, `add_embedding_provider`, `set_default_embedding`, `add_image_provider`, `add_search_provider`, `create_first_agent`.
+Item IDs recognized by the UI: `add_llm_provider`, `set_default_llm`, `add_embedding_provider`, `set_default_embedding`, `add_image_provider`, `add_search_provider`, `create_first_agent`.
 
 ### `POST /api/settings/dismissed-setup-items/:itemId`
 
-Marque un item comme skippé.
+Marks an item as skipped.
 
 ```typescript
 // Response 200
-{ items: string[] }   // liste mise a jour
+{ items: string[] }   // updated list
 
 // Errors
-// 400 INVALID_ITEM_ID — itemId vide ou > 64 caractères
+// 400 INVALID_ITEM_ID: itemId empty or > 64 characters
 ```
 
 ### `DELETE /api/settings/dismissed-setup-items/:itemId`
 
-Restaure (un-skip) un item — utilisé par "Show setup checklist" dans Settings → General.
+Restores (un-skips) an item, used by "Show setup checklist" in Settings → General.
 
 ```typescript
 // Response 200
@@ -1508,16 +1508,16 @@ Restaure (un-skip) un item — utilisé par "Show setup checklist" dans Settings
 
 ---
 
-## Usage (admin uniquement)
+## Usage (admin only)
 
-Suivi de la consommation de tokens LLM. Toutes les routes nécessitent le rôle admin.
+LLM token consumption tracking. All routes require the admin role.
 
 ### `GET /api/usage`
 
-Liste paginée des enregistrements de consommation LLM.
+Paginated list of LLM consumption records.
 
 ```typescript
-// Query params (tous optionnels)
+// Query params (all optional)
 agentId?: string
 providerId?: string
 providerType?: string
@@ -1559,11 +1559,11 @@ offset?: number      // default 0
 
 ### `GET /api/usage/summary`
 
-Agrégation de la consommation groupée par une dimension.
+Consumption aggregation grouped by a dimension.
 
 ```typescript
 // Query params
-groupBy: 'provider_type' | 'model_id' | 'agent_id' | 'call_site' | 'day'  // obligatoire
+groupBy: 'provider_type' | 'model_id' | 'agent_id' | 'call_site' | 'day'  // required
 agentId?: string
 providerType?: string
 modelId?: string
@@ -1586,63 +1586,63 @@ to?: number
 
 ## Account Triggers
 
-Déclencheurs par compte email connecté (table `account_triggers`, voir `schema.md`). Quand un nouvel email d'un compte connecté correspond à l'arbre de conditions, l'Agent cible est sollicité — dans sa conversation principale (avec contexte) ou via une sous-tâche isolée (le prompt doit alors être auto-suffisant). Réutilise le moteur de dispatch des webhooks. Le polling ne fait aucun appel API quand aucun trigger n'est actif.
+Triggers per connected email account (table `account_triggers`, see `schema.md`). When a new email from a connected account matches the condition tree, the target Agent is solicited: in its main conversation (with context) or via an isolated sub-task (the prompt must then be self-sufficient). Reuses the webhook dispatch engine. Polling makes no API call when no trigger is active.
 
 ### `GET /api/account-triggers?accountId=`
 
-Liste les triggers, optionnellement filtrés sur un compte. → `{ triggers: AccountTriggerSummary[] }`.
+Lists the triggers, optionally filtered on an account. → `{ triggers: AccountTriggerSummary[] }`.
 
 ### `POST /api/account-triggers`
 
-Crée un trigger (`created_by: 'user'`). Body : `{ accountId, name, folder?, conditions, prompt, targetAgentId, dispatchMode?, maxConcurrentTasks? }`. `conditions` = arbre `ConditionNode`, validé serveur (profondeur ≤ 4, ≤ 30 feuilles, groupe non vide, regex compilable). `201` → `{ trigger }`, sinon `400 VALIDATION_ERROR`.
+Creates a trigger (`created_by: 'user'`). Body: `{ accountId, name, folder?, conditions, prompt, targetAgentId, dispatchMode?, maxConcurrentTasks? }`. `conditions` = `ConditionNode` tree, server-validated (depth ≤ 4, ≤ 30 leaves, non-empty group, compilable regex). `201` → `{ trigger }`, otherwise `400 VALIDATION_ERROR`.
 
 ### `PATCH /api/account-triggers/:id`
 
-Met à jour (ou approuve via `isActive: true`). → `{ trigger }` ou `404`.
+Updates (or approves via `isActive: true`). → `{ trigger }` or `404`.
 
 ### `DELETE /api/account-triggers/:id`
 
-Supprime le trigger.
+Deletes the trigger.
 
 ### `GET /api/account-triggers/:id/logs?limit=`
 
-Journal d'évaluation/déclenchement (`trigger_logs`). → `{ logs: TriggerLogEntry[] }`.
+Evaluation/firing log (`trigger_logs`). → `{ logs: TriggerLogEntry[] }`.
 
 ### `GET /api/account-triggers/settings/approval` · `PUT /api/account-triggers/settings/approval`
 
-Réglage global : les triggers créés par un Agent doivent-ils être approuvés avant d'être actifs (défaut `false`). `GET` → `{ requireApproval }` ; `PUT { enabled: boolean }`.
+Global setting: whether triggers created by an Agent must be approved before becoming active (default `false`). `GET` → `{ requireApproval }`; `PUT { enabled: boolean }`.
 
 ### `GET /api/email-accounts/:id/folders`
 
-Liste les dossiers/labels d'un compte connecté (pour le picker de dossier d'un trigger). → `{ folders: { id, name, type? }[] }`. Retombe sur `INBOX` si le provider n'expose pas `listFolders`.
+Lists the folders/labels of a connected account (for a trigger's folder picker). → `{ folders: { id, name, type? }[] }`. Falls back to `INBOX` if the provider does not expose `listFolders`.
 
 ## Secure input (secret prompts)
 
-Popup de saisie sécurisée : un Agent (configurateur ou via `prompt_secret` / `request_provider_setup`) demande un secret (clé d'API, token). La valeur va **directement au coffre** ; elle ne transite jamais par le LLM, n'est ni journalisée ni stockée dans `secret_prompts`. Voir `secret-prompts.ts`. Émet `prompt:secret-request` / `prompt:secret-resolved` en SSE.
+Secure-input popup: an Agent (configurator or via `prompt_secret` / `request_provider_setup`) requests a secret (API key, token). The value goes **directly to the vault**; it never transits through the LLM, is neither logged nor stored in `secret_prompts`. See `secret-prompts.ts`. Emits `prompt:secret-request` / `prompt:secret-resolved` over SSE.
 
-### Human prompts — type `tool_access`
+### Human prompts: type `tool_access`
 
-`request_tool_access` (outil du floor, dispo pour tout Agent) crée un human prompt `promptType: 'tool_access'` : `description` = raison de l'Agent, `options[]` = un item par outil demandé. Réponse via le endpoint standard `POST /api/prompts/:id/respond` avec `{ response: string[] }` — la liste des outils **accordés** (tableau vide = tout refuser, valide contrairement à `multi_select`). À l'approbation le serveur fusionne les noms accordés dans `agents.extra_tool_names` (permanent, révocable via `PATCH /api/agents/:id`) puis relance l'Agent ; SSE `agent:tools-granted` `{ agentId, granted, extraToolNames }`.
+`request_tool_access` (a floor tool, available to any Agent) creates a `promptType: 'tool_access'` human prompt: `description` = the Agent's reason, `options[]` = one item per requested tool. Response via the standard endpoint `POST /api/prompts/:id/respond` with `{ response: string[] }`: the list of **granted** tools (empty array = deny all, valid unlike `multi_select`). On approval the server merges the granted names into `agents.extra_tool_names` (permanent, revocable via `PATCH /api/agents/:id`) then restarts the Agent; SSE `agent:tools-granted` `{ agentId, granted, extraToolNames }`.
 
 ### `GET /api/secret-prompts/pending?agentId=`
 
-Prompts en attente pour l'Agent (hydratation au montage / reconnexion). Métadonnées des champs uniquement, **jamais** de valeur secrète. → `{ prompts: SecretPromptRequest[] }`.
+Pending prompts for the Agent (hydration on mount / reconnect). Field metadata only, **never** a secret value. → `{ prompts: SecretPromptRequest[] }`.
 
 ### `POST /api/secret-prompts/:id/respond`
 
-Soumet les valeurs : `{ values: Record<fieldKey, string> }`. Le serveur stocke dans le coffre et exécute l'effet de bord (créer+tester un provider, stocker un secret, créer un channel). Purpose `reveal` (tool `reveal_secret`) : aucune valeur saisie — la soumission vaut **approbation** ; la valeur brute est injectée dans le message de reprise UNIQUEMENT (jamais dans le `summary` SSE/HTTP), le message porteur est flaggé `redact_pending` + metadata `{ reveal: { key } }` et il est auto-redacté en fin de tour (sweep + scrub `tool_calls` ; sweep de récupération au boot). Le cancel vaut refus. Émet `vault:secret-revealed { agentId, secretKey, approved }` sur le bus d'événements. Pour le purpose `vault`, une clé déjà présente est **mise à jour** (upsert) au lieu d'échouer sur la contrainte `UNIQUE(key)`. Dans tous les cas, le prompt quitte l'état `pending` (succès **comme** échec) et l'Agent est relancé via un message de confirmation non sensible — un effet de bord qui throw ne laisse plus le prompt bloqué (sinon il se re-déclenchait à chaque rechargement). → `{ success: true, summary }` ou `400 SECRET_PROMPT_ERROR`.
+Submits the values: `{ values: Record<fieldKey, string> }`. The server stores them in the vault and runs the side effect (create+test a provider, store a secret, create a channel). Purpose `reveal` (tool `reveal_secret`): no value entered, the submission counts as **approval**; the raw value is injected into the resume message ONLY (never into the SSE/HTTP `summary`), the carrier message is flagged `redact_pending` + metadata `{ reveal: { key } }` and it is auto-redacted at the end of the turn (sweep + `tool_calls` scrub; recovery sweep at boot). Cancel counts as refusal. Emits `vault:secret-revealed { agentId, secretKey, approved }` on the event bus. For the `vault` purpose, an already-present key is **updated** (upsert) instead of failing on the `UNIQUE(key)` constraint. In all cases, the prompt leaves the `pending` state (success **as well as** failure) and the Agent is restarted via a non-sensitive confirmation message: a side effect that throws no longer leaves the prompt stuck (otherwise it would re-trigger on every reload). → `{ success: true, summary }` or `400 SECRET_PROMPT_ERROR`.
 
 ### `POST /api/secret-prompts/:id/cancel`
 
-Écarte définitivement un prompt en attente sans fournir la valeur : statut `cancelled`, l'Agent (ou la sous-tâche suspendue) est relancé avec une note « refusé ». Idempotent si déjà résolu. → `{ success: true }` ou `400 SECRET_PROMPT_ERROR`.
+Permanently discards a pending prompt without providing the value: status `cancelled`, the Agent (or the suspended sub-task) is restarted with a "refused" note. Idempotent if already resolved. → `{ success: true }` or `400 SECRET_PROMPT_ERROR`.
 
-## Mises à jour de la plateforme (version-check)
+## Platform updates (version-check)
 
-Deux canaux : `stable` (releases GitHub) et `edge` (HEAD de `main`). Le canal est un réglage global (`app_settings.update_channel`, défaut `stable`).
+Two channels: `stable` (GitHub releases) and `edge` (HEAD of `main`). The channel is a global setting (`app_settings.update_channel`, default `stable`).
 
 ### `GET /api/version-check`
 
-Infos de version en cache (rafraîchies en arrière-plan si périmées). Accessible à tout utilisateur authentifié.
+Cached version info (refreshed in the background if stale). Accessible to any authenticated user.
 
 **Response 200**
 ```json
@@ -1665,32 +1665,32 @@ Infos de version en cache (rafraîchies en arrière-plan si périmées). Accessi
 ```
 
 - `installationType`: `docker` | `systemd-system` | `systemd-user` | `launchd` | `manual`.
-- `canSelfUpdate` est `false` (avec `selfUpdateBlockedReason`: `docker` | `not-git` | `dev-mode`) quand l'update doit se faire hors UI (repull d'image docker, checkout dev…).
-- `changelog` est **cumulatif** : toutes les releases entre la version courante et la dernière (stable), ou la liste des commits `HEAD..origin/main` (edge, `notes` = null).
+- `canSelfUpdate` is `false` (with `selfUpdateBlockedReason`: `docker` | `not-git` | `dev-mode`) when the update must happen outside the UI (docker image repull, dev checkout…).
+- `changelog` is **cumulative**: all releases between the current version and the latest (stable), or the list of `HEAD..origin/main` commits (edge, `notes` = null).
 
 ### `POST /api/version-check/check`
 
-Force un check immédiat contre GitHub (admin). Même réponse que `GET /`. **400 `DISABLED`** si `VERSION_CHECK_ENABLED=false`.
+Forces an immediate check against GitHub (admin). Same response as `GET /`. **400 `DISABLED`** if `VERSION_CHECK_ENABLED=false`.
 
 ### `PUT /api/version-check/channel`
 
-Change le canal (admin). Body : `{ "channel": "stable" | "edge" }`. Invalide le cache et relance un check ; renvoie les infos fraîches. **400 `INVALID_CHANNEL`** sinon.
+Changes the channel (admin). Body: `{ "channel": "stable" | "edge" }`. Invalidates the cache and re-runs a check; returns the fresh info. **400 `INVALID_CHANNEL`** otherwise.
 
 ### `POST /api/version-check/update`
 
-Lance la mise à jour auto (admin, installs git non-docker uniquement). Répond immédiatement :
+Starts the auto-update (admin, non-docker git installs only). Responds immediately:
 
 ```json
 { "started": true, "runId": "a1b2c3d4" }
 ```
 
-La progression arrive via SSE (`update:progress`), l'issue finale via `GET /api/version-check/last-update` (le serveur redémarre en cours de route, le client doit poller). Erreurs : **400 `SELF_UPDATE_UNAVAILABLE`** (docker/dev/non-git), **400 `NO_UPDATE`**, **409 `UPDATE_IN_PROGRESS`**.
+Progress arrives via SSE (`update:progress`), the final outcome via `GET /api/version-check/last-update` (the server restarts along the way, the client must poll). Errors: **400 `SELF_UPDATE_UNAVAILABLE`** (docker/dev/non-git), **400 `NO_UPDATE`**, **409 `UPDATE_IN_PROGRESS`**.
 
-Séquence serveur : preflight (worktree propre, disque) → snapshot DB (`VACUUM INTO`) → backup `dist/` + sha → download des assets client pré-buildés de la release (sha256 vérifié, fallback build local) → `git checkout` du tag (stable) / fast-forward `main` (edge) → `bun install` → restart. Si le nouveau code ne démarre pas, le boot-guard (`src/server/index.ts`) restaure automatiquement l'ancienne version (repo + dist + deps + snapshot DB) — statut `rolled-back`.
+Server sequence: preflight (clean worktree, disk) → DB snapshot (`VACUUM INTO`) → backup `dist/` + sha → download the release's pre-built client assets (sha256 verified, fallback local build) → `git checkout` of the tag (stable) / fast-forward `main` (edge) → `bun install` → restart. If the new code does not start, the boot-guard (`src/server/index.ts`) automatically restores the old version (repo + dist + deps + DB snapshot): status `rolled-back`.
 
 ### `GET /api/version-check/last-update`
 
-Dernière tentative de mise à jour (journal persistant `data/update/journal.json`, survit au restart).
+Last update attempt (persistent journal `data/update/journal.json`, survives the restart).
 
 **Response 200**
 ```json
@@ -1710,24 +1710,24 @@ Dernière tentative de mise à jour (journal persistant `data/update/journal.jso
 }
 ```
 
-`status`: `running` | `restarting` | `success` | `failed` (rien n'a changé, l'ancienne version tourne toujours) | `rolled-back` (le nouveau code n'a pas booté, restauration automatique).
+`status`: `running` | `restarting` | `success` | `failed` (nothing changed, the old version is still running) | `rolled-back` (the new code did not boot, automatic restore).
 
-## Terminal (admin uniquement)
+## Terminal (admin only)
 
-Terminal web sur la machine hôte (ou le conteneur sous Docker). Section `/terminal`, réservée aux admins. Modèle type tmux : chaque session est un shell (PTY, `bun-pty`) côté serveur, scopé à son propriétaire, qui **survit aux déconnexions WebSocket** — on peut fermer le navigateur et se rattacher depuis un autre appareil (le scrollback est rejoué). Une session ne meurt que quand son shell sort, quand l'utilisateur la ferme depuis la sidebar, ou (si `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` > 0, désactivé par défaut) après être restée détachée trop longtemps. Les sessions vivent en mémoire : un restart du serveur les tue. Désactivable globalement via `HIVEKEEP_TERMINAL_ENABLED=false`.
+Web terminal on the host machine (or the container under Docker). Section `/terminal`, reserved for admins. tmux-style model: each session is a shell (PTY, `bun-pty`) on the server, scoped to its owner, that **survives WebSocket disconnects**: you can close the browser and reattach from another device (the scrollback is replayed). A session only dies when its shell exits, when the user closes it from the sidebar, or (if `HIVEKEEP_TERMINAL_DETACHED_TTL_SEC` > 0, disabled by default) after staying detached too long. Sessions live in memory: a server restart kills them. Disableable globally via `HIVEKEEP_TERMINAL_ENABLED=false`.
 
-Tout changement de cycle de vie (création, attache/détache, renommage, mort) émet `terminal:sessions-changed` (SSE, scope user) avec la liste fraîche — c'est ce qui synchronise la sidebar entre appareils.
+Any lifecycle change (creation, attach/detach, rename, death) emits `terminal:sessions-changed` (SSE, user scope) with the fresh list: that's what syncs the sidebar across devices.
 
 ### `GET /api/terminal/status`
 
-Sonde la disponibilité de la fonctionnalité (la page l'appelle avant d'ouvrir le WebSocket, car un refus d'upgrade ne porte pas de corps d'erreur).
+Probes the feature's availability (the page calls it before opening the WebSocket, because an upgrade refusal carries no error body).
 
-**Response 200** : `{ "enabled": true, "shell": "/bin/bash" }`
-**403 `TERMINAL_DISABLED`** si désactivé par env var. **403 `FORBIDDEN`** si non-admin.
+**Response 200**: `{ "enabled": true, "shell": "/bin/bash" }`
+**403 `TERMINAL_DISABLED`** if disabled by env var. **403 `FORBIDDEN`** if non-admin.
 
 ### `GET /api/terminal/sessions`
 
-Liste les sessions vivantes de l'utilisateur courant (triées par date de création).
+Lists the current user's live sessions (sorted by creation date).
 
 **Response 200**
 ```json
@@ -1738,103 +1738,103 @@ Liste les sessions vivantes de l'utilisateur courant (triées par date de créat
 }
 ```
 
-`attached` : un client (n'importe quel appareil) est actuellement connecté à cette session.
+`attached`: a client (any device) is currently connected to this session.
 
 ### `PATCH /api/terminal/sessions/:id`
 
-Renomme une session. Body : `{ "name": "claude code prod" }` (trim, max 60 caractères). → `{ "session": { … } }`. **404 `NOT_FOUND`** si la session n'existe pas, n'appartient pas à l'appelant, ou si le nom est vide.
+Renames a session. Body: `{ "name": "claude code prod" }` (trim, max 60 characters). → `{ "session": { … } }`. **404 `NOT_FOUND`** if the session does not exist, does not belong to the caller, or if the name is empty.
 
 ### `DELETE /api/terminal/sessions/:id`
 
-Tue le shell et détruit la session (bouton « fermer » de la sidebar). Si un client y est attaché, il reçoit le message WS `exit`. → `{ "success": true }`. **404 `NOT_FOUND`** sinon.
+Kills the shell and destroys the session (the sidebar's "close" button). If a client is attached to it, it receives the WS `exit` message. → `{ "success": true }`. **404 `NOT_FOUND`** otherwise.
 
 ### `GET /api/terminal/ws`
 
-Upgrade WebSocket (cookie de session Better Auth requis, mêmes gardes que `/status`).
+WebSocket upgrade (Better Auth session cookie required, same guards as `/status`).
 
-**Query params** : `cols`, `rows` (taille initiale), `sessionId` (optionnel — rattache une session encore vivante du même utilisateur ; sinon un nouveau shell est créé). Plusieurs clients (onglets/appareils) peuvent s'attacher **simultanément** à la même session : la sortie est miroir vers tous, l'entrée de chacun va au PTY.
+**Query params**: `cols`, `rows` (initial size), `sessionId` (optional: reattaches a still-live session of the same user; otherwise a new shell is created). Multiple clients (tabs/devices) can attach **simultaneously** to the same session: the output is mirrored to all, each one's input goes to the PTY.
 
-**Messages client → serveur** (JSON) :
+**Client → server messages** (JSON):
 
-| Type | Payload | Effet |
+| Type | Payload | Effect |
 |---|---|---|
-| `input` | `{ "type": "input", "data": "ls\r" }` | Écrit sur le PTY |
-| `resize` | `{ "type": "resize", "cols": 120, "rows": 32 }` | Déclare la taille de CE client ; le PTY est dimensionné au plus petit client attaché (façon tmux) |
-| `kill` | `{ "type": "kill" }` | Tue le shell et détruit la session |
-| `ping` | `{ "type": "ping" }` | Keepalive (ignoré côté serveur) |
+| `input` | `{ "type": "input", "data": "ls\r" }` | Writes to the PTY |
+| `resize` | `{ "type": "resize", "cols": 120, "rows": 32 }` | Declares the size of THIS client; the PTY is sized to the smallest attached client (tmux-style) |
+| `kill` | `{ "type": "kill" }` | Kills the shell and destroys the session |
+| `ping` | `{ "type": "ping" }` | Keepalive (ignored on the server) |
 
-**Messages serveur → client** (JSON) :
+**Server → client messages** (JSON):
 
-| Type | Payload | Sens |
+| Type | Payload | Meaning |
 |---|---|---|
-| `ready` | `{ "type": "ready", "sessionId": "…", "resumed": false }` | Session attachée. Si `resumed: true`, le scrollback complet suit dans un message `output` |
-| `output` | `{ "type": "output", "data": "…" }` | Sortie brute du PTY (séquences ANSI incluses) |
-| `exit` | `{ "type": "exit" }` | Le shell s'est terminé (exit, kill ou TTL) ; la session n'existe plus |
-| `error` | `{ "type": "error", "code": "TERMINAL_MAX_SESSIONS" }` | Création refusée (cap `HIVEKEEP_TERMINAL_MAX_SESSIONS` atteint), le serveur ferme ensuite le socket |
+| `ready` | `{ "type": "ready", "sessionId": "…", "resumed": false }` | Session attached. If `resumed: true`, the full scrollback follows in an `output` message |
+| `output` | `{ "type": "output", "data": "…" }` | Raw PTY output (ANSI sequences included) |
+| `exit` | `{ "type": "exit" }` | The shell terminated (exit, kill or TTL); the session no longer exists |
+| `error` | `{ "type": "error", "code": "TERMINAL_MAX_SESSIONS" }` | Creation refused (`HIVEKEEP_TERMINAL_MAX_SESSIONS` cap reached), the server then closes the socket |
 
 ## Mini-Apps (backend runtime)
 
-> Le CRUD complet des mini-apps (fichiers, storage, snapshots, console, icônes) est documenté côté `docs-site/` (section Mini-Apps). Cette section couvre les contrats du **runtime backend** (`_server.js`).
+> The full mini-app CRUD (files, storage, snapshots, console, icons) is documented on the `docs-site/` side (Mini-Apps section). This section covers the **backend runtime** contracts (`_server.js`).
 
 ### `ALL /api/mini-apps/:id/api/*`
 
-Proxy vers les routes Hono du `_server.js` de l'app (chargé paresseusement, ou au boot si `app.json` déclare `"background": true`). `404 NO_BACKEND` si l'app n'a pas de backend, `404 NO_HTTP_ROUTES` si le module n'exporte que des hooks de cycle de vie.
+Proxy to the Hono routes of the app's `_server.js` (loaded lazily, or at boot if `app.json` declares `"background": true`). `404 NO_BACKEND` if the app has no backend, `404 NO_HTTP_ROUTES` if the module only exports lifecycle hooks.
 
 ### `GET /api/mini-apps/:id/events`
 
-Flux SSE **par app** (distinct du SSE global) : événements émis par `ctx.events.emit()` côté backend. Chaque abonné est taggé avec le user de session, ce qui permet l'émission ciblée `ctx.events.emit(event, data, { userId })`.
+**Per-app** SSE stream (distinct from the global SSE): events emitted by `ctx.events.emit()` on the backend side. Each subscriber is tagged with the session user, which enables targeted emission `ctx.events.emit(event, data, { userId })`.
 
 ```
 event: connected   data: { appId }
 event: app-event   data: { event: string, data: unknown, timestamp: number }
-: ping             (keep-alive toutes les 30s)
+: ping             (keep-alive every 30s)
 ```
 
 ### `ALL /api/mini-apps/:id/platform/*`
 
-Gateway permissionné vers l'API REST de la plateforme : permet à une mini-app (front) de gérer n'importe quelle ressource comme le font les pages de settings. Le sous-chemin est rejoué sur la vraie route `/api/<resource>` en portant la session de l'utilisateur, après vérification de la permission `platform:<resource>:<read|write>` accordée à l'app (GET/HEAD = read, le reste = write ; un grant `write` implique `read`).
+Permissioned gateway to the platform's REST API: lets a mini-app (front) manage any resource the way the settings pages do. The sub-path is replayed onto the real `/api/<resource>` route carrying the user's session, after checking the `platform:<resource>:<read|write>` permission granted to the app (GET/HEAD = read, the rest = write; a `write` grant implies `read`).
 
 ```
 GET  /api/mini-apps/:id/platform/contacts        -> proxy GET  /api/contacts        (platform:contacts:read)
 POST /api/mini-apps/:id/platform/contacts        -> proxy POST /api/contacts        (platform:contacts:write)
 ```
 
-Erreurs : `403 PERMISSION_REQUIRED` (permission non accordée), `403 RESOURCE_FORBIDDEN` (ressource interdite via le gateway : `auth`, `onboarding`, `vault`, `database`, `users`, `mini-apps`, `sse`, `health`, `uploads`), `400 INVALID_PATH`.
+Errors: `403 PERMISSION_REQUIRED` (permission not granted), `403 RESOURCE_FORBIDDEN` (resource forbidden via the gateway: `auth`, `onboarding`, `vault`, `database`, `users`, `mini-apps`, `sse`, `health`, `uploads`), `400 INVALID_PATH`.
 
-> Sécurité : l'iframe est same-origin (cookie de session). Le **mini-app origin guard** (`auth/mini-app-origin-guard.ts`) sandboxe les iframes à leur propre namespace `/api/mini-apps/<id>/*` via le `Referer` (couche 1, non-cassante), donc le gateway est le chemin pour atteindre les ressources. C'est de la défense en profondeur (une app hostile peut supprimer son Referer) ; le barrage complet (token scoped au lieu du cookie + retrait d'`allow-same-origin`) reste un durcissement prévu (couche 2).
+> Security: the iframe is same-origin (session cookie). The **mini-app origin guard** (`auth/mini-app-origin-guard.ts`) sandboxes the iframes to their own namespace `/api/mini-apps/<id>/*` via the `Referer` (layer 1, non-breaking), so the gateway is the path to reach the resources. This is defense in depth (a hostile app can drop its Referer); the full barrier (scoped token instead of the cookie + removal of `allow-same-origin`) remains a planned hardening (layer 2).
 
 ### `POST /api/mini-apps/:id/client-event`
 
-Canal montant UI → backend (`Hivekeep.events.send()`). Délivré à l'export `onClientEvent(ctx, event, data, meta)` du `_server.js` (`meta = { userId, userName }`, exécution bornée à 10s).
+Upstream UI → backend channel (`Hivekeep.events.send()`). Delivered to the `_server.js`'s `onClientEvent(ctx, event, data, meta)` export (`meta = { userId, userName }`, execution bounded to 10s).
 
 ```typescript
-// Requête
+// Request
 { event: string, data?: unknown }
 
-// Réponse 200
-{ handled: boolean, result: unknown | null }   // handled=false si pas d'export onClientEvent
+// Response 200
+{ handled: boolean, result: unknown | null }   // handled=false if no onClientEvent export
 
-// Erreurs : 404 NOT_FOUND / NO_BACKEND, 400 INVALID_BODY, 500 CLIENT_EVENT_ERROR
+// Errors: 404 NOT_FOUND / NO_BACKEND, 400 INVALID_BODY, 500 CLIENT_EVENT_ERROR
 ```
 
 ### `GET /api/mini-apps/:id/permissions`
 
-État des permissions de capacités : demandées dans `app.json` (`"permissions": ["llm", "agent:inform", "agent:task", "channels:send", "secrets:<NAME>", "platform:<resource>:<read|write>", "events:<prefix>"]`) vs accordées par l'utilisateur.
+State of the capability permissions: requested in `app.json` (`"permissions": ["llm", "agent:inform", "agent:task", "channels:send", "secrets:<NAME>", "platform:<resource>:<read|write>", "events:<prefix>"]`) vs granted by the user.
 
 ```typescript
-// Réponse 200
+// Response 200
 { requested: string[], granted: string[], missing: string[] }
 ```
 
 ### `POST /api/mini-apps/:id/permissions`
 
-Accorde des permissions (additif — jamais de révocation implicite). Seules des permissions présentes dans le manifest peuvent être accordées. Redémarre le backend et émet `miniapp:updated`.
+Grants permissions (additive: never an implicit revocation). Only permissions present in the manifest can be granted. Restarts the backend and emits `miniapp:updated`.
 
 ```typescript
-// Requête
+// Request
 { grant: string[] }
 
-// Réponse 200
+// Response 200
 { requested: string[], granted: string[], invalid: string[] }
 ```
 
@@ -1842,118 +1842,118 @@ Accorde des permissions (additif — jamais de révocation implicite). Seules de
 
 ### `GET /api/sse`
 
-Connexion SSE **globale** (une seule par client). Le serveur multiplex les événements de tous les Agents.
+**Global** SSE connection (a single one per client). The server multiplexes the events of all Agents.
 
-#### Types d'événements
+#### Event types
 
 ```typescript
-// Tokens LLM en streaming
+// Streaming LLM tokens
 { event: 'chat:token', data: { agentId: string, token: string } }
 
-// Réponse LLM terminée
+// LLM response finished
 { event: 'chat:done', data: { agentId: string, messageId: string, tokenUsage?: { inputTokens: number, outputTokens: number, totalTokens: number } } }
 
-// Nouveau message entrant dans le chat — émis pour TOUTES les sources, y compris
-// les messages utilisateur (sync temps-réel multi-appareils / multi-membres).
-// Pour les messages utilisateur web, `clientMessageId` reprend le token envoyé au
-// POST : le client émetteur réconcilie sa bulle optimiste, les autres l'ajoutent.
-// (Le payload est aplati au niveau racine, pas imbriqué sous `message`.)
+// New incoming chat message: emitted for ALL sources, including
+// user messages (real-time multi-device / multi-member sync).
+// For web user messages, `clientMessageId` echoes the token sent to the
+// POST: the emitting client reconciles its optimistic bubble, the others add it.
+// (The payload is flattened at the root level, not nested under `message`.)
 { event: 'chat:message', data: { agentId: string, id: string, clientMessageId?: string | null, role: string, content: string, files: FileShape[], ... } }
 
-// Messages supprimés (suppression unitaire ou rewind) — les clients retirent
-// ces ids de leur liste (filtre idempotent, sync multi-appareils).
+// Deleted messages (single deletion or rewind): clients remove
+// these ids from their list (idempotent filter, multi-device sync).
 { event: 'chat:messages-deleted', data: { agentId: string, messageIds: string[] } }
 
-// Messages nettoyés en place par redact_secret_leak (la valeur d'un secret a été
-// remplacée par son placeholder {{secret:KEY}} dans content/tool_calls) — les
-// clients re-fetchent la conversation (le contenu a changé, pas disparu).
+// Messages cleaned in place by redact_secret_leak (a secret's value was
+// replaced by its placeholder {{secret:KEY}} in content/tool_calls): the
+// clients re-fetch the conversation (the content changed, did not disappear).
 { event: 'chat:messages-redacted', data: { agentId: string, messageIds: string[] } }
 
-// Changement d'état d'une tâche
+// Task status change
 { event: 'task:status', data: { taskId: string, agentId: string, status: string } }
 
-// Tâche terminée
+// Task finished
 { event: 'task:done', data: { taskId: string, agentId: string, result: string } }
 
-// Exécution d'un cron
+// Cron execution
 { event: 'cron:triggered', data: { cronId: string, agentId: string, taskId: string } }
 
-// Trigger email (compte connecté) : créé / modifié / supprimé / déclenché
+// Email trigger (connected account): created / updated / deleted / fired
 { event: 'trigger:created', data: { triggerId: string, accountId: string } }
 { event: 'trigger:updated', data: { triggerId: string, accountId: string } }
 { event: 'trigger:deleted', data: { triggerId: string, accountId: string } }
 { event: 'trigger:fired',   data: { triggerId: string, accountId: string } }
 
-// Queue mise a jour
+// Queue updated
 { event: 'queue:update', data: { agentId: string, queueSize: number, isProcessing: boolean, processingStartedAt?: number } }
 
-// Erreur sur un Agent
+// Error on an Agent
 { event: 'agent:error', data: { agentId: string, error: string } }
 
-// Projet actif d'un Agent changé
+// Active project of an Agent changed
 { event: 'agent:active-project', data: { agentId: string, activeProjectId: string | null } }
 
-// Workspace muté (section Files) — émis par les routes /workspace/* ET par les
-// tools natifs qui écrivent dans le workspace statique (write_file, edit_file,
-// multi_edit, download_stored_file, download_email_attachment). Une opération
-// récursive (delete/move/copy/upload de dossier) émet UN seul change grossier
-// sur le dossier (isDirectory: true), jamais une entrée par descendant ; le
-// tableau `changes` est borné (≤ 20 — au-delà, un seul change sur le parent commun).
-// `modifiedAt` (mtime résultant) permet à l'appareil émetteur d'ignorer son propre écho.
+// Workspace mutated (Files section): emitted by the /workspace/* routes AND by the
+// native tools that write into the static workspace (write_file, edit_file,
+// multi_edit, download_stored_file, download_email_attachment). A recursive
+// operation (delete/move/copy/upload of a folder) emits ONE coarse change
+// on the folder (isDirectory: true), never one entry per descendant; the
+// `changes` array is bounded (≤ 20: beyond that, a single change on the common parent).
+// `modifiedAt` (resulting mtime) lets the emitting device ignore its own echo.
 { event: 'workspace:changed', data: {
   agentId: string,
   changes: Array<{
     path: string,
     type: 'created' | 'modified' | 'deleted' | 'renamed',
     isDirectory: boolean,
-    newPath?: string,         // pour renamed
+    newPath?: string,         // for renamed
     modifiedAt?: number
   }>
 } }
 
-// Projet créé / modifié / supprimé
+// Project created / updated / deleted
 { event: 'project:created', data: { project: ProjectSummary } }
 { event: 'project:updated', data: { project: ProjectSummary } }
 { event: 'project:deleted', data: { projectId: string } }
 
-// Ticket créé / modifié / supprimé
+// Ticket created / updated / deleted
 { event: 'ticket:created', data: { ticket: TicketSummary } }
-{ event: 'ticket:updated', data: { ticket: TicketSummary } }      // inclut changement de status / position
+{ event: 'ticket:updated', data: { ticket: TicketSummary } }      // includes status / position change
 { event: 'ticket:deleted', data: { ticketId: string, projectId: string } }
 
-// Tag CRUD au sein d'un projet
+// Tag CRUD within a project
 { event: 'project-tag:created', data: { tag: { id: string, label: string, color: string }, projectId: string } }
 { event: 'project-tag:updated', data: { tag: { id: string, label: string, color: string }, projectId: string } }
 { event: 'project-tag:deleted', data: { tagId: string, projectId: string } }
 
-// Sessions du terminal admin changées (création / attache / détache / renommage /
-// mort) — scope user (sendToUser) : seul le propriétaire reçoit. Le payload porte
-// la liste fraîche complète (la sidebar remplace, pas de merge nécessaire).
+// Admin terminal sessions changed (creation / attach / detach / rename /
+// death): user scope (sendToUser): only the owner receives it. The payload carries
+// the full fresh list (the sidebar replaces, no merge needed).
 { event: 'terminal:sessions-changed', data: { sessions: TerminalSessionDTO[] } }
 
-// Mini-apps : cycle de vie (CRUD + fichiers). `miniapp:notify` n'existe pas ici —
-// les notifications d'apps passent par le canal notification:new standard
+// Mini-apps: lifecycle (CRUD + files). `miniapp:notify` does not exist here:
+// app notifications go through the standard notification:new channel
 // (type 'miniapp:notify', relatedType 'miniapp', relatedId = appId).
 { event: 'miniapp:created', data: { app: MiniAppSummary } }
-{ event: 'miniapp:updated', data: { app: MiniAppSummary } }       // inclut reassignation mainteneur + grant de permissions
+{ event: 'miniapp:updated', data: { app: MiniAppSummary } }       // includes maintainer reassignment + permission grant
 { event: 'miniapp:deleted', data: { appId: string } }
 { event: 'miniapp:file-updated', data: { appId: string, path: string, version: number } }
-{ event: 'miniapp:reload', data: { appId: string } }              // demande de reload de l'iframe (tool reload_mini_app)
+{ event: 'miniapp:reload', data: { appId: string } }              // iframe reload request (tool reload_mini_app)
 
-// Mises à jour de la plateforme
-// Nouvelle version détectée par le cron de check (émis une seule fois par version)
+// Platform updates
+// New version detected by the check cron (emitted once per version)
 { event: 'version:update-available', data: { channel: 'stable' | 'edge', latestVersion: string, releaseUrl: string | null, publishedAt: number | null } }
-// Progression d'une self-update en cours (steps: preflight, snapshot, backup,
+// Progress of an in-progress self-update (steps: preflight, snapshot, backup,
 // download, apply, dependencies, assets, restart)
 { event: 'update:progress', data: { runId: string, step: string, status: 'running' | 'done' | 'error', message: string | null } }
-// Issue d'une self-update. 'success' et 'rolled-back' sont émis APRÈS le restart
-// (le client doit donc aussi poller GET /api/version-check/last-update pendant
-// la coupure SSE) ; 'failed' est émis avant restart (l'ancienne version tourne).
+// Outcome of a self-update. 'success' and 'rolled-back' are emitted AFTER the restart
+// (so the client must also poll GET /api/version-check/last-update during
+// the SSE outage); 'failed' is emitted before restart (the old version is running).
 { event: 'update:finished', data: { runId: string, status: 'success' | 'failed' | 'rolled-back', version?: string, error?: string } }
 ```
 
-> Les backends de mini-apps peuvent s'abonner IN-PROCESS à ce catalogue via `ctx.on(eventType, handler)` (gardé par la permission `events:<prefix>`, ex. `events:task`). Les types haute-fréquence/internes (`chat:token`, `queue:update`, `*-token-usage`…) ne sont pas abonnables. Voir `docs-site` > mini-apps > backend.
+> Mini-app backends can subscribe IN-PROCESS to this catalog via `ctx.on(eventType, handler)` (guarded by the `events:<prefix>` permission, e.g. `events:task`). High-frequency/internal types (`chat:token`, `queue:update`, `*-token-usage`…) are not subscribable. See `docs-site` > mini-apps > backend.
 
-> Le SSE est **global** (pas par Agent). Le client filtre côté frontend par `agentId` pour n'afficher que les événements pertinents. Cela permet de mettre a jour la sidebar (badges, statuts) pour tous les Agents simultanément.
+> The SSE is **global** (not per Agent). The client filters on the frontend side by `agentId` to display only the relevant events. This makes it possible to update the sidebar (badges, statuses) for all Agents simultaneously.
 
-> Les événements `task:*` existants restent inchangés. Les clients qui s'intéressent aux tasks liées aux tickets filtrent côté frontend sur `task.ticketId !== null` (le champ est désormais présent dans le payload des tasks).
+> The existing `task:*` events remain unchanged. Clients interested in ticket-linked tasks filter on the frontend side on `task.ticketId !== null` (the field is now present in the tasks payload).
