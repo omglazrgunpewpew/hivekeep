@@ -19,12 +19,15 @@ import {
 } from 'lucide-react'
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
   useDraggable,
   useDroppable,
   type DragEndEvent,
+  type DragStartEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core'
 import { cn } from '@/client/lib/utils'
 import { Skeleton } from '@/client/components/ui/skeleton'
@@ -107,9 +110,12 @@ export function WorkspaceTree({
   const clipboard = useWorkspaceClipboard()
   const [editing, setEditing] = useState<EditingState | null>(null)
   const [osDropDir, setOsDropDir] = useState<string | null>(null)
+  const [draggingEntry, setDraggingEntry] = useState<WorkspaceEntry | null>(null)
   const uploadInputRef = useRef<HTMLInputElement>(null)
   const uploadDirRef = useRef('')
   const treeRef = useRef<HTMLDivElement>(null)
+  // Pending auto-expand of a collapsed folder hovered during an intra-move drag.
+  const autoExpandRef = useRef<{ path: string; timer: ReturnType<typeof setTimeout> } | null>(null)
 
   // Intra-workspace dnd: fine pointers only (touch drag would hijack the
   // Sheet's scroll — touch move goes through cut/paste, files.md § 4.2).
@@ -123,6 +129,43 @@ export function WorkspaceTree({
     },
     [dirs],
   )
+
+  const clearAutoExpand = useCallback(() => {
+    if (autoExpandRef.current) {
+      clearTimeout(autoExpandRef.current.timer)
+      autoExpandRef.current = null
+    }
+  }, [])
+
+  useEffect(() => () => clearAutoExpand(), [clearAutoExpand])
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggingEntry((event.active.data.current?.entry as WorkspaceEntry | undefined) ?? null)
+  }
+
+  // Auto-expand a collapsed folder after a short hover (VSCode behaviour), so a
+  // file can be dropped into a nested folder without pre-opening it.
+  const handleDragOver = (event: DragOverEvent) => {
+    const overId = event.over?.id
+    const overDir = typeof overId === 'string' && overId !== '' ? overId : null
+    const intoSelf =
+      overDir != null &&
+      draggingEntry?.type === 'dir' &&
+      (overDir === draggingEntry.path || overDir.startsWith(draggingEntry.path + '/'))
+    if (!overDir || intoSelf || expanded.has(overDir)) {
+      clearAutoExpand()
+      return
+    }
+    if (autoExpandRef.current?.path === overDir) return
+    clearAutoExpand()
+    autoExpandRef.current = {
+      path: overDir,
+      timer: setTimeout(() => {
+        onToggleDir(overDir)
+        autoExpandRef.current = null
+      }, 600),
+    }
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const activeEntry = event.active.data.current?.entry as WorkspaceEntry | undefined
@@ -360,8 +403,25 @@ export function WorkspaceTree({
         </div>
       </div>
 
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <ScrollArea className="min-h-0 flex-1">
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={(e) => {
+          clearAutoExpand()
+          setDraggingEntry(null)
+          handleDragEnd(e)
+        }}
+        onDragCancel={() => {
+          clearAutoExpand()
+          setDraggingEntry(null)
+        }}
+      >
+        {/* The radix ScrollArea wraps its content in a display:table box that
+            breaks `min-h-full` on the tree — force it to block + full height so
+            the empty space below the last row stays a valid drop target
+            (drop-to-root for both intra-move and OS upload). */}
+        <ScrollArea className="min-h-0 flex-1 [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:min-h-full">
           <div
             ref={(node) => {
               rootDropzone.setNodeRef(node)
@@ -376,7 +436,10 @@ export function WorkspaceTree({
             onDragOver={(e) => {
               if (e.dataTransfer.types.includes('Files')) {
                 e.preventDefault()
-                if (osDropDir === null) setOsDropDir('')
+                // Folder rows stopPropagation, so this only fires over the root
+                // or a (non-dir) file row: always retarget root. Without the
+                // reset the last hovered folder stayed sticky and stole the drop.
+                if (osDropDir !== '') setOsDropDir('')
               }
             }}
             onDragLeave={(e) => {
@@ -394,6 +457,18 @@ export function WorkspaceTree({
             {renderDir('', 0)}
           </div>
         </ScrollArea>
+        <DragOverlay dropAnimation={null}>
+          {draggingEntry &&
+            (() => {
+              const Icon = draggingEntry.type === 'dir' ? Folder : getFileIcon(draggingEntry.name)
+              return (
+                <div className="flex items-center gap-1.5 rounded-md border border-border bg-popover px-2 py-1 text-sm shadow-md">
+                  <Icon className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="max-w-48 truncate">{draggingEntry.name}</span>
+                </div>
+              )
+            })()}
+        </DragOverlay>
       </DndContext>
 
       <input
