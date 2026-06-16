@@ -95,6 +95,27 @@ const indentFor = (depth: number) => Math.min(depth, 8) * 12
 
 const finePointer = () => window.matchMedia('(pointer: fine)').matches
 
+/**
+ * Directory a drop on `overId`/`overEntry` would land in: a hovered folder maps
+ * to itself, a hovered file to its parent (VSCode), the root droppable to ''.
+ * Returns null when there is no droppable target.
+ */
+function resolveDropDir(
+  overId: string | number | undefined,
+  overEntry: WorkspaceEntry | undefined,
+): string | null {
+  if (overId === '') return ''
+  if (!overEntry) return null
+  return overEntry.type === 'dir' ? overEntry.path : parentDirOf(overEntry.path)
+}
+
+/** A move is a no-op (same parent) or illegal (a folder into itself/descendant). */
+function isValidDrop(active: WorkspaceEntry, dir: string): boolean {
+  if (dir === parentDirOf(active.path)) return false
+  if (active.type === 'dir' && (dir === active.path || dir.startsWith(active.path + '/'))) return false
+  return true
+}
+
 export function WorkspaceTree({
   dirs,
   expanded,
@@ -111,6 +132,9 @@ export function WorkspaceTree({
   const [editing, setEditing] = useState<EditingState | null>(null)
   const [osDropDir, setOsDropDir] = useState<string | null>(null)
   const [draggingEntry, setDraggingEntry] = useState<WorkspaceEntry | null>(null)
+  // Directory a drop would land in during an intra-move drag (highlighted like
+  // VSCode): the hovered folder, a hovered file's parent, '' for root, or null.
+  const [dropTargetDir, setDropTargetDir] = useState<string | null>(null)
   const uploadInputRef = useRef<HTMLInputElement>(null)
   const uploadDirRef = useRef('')
   const treeRef = useRef<HTMLDivElement>(null)
@@ -143,25 +167,29 @@ export function WorkspaceTree({
     setDraggingEntry((event.active.data.current?.entry as WorkspaceEntry | undefined) ?? null)
   }
 
-  // Auto-expand a collapsed folder after a short hover (VSCode behaviour), so a
-  // file can be dropped into a nested folder without pre-opening it.
   const handleDragOver = (event: DragOverEvent) => {
-    const overId = event.over?.id
-    const overDir = typeof overId === 'string' && overId !== '' ? overId : null
+    const overEntry = event.over?.data.current?.entry as WorkspaceEntry | undefined
+    const dir = resolveDropDir(event.over?.id, overEntry)
+    // Highlight the destination folder (or root) only for a valid, distinct move.
+    setDropTargetDir(draggingEntry && dir !== null && isValidDrop(draggingEntry, dir) ? dir : null)
+
+    // Auto-expand a collapsed folder hovered directly (VSCode behaviour), so a
+    // file can be dropped into a nested folder without pre-opening it.
+    const hoveredDir = overEntry?.type === 'dir' ? overEntry.path : null
     const intoSelf =
-      overDir != null &&
+      hoveredDir != null &&
       draggingEntry?.type === 'dir' &&
-      (overDir === draggingEntry.path || overDir.startsWith(draggingEntry.path + '/'))
-    if (!overDir || intoSelf || expanded.has(overDir)) {
+      (hoveredDir === draggingEntry.path || hoveredDir.startsWith(draggingEntry.path + '/'))
+    if (!hoveredDir || intoSelf || expanded.has(hoveredDir)) {
       clearAutoExpand()
       return
     }
-    if (autoExpandRef.current?.path === overDir) return
+    if (autoExpandRef.current?.path === hoveredDir) return
     clearAutoExpand()
     autoExpandRef.current = {
-      path: overDir,
+      path: hoveredDir,
       timer: setTimeout(() => {
-        onToggleDir(overDir)
+        onToggleDir(hoveredDir)
         autoExpandRef.current = null
       }, 600),
     }
@@ -169,12 +197,10 @@ export function WorkspaceTree({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const activeEntry = event.active.data.current?.entry as WorkspaceEntry | undefined
-    const overDir = event.over?.id as string | undefined
-    if (!activeEntry || overDir === undefined) return
-    const destDir = String(overDir)
-    if (destDir === parentDirOf(activeEntry.path)) return
-    if (activeEntry.type === 'dir' && (destDir === activeEntry.path || destDir.startsWith(activeEntry.path + '/'))) return
-    void actions.moveInto(activeEntry, destDir)
+    const overEntry = event.over?.data.current?.entry as WorkspaceEntry | undefined
+    const dir = resolveDropDir(event.over?.id, overEntry)
+    if (!activeEntry || dir === null || !isValidDrop(activeEntry, dir)) return
+    void actions.moveInto(activeEntry, dir)
   }
 
   // Tree-scoped shortcuts (F2 / Delete / Mod-C/X/V) — only when the tree has
@@ -359,6 +385,7 @@ export function WorkspaceTree({
             isSelected={selectedPath === entry.path}
             isCut={clipboard?.op === 'cut' && clipboard.path === entry.path}
             isOsDropTarget={osDropDir === entry.path}
+            isDropTarget={entry.type === 'dir' && dropTargetDir === entry.path}
             dndEnabled={dndEnabled}
             renaming={editing?.mode === 'rename' && editing.entry?.path === entry.path}
             renderEditRow={renderEditRow}
@@ -410,11 +437,13 @@ export function WorkspaceTree({
         onDragEnd={(e) => {
           clearAutoExpand()
           setDraggingEntry(null)
+          setDropTargetDir(null)
           handleDragEnd(e)
         }}
         onDragCancel={() => {
           clearAutoExpand()
           setDraggingEntry(null)
+          setDropTargetDir(null)
         }}
       >
         {/* The radix ScrollArea wraps its content in a display:table box that
@@ -431,7 +460,7 @@ export function WorkspaceTree({
             tabIndex={0}
             className={cn(
               'min-h-full p-1.5 outline-none',
-              (rootDropzone.isOver || osDropDir === '') && 'rounded-md ring-2 ring-primary/40',
+              (dropTargetDir === '' || osDropDir === '') && 'rounded-md bg-primary/5 ring-2 ring-inset ring-primary/60',
             )}
             onDragOver={(e) => {
               if (e.dataTransfer.types.includes('Files')) {
@@ -503,6 +532,7 @@ interface TreeRowProps {
   isSelected: boolean
   isCut: boolean
   isOsDropTarget: boolean
+  isDropTarget: boolean
   dndEnabled: boolean
   renaming: boolean
   renderEditRow: (depth: number) => ReactNode
@@ -522,6 +552,7 @@ function TreeRow({
   isSelected,
   isCut,
   isOsDropTarget,
+  isDropTarget,
   dndEnabled,
   renaming,
   renderEditRow,
@@ -535,8 +566,12 @@ function TreeRow({
 }: TreeRowProps) {
   const isDir = entry.type === 'dir'
   const draggable = useDraggable({ id: entry.path, data: { entry }, disabled: !dndEnabled })
-  const droppable = useDroppable({ id: entry.path, disabled: !dndEnabled || !isDir })
+  // Files are droppable too: dropping onto a file targets its parent folder
+  // (resolved in handleDragEnd / the OS handlers below), like VSCode.
+  const droppable = useDroppable({ id: entry.path, data: { entry }, disabled: !dndEnabled })
   const RowIcon = isDir ? (isExpanded ? FolderOpen : Folder) : getFileIcon(entry.name)
+  // Directory an OS-file drop on this row lands in (folder → itself, file → parent).
+  const osTargetDir = isDir ? entry.path : parentDirOf(entry.path)
 
   if (renaming) {
     return <>{renderEditRow(depth)}</>
@@ -546,7 +581,7 @@ function TreeRow({
     <div
       ref={(node) => {
         draggable.setNodeRef(node)
-        if (isDir) droppable.setNodeRef(node)
+        droppable.setNodeRef(node)
       }}
       {...draggable.listeners}
       {...draggable.attributes}
@@ -554,7 +589,7 @@ function TreeRow({
         'group flex w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-left text-sm transition-colors',
         isSelected ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted',
         isCut && 'opacity-50',
-        (droppable.isOver || isOsDropTarget) && 'ring-2 ring-primary/40',
+        (isDropTarget || isOsDropTarget) && 'bg-primary/15 ring-1 ring-inset ring-primary',
         draggable.isDragging && 'opacity-40',
       )}
       style={{ paddingLeft: indentFor(depth) + 8 }}
@@ -569,18 +604,18 @@ function TreeRow({
         }
       }}
       onDragOver={(e) => {
-        if (isDir && e.dataTransfer.types.includes('Files')) {
+        if (e.dataTransfer.types.includes('Files')) {
           e.preventDefault()
           e.stopPropagation()
-          onOsDropDir(entry.path)
+          onOsDropDir(osTargetDir)
         }
       }}
       onDrop={(e) => {
-        if (isDir && e.dataTransfer.files.length > 0) {
+        if (e.dataTransfer.files.length > 0) {
           e.preventDefault()
           e.stopPropagation()
           onOsDropDir(null)
-          onOsDropFiles(entry.path, Array.from(e.dataTransfer.files))
+          onOsDropFiles(osTargetDir, Array.from(e.dataTransfer.files))
         }
       }}
     >
