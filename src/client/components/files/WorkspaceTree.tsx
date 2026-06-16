@@ -589,7 +589,6 @@ function TreeRow({
         'group flex w-full cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-left text-sm transition-colors',
         isSelected ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted',
         isCut && 'opacity-50',
-        (isDropTarget || isOsDropTarget) && 'bg-primary/15 ring-1 ring-inset ring-primary',
         draggable.isDragging && 'opacity-40',
       )}
       style={{ paddingLeft: indentFor(depth) + 8 }}
@@ -649,7 +648,10 @@ function TreeRow({
   )
 
   return (
-    <div>
+    // The drop highlight wraps the row AND its rendered children, so dragging
+    // over a folder lights up its whole region (row + contents), not just the
+    // single folder line — much easier to spot in a folder full of files.
+    <div className={cn((isDropTarget || isOsDropTarget) && 'rounded-md bg-primary/10 ring-1 ring-inset ring-primary/60')}>
       <ContextMenu>
         <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
