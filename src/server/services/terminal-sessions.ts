@@ -1,7 +1,7 @@
 import os from 'os'
-import { readFileSync, readlinkSync } from 'node:fs'
+import { readFileSync, readlinkSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { basename } from 'node:path'
+import { basename, join } from 'node:path'
 import { spawn, type IPty } from 'bun-pty'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
@@ -466,7 +466,35 @@ function becomeDormant(session: TerminalSession) {
   notifySessionsChanged(session.userId)
 }
 
-export function createSession(userId: string, cols: number, rows: number): TerminalSession {
+/** Options applied when a session is created from a preset. */
+export interface CreateSessionOptions {
+  /** Directory the shell starts in (`~` expanded; falls back to home if it isn't
+   *  an existing directory). */
+  cwd?: string | null
+  /** Multi-line script typed into the shell once, right after it starts. */
+  initScript?: string | null
+}
+
+/** Resolve a preset cwd to a real, existing directory (expand `~`, validate). */
+function resolveStartCwd(cwd?: string | null): string {
+  const home = os.homedir()
+  const raw = cwd?.trim()
+  if (!raw) return home
+  const expanded = raw === '~' || raw.startsWith('~/') ? join(home, raw.slice(1)) : raw
+  try {
+    if (statSync(expanded).isDirectory()) return expanded
+  } catch {
+    // Not an existing directory — fall back to home rather than failing the spawn.
+  }
+  return home
+}
+
+export function createSession(
+  userId: string,
+  cols: number,
+  rows: number,
+  opts: CreateSessionOptions = {},
+): TerminalSession {
   const running = [...sessions.values()].filter((s) => !s.exited)
   if (running.length >= getTerminalConfig().maxSessions) {
     throw new Error('TERMINAL_MAX_SESSIONS')
@@ -489,7 +517,8 @@ export function createSession(userId: string, cols: number, rows: number): Termi
     everAttached: false,
     detachTimer: null,
     exited: false,
-    probe: {},
+    // Seed the start directory so spawnForSession opens the shell there.
+    probe: { cwd: resolveStartCwd(opts.cwd) },
     dirty: false,
   }
   sessions.set(id, session)
@@ -497,6 +526,13 @@ export function createSession(userId: string, cols: number, rows: number): Termi
   const pty = spawnForSession(session, cols, rows)
   wireSession(session, pty)
   session.probe = probeSession(session)
+
+  // Run the preset's init script once: typed into the shell as if the user did.
+  // The kernel tty buffers it, so writing before the shell is fully ready is safe.
+  const initScript = opts.initScript?.trim()
+  if (initScript) {
+    session.pty?.write(initScript.endsWith('\n') ? initScript : `${initScript}\n`)
+  }
 
   // Unattached until the WS handler claims it — the orphan grace ensures a
   // client that died between create and attach can't leak a shell.

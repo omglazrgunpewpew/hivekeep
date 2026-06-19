@@ -3328,6 +3328,26 @@
       "persistentHint": "Sesje przetrwają restart serwera wraz z uruchomionymi procesami.",
       "unavailable": "Nie wykryto tmux: sesje nie przetrwają restartu",
       "unavailableHint": "Zainstaluj tmux na hoście, aby procesy sesji przetrwały restart. Bez niego przywracany jest tylko bufor przewijania."
+    },
+    "blankSession": "Pusta sesja",
+    "presets": {
+      "manage": "Zarządzaj presetami…",
+      "new": "Nowy preset",
+      "title": "Presety sesji",
+      "description": "Wielokrotne szablony: otwiera sesję w katalogu i uruchamia skrypt startowy.",
+      "editTitle": "Edytuj preset",
+      "newTitle": "Nowy preset",
+      "emptyTitle": "Brak presetów",
+      "emptyDescription": "Utwórz preset, aby otwierać sesje w katalogu i uruchamiać polecenie startowe.",
+      "nameRequired": "Nazwa jest wymagana",
+      "nameLabel": "Nazwa",
+      "namePlaceholder": "np. Hivekeep + Claude",
+      "cwdLabel": "Katalog roboczy",
+      "cwdHelp": "Sesja zaczyna się tutaj. ~ oznacza katalog domowy. Puste = katalog domowy.",
+      "initLabel": "Skrypt inicjujący",
+      "initHelp": "Uruchamiany raz przy otwarciu, jakby wpisany ręcznie. Jedno polecenie w wierszu.",
+      "deleteConfirmTitle": "Usunąć {{name}}?",
+      "deleteConfirmDescription": "Ten preset zostanie usunięty. Trwające sesje nie są zmieniane."
     }
   },
   "orphanTask": {

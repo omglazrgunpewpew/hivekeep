@@ -1890,11 +1890,22 @@ Renames a session. Body: `{ "name": "claude code prod" }` (trim, max 60 characte
 
 Kills the shell and destroys the session (the sidebar's "close" button). If a client is attached to it, it receives the WS `exit` message. → `{ "success": true }`. **404 `NOT_FOUND`** otherwise.
 
+### Session presets
+
+Reusable per-user templates: a working directory + an init script run once when a session is created from the preset. Mutations emit `terminal:presets-changed` (SSE, user scope) with the fresh list.
+
+`TerminalPresetDTO`: `{ id, name, cwd: string | null, initScript: string | null, createdAt, updatedAt }`.
+
+- **`GET /api/terminal/presets`** → `{ "presets": TerminalPresetDTO[] }` (caller's presets, oldest first).
+- **`POST /api/terminal/presets`** — body `{ name, cwd?, initScript? }` (name required, trimmed; cwd/initScript trimmed, empty → null). → `{ "preset": … }` (201). **400 `INVALID`** if the name is empty.
+- **`PATCH /api/terminal/presets/:id`** — same body as POST. → `{ "preset": … }`. **404 `NOT_FOUND`** if missing/not owned/empty name.
+- **`DELETE /api/terminal/presets/:id`** → `{ "success": true }`. **404 `NOT_FOUND`** otherwise.
+
 ### `GET /api/terminal/ws`
 
 WebSocket upgrade (Better Auth session cookie required, same guards as `/status`).
 
-**Query params**: `cols`, `rows` (initial size), `sessionId` (optional: reattaches a still-live session of the same user; otherwise a new shell is created). Multiple clients (tabs/devices) can attach **simultaneously** to the same session: the output is mirrored to all, each one's input goes to the PTY.
+**Query params**: `cols`, `rows` (initial size), `sessionId` (optional: reattaches a still-live session of the same user; otherwise a new shell is created), `presetId` (optional, ignored when `sessionId` is set: seeds the new session with the preset's `cwd` and runs its `initScript` once). The `cwd` is expanded (`~` → home) and falls back to home if it isn't an existing directory. Multiple clients (tabs/devices) can attach **simultaneously** to the same session: the output is mirrored to all, each one's input goes to the PTY.
 
 **Client → server messages** (JSON):
 
@@ -2140,6 +2151,7 @@ Returns `201 { "ok": true }`. Errors: `503 FEEDBACK_DISABLED` (feature off), `50
 // death): user scope (sendToUser): only the owner receives it. The payload carries
 // the full fresh list (the sidebar replaces, no merge needed).
 { event: 'terminal:sessions-changed', data: { sessions: TerminalSessionDTO[] } }
+{ event: 'terminal:presets-changed', data: { presets: TerminalPresetDTO[] } }
 
 // Mini-apps: lifecycle (CRUD + files). `miniapp:notify` does not exist here:
 // app notifications go through the standard notification:new channel

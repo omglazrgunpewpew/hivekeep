@@ -3310,6 +3310,26 @@
       "persistentHint": "Le sessioni sopravvivono al riavvio del server con i loro processi in esecuzione.",
       "unavailable": "tmux non rilevato: le sessioni non sopravvivono a un riavvio",
       "unavailableHint": "Installa tmux sull’host per sessioni i cui processi sopravvivono a un riavvio. Senza, viene ripristinato solo lo scrollback."
+    },
+    "blankSession": "Sessione vuota",
+    "presets": {
+      "manage": "Gestisci preset…",
+      "new": "Nuovo preset",
+      "title": "Preset di sessione",
+      "description": "Modelli riutilizzabili: apre una sessione in una directory ed esegue uno script di avvio.",
+      "editTitle": "Modifica preset",
+      "newTitle": "Nuovo preset",
+      "emptyTitle": "Nessun preset",
+      "emptyDescription": "Crea un preset per aprire sessioni in una directory ed eseguire un comando di avvio.",
+      "nameRequired": "Il nome è obbligatorio",
+      "nameLabel": "Nome",
+      "namePlaceholder": "es. Hivekeep + Claude",
+      "cwdLabel": "Directory di lavoro",
+      "cwdHelp": "La sessione parte qui. ~ corrisponde alla tua home. Vuoto = home.",
+      "initLabel": "Script di init",
+      "initHelp": "Eseguito una volta all’apertura, come se lo avessi digitato. Un comando per riga.",
+      "deleteConfirmTitle": "Eliminare {{name}}?",
+      "deleteConfirmDescription": "Questo preset verrà rimosso. Le sessioni in corso non sono interessate."
     }
   },
   "orphanTask": {

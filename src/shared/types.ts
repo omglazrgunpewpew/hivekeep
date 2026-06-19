@@ -1438,3 +1438,15 @@ export interface TerminalSessionDTO {
   /** Foreground command currently running, if any (idle shell → undefined). */
   command?: string
 }
+
+/** A reusable terminal session preset (working directory + init script). */
+export interface TerminalPresetDTO {
+  id: string
+  name: string
+  /** Directory the shell starts in (`~` expanded server-side). Null = home. */
+  cwd: string | null
+  /** Multi-line script run once when the session is created. Null = none. */
+  initScript: string | null
+  createdAt: number
+  updatedAt: number
+}

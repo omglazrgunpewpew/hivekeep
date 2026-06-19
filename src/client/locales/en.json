@@ -3310,6 +3310,26 @@
       "persistentHint": "Sessions survive a server restart with their running processes.",
       "unavailable": "tmux not detected: sessions don't survive a restart",
       "unavailableHint": "Install tmux on the host for sessions whose processes survive a restart. Without it, only the scrollback is restored."
+    },
+    "blankSession": "Blank session",
+    "presets": {
+      "manage": "Manage presets…",
+      "new": "New preset",
+      "title": "Session presets",
+      "description": "Reusable templates: open a session in a directory and run a startup script.",
+      "editTitle": "Edit preset",
+      "newTitle": "New preset",
+      "emptyTitle": "No presets yet",
+      "emptyDescription": "Create a preset to open sessions in a directory and run a startup command.",
+      "nameRequired": "A name is required",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Hivekeep + Claude",
+      "cwdLabel": "Working directory",
+      "cwdHelp": "The session starts here. ~ expands to your home. Leave empty for home.",
+      "initLabel": "Init script",
+      "initHelp": "Runs once when the session opens, as if typed. One command per line.",
+      "deleteConfirmTitle": "Delete {{name}}?",
+      "deleteConfirmDescription": "This preset will be removed. Running sessions are unaffected."
     }
   },
   "orphanTask": {

@@ -399,6 +399,25 @@ export const terminalSessions = sqliteTable('terminal_sessions', {
   index('idx_terminal_sessions_user').on(table.userId),
 ])
 
+/**
+ * Reusable terminal session presets (per user): open a new session straight in a
+ * working directory and run an init script (e.g. `cd ~/project` is replaced by
+ * the cwd, then `claude ...`). The init script runs once, at session creation.
+ */
+export const terminalPresets = sqliteTable('terminal_presets', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** Working directory the shell starts in (`~` is expanded). Null = home. */
+  cwd: text('cwd'),
+  /** Multi-line script typed into the shell right after it starts. Null = none. */
+  initScript: text('init_script'),
+  createdAt: integer('created_at').notNull(), // Unix ms
+  updatedAt: integer('updated_at').notNull(), // Unix ms
+}, (table) => [
+  index('idx_terminal_presets_user').on(table.userId),
+])
+
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
   parentAgentId: text('parent_agent_id').notNull().references(() => agents.id),

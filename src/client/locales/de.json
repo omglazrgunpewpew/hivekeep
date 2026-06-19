@@ -3310,6 +3310,26 @@
       "persistentHint": "Sitzungen überstehen einen Server-Neustart mitsamt laufenden Prozessen.",
       "unavailable": "tmux nicht erkannt: Sitzungen überstehen keinen Neustart",
       "unavailableHint": "Installiere tmux auf dem Host für Sitzungen, deren Prozesse einen Neustart überstehen. Ohne tmux wird nur der Scrollback wiederhergestellt."
+    },
+    "blankSession": "Leere Sitzung",
+    "presets": {
+      "manage": "Presets verwalten…",
+      "new": "Neues Preset",
+      "title": "Sitzungs-Presets",
+      "description": "Wiederverwendbare Vorlagen: Sitzung in einem Verzeichnis öffnen und ein Startskript ausführen.",
+      "editTitle": "Preset bearbeiten",
+      "newTitle": "Neues Preset",
+      "emptyTitle": "Noch keine Presets",
+      "emptyDescription": "Erstelle ein Preset, um Sitzungen in einem Verzeichnis zu öffnen und einen Startbefehl auszuführen.",
+      "nameRequired": "Ein Name ist erforderlich",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Hivekeep + Claude",
+      "cwdLabel": "Arbeitsverzeichnis",
+      "cwdHelp": "Die Sitzung startet hier. ~ steht für dein Home-Verzeichnis. Leer = Home.",
+      "initLabel": "Init-Skript",
+      "initHelp": "Wird einmal beim Öffnen ausgeführt, als hättest du es getippt. Ein Befehl pro Zeile.",
+      "deleteConfirmTitle": "{{name}} löschen?",
+      "deleteConfirmDescription": "Dieses Preset wird entfernt. Laufende Sitzungen sind nicht betroffen."
     }
   },
   "orphanTask": {

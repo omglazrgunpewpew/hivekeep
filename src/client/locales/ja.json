@@ -3310,6 +3310,26 @@
       "persistentHint": "サーバーを再起動しても、実行中のプロセスごとセッションが維持されます。",
       "unavailable": "tmux が見つかりません：セッションは再起動後に維持されません",
       "unavailableHint": "ホストに tmux をインストールすると、再起動後もプロセスが維持されます。tmux がない場合はスクロールバックのみ復元されます。"
+    },
+    "blankSession": "空のセッション",
+    "presets": {
+      "manage": "プリセットを管理…",
+      "new": "新規プリセット",
+      "title": "セッションプリセット",
+      "description": "再利用できるテンプレート：指定ディレクトリでセッションを開き、起動スクリプトを実行します。",
+      "editTitle": "プリセットを編集",
+      "newTitle": "新規プリセット",
+      "emptyTitle": "プリセットがありません",
+      "emptyDescription": "プリセットを作成すると、指定ディレクトリでセッションを開いて起動コマンドを実行できます。",
+      "nameRequired": "名前は必須です",
+      "nameLabel": "名前",
+      "namePlaceholder": "例：Hivekeep + Claude",
+      "cwdLabel": "作業ディレクトリ",
+      "cwdHelp": "セッションはここで開始します。~ はホームを表します。空欄でホーム。",
+      "initLabel": "初期化スクリプト",
+      "initHelp": "セッションを開いたときに一度だけ、入力したかのように実行します。1行に1コマンド。",
+      "deleteConfirmTitle": "{{name}} を削除しますか？",
+      "deleteConfirmDescription": "このプリセットは削除されます。実行中のセッションには影響しません。"
     }
   },
   "orphanTask": {

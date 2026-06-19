@@ -3310,6 +3310,26 @@
       "persistentHint": "Les sessions survivent à un redémarrage du serveur avec leurs processus en cours.",
       "unavailable": "tmux non détecté : les sessions ne survivent pas à un redémarrage",
       "unavailableHint": "Installez tmux sur l’hôte pour des sessions dont les processus survivent à un redémarrage. Sans lui, seul l’historique est restauré."
+    },
+    "blankSession": "Session vierge",
+    "presets": {
+      "manage": "Gérer les presets…",
+      "new": "Nouveau preset",
+      "title": "Presets de session",
+      "description": "Modèles réutilisables : ouvre une session dans un dossier et lance un script de démarrage.",
+      "editTitle": "Modifier le preset",
+      "newTitle": "Nouveau preset",
+      "emptyTitle": "Aucun preset",
+      "emptyDescription": "Créez un preset pour ouvrir des sessions dans un dossier et lancer une commande de démarrage.",
+      "nameRequired": "Un nom est requis",
+      "nameLabel": "Nom",
+      "namePlaceholder": "ex. Hivekeep + Claude",
+      "cwdLabel": "Dossier de départ",
+      "cwdHelp": "La session démarre ici. ~ correspond à votre dossier personnel. Vide = dossier personnel.",
+      "initLabel": "Script d’init",
+      "initHelp": "Exécuté une fois à l’ouverture, comme si vous l’aviez tapé. Une commande par ligne.",
+      "deleteConfirmTitle": "Supprimer {{name}} ?",
+      "deleteConfirmDescription": "Ce preset sera supprimé. Les sessions en cours ne sont pas affectées."
     }
   },
   "orphanTask": {

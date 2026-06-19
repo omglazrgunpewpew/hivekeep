@@ -3310,6 +3310,26 @@
       "persistentHint": "Las sesiones sobreviven a un reinicio del servidor con sus procesos en ejecución.",
       "unavailable": "tmux no detectado: las sesiones no sobreviven a un reinicio",
       "unavailableHint": "Instala tmux en el host para sesiones cuyos procesos sobrevivan a un reinicio. Sin él, solo se restaura el historial."
+    },
+    "blankSession": "Sesión en blanco",
+    "presets": {
+      "manage": "Gestionar presets…",
+      "new": "Nuevo preset",
+      "title": "Presets de sesión",
+      "description": "Plantillas reutilizables: abre una sesión en un directorio y ejecuta un script de inicio.",
+      "editTitle": "Editar preset",
+      "newTitle": "Nuevo preset",
+      "emptyTitle": "Aún no hay presets",
+      "emptyDescription": "Crea un preset para abrir sesiones en un directorio y ejecutar un comando de inicio.",
+      "nameRequired": "Se requiere un nombre",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "p. ej. Hivekeep + Claude",
+      "cwdLabel": "Directorio de trabajo",
+      "cwdHelp": "La sesión empieza aquí. ~ corresponde a tu carpeta personal. Vacío = carpeta personal.",
+      "initLabel": "Script de inicio",
+      "initHelp": "Se ejecuta una vez al abrir, como si lo hubieras escrito. Un comando por línea.",
+      "deleteConfirmTitle": "¿Eliminar {{name}}?",
+      "deleteConfirmDescription": "Este preset se eliminará. Las sesiones en curso no se ven afectadas."
     }
   },
   "orphanTask": {

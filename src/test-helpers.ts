@@ -276,6 +276,7 @@ export const fullMockSchema = {
   accountSyncState: {},
   triggerLogs: {},
   terminalSessions: {},
+  terminalPresets: {},
   workspaceFolders: {},
   feedbackState: {},
 }

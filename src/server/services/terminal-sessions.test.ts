@@ -274,6 +274,13 @@ describe('terminal-sessions', () => {
     expect(dto.persistent).toBe(false) // tmux forced off → pty backend
   })
 
+  it('runs a preset init script once at creation (typed into the PTY)', () => {
+    const session = createSession('user-1', 80, 24, { cwd: '/tmp', initScript: 'cd ~/x\nclaude' })
+    // Written verbatim with a trailing newline so the last command runs.
+    expect(spawned[0]!.written.join('')).toContain('cd ~/x\nclaude\n')
+    expect(session.id).toBeTruthy()
+  })
+
   it('strips terminal capability queries (DA/DSR) from the replayed scrollback', () => {
     const session = createSession('user-1', 80, 24)
     // tmux-style startup probes (DA1, DA2, DSR) interleaved with real output.

@@ -32,6 +32,17 @@ Restored sessions appear **dormant** (a moon badge) until you click one, which r
 
 Several tabs or devices can view the **same session at once**: output mirrors to every attached client and any of them can type, exactly like a shared tmux session. As in tmux, the terminal is sized to the smallest attached viewer so line wrapping stays coherent everywhere.
 
+## Session presets
+
+If you always start a session the same way (say, `cd ~/projects/app` then a command), save it as a **preset**. The `+` button becomes a menu: a blank session, your presets, and "Manage presets…".
+
+A preset has two parts:
+
+- a **working directory** the session opens in (`~` expands to your home; leave it empty for home);
+- an **init script** that runs once when the session is created, exactly as if you had typed it (one command per line, so you can `export` a variable then launch a program).
+
+For example, a "Project + Claude" preset with directory `~/projects/hivekeep` and init script `claude --remote-control --dangerously-skip-permission` opens a shell straight in the repo and launches the command. The init script runs only at creation, never on reconnect (a tmux-backed session keeps its process alive; a respawned shell just restores the directory). Presets are per-user and sync across your devices.
+
 ## What runs where
 
 - **Bare-metal / systemd installs**: the shell runs as the user the Hivekeep process runs as, starting in its home directory. It sees exactly what the server process sees.

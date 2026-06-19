@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { SquareTerminal, Plus, Plug, MoreHorizontal, PanelLeft, Pencil, Trash2, Folder, Anchor, TriangleAlert, Moon } from 'lucide-react'
+import { SquareTerminal, Plus, Plug, MoreHorizontal, PanelLeft, Pencil, Trash2, Folder, Anchor, TriangleAlert, Moon, Play, Settings2 } from 'lucide-react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/client/components/ui/dropdown-menu'
 import {
   AlertDialog,
@@ -33,7 +34,8 @@ import {
 import { api, ApiRequestError, getErrorMessage } from '@/client/lib/api'
 import { cn } from '@/client/lib/utils'
 import { formatRelativeTime, formatDurationMs } from '@/client/lib/time'
-import type { TerminalSessionDTO } from '@/shared/types'
+import { TerminalPresetsDialog } from '@/client/components/terminal/TerminalPresetsDialog'
+import type { TerminalSessionDTO, TerminalPresetDTO } from '@/shared/types'
 
 /**
  * Admin-only web terminal on the host machine (or the container under Docker).
@@ -119,6 +121,47 @@ function InlineRenameInput({ initial, onSubmit, onCancel }: { initial: string; o
   )
 }
 
+/** The "+" new-session control: a menu offering a blank session, each preset,
+ *  and a link to manage presets. `trigger` is the button it hangs off. */
+function NewSessionMenu({
+  trigger,
+  presets,
+  onBlank,
+  onPreset,
+  onManage,
+}: {
+  trigger: ReactNode
+  presets: TerminalPresetDTO[]
+  onBlank: () => void
+  onPreset: (presetId: string) => void
+  onManage: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuItem onClick={onBlank}>
+          <SquareTerminal className="size-4" />
+          {t('terminal.blankSession')}
+        </DropdownMenuItem>
+        {presets.length > 0 && <DropdownMenuSeparator />}
+        {presets.map((p) => (
+          <DropdownMenuItem key={p.id} onClick={() => onPreset(p.id)}>
+            <Play className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{p.name}</span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onManage}>
+          <Settings2 className="size-4" />
+          {t('terminal.presets.manage')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function TerminalPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -133,6 +176,8 @@ export function TerminalPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [presets, setPresets] = useState<TerminalPresetDTO[]>([])
+  const [presetsDialogOpen, setPresetsDialogOpen] = useState(false)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [closeTarget, setCloseTarget] = useState<TerminalSessionDTO | null>(null)
   const [tmuxAvailable, setTmuxAvailable] = useState(false)
@@ -188,20 +233,28 @@ export function TerminalPage() {
 
   const refreshSessions = useCallback(async () => {
     try {
-      const res = await api.get<{ sessions: TerminalSessionDTO[] }>('/terminal/sessions')
-      setSessions(res.sessions)
+      const [sessionsRes, presetsRes] = await Promise.all([
+        api.get<{ sessions: TerminalSessionDTO[] }>('/terminal/sessions'),
+        api.get<{ presets: TerminalPresetDTO[] }>('/terminal/presets'),
+      ])
+      setSessions(sessionsRes.sessions)
+      setPresets(presetsRes.presets)
     } catch {
-      // Transient; the next SSE event or resync will repair the list.
+      // Transient; the next SSE event or resync will repair the lists.
     }
   }, [])
 
-  // The sidebar is shared state across the user's devices: the server pushes
-  // the fresh list on every lifecycle change, and we refetch on SSE resume
-  // (events are not replayed after a disconnect/locked phone).
+  // The sidebar + presets are shared state across the user's devices: the server
+  // pushes the fresh list on every change, and we refetch on SSE resume (events
+  // are not replayed after a disconnect/locked phone).
   useSSE({
     'terminal:sessions-changed': (data) => {
       const list = (data as { sessions?: TerminalSessionDTO[] }).sessions
       if (list) setSessions(list)
+    },
+    'terminal:presets-changed': (data) => {
+      const list = (data as { presets?: TerminalPresetDTO[] }).presets
+      if (list) setPresets(list)
     },
   })
   useSSEResync(refreshSessions)
@@ -219,8 +272,9 @@ export function TerminalPage() {
     }
   }, [])
 
-  /** Open the WS: attach to `sessionId`, or create a fresh shell when null. */
-  const connect = useCallback((sessionId: string | null) => {
+  /** Open the WS: attach to `sessionId`, or create a fresh shell when null
+   *  (optionally seeded from a preset's working directory + init script). */
+  const connect = useCallback((sessionId: string | null, presetId?: string) => {
     const term = termRef.current
     const fit = fitRef.current
     if (!term || !fit) return
@@ -229,6 +283,7 @@ export function TerminalPage() {
 
     const params = new URLSearchParams({ cols: String(term.cols), rows: String(term.rows) })
     if (sessionId) params.set('sessionId', sessionId)
+    if (presetId) params.set('presetId', presetId)
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
     const ws = new WebSocket(`${proto}://${window.location.host}/api/terminal/ws?${params}`)
     wsRef.current = ws
@@ -282,10 +337,10 @@ export function TerminalPage() {
     connect(id)
   }, [connect])
 
-  const newSession = useCallback(() => {
+  const newSession = useCallback((presetId?: string) => {
     setSheetOpen(false)
     termRef.current?.reset()
-    connect(null)
+    connect(null, presetId)
   }, [connect])
 
   const renameSession = useCallback(async (id: string, name: string) => {
@@ -422,11 +477,15 @@ export function TerminalPage() {
       .get<{ enabled: boolean; tmux: boolean }>('/terminal/status')
       .then((status) => {
         if (!disposed) setTmuxAvailable(status.tmux)
-        return api.get<{ sessions: TerminalSessionDTO[] }>('/terminal/sessions')
+        return Promise.all([
+          api.get<{ sessions: TerminalSessionDTO[] }>('/terminal/sessions'),
+          api.get<{ presets: TerminalPresetDTO[] }>('/terminal/presets'),
+        ])
       })
-      .then((res) => {
+      .then(([res, presetsRes]) => {
         if (disposed) return
         setSessions(res.sessions)
+        setPresets(presetsRes.presets)
         const last = sessionStorage.getItem(SESSION_KEY)
         const pick = res.sessions.find((s) => s.id === last) ?? res.sessions[res.sessions.length - 1]
         connect(pick?.id ?? null)
@@ -462,9 +521,17 @@ export function TerminalPage() {
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {t('terminal.sessions.title')}
         </span>
-        <Button variant="ghost" size="icon-sm" onClick={newSession} title={t('terminal.newSession')} aria-label={t('terminal.newSession')}>
-          <Plus className="size-4" />
-        </Button>
+        <NewSessionMenu
+          presets={presets}
+          onBlank={() => newSession()}
+          onPreset={(id) => newSession(id)}
+          onManage={() => setPresetsDialogOpen(true)}
+          trigger={
+            <Button variant="ghost" size="icon-sm" title={t('terminal.newSession')} aria-label={t('terminal.newSession')}>
+              <Plus className="size-4" />
+            </Button>
+          }
+        />
       </div>
       {/* Persistence indicator: tmux-backed sessions survive a restart with their
           processes; without tmux only the scrollback is restored. */}
@@ -643,10 +710,18 @@ export function TerminalPage() {
                   {t('terminal.reconnect')}
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={newSession}>
-                <Plus className="size-4" />
-                <span className="hidden sm:inline">{t('terminal.newSession')}</span>
-              </Button>
+              <NewSessionMenu
+                presets={presets}
+                onBlank={() => newSession()}
+                onPreset={(id) => newSession(id)}
+                onManage={() => setPresetsDialogOpen(true)}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Plus className="size-4" />
+                    <span className="hidden sm:inline">{t('terminal.newSession')}</span>
+                  </Button>
+                }
+              />
             </>
           ) : undefined
         }
@@ -708,6 +783,8 @@ export function TerminalPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TerminalPresetsDialog open={presetsDialogOpen} onOpenChange={setPresetsDialogOpen} presets={presets} />
     </div>
   )
 }

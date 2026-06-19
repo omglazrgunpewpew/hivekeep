@@ -437,6 +437,25 @@ Sessions du terminal web admin, persistées pour survivre à un redémarrage (la
 
 ---
 
+### `terminal_presets`
+
+Presets de session du terminal (par user) : dossier de départ + script d'init lancé une fois à la création d'une session depuis le preset.
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| `id` | text PK | UUID | |
+| `user_id` | text | FK → user.id, ON DELETE CASCADE, NOT NULL | Propriétaire |
+| `name` | text | NOT NULL | Nom du preset |
+| `cwd` | text | | Dossier de départ (`~` étendu côté serveur) ; NULL = home |
+| `init_script` | text | | Script multi-ligne tapé dans le shell au démarrage ; NULL = aucun |
+| `created_at` | integer | NOT NULL | Unix ms |
+| `updated_at` | integer | NOT NULL | Unix ms |
+
+**Index** :
+- `idx_terminal_presets_user` sur `user_id`
+
+---
+
 ### `tasks`
 
 Sous-Agents éphémères (tâches déléguées).

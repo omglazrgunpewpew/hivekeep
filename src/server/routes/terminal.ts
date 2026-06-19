@@ -20,6 +20,13 @@ import {
   resize,
   write,
 } from '@/server/services/terminal-sessions'
+import {
+  listPresets,
+  getPreset,
+  createPreset,
+  updatePreset,
+  deletePreset,
+} from '@/server/services/terminal-presets'
 
 const log = createLogger('terminal')
 
@@ -87,11 +94,47 @@ terminalRoutes.delete('/sessions/:id', (c) => {
   return c.json({ success: true })
 })
 
+// ─── Session presets (working directory + init script) ──────────────────────
+
+terminalRoutes.get('/presets', (c) => {
+  const user = c.get('user')
+  return c.json({ presets: listPresets(user.id) })
+})
+
+terminalRoutes.post('/presets', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const preset = createPreset(user.id, body)
+  if (!preset) {
+    return c.json({ error: { code: 'INVALID', message: 'A preset name is required' } }, 400)
+  }
+  return c.json({ preset }, 201)
+})
+
+terminalRoutes.patch('/presets/:id', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.json().catch(() => ({}))
+  const preset = updatePreset(c.req.param('id'), user.id, body)
+  if (!preset) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Preset not found or invalid name' } }, 404)
+  }
+  return c.json({ preset })
+})
+
+terminalRoutes.delete('/presets/:id', (c) => {
+  const user = c.get('user')
+  if (!deletePreset(c.req.param('id'), user.id)) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Preset not found' } }, 404)
+  }
+  return c.json({ success: true })
+})
+
 terminalRoutes.get(
   '/ws',
   upgradeWebSocket((c) => {
     const user = c.get('user') as AppVariables['user']
     const requestedId = c.req.query('sessionId')
+    const presetId = c.req.query('presetId')
     const cols = Number(c.req.query('cols') ?? 80) || 80
     const rows = Number(c.req.query('rows') ?? 24) || 24
 
@@ -126,9 +169,15 @@ terminalRoutes.get(
           }
         }
 
+        // A new session may be seeded from a preset (start directory + init
+        // script). The init script runs once, here at creation.
+        const preset = presetId ? getPreset(presetId, user.id) : null
         let session
         try {
-          session = createSession(user.id, cols, rows)
+          session = createSession(user.id, cols, rows, {
+            cwd: preset?.cwd,
+            initScript: preset?.initScript,
+          })
         } catch (err) {
           log.warn({ err, userId: user.id }, 'Terminal session creation failed')
           send({ type: 'error', code: 'TERMINAL_MAX_SESSIONS' })

@@ -3310,6 +3310,26 @@
       "persistentHint": "服务器重启后会话及其运行中的进程仍然保留。",
       "unavailable": "未检测到 tmux：会话无法在重启后保留",
       "unavailableHint": "在主机上安装 tmux，可让会话的进程在重启后保留。否则仅恢复回滚缓冲区。"
+    },
+    "blankSession": "空白会话",
+    "presets": {
+      "manage": "管理预设…",
+      "new": "新建预设",
+      "title": "会话预设",
+      "description": "可复用模板：在某个目录中打开会话并运行启动脚本。",
+      "editTitle": "编辑预设",
+      "newTitle": "新建预设",
+      "emptyTitle": "暂无预设",
+      "emptyDescription": "创建预设，可在指定目录打开会话并运行启动命令。",
+      "nameRequired": "名称为必填项",
+      "nameLabel": "名称",
+      "namePlaceholder": "例如 Hivekeep + Claude",
+      "cwdLabel": "工作目录",
+      "cwdHelp": "会话从此处开始。~ 表示主目录。留空表示主目录。",
+      "initLabel": "初始化脚本",
+      "initHelp": "会话打开时运行一次，如同手动输入。每行一个命令。",
+      "deleteConfirmTitle": "删除 {{name}}？",
+      "deleteConfirmDescription": "该预设将被移除。运行中的会话不受影响。"
     }
   },
   "orphanTask": {
