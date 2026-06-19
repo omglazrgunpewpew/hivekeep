@@ -162,16 +162,39 @@ export const requestChannelSetupTool: ToolRegistration = {
         if (!agent) return { error: `Agent not found: "${agent_id}".` }
 
         // QR-pairing channels (e.g. WhatsApp Web) have no token to paste — they
-        // connect by scanning a code. The secure popup can't show/scan a QR, so
-        // hand back step-by-step guidance instead of dead-ending on "no secret".
+        // connect by scanning a code. Open an in-chat QR card: create the
+        // channel, then start pairing so the live QR streams into the card.
+        // Generic over the adapter's `pairing` capability. See interactive-setup.md.
         if (adapter.pairing === 'qr') {
           const displayName = adapter.meta?.displayName ?? platform
+          const { createChannel, activateChannel } = await import('@/server/services/channels')
+          const channel = await createChannel({
+            agentId: agent.id,
+            name,
+            platform: platform as Parameters<typeof createChannel>[0]['platform'],
+            platformConfig: {},
+            createdBy: 'agent',
+          })
+          const { promptId } = await createSecretPrompt({
+            agentId: ctx.agentId,
+            taskId: ctx.taskId,
+            purpose: 'channel',
+            kind: 'qr',
+            title: `Connect ${name} (${displayName})`,
+            description: 'Scan the QR code to link WhatsApp. I never see your messages or session.',
+            fields: [],
+            spec: { channelId: channel.id, platform, name, agentId: agent.id },
+            qr: { channelId: channel.id },
+          })
+          // Start pairing AFTER the card exists so the modal is mounted to
+          // receive the live QR. The card resolves on the 'connected' event.
+          void activateChannel(channel.id).catch(() => {})
           return {
-            status: 'manual_setup_required',
+            status: 'pending',
+            promptId,
             message:
-              `The "${platform}" channel pairs by scanning a QR code (no token to paste), so it can't go through the secure popup. ` +
-              `Tell the user to open Settings → Channels → Add channel, pick "${displayName}", choose the Agent "${agent.name}", click "Show QR code", ` +
-              `then scan it from their phone in WhatsApp → Settings → Linked devices → Link a device. The channel activates automatically once scanned.`,
+              'An in-chat QR card is open: the user scans it from WhatsApp → Settings → Linked devices. ' +
+              'Your turn ends now; you resume once pairing completes. Do not narrate manual Settings steps.',
           }
         }
 

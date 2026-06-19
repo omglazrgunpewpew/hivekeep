@@ -357,6 +357,38 @@ export async function respondToSecretPrompt(
 }
 
 /**
+ * Resolve a pending QR setup card (kind:'qr') for a channel from a server-side
+ * pairing event (connected / logged-out / error) — these cards have no user
+ * submit. Called by the channels pairing bridge. No-op when no card waits on
+ * the channel (e.g. the Settings dialog flow).
+ */
+export async function resolveQrCardForChannel(
+  channelId: string,
+  outcome: { ok: boolean; summary: string },
+): Promise<void> {
+  const rows = await db.select().from(secretPrompts).where(eq(secretPrompts.status, 'pending')).all()
+  for (const r of rows) {
+    let spec: { kind?: string; channelId?: string }
+    try {
+      spec = JSON.parse(r.spec) as { kind?: string; channelId?: string }
+    } catch {
+      continue
+    }
+    if (spec.kind !== 'qr' || spec.channelId !== channelId) continue
+    await finalizeSecretPrompt(
+      { id: r.id, agentId: r.agentId, taskId: r.taskId },
+      {
+        ok: outcome.ok,
+        status: 'answered',
+        summary: outcome.summary,
+        confirmationPrefix: outcome.ok ? 'Channel paired' : 'Pairing ended',
+        resultRef: { channelId, ok: outcome.ok },
+      },
+    )
+  }
+}
+
+/**
  * Cancel a pending secure-input prompt: the user dismissed the popup without
  * providing the value. Takes the prompt out of `pending` (so it never re-fires)
  * and resumes the Agent / sub-Agent with a neutral "declined" note so a suspended
@@ -383,6 +415,17 @@ export async function cancelSecretPrompt(
       })
     } catch { /* spec unreadable — event skipped */ }
   }
+
+  // Dismissing a QR pairing card mid-pair leaves the channel half-connected —
+  // deactivate it so we don't keep an unpaired socket alive.
+  try {
+    const spec = JSON.parse(prompt.spec) as { kind?: string; channelId?: string }
+    if (spec.kind === 'qr' && spec.channelId) {
+      cancelSummary = 'the user dismissed the WhatsApp QR pairing before scanning.'
+      const { deactivateChannel } = await import('@/server/services/channels')
+      await deactivateChannel(spec.channelId).catch(() => {})
+    }
+  } catch { /* spec unreadable — skip */ }
 
   await finalizeSecretPrompt(prompt, {
     ok: false,
@@ -474,9 +517,9 @@ export async function getPendingSecretPrompts(agentId: string) {
     .from(secretPrompts)
     .where(eq(secretPrompts.agentId, agentId))
     .all()
-  return rows
-    .filter((r) => r.status === 'pending')
-    .map((r) => {
+  const pending = rows.filter((r) => r.status === 'pending')
+  return Promise.all(
+    pending.map(async (r) => {
       const spec = JSON.parse(r.spec) as {
         fields: SecretPromptField[]
         title?: string
@@ -484,6 +527,16 @@ export async function getPendingSecretPrompts(agentId: string) {
         kind?: SetupCardKind
         oauth?: OAuthCardPayload
         qr?: QrCardPayload
+        channelId?: string
+      }
+      // For a QR card, fold in the latest known QR image so a card that mounts
+      // late / on resync renders immediately instead of waiting for the next
+      // live channel:pairing tick.
+      let qr = spec.qr
+      if (spec.kind === 'qr' && spec.channelId) {
+        const { getLatestChannelQr } = await import('@/server/services/channels')
+        const qrImage = getLatestChannelQr(spec.channelId)
+        qr = { channelId: spec.channelId, ...(qrImage ? { qrImage } : {}) }
       }
       return {
         promptId: r.id,
@@ -494,7 +547,8 @@ export async function getPendingSecretPrompts(agentId: string) {
         fields: spec.fields ?? [],
         kind: spec.kind ?? 'fields',
         ...(spec.oauth ? { oauth: spec.oauth } : {}),
-        ...(spec.qr ? { qr: spec.qr } : {}),
+        ...(qr ? { qr } : {}),
       }
-    })
+    }),
+  )
 }

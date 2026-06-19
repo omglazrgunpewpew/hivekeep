@@ -595,10 +595,13 @@ export interface OAuthCardPayload {
   redirectStyle: 'page' | 'loopback'
 }
 
-/** Extra payload for the `qr` card kind. The QR image itself arrives live via
- *  the `channel:pairing` SSE event, keyed by `channelId`. */
+/** Extra payload for the `qr` card kind. The QR image arrives live via the
+ *  `channel:pairing` SSE event, keyed by `channelId`; `qrImage` carries the
+ *  latest known one for cards that mount late / on resync. */
 export interface QrCardPayload {
   channelId: string
+  /** Latest QR as a data-URL PNG, when one has already been emitted. */
+  qrImage?: string
 }
 
 /** Serialized file as returned by the API and displayed in chat */

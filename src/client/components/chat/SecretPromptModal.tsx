@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ShieldCheck, ExternalLink, Lock, Eye, TriangleAlert, LogIn } from 'lucide-react'
+import { ShieldCheck, ExternalLink, Lock, Eye, TriangleAlert, LogIn, Loader2, Smartphone } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Button } from '@/client/components/ui/button'
 import { Input } from '@/client/components/ui/input'
 import { Label } from '@/client/components/ui/label'
 import { useSecretPrompts } from '@/client/hooks/useSecretPrompts'
+import { useSSE } from '@/client/hooks/useSSE'
 
 /**
  * Secure-input modal: appears when the configurator Agent requests a secret
@@ -27,13 +28,24 @@ export function SecretPromptModal({ agentId }: { agentId: string | null }) {
   const { prompts, respond, cancel, isResponding } = useSecretPrompts(agentId)
   const [values, setValues] = useState<Record<string, string>>({})
   const [dismissed, setDismissed] = useState<string | null>(null)
+  const [qrImage, setQrImage] = useState('')
 
   const prompt = prompts.find((p) => p.promptId !== dismissed) ?? null
 
   // Reset the form whenever a different prompt comes to the front.
   useEffect(() => {
     setValues({})
-  }, [prompt?.promptId])
+    setQrImage((prompt?.kind === 'qr' && prompt.qr?.qrImage) || '')
+  }, [prompt?.promptId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // For a QR card, follow the live pairing stream for this channel.
+  useSSE({
+    'channel:pairing': (data) => {
+      if (!prompt || prompt.kind !== 'qr' || !prompt.qr) return
+      if (data.channelId !== prompt.qr.channelId) return
+      if (data.status === 'qr' && data.qrImage) setQrImage(String(data.qrImage))
+    },
+  })
 
   if (!prompt) return null
 
@@ -41,6 +53,8 @@ export function SecretPromptModal({ agentId }: { agentId: string | null }) {
   const isReveal = prompt.purpose === 'reveal'
   // oauth: interactive sign-in card (button → browser → paste the code back).
   const isOAuth = prompt.kind === 'oauth' && !!prompt.oauth
+  // qr: pairing card — resolves from a server event, so it has no submit.
+  const isQr = prompt.kind === 'qr' && !!prompt.qr
   const canSubmit = isOAuth
     ? (values.code?.trim().length ?? 0) > 0
     : prompt.fields.every((f) => !f.secret || (values[f.key]?.trim().length ?? 0) > 0)
@@ -78,6 +92,25 @@ export function SecretPromptModal({ agentId }: { agentId: string | null }) {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {isQr && (
+            <div className="flex flex-col items-center gap-3 py-1 text-center">
+              <p className="text-sm text-muted-foreground">{t('settings.channels.qr.instructions')}</p>
+              <div className="rounded-xl border border-border bg-white p-3">
+                {qrImage ? (
+                  <img src={qrImage} alt="WhatsApp QR code" className="size-56" width={224} height={224} />
+                ) : (
+                  <div className="flex size-56 items-center justify-center">
+                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Smartphone className="size-3.5" />
+                {t('settings.channels.qr.waiting')}
+              </p>
+            </div>
+          )}
+
           {isOAuth && prompt.oauth && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
@@ -117,7 +150,7 @@ export function SecretPromptModal({ agentId }: { agentId: string | null }) {
             </div>
           )}
 
-          {!isOAuth && prompt.fields.map((field) => (
+          {!isOAuth && !isQr && prompt.fields.map((field) => (
             <div key={field.key} className="space-y-1.5">
               <Label htmlFor={`secret-${field.key}`}>{field.label}</Label>
               <Input
@@ -152,27 +185,30 @@ export function SecretPromptModal({ agentId }: { agentId: string | null }) {
               <TriangleAlert className="size-4 shrink-0 text-warning" />
               <p>{t('secretPrompt.revealWarning')}</p>
             </div>
-          ) : (
+          ) : !isQr ? (
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="size-3 shrink-0" />
               {t('secretPrompt.privacyNote')}
             </p>
-          )}
+          ) : null}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={handleCancel} disabled={isResponding}>
             {isReveal ? t('secretPrompt.deny') : t('common.cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit || isResponding}>
-            {isResponding
-              ? t('secretPrompt.saving')
-              : isReveal
-                ? t('secretPrompt.approve')
-                : isOAuth
-                  ? t('secretPrompt.connect')
-                  : t('secretPrompt.submit')}
-          </Button>
+          {/* The QR card resolves from the pairing event — no submit button. */}
+          {!isQr && (
+            <Button onClick={handleSubmit} disabled={!canSubmit || isResponding}>
+              {isResponding
+                ? t('secretPrompt.saving')
+                : isReveal
+                  ? t('secretPrompt.approve')
+                  : isOAuth
+                    ? t('secretPrompt.connect')
+                    : t('secretPrompt.submit')}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
