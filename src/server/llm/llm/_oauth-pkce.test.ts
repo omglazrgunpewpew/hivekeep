@@ -16,6 +16,7 @@ const CLIENT: PkceClient = {
   redirectUri: 'https://example.com/callback',
   scopes: ['a', 'b'],
   authorizeParams: { code: 'true' },
+  includeStateInExchange: true,
 }
 
 function b64url(buf: Buffer): string {
@@ -105,6 +106,22 @@ describe('exchangePkceCode', () => {
     expect(tokens.refreshToken).toBe('RT')
     expect(tokens.idToken).toBe('ID')
     expect(tokens.expiresAt).toBeGreaterThanOrEqual(before + 3600 * 1000)
+  })
+
+  it('omits state from the token body unless the client opts in (OpenAI rejects it)', async () => {
+    let captured: any = null
+    globalThis.fetch = (async (_url: any, init: any) => {
+      captured = JSON.parse(init.body)
+      return new Response(JSON.stringify({ access_token: 'AT', refresh_token: 'RT' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    }) as unknown as typeof fetch
+
+    const noState: PkceClient = { ...CLIENT, includeStateInExchange: false }
+    await exchangePkceCode({ client: noState, code: 'CODE', verifier: 'V', state: 'ST' })
+    expect(captured).not.toHaveProperty('state')
+    expect(captured).toMatchObject({ grant_type: 'authorization_code', code: 'CODE', code_verifier: 'V' })
   })
 
   it('throws with the upstream status + body on failure', async () => {

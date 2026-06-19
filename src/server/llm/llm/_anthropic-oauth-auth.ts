@@ -61,6 +61,8 @@ export const ANTHROPIC_PKCE_CLIENT: PkceClient = {
   redirectUri: 'https://console.anthropic.com/oauth/code/callback',
   scopes: ['org:create_api_key', 'user:profile', 'user:inference'],
   authorizeParams: { code: 'true' },
+  // Anthropic's token endpoint requires `state` echoed back in the exchange.
+  includeStateInExchange: true,
 }
 // Track the latest published Claude Code CLI version. Bump when Anthropic
 // releases new versions to avoid being flagged as an outdated client.

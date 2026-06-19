@@ -32,6 +32,10 @@ export interface PkceClient {
   /** Extra static query params merged into the authorize URL (e.g. `code=true`
    *  for Anthropic's "show the code" mode). */
   authorizeParams?: Record<string, string>
+  /** Whether to echo `state` back in the token-exchange body. Anthropic
+   *  REQUIRES it; OpenAI/Codex REJECTS it ("Unknown parameter: 'state'"), so
+   *  this is opt-in per provider. Defaults to off. */
+  includeStateInExchange?: boolean
 }
 
 export interface PkcePair {
@@ -135,7 +139,9 @@ export async function exchangePkceCode(opts: {
     redirect_uri: opts.client.redirectUri,
     code_verifier: opts.verifier,
   }
-  if (opts.state) body.state = opts.state
+  // Only providers that accept `state` in the token request get it (Anthropic);
+  // OpenAI/Codex rejects it with a 400 invalid_request.
+  if (opts.state && opts.client.includeStateInExchange) body.state = opts.state
 
   const res = await fetch(opts.client.tokenUrl, {
     method: 'POST',
