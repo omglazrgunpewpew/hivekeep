@@ -21,11 +21,35 @@ const log = createLogger('channels')
 
 // ─── Interactive pairing (QR) → SSE bridge ──────────────────────────────────
 
+/** Latest QR data-URL per channel, so a setup card that mounts after the first
+ *  QR broadcast (or on resync) can render it immediately. Cleared on resolve. */
+const latestQrByChannel = new Map<string, string>()
+
+/** The most recent QR image for a channel, if pairing is in progress. */
+export function getLatestChannelQr(channelId: string): string | undefined {
+  return latestQrByChannel.get(channelId)
+}
+
+/**
+ * Resolve any in-chat QR setup card waiting on this channel (P2 of
+ * interactive-setup). No-op for the Settings dialog flow (no card). Dynamic
+ * import to avoid a static cycle with secret-prompts.
+ */
+async function resolveQrCard(channelId: string, ok: boolean, summary: string): Promise<void> {
+  try {
+    const { resolveQrCardForChannel } = await import('@/server/services/secret-prompts')
+    await resolveQrCardForChannel(channelId, { ok, summary })
+  } catch (err) {
+    log.warn({ channelId, err }, 'Failed to resolve QR setup card')
+  }
+}
+
 /**
  * Build the `onPairing` sink for an interactive-pairing adapter (e.g.
  * WhatsApp-Web). It turns the adapter's QR/connection lifecycle into
  * `channel:pairing` SSE events (encoding the QR string into a data-URL image so
- * the client just renders an <img>) and drives the channel status.
+ * the client just renders an <img>), drives the channel status, and resolves
+ * any in-chat QR setup card on a terminal outcome.
  */
 function makePairingHandler(channelId: string, agentId: string): (e: ChannelPairingEvent) => void {
   return (event) => {
@@ -33,32 +57,39 @@ function makePairingHandler(channelId: string, agentId: string): (e: ChannelPair
       try {
         if (event.type === 'qr') {
           const qrImage = await QRCode.toDataURL(event.qr, { margin: 1, width: 320 })
+          latestQrByChannel.set(channelId, qrImage)
           sseManager.broadcast({
             type: 'channel:pairing',
             agentId,
             data: { channelId, agentId, status: 'qr', qrImage },
           })
         } else if (event.type === 'connected') {
+          latestQrByChannel.delete(channelId)
           await setChannelStatus(channelId, 'active')
           sseManager.broadcast({
             type: 'channel:pairing',
             agentId,
             data: { channelId, agentId, status: 'connected' },
           })
+          await resolveQrCard(channelId, true, 'the WhatsApp channel was paired and is now active.')
         } else if (event.type === 'logged-out') {
+          latestQrByChannel.delete(channelId)
           await setChannelStatus(channelId, 'error', 'WhatsApp session logged out — scan the QR code again to re-pair.')
           sseManager.broadcast({
             type: 'channel:pairing',
             agentId,
             data: { channelId, agentId, status: 'logged-out' },
           })
+          await resolveQrCard(channelId, false, 'the WhatsApp session was logged out before pairing completed.')
         } else {
+          latestQrByChannel.delete(channelId)
           await setChannelStatus(channelId, 'error', event.message)
           sseManager.broadcast({
             type: 'channel:pairing',
             agentId,
             data: { channelId, agentId, status: 'error', message: event.message },
           })
+          await resolveQrCard(channelId, false, `pairing failed: ${event.message}`)
         }
       } catch (err) {
         log.error({ channelId, err }, 'Failed to relay channel pairing event')

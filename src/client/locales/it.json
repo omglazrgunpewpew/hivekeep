@@ -6,7 +6,14 @@
     "approve": "Rivela il valore",
     "deny": "Nega",
     "saving": "Salvataggio…",
-    "submit": "Salva in modo sicuro"
+    "submit": "Salva in modo sicuro",
+    "connect": "Connetti",
+    "oauthSignIn": "Accedi con {{provider}}",
+    "oauthHint": "Accedi a {{provider}} nella scheda del browser che si apre, poi incolla qui sotto il codice di autorizzazione.",
+    "oauthLoopbackHint": "Dopo l'approvazione, il browser mostra un errore localhost. È normale: copia l'indirizzo completo dalla barra degli indirizzi e incollalo qui sotto.",
+    "oauthCodeLabel": "Codice di autorizzazione",
+    "oauthCodePlaceholder": "Incolla qui il codice",
+    "oauthLoopbackPlaceholder": "Incolla l'URL localhost (o il codice)"
   },
   "setup": {
     "button": {
@@ -2230,7 +2237,10 @@
         "instructions": "Apri WhatsApp sul telefono, vai su Impostazioni > Dispositivi collegati > Collega un dispositivo e scansiona questo codice.",
         "waiting": "In attesa della scansione",
         "connected": "WhatsApp connesso",
-        "failed": "Associazione non riuscita. Riprova."
+        "failed": "Associazione non riuscita. Riprova.",
+        "repair": "Ricollega",
+        "repairTitle": "Ricollega {{name}}",
+        "repairHint": "La sessione WhatsApp deve essere ricollegata. Scansiona questo codice per riconnetterti."
       }
     },
     "notifications": {

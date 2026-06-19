@@ -6,7 +6,14 @@
     "approve": "Revelar o valor",
     "deny": "Negar",
     "saving": "Salvando…",
-    "submit": "Salvar com segurança"
+    "submit": "Salvar com segurança",
+    "connect": "Conectar",
+    "oauthSignIn": "Entrar com {{provider}}",
+    "oauthHint": "Entre no {{provider}} na aba do navegador que abrir e cole abaixo o código de autorização.",
+    "oauthLoopbackHint": "Após aprovar, o navegador mostra um erro de localhost. Isso é normal: copie o endereço completo da barra de endereços e cole abaixo.",
+    "oauthCodeLabel": "Código de autorização",
+    "oauthCodePlaceholder": "Cole o código aqui",
+    "oauthLoopbackPlaceholder": "Cole a URL do localhost (ou o código)"
   },
   "setup": {
     "button": {
@@ -2230,7 +2237,10 @@
         "instructions": "Abra o WhatsApp no seu telefone, vá em Configurações > Aparelhos conectados > Conectar um aparelho e escaneie este código.",
         "waiting": "Aguardando a leitura",
         "connected": "WhatsApp conectado",
-        "failed": "Falha no pareamento. Tente novamente."
+        "failed": "Falha no pareamento. Tente novamente.",
+        "repair": "Reparear",
+        "repairTitle": "Reparear {{name}}",
+        "repairHint": "A sessão do WhatsApp precisa ser vinculada novamente. Escaneie este código para reconectar."
       }
     },
     "notifications": {

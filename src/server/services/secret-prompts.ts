@@ -30,7 +30,14 @@ import { testProviderConnection, getCapabilitiesForType } from '@/server/provide
 import { generateProviderSlug } from '@/server/services/provider-slug'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
-import type { SecretPromptField, SecretPromptPurpose } from '@/shared/types'
+import { completeProviderSignIn } from '@/server/services/provider-signin'
+import type {
+  SecretPromptField,
+  SecretPromptPurpose,
+  SetupCardKind,
+  OAuthCardPayload,
+  QrCardPayload,
+} from '@/shared/types'
 
 const log = createLogger('secret-prompts')
 
@@ -59,16 +66,34 @@ export interface ChannelSecretSpec {
   config?: Record<string, unknown>
 }
 
+/** Server-only spec for an OAuth setup card (kind:'oauth'). The verifier/state
+ *  are persisted here but NEVER sent over SSE. */
+export interface OAuthCardSpec {
+  type: string
+  name: string
+  families?: string[]
+  /** PKCE verifier minted at card creation — secret, server-side only. */
+  verifier: string
+  state: string
+}
+
 interface CreateSecretPromptParams {
   agentId: string
   taskId?: string
   purpose: SecretPromptPurpose
   title: string
   description?: string
-  /** Secret fields the user must fill (rendered as masked inputs). */
+  /** Secret fields the user must fill (rendered as masked inputs). Empty for
+   *  the interactive card kinds (oauth/qr), which render their own UI. */
   fields: SecretPromptField[]
-  /** Purpose-specific data (ProviderSecretSpec | VaultSecretSpec). */
+  /** Purpose-specific data (ProviderSecretSpec | VaultSecretSpec | OAuthCardSpec…). */
   spec: Record<string, unknown>
+  /** Setup-card kind (interactive-setup.md). Omit ⇒ 'fields' (the secret popup). */
+  kind?: SetupCardKind
+  /** SSE-safe payload for the 'oauth' card (authorizeUrl, etc. — no secrets). */
+  oauth?: OAuthCardPayload
+  /** SSE-safe payload for the 'qr' card. */
+  qr?: QrCardPayload
 }
 
 export async function createSecretPrompt(params: CreateSecretPromptParams): Promise<{ promptId: string }> {
@@ -78,7 +103,16 @@ export async function createSecretPrompt(params: CreateSecretPromptParams): Prom
     agentId: params.agentId,
     taskId: params.taskId ?? null,
     purpose: params.purpose,
-    spec: JSON.stringify({ ...params.spec, fields: params.fields, title: params.title, description: params.description ?? null }),
+    spec: JSON.stringify({
+      ...params.spec,
+      fields: params.fields,
+      title: params.title,
+      description: params.description ?? null,
+      kind: params.kind ?? 'fields',
+      // SSE-safe card payloads (no secrets) — re-sent on resync via getPending.
+      ...(params.oauth ? { oauth: params.oauth } : {}),
+      ...(params.qr ? { qr: params.qr } : {}),
+    }),
     status: 'pending',
     createdAt: new Date(),
   })
@@ -104,6 +138,9 @@ export async function createSecretPrompt(params: CreateSecretPromptParams): Prom
       title: params.title,
       description: params.description ?? null,
       fields: params.fields,
+      kind: params.kind ?? 'fields',
+      ...(params.oauth ? { oauth: params.oauth } : {}),
+      ...(params.qr ? { qr: params.qr } : {}),
     },
   })
 
@@ -152,8 +189,33 @@ export async function respondToSecretPrompt(
   let confirmationOverride: string | undefined
   let messageMetadata: Record<string, unknown> | undefined
 
+  const kind = (spec.kind as SetupCardKind | undefined) ?? 'fields'
+
   try {
-    if (prompt.purpose === 'provider') {
+    if (kind === 'oauth') {
+      // OAuth setup card: exchange the pasted code (held verifier is in the
+      // server-only spec) and create the provider. Generic over any provider
+      // that declared `oauth` — see interactive-setup.md.
+      const os = spec as unknown as OAuthCardSpec
+      const result = await completeProviderSignIn({
+        type: os.type,
+        codeInput: values.code ?? '',
+        verifier: os.verifier,
+        expectedState: os.state,
+        name: os.name,
+        createdByAgentId: prompt.agentId,
+      })
+      if (!result.ok) {
+        // Throw → finalize + resume with a retry note (codes expire fast).
+        throw new Error(`sign-in ${result.code}: ${result.message}`)
+      }
+      const p = result.provider
+      resultRef = { providerId: p.id, valid: p.isValid, capabilities: p.capabilities }
+      summary = p.isValid
+        ? `Signed in to "${p.name}" (${p.type}). Capabilities: ${p.capabilities.join(', ')}. Provider id: ${p.slug}.`
+        : `Signed in to "${p.name}" (${p.type}) but the validation probe failed — the user may need to retry.`
+      log.info({ promptId, providerId: p.id, type: p.type, valid: p.isValid }, 'Provider created from OAuth card')
+    } else if (prompt.purpose === 'provider') {
       const ps = spec as unknown as ProviderSecretSpec
       const rawConfig: Record<string, string> = { ...(ps.config ?? {}), ...values }
 
@@ -295,6 +357,38 @@ export async function respondToSecretPrompt(
 }
 
 /**
+ * Resolve a pending QR setup card (kind:'qr') for a channel from a server-side
+ * pairing event (connected / logged-out / error) — these cards have no user
+ * submit. Called by the channels pairing bridge. No-op when no card waits on
+ * the channel (e.g. the Settings dialog flow).
+ */
+export async function resolveQrCardForChannel(
+  channelId: string,
+  outcome: { ok: boolean; summary: string },
+): Promise<void> {
+  const rows = await db.select().from(secretPrompts).where(eq(secretPrompts.status, 'pending')).all()
+  for (const r of rows) {
+    let spec: { kind?: string; channelId?: string }
+    try {
+      spec = JSON.parse(r.spec) as { kind?: string; channelId?: string }
+    } catch {
+      continue
+    }
+    if (spec.kind !== 'qr' || spec.channelId !== channelId) continue
+    await finalizeSecretPrompt(
+      { id: r.id, agentId: r.agentId, taskId: r.taskId },
+      {
+        ok: outcome.ok,
+        status: 'answered',
+        summary: outcome.summary,
+        confirmationPrefix: outcome.ok ? 'Channel paired' : 'Pairing ended',
+        resultRef: { channelId, ok: outcome.ok },
+      },
+    )
+  }
+}
+
+/**
  * Cancel a pending secure-input prompt: the user dismissed the popup without
  * providing the value. Takes the prompt out of `pending` (so it never re-fires)
  * and resumes the Agent / sub-Agent with a neutral "declined" note so a suspended
@@ -321,6 +415,17 @@ export async function cancelSecretPrompt(
       })
     } catch { /* spec unreadable — event skipped */ }
   }
+
+  // Dismissing a QR pairing card mid-pair leaves the channel half-connected —
+  // deactivate it so we don't keep an unpaired socket alive.
+  try {
+    const spec = JSON.parse(prompt.spec) as { kind?: string; channelId?: string }
+    if (spec.kind === 'qr' && spec.channelId) {
+      cancelSummary = 'the user dismissed the WhatsApp QR pairing before scanning.'
+      const { deactivateChannel } = await import('@/server/services/channels')
+      await deactivateChannel(spec.channelId).catch(() => {})
+    }
+  } catch { /* spec unreadable — skip */ }
 
   await finalizeSecretPrompt(prompt, {
     ok: false,
@@ -412,10 +517,27 @@ export async function getPendingSecretPrompts(agentId: string) {
     .from(secretPrompts)
     .where(eq(secretPrompts.agentId, agentId))
     .all()
-  return rows
-    .filter((r) => r.status === 'pending')
-    .map((r) => {
-      const spec = JSON.parse(r.spec) as { fields: SecretPromptField[]; title?: string; description?: string | null }
+  const pending = rows.filter((r) => r.status === 'pending')
+  return Promise.all(
+    pending.map(async (r) => {
+      const spec = JSON.parse(r.spec) as {
+        fields: SecretPromptField[]
+        title?: string
+        description?: string | null
+        kind?: SetupCardKind
+        oauth?: OAuthCardPayload
+        qr?: QrCardPayload
+        channelId?: string
+      }
+      // For a QR card, fold in the latest known QR image so a card that mounts
+      // late / on resync renders immediately instead of waiting for the next
+      // live channel:pairing tick.
+      let qr = spec.qr
+      if (spec.kind === 'qr' && spec.channelId) {
+        const { getLatestChannelQr } = await import('@/server/services/channels')
+        const qrImage = getLatestChannelQr(spec.channelId)
+        qr = { channelId: spec.channelId, ...(qrImage ? { qrImage } : {}) }
+      }
       return {
         promptId: r.id,
         agentId: r.agentId,
@@ -423,6 +545,10 @@ export async function getPendingSecretPrompts(agentId: string) {
         title: spec.title ?? 'Secure input needed',
         description: spec.description ?? null,
         fields: spec.fields ?? [],
+        kind: spec.kind ?? 'fields',
+        ...(spec.oauth ? { oauth: spec.oauth } : {}),
+        ...(qr ? { qr } : {}),
       }
-    })
+    }),
+  )
 }

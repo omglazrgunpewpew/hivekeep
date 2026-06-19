@@ -1033,6 +1033,59 @@ export type ChatChunk =
   | { type: 'finish'; reason: FinishReason; usage: Usage }
 
 /** Native LLM provider interface — plugins implement this directly. */
+/**
+ * A PKCE public-client descriptor (no client secret) for an interactive OAuth
+ * sign-in. The host runs the authorization-code + PKCE dance on the provider's
+ * behalf (see interactive-setup.md). A plugin provider can declare one to get
+ * an in-chat "Sign in" card for free — the host never hardcodes a provider id.
+ */
+export interface PkceClient {
+  clientId: string
+  authorizeUrl: string
+  tokenUrl: string
+  /** Fixed redirect URI registered with the provider's OAuth app. Not a real
+   *  callback the host serves — the redirect page surfaces the code for the
+   *  user to paste back. */
+  redirectUri: string
+  scopes: string[]
+  /** Extra static query params merged into the authorize URL (e.g. `code=true`). */
+  authorizeParams?: Record<string, string>
+  /** Whether to echo `state` back in the token-exchange body. Some providers
+   *  require it (Anthropic), others reject it (OpenAI). Opt-in, default off. */
+  includeStateInExchange?: boolean
+}
+
+/** Parsed token response from a PKCE code exchange. */
+export interface PkceTokenResponse {
+  accessToken: string
+  refreshToken?: string
+  /** Absolute expiry, Unix ms (when the provider returns `expires_in`). */
+  expiresAt?: number
+  /** Raw OIDC id_token, when present. */
+  idToken?: string
+  /** The verbatim parsed token payload, for provider-specific extraction. */
+  raw: Record<string, unknown>
+}
+
+/**
+ * Declares that a provider authenticates via an interactive browser sign-in
+ * rather than a pasteable key. The PRESENCE of this field is the generic signal
+ * the host keys off to offer the OAuth "Sign in" card (chat) and toggle
+ * (Settings) — no provider id is ever hardcoded. See interactive-setup.md.
+ */
+export interface ProviderOAuthDescriptor {
+  /** The PKCE public client to run the sign-in against. */
+  client: PkceClient
+  /** Lift durable extras from the token response into the stored token bundle
+   *  (e.g. a ChatGPT account id parsed from the id_token). Optional. */
+  buildExtra?: (tokens: PkceTokenResponse) => Record<string, string> | undefined
+  /** How the provider's redirect surfaces the code, so the UI can word the
+   *  paste step generically: `'page'` = the code is shown on a page (paste the
+   *  code); `'loopback'` = redirected to a localhost URL that won't load (paste
+   *  the whole URL — the host extracts the code). */
+  redirectStyle: 'page' | 'loopback'
+}
+
 export interface LLMProvider extends ProviderUIHints {
   /** Stable identifier stored in the providers table. Plugin loader prefixes
    *  this with `plugin:<plugin-name>:` to avoid collisions with built-ins. */
@@ -1071,6 +1124,15 @@ export interface LLMProvider extends ProviderUIHints {
    * Undefined defaults to `per-token` — the conservative assumption.
    */
   readonly billing?: 'subscription' | 'per-token' | 'local'
+
+  /**
+   * Optional interactive OAuth sign-in declaration. When present, the provider
+   * is connected by a browser sign-in (PKCE) rather than a pasteable key — the
+   * host surfaces an in-chat "Sign in" card and a Settings "Sign in" toggle.
+   * Generic: the card layer keys off this field, never the provider id. See
+   * interactive-setup.md.
+   */
+  readonly oauth?: ProviderOAuthDescriptor
 
   /** Verify the credentials work. Called by the UI before saving. */
   authenticate(config: ProviderConfig): Promise<AuthResult>
@@ -2522,6 +2584,27 @@ export type PluginCardActionResult = { ok: true } | { ok: false; error: string }
  * before instantiating the context. The generic is purely a type-side
  * convenience for the plugin's call sites.
  */
+/**
+ * OAuth helper for a plugin LLM provider that declares an `oauth` descriptor
+ * (interactive sign-in). When the user connects that provider via the in-app
+ * "Sign in" card, the host stores + refreshes its tokens in the vault; this is
+ * how the plugin reads a fresh access token inside `chat()` / `authenticate()`.
+ *
+ * Scoped to the plugin's OWN providers: passing a config for a provider outside
+ * this plugin's namespace returns null.
+ */
+export interface PluginOAuthAPI {
+  /**
+   * Resolve a fresh access token for the provider described by `config` (pass
+   * the `ProviderConfig` your provider method received). The host reads the
+   * vault-stored bundle, refreshes it via your declared `oauth.client` when
+   * expired, and returns the token (+ any durable `extra` fields you captured
+   * with `oauth.buildExtra`). Returns null when the provider wasn't connected
+   * via sign-in (e.g. it uses an API key) — fall back to your own auth then.
+   */
+  getAccessToken(config: ProviderConfig): Promise<{ accessToken: string; extra?: Record<string, string> } | null>
+}
+
 export interface PluginContext<Config = Record<string, unknown>> {
   config: Config
   log: PluginLogger
@@ -2530,6 +2613,8 @@ export interface PluginContext<Config = Record<string, unknown>> {
   vault: PluginVaultAPI
   manifest: PluginManifestInfo
   cards: PluginCardsAPI
+  /** OAuth helper for plugin providers that declare `oauth` (sign-in). */
+  oauth: PluginOAuthAPI
 }
 
 /**

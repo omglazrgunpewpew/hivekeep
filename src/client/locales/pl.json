@@ -6,7 +6,14 @@
     "approve": "Ujawnij wartość",
     "deny": "Odmów",
     "saving": "Zapisywanie…",
-    "submit": "Zapisz bezpiecznie"
+    "submit": "Zapisz bezpiecznie",
+    "connect": "Połącz",
+    "oauthSignIn": "Zaloguj się przez {{provider}}",
+    "oauthHint": "Zaloguj się do {{provider}} w otwartej karcie przeglądarki, a następnie wklej poniżej kod autoryzacji.",
+    "oauthLoopbackHint": "Po zatwierdzeniu przeglądarka pokaże błąd localhost. To normalne: skopiuj cały adres z paska adresu i wklej go poniżej.",
+    "oauthCodeLabel": "Kod autoryzacji",
+    "oauthCodePlaceholder": "Wklej kod tutaj",
+    "oauthLoopbackPlaceholder": "Wklej adres localhost (lub kod)"
   },
   "setup": {
     "button": {
@@ -2246,7 +2253,10 @@
         "instructions": "Otwórz WhatsApp w telefonie, przejdź do Ustawienia > Połączone urządzenia > Połącz urządzenie i zeskanuj ten kod.",
         "waiting": "Oczekiwanie na zeskanowanie",
         "connected": "WhatsApp połączony",
-        "failed": "Parowanie nie powiodło się. Spróbuj ponownie."
+        "failed": "Parowanie nie powiodło się. Spróbuj ponownie.",
+        "repair": "Sparuj ponownie",
+        "repairTitle": "Sparuj ponownie {{name}}",
+        "repairHint": "Sesję WhatsApp trzeba połączyć ponownie. Zeskanuj ten kod, aby połączyć."
       }
     },
     "notifications": {
