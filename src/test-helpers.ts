@@ -214,6 +214,7 @@ export const fullMockSchema = {
   verification: {},
   userProfiles: {},
   providers: {},
+  modelRegistry: {},
   agents: {},
   mcpServers: {},
   agentMcpServers: {},
@@ -273,6 +274,7 @@ export const fullMockSchema = {
   accountTriggers: {},
   accountSyncState: {},
   triggerLogs: {},
+  terminalSessions: {},
 }
 
 /**

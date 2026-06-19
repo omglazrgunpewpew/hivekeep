@@ -33,6 +33,7 @@ sqlite.run(`CREATE TABLE vault_secrets (
   id text PRIMARY KEY NOT NULL, key text NOT NULL UNIQUE, encrypted_value text NOT NULL,
   description text, entry_type text NOT NULL DEFAULT 'text', vault_type_id text,
   is_favorite integer NOT NULL DEFAULT 0, created_by_agent_id text,
+  last_used_at integer, allowed_tools text, allowed_hosts text,
   created_at integer NOT NULL, updated_at integer NOT NULL
 )`)
 sqlite.run(`CREATE TABLE queue_items (
