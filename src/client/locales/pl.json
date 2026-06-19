@@ -3733,6 +3733,13 @@
       "pathField": "Ścieżka bezwzględna",
       "pathHint": "Bezwzględna ścieżka do istniejącego katalogu na serwerze."
     },
+    "worktree": {
+      "base": "Klon bazowy",
+      "ticket": "#{{number}} · {{branch}}"
+    },
+    "git": {
+      "dirty": "{{count}} niezacommitowanych zmian"
+    },
     "empty": {
       "title": "Ta przestrzeń robocza jest pusta",
       "description": "Pliki utworzone przez tego agenta pojawią się tutaj."

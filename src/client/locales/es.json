@@ -3695,6 +3695,13 @@
       "pathField": "Ruta absoluta",
       "pathHint": "Una ruta absoluta a un directorio existente en el servidor."
     },
+    "worktree": {
+      "base": "Clon base",
+      "ticket": "#{{number}} · {{branch}}"
+    },
+    "git": {
+      "dirty": "{{count}} cambio(s) sin confirmar"
+    },
     "empty": {
       "title": "Este workspace está vacío",
       "description": "Los archivos creados por este agente aparecerán aquí."

@@ -21,6 +21,8 @@ import {
 } from '@/client/components/ui/alert-dialog'
 import { useAgentList } from '@/client/hooks/useAgentList'
 import { useWorkspaceFolders } from '@/client/hooks/useWorkspaceFolders'
+import { useProjects } from '@/client/hooks/useProjects'
+import { useWorkspaceGit } from '@/client/hooks/useWorkspaceGit'
 import { appendToDraft } from '@/client/hooks/useDraftMessage'
 import {
   useWorkspaceFiles,
@@ -31,6 +33,7 @@ import {
 import { useWorkspaceTabs } from '@/client/hooks/useWorkspaceTabs'
 import { WorkspaceTree, type WorkspaceTreeActions } from '@/client/components/files/WorkspaceTree'
 import { WorkspaceSourceSelector } from '@/client/components/files/WorkspaceSourceSelector'
+import { WorkspaceProjectBar } from '@/client/components/files/WorkspaceProjectBar'
 import { AddFolderDialog } from '@/client/components/files/AddFolderDialog'
 import { FileStorageFormDialog } from '@/client/components/file-storage/FileStorageFormDialog'
 import { WorkspaceEditor, workspaceRawUrl } from '@/client/components/files/WorkspaceEditor'
@@ -66,7 +69,14 @@ export function FilesPage() {
 
   const { agents, isLoading: agentsLoading } = useAgentList()
   const foldersApi = useWorkspaceFolders()
+  const { projects } = useProjects()
   const [addFolderOpen, setAddFolderOpen] = useState(false)
+
+  // Only repos that finished cloning can be browsed.
+  const readyProjects = useMemo(
+    () => projects.filter((p) => p.cloneStatus === 'ready').map((p) => ({ id: p.id, title: p.title })),
+    [projects],
+  )
 
   // Source from the route: explicit project/folder, or legacy agent id/slug.
   const routeSource = useMemo<WorkspaceSourceRef | null>(() => {
@@ -101,6 +111,13 @@ export function FilesPage() {
   const handleSourceChange = (next: WorkspaceSourceRef) => {
     navigate(next.type === 'agent' ? `/files/${next.id}` : `/files/${next.type}/${next.id}`)
   }
+
+  const handleSelectWorktree = (worktreeId: string) => {
+    if (source?.type !== 'project') return
+    navigate(`/files/project/${source.id}${worktreeId ? `?worktree=${encodeURIComponent(worktreeId)}` : ''}`)
+  }
+
+  const { gitStatus, worktrees } = useWorkspaceGit(source)
 
   const workspace = useWorkspaceFiles(source)
   const tabsApi = useWorkspaceTabs(source)
@@ -315,10 +332,19 @@ export function FilesPage() {
           onChange={handleSourceChange}
           agents={agents.map((a) => ({ id: a.id, name: a.name, role: a.role, avatarUrl: a.avatarUrl }))}
           folders={foldersApi.folders}
+          projects={readyProjects}
           onAddFolder={() => setAddFolderOpen(true)}
           placeholder={t('files.selectWorkspace')}
         />
       </div>
+      {source && (
+        <WorkspaceProjectBar
+          source={source}
+          gitStatus={gitStatus}
+          worktrees={worktrees}
+          onSelectWorktree={handleSelectWorktree}
+        />
+      )}
       <WorkspaceTree
         dirs={workspace.dirs}
         expanded={workspace.expanded}

@@ -3695,6 +3695,13 @@
       "pathField": "絶対パス",
       "pathHint": "サーバー上の既存ディレクトリへの絶対パス。"
     },
+    "worktree": {
+      "base": "ベースクローン",
+      "ticket": "#{{number}} · {{branch}}"
+    },
+    "git": {
+      "dirty": "未コミットの変更 {{count}} 件"
+    },
     "empty": {
       "title": "このワークスペースは空です",
       "description": "このエージェントが作成したファイルがここに表示されます。"

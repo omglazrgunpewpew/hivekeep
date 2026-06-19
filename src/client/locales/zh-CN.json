@@ -3695,6 +3695,13 @@
       "pathField": "绝对路径",
       "pathHint": "服务器上现有目录的绝对路径。"
     },
+    "worktree": {
+      "base": "基础克隆",
+      "ticket": "#{{number}} · {{branch}}"
+    },
+    "git": {
+      "dirty": "{{count}} 处未提交的更改"
+    },
     "empty": {
       "title": "此工作区是空的",
       "description": "该智能体创建的文件会显示在这里。"

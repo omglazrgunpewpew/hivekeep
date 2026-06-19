@@ -15,6 +15,7 @@ import {
   type WorkspaceTarget,
 } from '@/server/services/workspace-files'
 import { resolveWorkspaceSource, WorkspaceSourceError, type ResolveSourceOpts } from '@/server/services/workspace-sources'
+import { listProjectWorktrees, gitStatusSummary } from '@/server/services/workspace-git'
 import { isInlineSafeMime } from '@/server/services/file-kind'
 import type { WorkspaceSourceRef } from '@/shared/types'
 import type { AppVariables } from '@/server/app'
@@ -187,6 +188,26 @@ workspaceSourceRoutes.get('/search', async (c) => {
     const target = await resolveRouteTarget(c)
     const hits = await searchInTarget(target, q, Number.isFinite(limit) ? limit : 20)
     return c.json({ hits })
+  } catch (err) {
+    return handleError(c, err)
+  }
+})
+
+// GET /api/workspace/project/:projectId/worktrees — live worktrees of a repo
+workspaceSourceRoutes.get('/worktrees', async (c) => {
+  if (c.req.param('sourceType') !== 'project') return c.json({ worktrees: [] })
+  try {
+    return c.json({ worktrees: await listProjectWorktrees(c.req.param('sourceId') ?? '') })
+  } catch (err) {
+    return handleError(c, err)
+  }
+})
+
+// GET /api/workspace/:type/:id/git-status — branch + dirty count (null if not a repo)
+workspaceSourceRoutes.get('/git-status', async (c) => {
+  try {
+    const target = await resolveRouteTarget(c)
+    return c.json({ gitStatus: await gitStatusSummary(target.root) })
   } catch (err) {
     return handleError(c, err)
   }
