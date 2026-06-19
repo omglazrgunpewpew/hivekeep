@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, forwardRef, useImperativeHandle, memo } from 'react'
+import { useRef, useState, useCallback, useEffect, useMemo, forwardRef, useImperativeHandle, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/client/components/ui/button'
@@ -129,9 +129,16 @@ export const MessageInput = memo(forwardRef<MessageInputHandle, MessageInputProp
 
   // Workspace files group of the @ palette (files.md § 5.1) — scoped to the
   // conversation agent, server-side search-as-you-type.
+  // Stable reference: an inline `{ type, id }` here would be a new object every
+  // render, which (via this hook's effect deps) re-runs the search effect on
+  // every render. Memoize so it only changes when the agent does.
+  const mentionFileSource = useMemo(
+    () => (agentId ? { type: 'agent' as const, id: agentId } : null),
+    [agentId],
+  )
   const { hits: mentionFileHits } = useWorkspaceFileSearch({
     query: mentionQuery ?? '',
-    source: agentId ? { type: 'agent', id: agentId } : null,
+    source: mentionFileSource,
     enabled: mentionQuery !== null && !!agentId,
   })
   const isMentionOpen =
