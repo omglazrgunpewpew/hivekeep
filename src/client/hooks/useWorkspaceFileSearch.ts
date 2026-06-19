@@ -46,7 +46,13 @@ export function useWorkspaceFileSearch({
 
   useEffect(() => {
     if (!enabled || !source) {
-      setHits([])
+      // Reset to empty WITHOUT allocating a fresh array when already empty: a
+      // brand-new `[]` is a new reference each time, so an unstable `source`
+      // prop (e.g. an inline `{ type, id }` recreated every render) would make
+      // this effect re-run each render and setState a new array every time,
+      // spinning into an infinite render loop (React #185). The functional
+      // updater bails out when there's nothing to clear.
+      setHits((prev) => (prev.length === 0 ? prev : []))
       setIsLoading(false)
       return
     }
