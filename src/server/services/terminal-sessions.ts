@@ -172,6 +172,20 @@ function markDirty(session: TerminalSession) {
 
 // ─── tmux backing (opportunistic) ───────────────────────────────────────────
 
+/** Dedicated tmux server socket so Hivekeep's sessions and global options
+ *  (history-limit, mouse, clipboard) stay isolated from the user's own tmux on
+ *  the default socket. Every tmux call below targets this socket. */
+const TMUX_SOCKET = 'hivekeep'
+
+/** Per-pane scrollback tmux keeps (default is only 2000 lines, which makes long
+ *  output like Claude Code feel truncated when scrolling back). */
+const TMUX_HISTORY_LIMIT = 50000
+
+/** Prefix tmux args with the dedicated socket. */
+function tmuxArgs(...args: string[]): string[] {
+  return ['-L', TMUX_SOCKET, ...args]
+}
+
 let tmuxAvail: boolean | null = null
 
 /** Whether tmux is usable on this host. Detected once and cached; sessions
@@ -192,7 +206,7 @@ export function isTmuxAvailable(): boolean {
 function tmuxHasSession(name: string | null): boolean {
   if (!name || !isTmuxAvailable()) return false
   try {
-    execFileSync('tmux', ['has-session', '-t', name], { stdio: 'ignore' })
+    execFileSync('tmux', tmuxArgs('has-session', '-t', name), { stdio: 'ignore' })
     return true
   } catch {
     return false
@@ -203,7 +217,7 @@ function probeViaTmux(name: string): SessionProbe {
   try {
     const out = execFileSync(
       'tmux',
-      ['display-message', '-p', '-t', name, '#{pane_current_command}\n#{pane_current_path}'],
+      tmuxArgs('display-message', '-p', '-t', name, '#{pane_current_command}\n#{pane_current_path}'),
       { encoding: 'utf8' },
     )
     const [rawCommand, rawCwd] = out.split('\n')
@@ -407,11 +421,19 @@ function spawnForSession(session: TerminalSession, cols: number, rows: number): 
   const safeRows = Math.max(2, rows)
 
   if (session.backend === 'tmux' && isTmuxAvailable() && session.tmuxName) {
-    // `new-session -A` attaches to the existing tmux session (live shell intact
-    // after a process-only restart) or creates it in `cwd` if it's gone.
+    // Start (or reuse) the dedicated server and set generous scrollback + mouse
+    // scrolling + clipboard passthrough BEFORE the pane exists (history-limit is
+    // read at pane creation; mouse/set-clipboard apply live), then `new-session
+    // -A` attaches to the live session or creates it in `cwd`.
     return spawn(
       'tmux',
-      ['new-session', '-A', '-s', session.tmuxName, '-c', cwd],
+      tmuxArgs(
+        'start-server', ';',
+        'set-option', '-g', 'history-limit', String(TMUX_HISTORY_LIMIT), ';',
+        'set-option', '-g', 'mouse', 'on', ';',
+        'set-option', '-g', 'set-clipboard', 'on', ';',
+        'new-session', '-A', '-s', session.tmuxName, '-c', cwd,
+      ),
       { name: 'xterm-256color', cols: safeCols, rows: safeRows, cwd, env },
     )
   }
@@ -672,7 +694,7 @@ export function destroySession(sessionId: string) {
   // not just detached (otherwise it would survive in the tmux server).
   if (session.backend === 'tmux' && session.tmuxName && isTmuxAvailable()) {
     try {
-      execFileSync('tmux', ['kill-session', '-t', session.tmuxName], { stdio: 'ignore' })
+      execFileSync('tmux', tmuxArgs('kill-session', '-t', session.tmuxName), { stdio: 'ignore' })
     } catch {
       // Already gone — nothing to kill.
     }
