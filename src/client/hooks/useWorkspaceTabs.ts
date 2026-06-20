@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { arrayMove } from '@dnd-kit/sortable'
 import { api, getErrorMessage, ApiRequestError } from '@/client/lib/api'
 import { useSSE } from '@/client/hooks/useSSE'
 import { sourceApiBase, sourceQuery, sourceKey, changeMatchesSource } from '@/client/lib/workspace-source'
@@ -199,6 +200,16 @@ export function useWorkspaceTabs(source: WorkspaceSourceRef | null) {
     [source, states, patchState],
   )
 
+  /** Drag-reorder: move the `activeId` tab to the slot of `overId` (files.md § 3.4 v2). */
+  const reorderTabs = useCallback((activeId: string, overId: string) => {
+    setTabs((prev) => {
+      const from = prev.indexOf(activeId)
+      const to = prev.indexOf(overId)
+      if (from === -1 || to === -1 || from === to) return prev
+      return arrayMove(prev, from, to)
+    })
+  }, [])
+
   /** Rename `from` → `to` across tabs/states/active, draft preserved. */
   const retargetTabs = useCallback((from: string, to: string, isDirectory: boolean) => {
     const map = (p: string) =>
@@ -296,6 +307,7 @@ export function useWorkspaceTabs(source: WorkspaceSourceRef | null) {
     openTab,
     focusTab,
     forceCloseTab,
+    reorderTabs,
     updateDraft,
     save,
     reload: loadFile,

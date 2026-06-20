@@ -428,6 +428,7 @@ export function FilesPage() {
                   tabsApi.focusTab(path)
                 }}
                 onClose={requestCloseTab}
+                onReorder={tabsApi.reorderTabs}
               />
               {activeTab && activeState && source ? (
                 <WorkspaceEditor
