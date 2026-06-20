@@ -3825,7 +3825,9 @@
         "message": "Le fichier a changé sur le disque depuis son ouverture (probablement écrit par l’agent).",
         "reload": "Recharger",
         "overwrite": "Écraser"
-      }
+      },
+      "wrap": "Retour à la ligne",
+      "lineCol": "Ln {{line}}, Col {{col}}"
     },
     "browseWorkspace": "Parcourir les fichiers",
     "share": {

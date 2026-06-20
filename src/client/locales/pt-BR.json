@@ -3825,7 +3825,9 @@
         "message": "O arquivo mudou no disco desde que você o abriu (provavelmente escrito pelo agente).",
         "reload": "Recarregar",
         "overwrite": "Sobrescrever"
-      }
+      },
+      "wrap": "Quebra de linha",
+      "lineCol": "Ln {{line}}, Col {{col}}"
     },
     "browseWorkspace": "Explorar arquivos",
     "share": {

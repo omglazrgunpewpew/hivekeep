@@ -3863,7 +3863,9 @@
         "message": "Plik zmienił się na dysku od momentu otwarcia (prawdopodobnie zapisał go agent).",
         "reload": "Wczytaj ponownie",
         "overwrite": "Nadpisz"
-      }
+      },
+      "wrap": "Zawijanie wierszy",
+      "lineCol": "Wrsz {{line}}, Kol {{col}}"
     },
     "browseWorkspace": "Przeglądaj pliki",
     "share": {

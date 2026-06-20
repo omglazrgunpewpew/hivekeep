@@ -3825,7 +3825,9 @@
         "message": "The file changed on disk since you opened it (probably written by the agent).",
         "reload": "Reload",
         "overwrite": "Overwrite"
-      }
+      },
+      "wrap": "Word wrap",
+      "lineCol": "Ln {{line}}, Col {{col}}"
     },
     "browseWorkspace": "Browse files",
     "share": {

@@ -3825,7 +3825,9 @@
         "message": "自你打开后，该文件在磁盘上已发生变化（可能由智能体写入）。",
         "reload": "重新加载",
         "overwrite": "覆盖"
-      }
+      },
+      "wrap": "自动换行",
+      "lineCol": "行 {{line}}，列 {{col}}"
     },
     "browseWorkspace": "浏览文件",
     "share": {

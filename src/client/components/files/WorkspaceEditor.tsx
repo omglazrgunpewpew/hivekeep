@@ -1,6 +1,6 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Download, Eye, FileWarning, Loader2, Pencil, Save } from 'lucide-react'
+import { AlertTriangle, Download, Eye, FileWarning, Loader2, Pencil, Save, WrapText } from 'lucide-react'
 import { Button } from '@/client/components/ui/button'
 import { CodeEditor } from '@/client/components/ui/code-editor'
 import { ScrollArea } from '@/client/components/ui/scroll-area'
@@ -33,6 +33,7 @@ interface WorkspaceEditorProps {
 export { workspaceRawUrl }
 
 const isMarkdown = (name: string) => /\.(md|markdown)$/i.test(name)
+const WRAP_KEY = 'files.editor.wrap'
 
 /**
  * Center pane of the Files section (files.md § 3.5): viewer picked from the
@@ -43,6 +44,13 @@ const isMarkdown = (name: string) => /\.(md|markdown)$/i.test(name)
 export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, onReload, onRevealDir }: WorkspaceEditorProps) {
   const { t } = useTranslation()
   const [mdView, setMdView] = useState<'edit' | 'preview'>('edit')
+  const [wrap, setWrap] = useState(() => localStorage.getItem(WRAP_KEY) !== 'false')
+  const [cursor, setCursor] = useState<{ line: number; col: number; selLen: number } | null>(null)
+  const [language, setLanguage] = useState<string | null>(null)
+
+  useEffect(() => {
+    localStorage.setItem(WRAP_KEY, String(wrap))
+  }, [wrap])
 
   const { info } = state
   const name = path.split('/').pop() ?? path
@@ -114,6 +122,9 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
             filename={name}
             height="100%"
             search
+            lineWrapping={wrap}
+            onCursorChange={setCursor}
+            onLanguageChange={setLanguage}
             className="h-full rounded-none border-0 [&:has(.cm-focused)]:ring-0 [&:has(.cm-focused)]:border-0"
             onSave={() => onSave()}
           />
@@ -211,6 +222,17 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
           )}
           <div className="ml-auto flex items-center gap-1.5">
             <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-pressed={wrap}
+              className={cn(wrap && 'text-primary')}
+              onClick={() => setWrap((w) => !w)}
+              title={t('files.editor.wrap')}
+              aria-label={t('files.editor.wrap')}
+            >
+              <WrapText className="size-4" />
+            </Button>
+            <Button
               size="sm"
               variant={state.dirty ? 'default' : 'ghost'}
               className="gap-1.5"
@@ -230,8 +252,14 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
           <span className="min-w-0 flex-1 truncate" title={path}>
             {path}
           </span>
+          {isText && cursor && (
+            <span className="shrink-0 tabular-nums max-sm:hidden">
+              {t('files.editor.lineCol', { line: cursor.line, col: cursor.col })}
+            </span>
+          )}
+          {isText && language && <span className="shrink-0 max-sm:hidden">{language}</span>}
           <span className="shrink-0">{formatFileSize(info.size)}</span>
-          <span className="shrink-0 max-sm:hidden">{new Date(info.modifiedAt).toLocaleString()}</span>
+          <span className="shrink-0 max-md:hidden">{new Date(info.modifiedAt).toLocaleString()}</span>
         </div>
       )}
     </div>

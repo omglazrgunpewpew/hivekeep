@@ -3825,7 +3825,9 @@
         "message": "Die Datei hat sich auf der Festplatte geändert, seit du sie geöffnet hast (wahrscheinlich vom Agenten geschrieben).",
         "reload": "Neu laden",
         "overwrite": "Überschreiben"
-      }
+      },
+      "wrap": "Zeilenumbruch",
+      "lineCol": "Z {{line}}, Sp {{col}}"
     },
     "browseWorkspace": "Dateien durchsuchen",
     "share": {

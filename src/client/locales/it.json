@@ -3825,7 +3825,9 @@
         "message": "Il file è cambiato su disco da quando lo hai aperto (probabilmente scritto dall'agente).",
         "reload": "Ricarica",
         "overwrite": "Sovrascrivi"
-      }
+      },
+      "wrap": "A capo automatico",
+      "lineCol": "Ln {{line}}, Col {{col}}"
     },
     "browseWorkspace": "Sfoglia i file",
     "share": {
