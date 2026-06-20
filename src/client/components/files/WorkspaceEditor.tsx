@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Download, Eye, FileWarning, GitCompare, Loader2, Pencil, Save, WrapText } from 'lucide-react'
+import { AlertTriangle, Crosshair, Download, Eye, FileWarning, GitCompare, Loader2, Pencil, Save, WrapText } from 'lucide-react'
 import { Button } from '@/client/components/ui/button'
 import { CodeEditor } from '@/client/components/ui/code-editor'
 import { ScrollArea } from '@/client/components/ui/scroll-area'
@@ -29,6 +29,8 @@ interface WorkspaceEditorProps {
   onReload: () => void
   /** Reveal a parent directory of the file in the tree (breadcrumb segment click). */
   onRevealDir?: (dirPath: string) => void
+  /** Reveal the active file itself in the tree (select + expand ancestors). */
+  onRevealFile?: (path: string) => void
   /** Source is a git repo: enables the per-file Diff toggle. */
   gitRepo?: boolean
 }
@@ -44,7 +46,7 @@ const WRAP_KEY = 'files.editor.wrap'
  * deleted-on-disk banners, status bar. The text editor IS the shared
  * CodeEditor (extended with filename/onSave), not a fork.
  */
-export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, onReload, onRevealDir, gitRepo }: WorkspaceEditorProps) {
+export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, onReload, onRevealDir, onRevealFile, gitRepo }: WorkspaceEditorProps) {
   const { t } = useTranslation()
   const [mdView, setMdView] = useState<'edit' | 'preview'>('edit')
   const [wrap, setWrap] = useState(() => localStorage.getItem(WRAP_KEY) !== 'false')
@@ -191,8 +193,8 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
     <div className="flex h-full min-h-0 flex-col">
       {banner}
       {info && (
-        <div className="flex shrink-0 items-center overflow-x-auto border-b border-border px-2.5 py-1">
-          <Breadcrumb>
+        <div className="flex shrink-0 items-center gap-1 border-b border-border px-2.5 py-1">
+          <Breadcrumb className="min-w-0 flex-1 overflow-x-auto">
             <BreadcrumbList className="flex-nowrap gap-1 text-[11px] sm:gap-1.5">
               {segments.map((seg, i) => {
                 const isLast = i === segments.length - 1
@@ -221,6 +223,18 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
               })}
             </BreadcrumbList>
           </Breadcrumb>
+          {onRevealFile && (
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              className="shrink-0"
+              onClick={() => onRevealFile(path)}
+              title={t('files.tabs.reveal')}
+              aria-label={t('files.tabs.reveal')}
+            >
+              <Crosshair className="size-3.5" />
+            </Button>
+          )}
         </div>
       )}
       {isText && (

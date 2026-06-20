@@ -490,6 +490,13 @@ export function FilesPage() {
                       setTreeSheetOpen(true)
                     }
                   }}
+                  onRevealFile={(p) => {
+                    setSelectedPath(p)
+                    workspace.expandTo(p)
+                    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+                      setTreeSheetOpen(true)
+                    }
+                  }}
                 />
               ) : (
                 <div className="flex flex-1 items-center justify-center p-6">
