@@ -1373,12 +1373,13 @@ export interface WorkspaceFileInfo {
 
 // ─── Workspace sources (Files section selector — agent / project / folder) ──
 
-export type WorkspaceSourceType = 'agent' | 'project' | 'folder'
+export type WorkspaceSourceType = 'agent' | 'project' | 'folder' | 'miniapp'
 
 /**
  * Identifies a browse source for the Files section. `agent` is the legacy
  * per-agent workspace; `project` browses a cloned repo (optionally a specific
- * git worktree); `folder` browses a user-added absolute FS path.
+ * git worktree); `folder` browses a user-added absolute FS path; `miniapp`
+ * browses a mini-app's source directory (id = the mini-app id).
  */
 export interface WorkspaceSourceRef {
   type: WorkspaceSourceType
