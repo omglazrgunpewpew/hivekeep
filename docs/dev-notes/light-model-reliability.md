@@ -5,10 +5,10 @@ problem and proposes fixes ranked by impact and effort, for the maintainer to de
 Built so far: R1 (tolerant tool-argument parsing), R2 (schema validation with a correctable
 error), and the low-temperature-for-tool-turns part of R6. R3 was re-scoped after research
 (the client-side constrained-decoding knob does not apply to tool-call arguments; see R3).
-**Empirically, R5 is now the priority:** a real `gemma3:12b` on Ollama returns HTTP 400
-`does not support tools` for every native call (so R1/R2/R6 never run), while the same
-model emits 100% valid tool calls via a prompt-based protocol (see R5). R4 and R6's
-tool-scoping / prompt-slimming parts remain proposals.
+**R5 is now implemented** (prompt-based tool protocol with runtime auto-detection): a real
+`gemma3:12b` on Ollama returns HTTP 400 `does not support tools` for every native call (so
+R1/R2/R6 never run), and the provider now falls back to a text protocol that the same model
+follows at 100% validity. R4 and R6's tool-scoping / prompt-slimming parts remain proposals.
 
 **Origin:** user feedback that Hivekeep is the #1-cited adoption blocker for the
 self-hosted / local-LLM audience. The platform works well with Claude, but small and
@@ -511,7 +511,27 @@ Two further consequences for our exact audience:
 | Does this model support a JSON / structured-output mode? | Yes (`structured_output`, **not yet ingested**) |
 | Which structured-output knob to send (Ollama / vLLM / llama.cpp)? | **No, and structurally cannot** — it is a server property, needs backend detection |
 
-### R5. Prompt-based tool-call fallback for weak native function-calling (high impact, high effort) — VALIDATED, RECOMMENDED NEXT
+### R5. Prompt-based tool-call fallback for weak native function-calling (high impact, high effort) — IMPLEMENTED
+
+**Status:** done, with runtime auto-detection and verified end-to-end on the real
+`gemma3:12b`. The reusable, provider-agnostic core is `src/server/llm/core/prompt-tool-protocol.ts`
+(`buildToolProtocolPrompt`, `renderToolCall`, `renderToolResult`, `parseToolCallsFromText`,
+with tests) — pure functions over `HivekeepTool` and strings, so any provider can adopt the
+protocol with a thin adapter. The first consumer is `openai-compatible.ts`: on a turn with
+tools it tries native first, and the first time a backend reports it does not support tools
+(matched by `isNativeToolsUnsupported`, e.g. Ollama's 400), it remembers that per
+endpoint+model (`promptProtocolModels`) and switches to the text protocol — describing the
+tools in the system prompt and parsing `<tool_call>{...}</tool_call>` from the response. The
+fallback only fires before any chunk is emitted, so a mid-stream error is never mistaken for
+"no tool support". History replay serializes prior tool calls / results as text
+(`messagesToOpenAIPrompt`) so the model sees the full tool conversation. The key invariant:
+the prompt protocol is contained entirely in the provider and emits the same canonical
+`tool-use` chunk shape, so nothing downstream (rendering, persistence, SSE, execution) changes.
+Live check through the real provider against `gemma3:12b`: native 400 → auto-switch →
+`{name:"get_weather", args:{city:"Paris", units:"celsius"}}`, finish reason `tool-calls`, no
+leaked text.
+
+
 
 **Empirical result (2026-06-21, real `gemma3:12b` on Ollama 0.30.10 over the LAN, via
 `scripts/llm-tool-reliability.ts`):**
