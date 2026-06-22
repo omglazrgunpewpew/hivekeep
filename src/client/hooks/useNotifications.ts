@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/client/lib/api'
-import { useSSE } from '@/client/hooks/useSSE'
+import { useSSE, useSSEResync } from '@/client/hooks/useSSE'
 import type { NotificationSummary } from '@/shared/types'
 
 interface NotificationsResponse {
@@ -66,6 +66,12 @@ export function useNotifications() {
       }
     },
   })
+
+  // Catch up after the tab/app returns to the foreground or the SSE connection
+  // recovers. SSE never replays the notification:* events missed while a phone
+  // was locked or the stream was down, so without this the always-mounted bell
+  // (list + unread count) stays frozen on stale data until a manual refresh.
+  useSSEResync(fetchNotifications)
 
   const markAsRead = useCallback(async (id: string) => {
     // Optimistic update
