@@ -169,6 +169,21 @@ export function UpdateProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {})
     },
+    // Terminal outcome (incl. the post-restart success/rollback the freshly
+    // booted process broadcasts to every client). The journal poller already
+    // converges on this, but the event lets an active overlay settle without
+    // waiting a poll tick. Only act when an overlay is actually up, and re-read
+    // the journal (authoritative) rather than trusting the payload — the reload
+    // on success is still guarded by handleTerminal's reloadingRef.
+    'update:finished': () => {
+      if (!activeRef.current) return
+      api
+        .get<{ run: UpdateRunInfo | null }>('/version-check/last-update')
+        .then(({ run: latest }) => {
+          if (latest && isTerminal(latest.status)) handleTerminal(latest)
+        })
+        .catch(() => {})
+    },
   })
 
   // Poll the journal while the overlay is active — the resilient source of
