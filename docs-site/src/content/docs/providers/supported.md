@@ -77,7 +77,7 @@ Both methods feed the same provider. Tokens obtained via "Sign in" never touch t
 
 You can also just **ask Queenie** (the configurator Agent) to connect Claude Max or Codex: she opens the sign-in as an in-chat card (the same button + paste-the-code step), so you never have to leave the conversation.
 
-Codex does not need its CLI model cache (`~/.codex/models_cache.json`) anymore: when the cache is absent (which it always is in sign-in mode), Hivekeep falls back to a built-in GPT-5-family catalog, and per-model metadata is filled in from the [Model Registry](/docs/providers/model-registry/).
+Codex does not need its CLI model cache (`~/.codex/models_cache.json`): Hivekeep fetches your live, per-account model catalog straight from the Codex backend (the same source the CLI uses), so it always lists the models your plan actually supports. The CLI cache and a small built-in list are only fallbacks for when that request can't be made. Per-model metadata is enriched from the [Model Registry](/docs/providers/model-registry/).
 
 ## API Endpoints
 
