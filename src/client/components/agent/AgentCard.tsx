@@ -88,6 +88,11 @@ export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function Age
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // Track which avatar URL has finished loading. Comparing against the current
+  // url (rather than a plain boolean) resets the fade-in when the avatar is
+  // regenerated and the cache-busting `?v=` changes, without an effect.
+  const [loadedAvatarUrl, setLoadedAvatarUrl] = useState<string | null>(null)
+  const avatarLoaded = avatarUrl != null && loadedAvatarUrl === avatarUrl
   const isMobile = useIsMobile()
   // Inside the narrow mobile drawer, show fewer icons and collapse the rest
   // into the existing "+N" affordance. Desktop keeps the full count.
@@ -130,19 +135,29 @@ export const AgentCard = forwardRef<HTMLDivElement, AgentCardProps>(function Age
       <div className="relative size-10 shrink-0">
         <div
           className={cn(
-            'size-10 rounded-xl flex items-center justify-center overflow-hidden transition-shadow',
+            'relative size-10 rounded-xl flex items-center justify-center overflow-hidden transition-shadow',
             isSelected
               ? 'gradient-primary shadow-md'
               : 'bg-secondary',
           )}
         >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={name} className="size-full object-cover" />
-          ) : (
-            <Bot
+          {/* Placeholder sits underneath the image: the Bot icon (pulsing
+              while the avatar is still loading) so the slot is never blank. */}
+          <Bot
+            className={cn(
+              'size-5',
+              isSelected ? 'text-white' : 'text-secondary-foreground/70',
+              avatarUrl && !avatarLoaded && 'animate-pulse',
+            )}
+          />
+          {avatarUrl && (
+            <img
+              src={avatarUrl}
+              alt={name}
+              onLoad={() => setLoadedAvatarUrl(avatarUrl)}
               className={cn(
-                'size-5',
-                isSelected ? 'text-white' : 'text-secondary-foreground/70',
+                'absolute inset-0 size-full object-cover transition-opacity duration-300',
+                avatarLoaded ? 'opacity-100' : 'opacity-0',
               )}
             />
           )}
