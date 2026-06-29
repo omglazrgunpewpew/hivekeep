@@ -31,6 +31,7 @@ import { ContactsSettings } from '@/client/pages/settings/ContactsSettings'
 import { FileStorageSettings } from '@/client/pages/settings/FileStorageSettings'
 import { MemoriesSettings } from '@/client/pages/settings/MemoriesSettings'
 import { WebhooksSettings } from '@/client/pages/settings/WebhooksSettings'
+import { ExternalApiSettings } from '@/client/pages/settings/ExternalApiSettings'
 import { ChannelsSettings } from '@/client/pages/settings/ChannelsSettings'
 import { EmailAccountsSettings } from '@/client/pages/settings/EmailAccountsSettings'
 import { UsersSettings } from '@/client/pages/settings/UsersSettings'
@@ -71,6 +72,7 @@ import {
   Mail,
   Image as ImageIcon,
   ArrowUpCircle,
+  Network,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/client/components/ui/tooltip'
 import { api } from '@/client/lib/api'
@@ -117,6 +119,7 @@ const sectionGroups: SectionGroup[] = [
       { id: 'channels', icon: Radio, labelKey: 'settings.channels.title' },
       { id: 'emailAccounts', icon: Mail, labelKey: 'settings.emailAccounts.title' },
       { id: 'webhooks', icon: Webhook, labelKey: 'settings.webhooks.title' },
+      { id: 'externalApi', icon: Network, labelKey: 'settings.externalApi.title' },
       { id: 'contacts', icon: Users, labelKey: 'settings.contacts.title' },
     ],
   },
@@ -172,6 +175,7 @@ const sectionComponents: Record<string, React.FC> = {
   users: UsersSettings,
   files: FileStorageSettings,
   webhooks: WebhooksSettings,
+  externalApi: ExternalApiSettings,
   channels: ChannelsSettings,
   emailAccounts: EmailAccountsSettings,
   plugins: PluginsSettings,

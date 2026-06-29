@@ -431,6 +431,32 @@ export interface WebhookSummary {
   url: string
 }
 
+/** An external-API key as returned by the management routes (never the secret). */
+export interface ApiKeySummary {
+  id: string
+  label: string
+  prefix: string
+  lastUsedAt: number | null
+  revokedAt: number | null
+  createdAt: number
+}
+
+/** An external-API client (machine-to-machine caller) with its keys. */
+export interface ApiClientSummary {
+  id: string
+  name: string
+  description: string | null
+  /** null = may target any Agent; otherwise locked to one Agent. */
+  agentId: string | null
+  /** Subset of ['main','isolated']. */
+  allowedModes: string[]
+  rateLimitPerMin: number | null
+  status: 'active' | 'disabled'
+  createdAt: number
+  updatedAt: number
+  keys: ApiKeySummary[]
+}
+
 /** Webhook trigger log entry as returned by GET /api/webhooks/:id/logs */
 export interface WebhookLog {
   id: string

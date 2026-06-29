@@ -35,15 +35,15 @@ function serializeClient(client: typeof apiClients.$inferSelect, keys: (typeof a
     allowedModes: JSON.parse(client.allowedModes) as string[],
     rateLimitPerMin: client.rateLimitPerMin,
     status: client.status,
-    createdAt: client.createdAt,
-    updatedAt: client.updatedAt,
+    createdAt: client.createdAt.getTime(),
+    updatedAt: client.updatedAt.getTime(),
     keys: keys.map((k) => ({
       id: k.id,
       label: k.label,
       prefix: k.keyPrefix,
-      lastUsedAt: k.lastUsedAt,
-      revokedAt: k.revokedAt,
-      createdAt: k.createdAt,
+      lastUsedAt: k.lastUsedAt ? k.lastUsedAt.getTime() : null,
+      revokedAt: k.revokedAt ? k.revokedAt.getTime() : null,
+      createdAt: k.createdAt.getTime(),
     })),
   }
 }
