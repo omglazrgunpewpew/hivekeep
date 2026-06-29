@@ -2206,3 +2206,75 @@ Returns `201 { "ok": true }`. Errors: `503 FEEDBACK_DISABLED` (feature off), `50
 > The SSE is **global** (not per Agent). The client filters on the frontend side by `agentId` to display only the relevant events. This makes it possible to update the sidebar (badges, statuses) for all Agents simultaneously.
 
 > The existing `task:*` events remain unchanged. Clients interested in ticket-linked tasks filter on the frontend side on `task.ticketId !== null` (the field is now present in the tasks payload).
+
+---
+
+## External API (machine-to-machine)
+
+A bearer-authenticated surface so an external program can hold a conversation with an Agent without a browser session. Full spec: `external-api.md`.
+
+**Auth.** `Authorization: Bearer hk_<keyId>.<secret>` on every `/api/v1/*` route (its own scheme, not the cookie session). The request runs as the client's owner user. Errors: `UNAUTHORIZED` (401), `API_KEY_REVOKED` (401), `CLIENT_DISABLED` (403), `RATE_LIMITED` (429), `EXTERNAL_API_DISABLED` (403).
+
+### `POST /api/v1/agents/:agentId/messages`
+
+Send a message; optionally wait for the reply inline. No `conversationId`/`newConversation` targets the **main timeline**; otherwise an **isolated thread** (full Agent power, private context).
+
+```typescript
+// Request
+{
+  content: string,            // required
+  conversationId?: string,    // continue an isolated thread
+  newConversation?: boolean,  // open a new isolated thread
+  title?: string,             // title for newConversation
+  mode?: 'wait' | 'async',    // default: async
+  waitTimeoutMs?: number       // clamped to externalApi.waitTimeoutMsMax
+}
+
+// Response 200 (mode 'wait', reply ready)
+{ requestId: string, status: 'done', reply: string, conversationId: string | null }
+
+// Response 202 (mode 'async', or 'wait' timed out, then poll)
+{ requestId: string, status: 'pending', conversationId: string | null }
+```
+
+Errors: `AGENT_NOT_FOUND` (404), `AGENT_SCOPE_VIOLATION` (403), `MODE_NOT_ALLOWED` (403), `EMPTY_MESSAGE`/`MESSAGE_TOO_LONG` (400), `CONVERSATION_NOT_FOUND` (404), `CONVERSATION_CLOSED` (409), `TOO_MANY_CONVERSATIONS` (429).
+
+### `GET /api/v1/requests/:requestId`
+
+Poll a request. Scoped to the calling client.
+
+```typescript
+// Response 200
+{ requestId: string, status: 'pending' | 'done' | 'error', reply: string | null, error: { code: string, message: string } | null, conversationId: string | null }
+```
+
+### `GET /api/v1/agents`
+
+Agents this key may target: `{ agents: Array<{ id, slug, name }> }`.
+
+### `POST /api/v1/agents/:agentId/conversations`
+
+Open an isolated thread. Body `{ title? }` → `201 { conversationId }`.
+
+### `GET /api/v1/agents/:agentId/conversations`
+
+List this client's threads: `{ conversations: Array<{ conversationId, agentId, title, status, createdAt, lastMessageAt }> }`.
+
+### `GET /api/v1/conversations/:conversationId/messages`
+
+Transcript of a thread (this client's only). Query `?limit=&before=`. Returns `{ messages: Array<{ id, role, content, sourceType, createdAt }> }`.
+
+### `POST /api/v1/conversations/:conversationId/close`
+
+Close a thread → `{ ok: true }`.
+
+### Management routes `/api/api-clients/*` (cookie auth, admin)
+
+Back the Settings UI.
+
+- `GET /api/api-clients` → `{ clients: ApiClientSummary[] }` (with keys, never secrets)
+- `POST /api/api-clients` → create. Body `{ name, description?, agentId?, allowedModes?, rateLimitPerMin? }`
+- `PATCH /api/api-clients/:id` → update (same fields + `status`)
+- `DELETE /api/api-clients/:id` → delete (cascades keys + requests)
+- `POST /api/api-clients/:id/keys` → mint a key. Body `{ label? }` → `{ id, label, prefix, fullKey }` (**fullKey shown once**)
+- `POST /api/api-clients/:id/keys/:keyId/revoke` → soft-revoke a key

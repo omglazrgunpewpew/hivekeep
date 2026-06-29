@@ -1,8 +1,8 @@
 # External API (machine-to-machine conversational access)
 
-> **Status: P1 + P2 implemented** (backend complete). P3 (Settings UI) and P4
-> (api.md / schema.md / config.md / docs-site, reply-retention GC) pending. Branch
-> `add-external-communication-system`.
+> **Status: P1 to P4 implemented** (backend, Settings UI, docs, reply-retention GC).
+> P5 (SSE-by-key stream, outbound webhook delivery) is optional and not built.
+> Branch `add-external-communication-system`.
 > Lets an external machine hold a *stateful conversation* with an Agent over HTTP,
 > authenticated by an API key, without a browser session. This is NOT the channels
 > system (that is human chat on Telegram/Slack and carries contact resolution,

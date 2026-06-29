@@ -1,5 +1,5 @@
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, lt, isNotNull } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
 import { apiClients, apiKeys, apiRequests, apiConversations, quickSessions } from '@/server/db/schema'
@@ -325,5 +325,35 @@ export function parseAllowedModes(client: ApiClientRow): string[] {
   } catch {
     log.warn({ clientId: client.id }, 'Corrupted allowed_modes JSON — defaulting to none')
     return []
+  }
+}
+
+// ─── Reply retention GC ──────────────────────────────────────────────────────
+
+/** Delete resolved api_requests rows past the retention window. */
+function purgeOldApiRequests(): void {
+  const cutoff = new Date(Date.now() - config.externalApi.replyRetentionHours * 60 * 60 * 1000)
+  db.delete(apiRequests).where(and(isNotNull(apiRequests.completedAt), lt(apiRequests.completedAt, cutoff))).run()
+}
+
+let purgeInterval: ReturnType<typeof setInterval> | null = null
+
+/** Start periodic GC of resolved api_requests rows (runs every 6 hours). */
+export function startExternalApiCleanup(): void {
+  if (purgeInterval) return
+  const intervalMs = 6 * 60 * 60 * 1000
+  setTimeout(() => {
+    try { purgeOldApiRequests() } catch (err) { log.error({ err }, 'External API request GC failed') }
+  }, 60_000)
+  purgeInterval = setInterval(() => {
+    try { purgeOldApiRequests() } catch (err) { log.error({ err }, 'External API request GC failed') }
+  }, intervalMs)
+  log.info({ intervalHours: 6, retentionHours: config.externalApi.replyRetentionHours }, 'External API request GC scheduled')
+}
+
+export function stopExternalApiCleanup(): void {
+  if (purgeInterval) {
+    clearInterval(purgeInterval)
+    purgeInterval = null
   }
 }

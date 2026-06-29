@@ -312,6 +312,20 @@ Internal tuning parameters — most deployments never touch them, the defaults a
 | `WEBHOOKS_MAX_LOGS_PER_WEBHOOK` | `500` | Max number of log entries retained per webhook. |
 | `WEBHOOKS_RATE_LIMIT_PER_MINUTE` | `60` | Delivery rate limit. |
 
+## External API
+
+Machine-to-machine conversational API (see `external-api.md`). External clients hold conversations with Agents over `/api/v1/*` using bearer API keys.
+
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `HIVEKEEP_EXTERNAL_API_ENABLED` | `true` | Master switch. When `false`, `/api/v1/*` returns 403. |
+| `HIVEKEEP_EXTERNAL_API_RATE_LIMIT` | `60` | Per-client fallback rate limit (requests/min) when the client has none set. |
+| `HIVEKEEP_EXTERNAL_API_WAIT_DEFAULT_MS` | `60_000` | Default `wait` timeout for a synchronous send. |
+| `HIVEKEEP_EXTERNAL_API_WAIT_MAX_MS` | `120_000` | Hard clamp on the `wait` timeout. |
+| `HIVEKEEP_EXTERNAL_API_CONV_TTL_HOURS` | `720` (30 days) | Sliding idle TTL for isolated conversations, refreshed on each message. |
+| `HIVEKEEP_EXTERNAL_API_MAX_CONV` | `200` | Max active isolated conversations per client. |
+| `HIVEKEEP_EXTERNAL_API_REPLY_RETENTION_HOURS` | `168` (7 days) | Retention of resolved `api_requests` rows before the GC sweep removes them. |
+
 ## Email triggers
 
 Triggers on connected email accounts: a matching incoming email prompts a target Agent (in its conversation or as a task). Polled — see `account_triggers` / `account_sync_state` in `schema.md`.

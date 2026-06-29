@@ -215,6 +215,10 @@ startWebhookLogCleanup()
 import { startTriggerLogCleanup } from '@/server/services/account-triggers'
 startTriggerLogCleanup()
 
+// External API request GC (prune resolved api_requests past retention)
+import { startExternalApiCleanup } from '@/server/services/external-api'
+startExternalApiCleanup()
+
 // Version check cron (checks GitHub for new releases)
 import { startVersionCheckCron } from '@/server/services/version-check'
 startVersionCheckCron()

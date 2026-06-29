@@ -120,6 +120,7 @@ export default defineConfig({
 				{
 					label: 'Extending Hivekeep',
 					items: [
+						{ label: 'External API', slug: 'guides/external-api' },
 						{ label: 'Mini-Apps Overview', slug: 'mini-apps/overview' },
 						{ label: 'Mini-Apps: Getting Started', slug: 'mini-apps/getting-started' },
 						{ label: 'Mini-Apps: Components', slug: 'mini-apps/components' },

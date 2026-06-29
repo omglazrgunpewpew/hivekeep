@@ -1047,3 +1047,87 @@ vault_secrets
 
 llm_usage (standalone, indexes sur agent_id, provider_type, model_id, task_id, cron_id)
 ```
+
+---
+
+## External API (machine-to-machine)
+
+Voir `external-api.md`. Un client externe déclaré tient des conversations avec un Agent via `/api/v1/*`, authentifié par une clé bearer. Les réponses sont corrélées par `requestId`.
+
+### `api_clients`
+
+Appelant externe déclaré (admin uniquement). Représenté comme l'auteur du message ; ses tool calls agissent comme `owner_user_id`.
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| `id` | text PK | UUID | |
+| `name` | text | NOT NULL | Affiché en préfixe d'attribution `[name]` |
+| `description` | text | | |
+| `owner_user_id` | text | FK → user.id, ON DELETE CASCADE, NOT NULL | Acteur des tool calls |
+| `agent_id` | text | FK → agents.id, ON DELETE CASCADE | NULL = tout Agent ; sinon verrouillé sur un seul |
+| `allowed_modes` | text | NOT NULL, DEFAULT `'["main","isolated"]'` | JSON, sous-ensemble de `['main','isolated']` |
+| `rate_limit_per_min` | integer | | NULL = `externalApi.defaultRateLimitPerMinute` |
+| `status` | text | NOT NULL, DEFAULT 'active' | 'active' \| 'disabled' |
+| `created_at` | integer | NOT NULL | |
+| `updated_at` | integer | NOT NULL | |
+
+**Index** : `idx_api_clients_owner` sur `owner_user_id`
+
+### `api_keys`
+
+Credential rotatable sous un client. Seul le hash est stocké ; la clé complète `hk_<id>.<secret>` n'est montrée qu'une fois.
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| `id` | text PK | UUID | Le `<keyId>` du token |
+| `client_id` | text | FK → api_clients.id, ON DELETE CASCADE, NOT NULL | |
+| `label` | text | NOT NULL | |
+| `key_hash` | text | NOT NULL | sha256(secret) |
+| `key_prefix` | text | NOT NULL | Affichage seul, ex. `hk_a1b2c3…` |
+| `last_used_at` | integer | | Écriture throttlée |
+| `revoked_at` | integer | | Révocation soft (jamais supprimée) |
+| `created_at` | integer | NOT NULL | |
+
+**Index** : `idx_api_keys_client` sur `client_id`
+
+### `api_conversations`
+
+Fil isolé : un couloir de contexte privé pour un client, adossé à une `quick_sessions` (`kind='api'`). Possède le cycle de vie (TTL glissant).
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| `id` | text PK | UUID | Le `conversationId` public |
+| `client_id` | text | FK → api_clients.id, ON DELETE CASCADE, NOT NULL | |
+| `agent_id` | text | FK → agents.id, ON DELETE CASCADE, NOT NULL | |
+| `session_id` | text | FK → quick_sessions.id, ON DELETE CASCADE, NOT NULL | Session backing |
+| `title` | text | | |
+| `status` | text | NOT NULL, DEFAULT 'active' | 'active' \| 'closed' |
+| `created_at` | integer | NOT NULL | |
+| `last_message_at` | integer | | Pilote le TTL glissant |
+| `expires_at` | integer | | Glissant, rafraîchi à chaque message |
+
+**Index** : `idx_api_conversations_client` sur `client_id`, `idx_api_conversations_session` sur `session_id`
+
+### `api_requests`
+
+Corrélation entre un message envoyé et sa réponse. `id` = `requestId`, posé aussi sur `queue_items.request_id`. GC après `externalApi.replyRetentionHours`.
+
+| Colonne | Type | Contraintes | Description |
+|---|---|---|---|
+| `id` | text PK | UUID | Le `requestId` |
+| `client_id` | text | FK → api_clients.id, ON DELETE CASCADE, NOT NULL | |
+| `agent_id` | text | FK → agents.id, ON DELETE CASCADE, NOT NULL | |
+| `conversation_id` | text | | NULL = timeline principale |
+| `queue_item_id` | text | | Item enfilé |
+| `request_message_id` | text | FK → messages.id, ON DELETE SET NULL | |
+| `status` | text | NOT NULL, DEFAULT 'pending' | 'pending' \| 'done' \| 'error' \| 'cancelled' |
+| `reply_message_id` | text | FK → messages.id, ON DELETE SET NULL | |
+| `reply_content` | text | | Dénormalisé pour des lectures poll/wait économiques |
+| `error_code` | text | | |
+| `error_message` | text | | |
+| `created_at` | integer | NOT NULL | |
+| `completed_at` | integer | | |
+
+**Index** : `idx_api_requests_client` sur `client_id`, `idx_api_requests_status` sur `status`
+
+> **`quick_sessions.kind`** : colonne ajoutée (`'quick'` par défaut, `'api'` pour les fils isolés). Les sessions `kind='api'` tournent à pleine puissance (prompt + outils complets), ont `expires_at = null` (exemptées du GC des quick sessions), et sont exclues de la liste/quota des quick sessions humaines.
