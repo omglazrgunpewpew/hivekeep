@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { auth } from '@/server/auth/index'
 import { db } from '@/server/db/index'
 import { userProfiles } from '@/server/db/schema'
+import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 
 const log = createLogger('auth')
@@ -41,6 +42,42 @@ export async function authMiddleware(c: Context, next: Next) {
   if (internalActor) {
     c.set('user', { id: internalActor, name: '', email: '' } as never)
     c.set('session', { id: 'internal', userId: internalActor, token: 'internal' } as never)
+    return next()
+  }
+
+  // External API: /api/v1/* has its own bearer scheme (NOT a cookie session and
+  // NOT an auth exemption). Resolve the key to its client, enforce the per-client
+  // rate limit, and run as the client's owner user.
+  if (path.startsWith('/api/v1/')) {
+    if (!config.externalApi.enabled) {
+      return c.json({ error: { code: 'EXTERNAL_API_DISABLED', message: 'The external API is disabled' } }, 403)
+    }
+    const authz = c.req.header('authorization')
+    const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : undefined
+    if (!token) {
+      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Missing bearer API key' } }, 401)
+    }
+    // Lazily imported (like the mini-app-token resolver above) so this module
+    // does not statically pull the external-api schema tables — keeps suites
+    // that stub the schema module to a subset from failing to link.
+    const { resolveApiKeyToken, consumeRateLimit } = await import('@/server/services/external-api')
+    const resolved = await resolveApiKeyToken(token)
+    if (!resolved.ok) {
+      const messages = {
+        UNAUTHORIZED: 'Invalid API key',
+        API_KEY_REVOKED: 'This API key has been revoked',
+        CLIENT_DISABLED: 'This API client is disabled',
+      } as const
+      return c.json({ error: { code: resolved.code, message: messages[resolved.code] } }, resolved.status)
+    }
+    const limit = resolved.client.rateLimitPerMin ?? config.externalApi.defaultRateLimitPerMinute
+    if (!consumeRateLimit(resolved.client.id, limit)) {
+      c.header('Retry-After', '60')
+      return c.json({ error: { code: 'RATE_LIMITED', message: 'Rate limit exceeded' } }, 429)
+    }
+    c.set('user', { id: resolved.client.ownerUserId, name: '', email: '' } as never)
+    c.set('session', { id: 'external-api', userId: resolved.client.ownerUserId, token: 'external-api' } as never)
+    c.set('apiClient', resolved.client)
     return next()
   }
 

@@ -508,6 +508,19 @@ export const config = {
     rateLimitPerMinute: Number(process.env.INTER_KIN_RATE_LIMIT ?? 20),
   },
 
+  // External machine-to-machine conversational API (see external-api.md).
+  externalApi: {
+    enabled: process.env.HIVEKEEP_EXTERNAL_API_ENABLED !== 'false', // default: true
+    defaultRateLimitPerMinute: Number(process.env.HIVEKEEP_EXTERNAL_API_RATE_LIMIT ?? 60),
+    waitTimeoutMsDefault: Number(process.env.HIVEKEEP_EXTERNAL_API_WAIT_DEFAULT_MS ?? 60_000),
+    waitTimeoutMsMax: Number(process.env.HIVEKEEP_EXTERNAL_API_WAIT_MAX_MS ?? 120_000),
+    // Sliding TTL for isolated conversations (P2). Default 30 days.
+    conversationIdleTtlHours: Number(process.env.HIVEKEEP_EXTERNAL_API_CONV_TTL_HOURS ?? 720),
+    maxActiveConversationsPerClient: Number(process.env.HIVEKEEP_EXTERNAL_API_MAX_CONV ?? 200),
+    // How long resolved api_requests rows are retained before GC. Default 7 days.
+    replyRetentionHours: Number(process.env.HIVEKEEP_EXTERNAL_API_REPLY_RETENTION_HOURS ?? 168),
+  },
+
   mcp: {
     requireApproval: process.env.MCP_REQUIRE_APPROVAL !== 'false', // default: true
   },

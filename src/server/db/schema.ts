@@ -1406,3 +1406,67 @@ export const projectKnowledge = sqliteTable('project_knowledge', {
   index('idx_project_knowledge_project').on(table.projectId),
   index('idx_project_knowledge_project_pinned').on(table.projectId, table.pinned),
 ])
+
+// ─── External API (machine-to-machine conversational access) ───────────────────
+// See external-api.md. A declared external client holds API keys and talks to an
+// Agent over /api/v1/* with bearer auth. Replies are correlated by requestId.
+
+/** A declared external caller. Represented as the message author (attribution),
+ *  and its owner_user_id is the actor tool calls run as. */
+export const apiClients = sqliteTable('api_clients', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  ownerUserId: text('owner_user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  // NULL = may target any Agent via the path param; set = locked to one Agent.
+  agentId: text('agent_id').references(() => agents.id, { onDelete: 'cascade' }),
+  // JSON array, subset of ['main','isolated'] — gates which conversation targets
+  // this client may use.
+  allowedModes: text('allowed_modes').notNull().default('["main","isolated"]'),
+  // NULL inherits config.externalApi.defaultRateLimitPerMinute.
+  rateLimitPerMin: integer('rate_limit_per_min'),
+  status: text('status').notNull().default('active'), // 'active' | 'disabled'
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+}, (table) => [
+  index('idx_api_clients_owner').on(table.ownerUserId),
+])
+
+/** A rotatable credential under a client. We store only sha256(secret) plus a
+ *  short display prefix; the full key `hk_<id>.<secret>` is shown once. */
+export const apiKeys = sqliteTable('api_keys', {
+  id: text('id').primaryKey(), // the <keyId> embedded in the token
+  clientId: text('client_id').notNull().references(() => apiClients.id, { onDelete: 'cascade' }),
+  label: text('label').notNull(),
+  keyHash: text('key_hash').notNull(),
+  keyPrefix: text('key_prefix').notNull(), // display only, e.g. 'hk_a1b2c3…'
+  lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+  revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }), // soft revoke, never hard-delete
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+}, (table) => [
+  index('idx_api_keys_client').on(table.clientId),
+])
+
+/** Correlation between a sent message and its reply. `id` is the requestId, also
+ *  set as queue_items.request_id, so the turn-completion hook can resolve it.
+ *  `conversation_id` is NULL for the main timeline (isolated threads land in P2). */
+export const apiRequests = sqliteTable('api_requests', {
+  id: text('id').primaryKey(),
+  clientId: text('client_id').notNull().references(() => apiClients.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  conversationId: text('conversation_id'), // FK added with api_conversations in P2
+  queueItemId: text('queue_item_id'),
+  requestMessageId: text('request_message_id').references(() => messages.id, { onDelete: 'set null' }),
+  status: text('status').notNull().default('pending'), // 'pending' | 'done' | 'error' | 'cancelled'
+  replyMessageId: text('reply_message_id').references(() => messages.id, { onDelete: 'set null' }),
+  replyContent: text('reply_content'),
+  errorCode: text('error_code'),
+  errorMessage: text('error_message'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+}, (table) => [
+  index('idx_api_requests_client').on(table.clientId),
+  index('idx_api_requests_status').on(table.status),
+])
+
+export type ApiClientSelect = typeof apiClients.$inferSelect

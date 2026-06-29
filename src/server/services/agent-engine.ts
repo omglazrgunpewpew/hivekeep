@@ -1182,8 +1182,13 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       if (owner) userLanguage = owner.agentLanguage ?? owner.language
     }
 
-    // Only propagate userId when the source is actually a user (not an agent or task)
-    const effectiveUserId = queueItem.sourceType === 'user' ? (queueItem.sourceId ?? undefined) : undefined
+    // Only propagate userId when the source is actually a user (not an agent or
+    // task). External API turns act as the declared client's owner user.
+    const effectiveUserId = queueItem.sourceType === 'user'
+      ? (queueItem.sourceId ?? undefined)
+      : queueItem.sourceType === 'api'
+        ? ((await import('@/server/services/external-api')).resolveApiClientOwner(queueItem.sourceId) ?? undefined)
+        : undefined
 
     // Execute beforeChat hook
     await hookRegistry.execute('beforeChat', {
@@ -1958,6 +1963,15 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         clearStagedAttachments(agentId)
       }
 
+      // External API reply correlation: resolve the request so a `wait` caller
+      // unblocks and pollers see the reply. Dynamically imported to keep this
+      // module's static graph off the external-api schema tables (test stubs).
+      if (queueItem.sourceType === 'api' && queueItem.requestId && fullContent) {
+        import('@/server/services/external-api')
+          .then((m) => m.resolveApiReply(queueItem!.requestId!, assistantMessageId, fullContent))
+          .catch((err) => log.error({ agentId, requestId: queueItem!.requestId, err }, 'External API reply resolution failed'))
+      }
+
       // Mention notifications (fire-and-forget)
       if (fullContent) {
         parseMentions(fullContent).then((mentions) => {
@@ -2106,6 +2120,14 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       await markQueueItemDone(queueItem.id).catch((err) =>
         log.error({ agentId, err }, 'Failed to mark queue item done in finally'),
       )
+      // Safety net for external API turns: if the turn ended (error/abort/empty)
+      // without resolving the reply, fail the still-pending request so `wait`
+      // and poll surface it instead of hanging. No-op once resolved 'done'.
+      if (queueItem.sourceType === 'api' && queueItem.requestId) {
+        await import('@/server/services/external-api')
+          .then((m) => m.failPendingApiRequest(queueItem!.requestId!, 'TURN_INCOMPLETE', 'The Agent turn ended without a reply'))
+          .catch(() => {})
+      }
     }
     agentLocks.delete(agentId)
   }

@@ -25,6 +25,8 @@ import { toolDomainRoutes } from '@/server/routes/tool-domains'
 import { customToolRoutes } from '@/server/routes/custom-tools'
 import { messageRoutes } from '@/server/routes/messages'
 import { reactionRoutes } from '@/server/routes/reactions'
+import { externalApiRoutes } from '@/server/routes/external-api'
+import { apiClientRoutes } from '@/server/routes/api-clients'
 import { vaultRoutes } from '@/server/routes/vault'
 import { contactRoutes } from '@/server/routes/contacts'
 import { taskRoutes } from '@/server/routes/tasks'
@@ -68,6 +70,8 @@ import { versionCheckRoutes } from '@/server/routes/version-check'
 export type AppVariables = {
   session: { id: string; userId: string; token: string }
   user: { id: string; name: string; email: string }
+  /** Set only on /api/v1/* requests authenticated by an external API key. */
+  apiClient?: import('@/server/db/schema').ApiClientSelect
 }
 
 const app = new Hono<{ Variables: AppVariables }>()
@@ -218,6 +222,9 @@ app.route('/api/secret-prompts', secretPromptRoutes)
 app.route('/api/memories', memoryRoutes)
 app.route('/api/webhooks/incoming', webhookIncomingRoutes)
 app.route('/api/webhooks', webhookRoutes)
+// External machine-to-machine API (bearer auth) + its admin management surface.
+app.route('/api/v1', externalApiRoutes)
+app.route('/api/api-clients', apiClientRoutes)
 app.route('/api/account-triggers', accountTriggerRoutes)
 app.route('/api/channels/telegram', channelTelegramRoutes)
 app.route('/api/channels/slack/webhook', channelSlackRoutes)
