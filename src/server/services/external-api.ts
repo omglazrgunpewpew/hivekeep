@@ -1,8 +1,9 @@
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
-import { apiClients, apiKeys, apiRequests } from '@/server/db/schema'
+import { apiClients, apiKeys, apiRequests, apiConversations, quickSessions } from '@/server/db/schema'
+import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 
 const log = createLogger('external-api')
@@ -185,6 +186,135 @@ export async function failPendingApiRequest(requestId: string, code: string, mes
     .returning()
     .get()
   if (row) releaseWaiter(requestId, row)
+}
+
+// ─── Isolated conversations ─────────────────────────────────────────────────────
+// An isolated thread is backed by a quick_sessions row (kind='api'). Its backing
+// session has expiresAt = null so the quick-session idle GC never auto-closes it;
+// the lifecycle is owned here (caller closes it, or a future sweep on expiresAt).
+
+export type CreateConversationResult =
+  | { ok: true; conversationId: string; sessionId: string }
+  | { ok: false; code: 'TOO_MANY_CONVERSATIONS' }
+
+export function createApiConversation(params: {
+  clientId: string
+  agentId: string
+  ownerUserId: string
+  title?: string | null
+}): CreateConversationResult {
+  const active = db
+    .select({ id: apiConversations.id })
+    .from(apiConversations)
+    .where(and(eq(apiConversations.clientId, params.clientId), eq(apiConversations.status, 'active')))
+    .all()
+  if (active.length >= config.externalApi.maxActiveConversationsPerClient) {
+    return { ok: false, code: 'TOO_MANY_CONVERSATIONS' }
+  }
+  const now = new Date()
+  const sessionId = uuid()
+  const conversationId = uuid()
+  db.insert(quickSessions).values({
+    id: sessionId,
+    agentId: params.agentId,
+    createdBy: params.ownerUserId,
+    title: params.title ?? null,
+    status: 'active',
+    kind: 'api',
+    createdAt: now,
+    expiresAt: null, // never auto-closed by the quick-session GC
+  }).run()
+  const ttlMs = config.externalApi.conversationIdleTtlHours * 60 * 60 * 1000
+  db.insert(apiConversations).values({
+    id: conversationId,
+    clientId: params.clientId,
+    agentId: params.agentId,
+    sessionId,
+    title: params.title ?? null,
+    status: 'active',
+    createdAt: now,
+    lastMessageAt: now,
+    expiresAt: new Date(now.getTime() + ttlMs),
+  }).run()
+  return { ok: true, conversationId, sessionId }
+}
+
+export type ResolveConversationResult =
+  | { ok: true; sessionId: string }
+  | { ok: false; code: 'CONVERSATION_NOT_FOUND' | 'CONVERSATION_CLOSED' }
+
+/** Resolve an isolated thread for a send, enforcing client + agent ownership. */
+export function resolveApiConversation(conversationId: string, clientId: string, agentId: string): ResolveConversationResult {
+  const row = db
+    .select()
+    .from(apiConversations)
+    .where(and(eq(apiConversations.id, conversationId), eq(apiConversations.clientId, clientId)))
+    .get()
+  if (!row || row.agentId !== agentId) return { ok: false, code: 'CONVERSATION_NOT_FOUND' }
+  if (row.status !== 'active') return { ok: false, code: 'CONVERSATION_CLOSED' }
+  return { ok: true, sessionId: row.sessionId }
+}
+
+/** Slide the TTL forward on each message. Keyed by the backing session id. */
+export function refreshApiConversationActivity(sessionId: string): void {
+  const now = Date.now()
+  const ttlMs = config.externalApi.conversationIdleTtlHours * 60 * 60 * 1000
+  db.update(apiConversations)
+    .set({ lastMessageAt: new Date(now), expiresAt: new Date(now + ttlMs) })
+    .where(eq(apiConversations.sessionId, sessionId))
+    .run()
+}
+
+export function closeApiConversation(conversationId: string, clientId: string): boolean {
+  const row = db
+    .select({ id: apiConversations.id, sessionId: apiConversations.sessionId })
+    .from(apiConversations)
+    .where(and(eq(apiConversations.id, conversationId), eq(apiConversations.clientId, clientId)))
+    .get()
+  if (!row) return false
+  const now = new Date()
+  db.update(apiConversations).set({ status: 'closed' }).where(eq(apiConversations.id, conversationId)).run()
+  db.update(quickSessions).set({ status: 'closed', closedAt: now }).where(eq(quickSessions.id, row.sessionId)).run()
+  return true
+}
+
+export interface ApiConversationPublic {
+  conversationId: string
+  agentId: string
+  title: string | null
+  status: string
+  createdAt: Date
+  lastMessageAt: Date | null
+}
+
+export function listApiConversations(clientId: string, agentId?: string): ApiConversationPublic[] {
+  const where = agentId
+    ? and(eq(apiConversations.clientId, clientId), eq(apiConversations.agentId, agentId))
+    : eq(apiConversations.clientId, clientId)
+  return db
+    .select()
+    .from(apiConversations)
+    .where(where)
+    .orderBy(desc(apiConversations.createdAt))
+    .all()
+    .map((r) => ({
+      conversationId: r.id,
+      agentId: r.agentId,
+      title: r.title,
+      status: r.status,
+      createdAt: r.createdAt,
+      lastMessageAt: r.lastMessageAt,
+    }))
+}
+
+/** The backing session id for a client's conversation, for reading its transcript. */
+export function getApiConversationSessionId(conversationId: string, clientId: string): string | null {
+  const row = db
+    .select({ sessionId: apiConversations.sessionId })
+    .from(apiConversations)
+    .where(and(eq(apiConversations.id, conversationId), eq(apiConversations.clientId, clientId)))
+    .get()
+  return row?.sessionId ?? null
 }
 
 /** Allowed conversation targets for a client (parsed from the JSON column). */

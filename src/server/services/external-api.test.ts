@@ -27,6 +27,17 @@ sqlite.run(`CREATE TABLE api_requests (
   status text NOT NULL DEFAULT 'pending', reply_message_id text, reply_content text,
   error_code text, error_message text, created_at integer NOT NULL, completed_at integer
 )`)
+sqlite.run(`CREATE TABLE quick_sessions (
+  id text PRIMARY KEY NOT NULL, agent_id text NOT NULL, created_by text NOT NULL,
+  title text, status text NOT NULL DEFAULT 'active', kind text NOT NULL DEFAULT 'quick',
+  model text, provider_id text, thinking_enabled integer, thinking_effort text,
+  created_at integer NOT NULL, closed_at integer, expires_at integer
+)`)
+sqlite.run(`CREATE TABLE api_conversations (
+  id text PRIMARY KEY NOT NULL, client_id text NOT NULL, agent_id text NOT NULL,
+  session_id text NOT NULL, title text, status text NOT NULL DEFAULT 'active',
+  created_at integer NOT NULL, last_message_at integer, expires_at integer
+)`)
 const testDb = drizzle(sqlite, { schema })
 
 mock.module('@/server/logger', () => ({ createLogger: () => ({ info() {}, warn() {}, debug() {}, error() {} }) }))
@@ -49,6 +60,12 @@ const {
   getApiRequest,
   waitForApiReply,
   parseAllowedModes,
+  createApiConversation,
+  resolveApiConversation,
+  closeApiConversation,
+  listApiConversations,
+  getApiConversationSessionId,
+  refreshApiConversationActivity,
 } = svc
 
 function seedClient(overrides: Partial<{ id: string; status: string }> = {}) {
@@ -167,6 +184,61 @@ d('external-api requests', () => {
       status: 'error',
       error: { code: 'TURN_INCOMPLETE', message: 'turn died' },
     })
+  })
+})
+
+d('external-api isolated conversations', () => {
+  beforeEach(() => {
+    sqlite.run('DELETE FROM api_conversations')
+    sqlite.run('DELETE FROM quick_sessions')
+  })
+
+  it('creates an isolated thread backed by a kind=api session exempt from idle GC', () => {
+    const created = createApiConversation({ clientId: 'client-1', agentId: 'agent-1', ownerUserId: 'user-1', title: 'CI run' })
+    expect(created.ok).toBe(true)
+    if (!created.ok) return
+    const session = sqlite.query('SELECT kind, expires_at, status FROM quick_sessions WHERE id = ?').get(created.sessionId) as { kind: string; expires_at: number | null; status: string }
+    expect(session.kind).toBe('api')
+    expect(session.expires_at).toBeNull() // never auto-closed by the quick-session GC
+    expect(session.status).toBe('active')
+  })
+
+  it('resolves an owned active conversation and rejects others', () => {
+    const created = createApiConversation({ clientId: 'client-1', agentId: 'agent-1', ownerUserId: 'user-1' })
+    if (!created.ok) throw new Error('setup failed')
+    expect(resolveApiConversation(created.conversationId, 'client-1', 'agent-1')).toEqual({ ok: true, sessionId: created.sessionId })
+    expect(resolveApiConversation(created.conversationId, 'other-client', 'agent-1')).toMatchObject({ ok: false, code: 'CONVERSATION_NOT_FOUND' })
+    expect(resolveApiConversation(created.conversationId, 'client-1', 'other-agent')).toMatchObject({ ok: false, code: 'CONVERSATION_NOT_FOUND' })
+  })
+
+  it('closes both the conversation and its backing session', () => {
+    const created = createApiConversation({ clientId: 'client-1', agentId: 'agent-1', ownerUserId: 'user-1' })
+    if (!created.ok) throw new Error('setup failed')
+    expect(closeApiConversation(created.conversationId, 'client-1')).toBe(true)
+    expect(resolveApiConversation(created.conversationId, 'client-1', 'agent-1')).toMatchObject({ ok: false, code: 'CONVERSATION_CLOSED' })
+    const session = sqlite.query('SELECT status FROM quick_sessions WHERE id = ?').get(created.sessionId) as { status: string }
+    expect(session.status).toBe('closed')
+  })
+
+  it('lists only the calling client conversations and resolves the session for reads', () => {
+    const a = createApiConversation({ clientId: 'client-1', agentId: 'agent-1', ownerUserId: 'user-1' })
+    createApiConversation({ clientId: 'client-2', agentId: 'agent-1', ownerUserId: 'user-2' })
+    if (!a.ok) throw new Error('setup failed')
+    const list = listApiConversations('client-1')
+    expect(list).toHaveLength(1)
+    expect(list[0]!.conversationId).toBe(a.conversationId)
+    expect(getApiConversationSessionId(a.conversationId, 'client-1')).toBe(a.sessionId)
+    expect(getApiConversationSessionId(a.conversationId, 'client-2')).toBeNull()
+  })
+
+  it('slides the TTL forward on activity', () => {
+    const created = createApiConversation({ clientId: 'client-1', agentId: 'agent-1', ownerUserId: 'user-1' })
+    if (!created.ok) throw new Error('setup failed')
+    sqlite.run('UPDATE api_conversations SET expires_at = 1, last_message_at = 1 WHERE id = ?', [created.conversationId])
+    refreshApiConversationActivity(created.sessionId)
+    const row = sqlite.query('SELECT expires_at, last_message_at FROM api_conversations WHERE id = ?').get(created.conversationId) as { expires_at: number; last_message_at: number }
+    expect(row.expires_at).toBeGreaterThan(1)
+    expect(row.last_message_at).toBeGreaterThan(1)
   })
 })
 

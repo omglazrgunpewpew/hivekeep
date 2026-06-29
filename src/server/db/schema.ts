@@ -359,6 +359,10 @@ export const quickSessions = sqliteTable('quick_sessions', {
   createdBy: text('created_by').notNull().references(() => user.id, { onDelete: 'cascade' }),
   title: text('title'),
   status: text('status').notNull().default('active'), // 'active' | 'closed'
+  /** 'quick' = the ephemeral quick-chat UI session (minimal capability profile).
+   *  'api' = an external-API isolated conversation (full capability profile,
+   *  exempt from the idle GC; lifecycle owned by api_conversations). */
+  kind: text('kind').notNull().default('quick'),
   /** Per-session LLM override (null = inherit the agent's model) — lets the
    *  user try another model in an ephemeral session without touching the
    *  agent's configuration (the whole point of quick sessions). */
@@ -1467,6 +1471,24 @@ export const apiRequests = sqliteTable('api_requests', {
 }, (table) => [
   index('idx_api_requests_client').on(table.clientId),
   index('idx_api_requests_status').on(table.status),
+])
+
+/** An isolated external-API conversation: a private context lane for one client,
+ *  backed by a quick_sessions row (kind='api'). Owns the lifecycle (sliding TTL),
+ *  so the backing session is exempt from the ephemeral quick-session GC. */
+export const apiConversations = sqliteTable('api_conversations', {
+  id: text('id').primaryKey(), // the public conversationId
+  clientId: text('client_id').notNull().references(() => apiClients.id, { onDelete: 'cascade' }),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  sessionId: text('session_id').notNull().references(() => quickSessions.id, { onDelete: 'cascade' }),
+  title: text('title'),
+  status: text('status').notNull().default('active'), // 'active' | 'closed'
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  lastMessageAt: integer('last_message_at', { mode: 'timestamp_ms' }),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }), // sliding; refreshed each message
+}, (table) => [
+  index('idx_api_conversations_client').on(table.clientId),
+  index('idx_api_conversations_session').on(table.sessionId),
 ])
 
 export type ApiClientSelect = typeof apiClients.$inferSelect

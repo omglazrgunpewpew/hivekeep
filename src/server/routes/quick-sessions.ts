@@ -39,7 +39,9 @@ agentScopedRoutes.post('/', async (c) => {
     return c.json({ error: { code: 'TITLE_TOO_LONG', message: 'Title must be 200 characters or less' } }, 400)
   }
 
-  // Check max active sessions per user per agent
+  // Check max active sessions per user per agent. Exclude kind='api' (external
+  // API isolated conversations) — they are not human quick-chat sessions and
+  // must not count against the user's quota or appear in their list.
   const activeCount = await db
     .select()
     .from(quickSessions)
@@ -47,6 +49,7 @@ agentScopedRoutes.post('/', async (c) => {
       eq(quickSessions.agentId, agentId),
       eq(quickSessions.createdBy, user.id),
       eq(quickSessions.status, 'active'),
+      eq(quickSessions.kind, 'quick'),
     ))
     .all()
 
@@ -102,6 +105,7 @@ agentScopedRoutes.get('/', async (c) => {
   const conditions = [
     eq(quickSessions.agentId, agentId),
     eq(quickSessions.createdBy, user.id),
+    eq(quickSessions.kind, 'quick'), // hide external-API isolated conversations
   ]
 
   if (statusFilter === 'active' || statusFilter === 'closed') {

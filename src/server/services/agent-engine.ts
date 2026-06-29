@@ -2247,10 +2247,26 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
         providerId: quickSessions.providerId,
         thinkingEnabled: quickSessions.thinkingEnabled,
         thinkingEffort: quickSessions.thinkingEffort,
+        kind: quickSessions.kind,
       })
       .from(quickSessions)
       .where(eq(quickSessions.id, sessionId))
       .get()
+
+    // External-API isolated conversations share the quick lane (session-scoped
+    // history, parallel slot) but run at FULL capability: full system prompt and
+    // full toolset, not the minimal quick-chat profile. The distinction is
+    // capability, not isolation. Everything else (history, abort, SSE) is reused.
+    const isApiSession = qsSessionRow?.kind === 'api'
+    const extApi = isApiSession ? await import('@/server/services/external-api') : null
+    const apiContacts = isApiSession ? await listContactsForPrompt() : []
+    const apiAgentDirectory = isApiSession
+      ? (await listAvailableAgents(agentId)).map((k) => ({ slug: k.slug, name: k.name, role: k.role }))
+      : []
+    const apiMcpToolsSummary = isApiSession ? await getMCPToolsSummary(agentId) : undefined
+    const apiActiveChannels = isApiSession
+      ? (await getActiveChannelsForAgent(agentId)).map((ch) => ({ platform: ch.platform, name: ch.name }))
+      : undefined
     const qsModelId = qsSessionRow?.model ?? agent.model
     // When the session overrides the model, its providerId (possibly null =
     // auto-resolve) replaces the agent's — the agent's provider may not even
@@ -2279,12 +2295,15 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
 
     const systemSegments = buildSystemPrompt({
       agent: { name: agent.name, slug: agent.slug, role: agent.role, character: agent.character, expertise: agent.expertise, kind: agent.kind },
-      contacts: [],
+      contacts: apiContacts,
       relevantMemories,
       relevantKnowledge,
-      agentDirectory: [],
+      agentDirectory: apiAgentDirectory,
+      mcpTools: apiMcpToolsSummary,
+      activeChannels: apiActiveChannels,
       isSubAgent: false,
-      isQuickSession: true,
+      // Full prompt for API isolated sessions; minimal for quick-chat sessions.
+      isQuickSession: !isApiSession,
       globalPrompt,
       userLanguage,
       workspacePath: agent.workspacePath,
@@ -2353,16 +2372,24 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     // Unified toolset resolution (same model as a main turn) then apply the
     // quick-session exclusion list on top. The toolbox is the sole grant
     // primitive; a null/empty selection resolves to the 'all' built-in.
-    const quickEffectiveUserId = queueItem.sourceType === 'user' ? (queueItem.sourceId ?? undefined) : undefined
+    // API isolated sessions run the full toolset (no exclusion) as the client's
+    // owner; quick-chat sessions stay restricted.
+    const quickEffectiveUserId = queueItem.sourceType === 'user'
+      ? (queueItem.sourceId ?? undefined)
+      : isApiSession
+        ? (extApi!.resolveApiClientOwner(queueItem.sourceId) ?? undefined)
+        : undefined
     const quickTools = await resolveToolset({
       agentId,
       toolboxIds: agent.toolboxIds,
       isSubAgent: false,
       userId: quickEffectiveUserId,
-      quick: true,
+      quick: !isApiSession,
     })
-    // Apply quick session exclusion list
-    for (const name of QUICK_SESSION_EXCLUDED_TOOLS) delete quickTools[name]
+    // Apply quick session exclusion list (skipped for full-power API sessions)
+    if (!isApiSession) {
+      for (const name of QUICK_SESSION_EXCLUDED_TOOLS) delete quickTools[name]
+    }
 
     const tools = capTools(wrapToolsWithSpill({ ...quickTools }, agent.workspacePath), agentId, qsProviderType, qsResolved.model)
     const hasTools = Object.keys(tools).length > 0
@@ -2629,6 +2656,16 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
 
     // No compacting, no memory extraction for quick sessions
 
+    // External-API isolated reply correlation + sliding TTL refresh.
+    if (isApiSession && extApi) {
+      if (queueItem.requestId && fullContent) {
+        await extApi.resolveApiReply(queueItem.requestId, assistantMessageId, fullContent).catch((err) =>
+          log.error({ agentId, sessionId, requestId: queueItem!.requestId, err }, 'External API (isolated) reply resolution failed'),
+        )
+      }
+      extApi.refreshApiConversationActivity(sessionId)
+    }
+
     await markQueueItemDone(queueItem.id)
 
     return true
@@ -2678,6 +2715,13 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       await markQueueItemDone(queueItem.id).catch((err) =>
         log.error({ agentId, err }, 'Failed to mark quick session queue item done in finally'),
       )
+      // Safety net for API isolated turns: fail a still-pending request so
+      // wait/poll surface it instead of hanging. No-op once resolved 'done'.
+      if (queueItem.sourceType === 'api' && queueItem.requestId) {
+        await import('@/server/services/external-api')
+          .then((m) => m.failPendingApiRequest(queueItem!.requestId!, 'TURN_INCOMPLETE', 'The Agent turn ended without a reply'))
+          .catch(() => {})
+      }
     }
     quickLocks.delete(agentId)
   }
