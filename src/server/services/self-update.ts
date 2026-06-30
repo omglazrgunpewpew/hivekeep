@@ -27,6 +27,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  renameSync,
   rmSync,
   statSync,
 } from 'fs'
@@ -90,12 +91,12 @@ function runGit(args: string[], opts: { timeoutMs?: number } = {}): string {
   return (proc.stdout ?? '').trim()
 }
 
-function runBun(args: string[], opts: { timeoutMs?: number } = {}): void {
+function runBun(args: string[], opts: { timeoutMs?: number; env?: Record<string, string> } = {}): void {
   const proc = spawnSync(process.execPath, args, {
     cwd: process.cwd(),
     encoding: 'utf-8',
     timeout: opts.timeoutMs ?? 15 * 60 * 1000,
-    env: { ...process.env, HUSKY: '0' },
+    env: { ...process.env, HUSKY: '0', ...opts.env },
   })
   if (proc.status !== 0) {
     const output = `${proc.stdout ?? ''}\n${proc.stderr ?? ''}`.trim().slice(-2000) || (proc.status === null ? 'timed out' : 'unknown error')
@@ -244,26 +245,84 @@ async function downloadClientAssets(journal: UpdateJournal, tag: string): Promis
   }
 }
 
-function extractClientAssets(tarPath: string): void {
-  const stagingDir = join(getUpdateDir(), 'staging')
-  rmSync(stagingDir, { recursive: true, force: true })
-  mkdirSync(stagingDir, { recursive: true })
+// The live client is only ever replaced atomically (see swapClientDir). Both the
+// local build and the prebuilt extract produce a complete client in this sibling
+// staging dir first, so a failed/partial build never wipes what the running
+// server serves. Lives under dist/ so the swap is a same-filesystem rename.
+const STAGING_CLIENT_DIRNAME = 'client.staging'
 
-  const proc = spawnSync('tar', ['-xzf', tarPath, '-C', stagingDir], { encoding: 'utf-8' })
+/**
+ * Atomically replace dist/client with a known-good staged build. `stagedDir`
+ * MUST sit under the repo's dist/ (same filesystem) so the swap is two
+ * near-instant renames rather than a multi-second copy. dist/client is touched
+ * ONLY here, after the new build is verified.
+ */
+function swapClientDir(stagedDir: string): void {
+  const distDir = join(process.cwd(), 'dist')
+  const distClient = join(distDir, 'client')
+  const distClientOld = join(distDir, 'client.old')
+  mkdirSync(distDir, { recursive: true })
+  rmSync(distClientOld, { recursive: true, force: true })
+  if (existsSync(distClient)) renameSync(distClient, distClientOld)
+  renameSync(stagedDir, distClient)
+  rmSync(distClientOld, { recursive: true, force: true })
+}
+
+/**
+ * Crash safety: if a swap was interrupted between its two renames, dist/client
+ * may be missing while dist/client.old still holds the last good build. Restore
+ * it so the server always has a client to serve.
+ */
+function recoverInterruptedSwap(): void {
+  const distDir = join(process.cwd(), 'dist')
+  const distClient = join(distDir, 'client')
+  const distClientOld = join(distDir, 'client.old')
+  if (!existsSync(distClient) && existsSync(distClientOld)) {
+    renameSync(distClientOld, distClient)
+  }
+}
+
+/** Build the client into the staging dir, then atomically swap on success. */
+function buildClientAtomically(): void {
+  recoverInterruptedSwap()
+  const staging = join(process.cwd(), 'dist', STAGING_CLIENT_DIRNAME)
+  rmSync(staging, { recursive: true, force: true })
+  // Vite reads HIVEKEEP_BUILD_OUTDIR and writes there (emptyOutDir only cleans
+  // the staging dir). dist/client stays intact until the build fully succeeds.
+  runBun(['run', 'build'], { env: { HIVEKEEP_BUILD_OUTDIR: `dist/${STAGING_CLIENT_DIRNAME}` } })
+  if (!existsSync(join(staging, 'index.html'))) {
+    rmSync(staging, { recursive: true, force: true })
+    throw new UpdateError('Client build produced no index.html')
+  }
+  swapClientDir(staging)
+}
+
+function extractClientAssets(tarPath: string): void {
+  recoverInterruptedSwap()
+  // tar archive nests dist/client/... — extract into the OS update dir first.
+  const extractRoot = join(getUpdateDir(), 'staging')
+  rmSync(extractRoot, { recursive: true, force: true })
+  mkdirSync(extractRoot, { recursive: true })
+
+  const proc = spawnSync('tar', ['-xzf', tarPath, '-C', extractRoot], { encoding: 'utf-8' })
   if (proc.status !== 0) {
     throw new UpdateError(`tar extraction failed: ${(proc.stderr ?? '').trim()}`)
   }
 
-  const extracted = join(stagingDir, 'dist', 'client')
+  const extracted = join(extractRoot, 'dist', 'client')
   if (!existsSync(join(extracted, 'index.html'))) {
     throw new UpdateError('Prebuilt client archive is malformed (no dist/client/index.html)')
   }
 
-  const distClient = join(process.cwd(), 'dist', 'client')
-  rmSync(distClient, { recursive: true, force: true })
+  // Copy into a same-filesystem staging dir under the repo (the OS update dir
+  // may be on a different filesystem, which would make the swap rename EXDEV),
+  // then atomically swap. dist/client is untouched until the copy succeeds.
+  const staging = join(process.cwd(), 'dist', STAGING_CLIENT_DIRNAME)
+  rmSync(staging, { recursive: true, force: true })
   mkdirSync(join(process.cwd(), 'dist'), { recursive: true })
-  cpSync(extracted, distClient, { recursive: true })
-  rmSync(stagingDir, { recursive: true, force: true })
+  cpSync(extracted, staging, { recursive: true })
+  rmSync(extractRoot, { recursive: true, force: true })
+  swapClientDir(staging)
   rmSync(tarPath, { force: true })
 }
 
@@ -402,8 +461,9 @@ async function runUpdate(journal: UpdateJournal): Promise<void> {
       if (tarPath) {
         extractClientAssets(tarPath)
       } else {
-        // Edge channel, or prebuilt assets unavailable: build locally.
-        runBun(['run', 'build'])
+        // Edge channel, or prebuilt assets unavailable: build locally. Atomic —
+        // a failed build never wipes the live dist/client.
+        buildClientAtomically()
       }
     })
 
