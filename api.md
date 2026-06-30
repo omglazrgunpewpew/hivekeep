@@ -2250,7 +2250,7 @@ Poll a request. Scoped to the calling client.
 
 ### `GET /api/v1/agents`
 
-Agents this key may target: `{ agents: Array<{ id, slug, name }> }`.
+Agents this key may target: `{ agents: Array<{ id, slug, name, role, avatarUrl }> }` (`avatarUrl` is null when the Agent has no avatar). Scoped to the locked Agent if the client has one.
 
 ### `POST /api/v1/agents/:agentId/conversations`
 

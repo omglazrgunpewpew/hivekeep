@@ -28,13 +28,23 @@ const log = createLogger('routes:external-api')
 // sets `apiClient` on the context for every /api/v1/* request.
 const externalApiRoutes = new Hono<{ Variables: AppVariables }>()
 
-// GET /api/v1/agents — Agents this key may target (discovery).
-externalApiRoutes.get('/agents', async (c) => {
+// GET /api/v1/agents — Agents this key may target (discovery). Includes role and
+// avatar so a caller (e.g. an MCP client) can tell what each Agent does.
+externalApiRoutes.get('/agents', (c) => {
   const client = c.get('apiClient')!
+  const cols = { id: agents.id, slug: agents.slug, name: agents.name, role: agents.role, avatarPath: agents.avatarPath }
   const rows = client.agentId
-    ? db.select({ id: agents.id, slug: agents.slug, name: agents.name }).from(agents).where(eq(agents.id, client.agentId)).all()
-    : db.select({ id: agents.id, slug: agents.slug, name: agents.name }).from(agents).all()
-  return c.json({ agents: rows })
+    ? db.select(cols).from(agents).where(eq(agents.id, client.agentId)).all()
+    : db.select(cols).from(agents).all()
+  return c.json({
+    agents: rows.map((k) => ({
+      id: k.id,
+      slug: k.slug,
+      name: k.name,
+      role: k.role,
+      avatarUrl: k.avatarPath ? `/api/uploads/agents/${k.id}/avatar.${k.avatarPath.split('.').pop() ?? 'png'}` : null,
+    })),
+  })
 })
 
 // POST /api/v1/agents/:agentId/messages — send a message, optionally wait for the reply.
