@@ -1,7 +1,8 @@
 import { v4 as uuid } from 'uuid'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile, readdir, unlink, stat } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join, sep } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 import type { ExtractMode } from '@/server/services/web-browse'
@@ -308,6 +309,56 @@ class PlaywrightManager {
         title: title || null,
         html,
       }
+    } finally {
+      if (page) await page.close().catch(() => {})
+      if (context) await context.close().catch(() => {})
+      this.release(entry)
+    }
+  }
+
+  /**
+   * Render a local HTML file to a PDF buffer (Files section: export-to-PDF).
+   * Navigates to the file via `file://` so sibling assets (relative images/CSS)
+   * resolve exactly as they would in a real browser. `file://` requests are
+   * bounded to the document's own directory to keep an agent-authored page from
+   * reading arbitrary local files during the render; http(s) (CDN libs) pass.
+   */
+  async renderPdf(absPath: string): Promise<Uint8Array> {
+    if (!this.isEnabled) {
+      throw new Error(
+        'Headless browser not available. Set WEB_BROWSING_HEADLESS_ENABLED=true and install Chromium.',
+      )
+    }
+
+    this.ensureInitialized()
+    const entry = await this.acquireEntry()
+
+    let context: BrowserContext | null = null
+    let page: Page | null = null
+    try {
+      context = await this.openContext(entry.browser, { width: 1280, height: 720 })
+      page = await context.newPage()
+
+      const root = dirname(absPath)
+      await page.route('**/*', (route) => {
+        const url = route.request().url()
+        if (url.startsWith('file://')) {
+          const target = fileURLToPath(url)
+          if (target !== absPath && !target.startsWith(root + sep)) return route.abort()
+        }
+        return route.continue()
+      })
+
+      await page.goto(pathToFileURL(absPath).href, {
+        waitUntil: 'networkidle',
+        timeout: config.webBrowsing.pageTimeout,
+      })
+
+      return await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '12mm', bottom: '12mm', left: '12mm', right: '12mm' },
+      })
     } finally {
       if (page) await page.close().catch(() => {})
       if (context) await context.close().catch(() => {})

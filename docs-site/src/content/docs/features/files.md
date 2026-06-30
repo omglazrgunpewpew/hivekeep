@@ -16,7 +16,7 @@ The page works like a lightweight code editor:
 - **Source selector**: a searchable picker at the top of the left panel switches between source kinds: **Agents** (each Agent's workspace), **Projects** (a project's cloned repo), **Mini-apps** (a mini-app's source directory) and **Folders** (any folder on the server you add yourself). Category segments and a search box keep the right workspace one keystroke away even with many sources; the last source you visited is remembered. See [Browse sources](#browse-sources) below.
 - **File tree**: folders load lazily as you expand them (a workspace can contain a cloned repo with `node_modules`; nothing is walked until you open it). Everything on disk is shown, dotfiles included. A **filter box** narrows the loaded tree by name, and **collapse-all / expand-all** buttons sit in the tree header. The panel is **resizable** (drag the divider; the width is remembered). On mobile the tree lives in a slide-in drawer.
 - **Tabs**: every opened file gets a tab, with a dirty indicator for unsaved changes. **Drag to reorder** tabs, and right-click (or the tab-bar "⋯") for **close others / close to the right / close all**, reveal in tree, and copy path. Tabs are remembered per workspace for the session; `Ctrl/Cmd+Shift+T` reopens the last closed one. Closing a dirty tab asks for confirmation, and the browser warns you before leaving the page with unsaved work.
-- **Editor / viewers**: the server decides how a file is displayed: text files open in the code editor (syntax highlighting by extension, in-editor **search** with `Ctrl/Cmd+F` and go-to-line, a **word-wrap** toggle, and a status bar showing the caret position and language), images render in a **zoomable, pannable** viewer, PDFs render inline, binary or oversized files show a metadata panel with a download button. A **breadcrumb** above the editor shows the file path; clicking a segment reveals that folder in the tree, and a reveal button locates the active file.
+- **Editor / viewers**: the server decides how a file is displayed: text files open in the code editor (syntax highlighting by extension, in-editor **search** with `Ctrl/Cmd+F` and go-to-line, a **word-wrap** toggle, and a status bar showing the caret position and language), Markdown and HTML files add an **Edit / Preview** toggle (HTML also offers **Export to PDF**), images render in a **zoomable, pannable** viewer, PDFs render inline, binary or oversized files show a metadata panel with a download button. A **breadcrumb** above the editor shows the file path; clicking a segment reveals that folder in the tree, and a reveal button locates the active file.
 
 You can also jump straight to a specific Agent's files from its agent card or from the conversation header menu ("Browse files").
 
@@ -46,9 +46,19 @@ Because **the Agent may write the same file while you have it open**, saves use 
 
 The tree itself stays live: file operations made by Agents (writes, edits, downloads into the workspace) are pushed over SSE, so you see files appear and change in real time. Mutations made through a raw shell command are the one gap: the refresh button and re-expanding a folder cover those.
 
-### Markdown preview
+### Markdown and HTML preview
 
 Markdown files get an **Edit / Preview** toggle, so you can proofread a report the way it will actually render.
+
+HTML files (`.html` / `.htm`) get the same **Edit / Preview** toggle. The preview renders the document in a sandboxed frame, so the page (including its JavaScript and CDN libraries like Chart.js) displays the way a browser would, without any access to your Hivekeep session. This is aimed at the common case where an Agent produces a document as HTML: you can read it in place instead of downloading it and opening it yourself.
+
+Relative links to neighbouring files (a logo image next to the HTML) do not load in the live preview; inline content and absolute/CDN URLs do. The PDF export below resolves those neighbouring files.
+
+### Export an HTML file to PDF
+
+When an HTML file is open, an **Export to PDF** button appears in the editor toolbar. It renders the file server-side and downloads a PDF, reproducing what you would get by opening the HTML in a browser and printing to PDF, neighbouring images and styles included. Unsaved edits are saved first, since the export renders the file on disk.
+
+PDF export uses the same headless browser as web browsing, so it requires `WEB_BROWSING_HEADLESS_ENABLED` and a Chromium install (see the [configuration reference](/docs/getting-started/configuration/)). When it is disabled, the button reports a clear error and the HTML preview still works.
 
 ## File operations
 
@@ -108,7 +118,7 @@ The Files section has a few server-side limits, all overridable by environment v
 
 ## Security notes
 
-The HTTP API behind this section is **stricter than the Agents' own filesystem tools**: a path can never leave the target source root (no absolute paths, no `..`, no symlink escape), and that holds identically for agent workspaces, project repos and folders. Raw file serving never lets the browser sniff content types, and only inert formats (images, PDF, plain text) are ever displayed inline. Active formats like SVG or HTML are always downloaded instead.
+The HTTP API behind this section is **stricter than the Agents' own filesystem tools**: a path can never leave the target source root (no absolute paths, no `..`, no symlink escape), and that holds identically for agent workspaces, project repos and folders. Raw file serving never lets the browser sniff content types, and only inert formats (images, PDF, plain text) are ever displayed inline. Active formats like SVG or HTML are downloaded rather than served inline. The HTML **preview** is the one place HTML is rendered, and it runs in a sandboxed frame with no access to your session (no cookies, no app origin); the **PDF export** renders the file in the same isolated headless browser used for web browsing.
 
 One deliberate trade-off: a **Folder** source points at an arbitrary absolute path on the server, and (like Agent workspaces) folders are visible and editable by every authenticated user. Add a folder only when you are comfortable with that. The path is canonicalized and re-checked on every browse, so a folder removed from disk fails cleanly rather than escaping its root.
 

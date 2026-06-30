@@ -45,3 +45,8 @@ export function workspaceRawUrl(source: WorkspaceSourceRef, path: string, inline
   if (inline) params.inline = '1'
   return `/api${sourceApiBase(source)}/raw${sourceQuery(source, params)}`
 }
+
+/** Server-rendered PDF of an HTML file (Files section export). */
+export function workspaceExportPdfUrl(source: WorkspaceSourceRef, path: string): string {
+  return `/api${sourceApiBase(source)}/export-pdf${sourceQuery(source, { path })}`
+}

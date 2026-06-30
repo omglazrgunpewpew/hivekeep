@@ -17,6 +17,7 @@ import {
 import { resolveWorkspaceSource, WorkspaceSourceError, type ResolveSourceOpts } from '@/server/services/workspace-sources'
 import { listProjectWorktrees, gitStatusSummary, gitDiffFile, gitChangedFiles } from '@/server/services/workspace-git'
 import { isInlineSafeMime } from '@/server/services/file-kind'
+import { playwrightManager } from '@/server/services/playwright-manager'
 import type { WorkspaceSourceRef } from '@/shared/types'
 import type { AppVariables } from '@/server/app'
 
@@ -247,6 +248,41 @@ workspaceSourceRoutes.get('/raw', async (c) => {
     }
     if (inline) headers['Content-Security-Policy'] = "default-src 'none'; sandbox"
     return new Response(Bun.file(file.abs), { headers })
+  } catch (err) {
+    return handleError(c, err)
+  }
+})
+
+// GET /api/workspace/:type/:id/export-pdf?path=… — render an HTML file to PDF (Files section)
+workspaceSourceRoutes.get('/export-pdf', async (c) => {
+  try {
+    const target = await resolveRouteTarget(c)
+    const file = await statForRawInTarget(target, c.req.query('path') ?? '')
+    if (file.mimeType !== 'text/html') {
+      return c.json({ error: { code: 'NOT_HTML', message: 'Only HTML files can be exported to PDF' } }, 400)
+    }
+    let pdf: Uint8Array
+    try {
+      pdf = await playwrightManager.renderPdf(file.abs)
+    } catch (err) {
+      return c.json(
+        {
+          error: {
+            code: 'PDF_EXPORT_FAILED',
+            message: err instanceof Error ? err.message : 'Failed to render the PDF',
+          },
+        },
+        503,
+      )
+    }
+    const downloadName = file.name.replace(/\.html?$/i, '') + '.pdf'
+    return new Response(new Uint8Array(pdf), {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Length': String(pdf.length),
+        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+      },
+    })
   } catch (err) {
     return handleError(c, err)
   }

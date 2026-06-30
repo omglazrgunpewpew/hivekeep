@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Crosshair, Download, Eye, FileWarning, GitCompare, Loader2, Pencil, Save, WrapText } from 'lucide-react'
+import { AlertTriangle, Crosshair, Download, Eye, FileDown, FileWarning, GitCompare, Loader2, Pencil, Save, WrapText } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/client/components/ui/button'
 import { CodeEditor } from '@/client/components/ui/code-editor'
 import { ScrollArea } from '@/client/components/ui/scroll-area'
@@ -17,7 +18,8 @@ import { WorkspaceDiffView } from '@/client/components/files/WorkspaceDiffView'
 import { WorkspaceImageView } from '@/client/components/files/WorkspaceImageView'
 import { cn } from '@/client/lib/utils'
 import { getFileIcon, formatFileSize } from '@/client/lib/file-icons'
-import { workspaceRawUrl } from '@/client/lib/workspace-source'
+import { getErrorMessage } from '@/client/lib/api'
+import { workspaceExportPdfUrl, workspaceRawUrl } from '@/client/lib/workspace-source'
 import type { TabFileState } from '@/client/hooks/useWorkspaceTabs'
 import type { WorkspaceSourceRef } from '@/shared/types'
 
@@ -26,7 +28,7 @@ interface WorkspaceEditorProps {
   path: string
   state: TabFileState
   onChangeDraft: (value: string) => void
-  onSave: (opts?: { force?: boolean }) => void
+  onSave: (opts?: { force?: boolean }) => void | Promise<void>
   onReload: () => void
   /** Reveal a parent directory of the file in the tree (breadcrumb segment click). */
   onRevealDir?: (dirPath: string) => void
@@ -39,6 +41,7 @@ interface WorkspaceEditorProps {
 export { workspaceRawUrl }
 
 const isMarkdown = (name: string) => /\.(md|markdown)$/i.test(name)
+const isHtml = (name: string) => /\.html?$/i.test(name)
 const WRAP_KEY = 'files.editor.wrap'
 
 /**
@@ -54,6 +57,7 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
   const [cursor, setCursor] = useState<{ line: number; col: number; selLen: number } | null>(null)
   const [language, setLanguage] = useState<string | null>(null)
   const [showDiff, setShowDiff] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     localStorage.setItem(WRAP_KEY, String(wrap))
@@ -67,6 +71,39 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
   const { info } = state
   const name = path.split('/').pop() ?? path
   const Icon = getFileIcon(name)
+
+  const handleExportPdf = async () => {
+    if (exporting) return
+    setExporting(true)
+    try {
+      // The PDF is rendered from the file on disk, so flush unsaved edits first.
+      if (state.dirty) await onSave()
+      const res = await fetch(workspaceExportPdfUrl(source, path), { credentials: 'include' })
+      if (!res.ok) {
+        let message = t('files.editor.exportPdfError')
+        try {
+          const body = await res.json()
+          if (body?.error?.message) message = body.error.message
+        } catch {
+          // Non-JSON error body: keep the generic message.
+        }
+        throw new Error(message)
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = name.replace(/\.html?$/i, '') + '.pdf'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   if (state.isLoading) {
     return (
@@ -147,6 +184,15 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
           <ScrollArea className="h-full">
             <MarkdownContent content={state.draft} disableChatPlugins className="max-w-3xl p-4" />
           </ScrollArea>
+        ) : isHtml(name) && mdView === 'preview' ? (
+          // Opaque-origin sandbox: the document's JS runs but cannot reach the
+          // Hivekeep session (no allow-same-origin). srcDoc keeps the preview live.
+          <iframe
+            title={name}
+            srcDoc={state.draft}
+            sandbox="allow-scripts allow-popups"
+            className="h-full w-full border-0 bg-white"
+          />
         ) : (
           editable
         )
@@ -232,13 +278,26 @@ export function WorkspaceEditor({ source, path, state, onChangeDraft, onSave, on
       )}
       {isText && (
         <div className="flex shrink-0 items-center gap-1 border-b border-border px-2 py-1">
-          {isMarkdown(name) && (
+          {(isMarkdown(name) || isHtml(name)) && (
             <div className="flex items-center rounded-md bg-muted/60 p-0.5">
               <ToolbarToggle active={mdView === 'edit'} onClick={() => setMdView('edit')} icon={Pencil} label={t('files.editor.edit')} />
               <ToolbarToggle active={mdView === 'preview'} onClick={() => setMdView('preview')} icon={Eye} label={t('files.editor.preview')} />
             </div>
           )}
           <div className="ml-auto flex items-center gap-1.5">
+            {isHtml(name) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                disabled={exporting}
+                onClick={handleExportPdf}
+                title={t('files.editor.exportPdf')}
+              >
+                {exporting ? <Loader2 className="size-3.5 animate-spin" /> : <FileDown className="size-3.5" />}
+                <span className="max-sm:hidden">{exporting ? t('files.editor.exportingPdf') : t('files.editor.exportPdf')}</span>
+              </Button>
+            )}
             {gitRepo && (
               <Button
                 size="icon-sm"

@@ -480,7 +480,7 @@ export function FilesPage() {
                   path={activeTab}
                   state={activeState}
                   onChangeDraft={(value) => tabsApi.updateDraft(activeTab, value)}
-                  onSave={(opts) => void tabsApi.save(activeTab, opts)}
+                  onSave={(opts) => tabsApi.save(activeTab, opts)}
                   onReload={() => void tabsApi.reload(activeTab)}
                   gitRepo={!!gitStatus}
                   onRevealDir={(dir) => {

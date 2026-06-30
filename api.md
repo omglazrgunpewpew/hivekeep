@@ -1344,6 +1344,22 @@ The containment/confinement guarantees are identical for every source.
 //   (plus the same PATH_FORBIDDEN / FILE_NOT_FOUND / CONFLICT / … as the agent routes)
 ```
 
+### `GET /api/workspace/:sourceType/:sourceId/export-pdf`
+
+Renders an HTML file (`text/html` only) to a PDF and streams it back as a
+download (`Content-Disposition: attachment`). The server loads the file via
+`file://` with Playwright, so relative sibling assets (images/CSS on disk) resolve
+as they would in a real browser. Carries the same `?worktree=` as the browse routes.
+
+```typescript
+// GET /api/workspace/agent/:id/export-pdf?path=reports/q3.html
+// Response 200: application/pdf (attachment; filename = <base>.pdf)
+
+// Error 400 NOT_HTML (path is not an HTML file)
+//   · 503 PDF_EXPORT_FAILED (headless browser disabled / Chromium missing / render error)
+//   · plus the same SOURCE_* / PATH_FORBIDDEN / FILE_NOT_FOUND as the browse routes
+```
+
 ### `GET /api/workspace/project/:projectId/worktrees`
 
 Lists the live worktrees of a project repo (base clone + per-task worktrees) for
