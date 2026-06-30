@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { config } from '@/server/config'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { existsSync } from 'fs'
 import type { AppVariables } from '@/server/app'
 import {
@@ -1107,7 +1107,11 @@ miniAppRoutes.get('/:id/static/*', async (c) => {
   }
 
   const dir = getAppDir(app.agentId, app.id)
-  const absoluteDir = join(process.cwd(), dir)
+  // getAppDir() is absolute whenever HIVEKEEP_DATA_DIR/MINI_APPS_DIR is an absolute
+  // path (the norm in production). resolve() leaves an absolute dir untouched and
+  // resolves a relative one against cwd; join(process.cwd(), dir) instead concatenated
+  // cwd onto the absolute path, so every generated icon (_icon.png) 404'd.
+  const absoluteDir = resolve(dir)
   const fullPath = join(absoluteDir, assetPath)
 
   // Path traversal check
