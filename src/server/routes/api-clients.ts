@@ -3,7 +3,7 @@ import { eq, desc } from 'drizzle-orm'
 import type { Context, Next } from 'hono'
 import { db } from '@/server/db/index'
 import { apiClients, apiKeys, userProfiles, agents } from '@/server/db/schema'
-import { mintApiKey } from '@/server/services/external-api'
+import { mintApiKey, countClientConversations, listClientConversations, getClientConversationMessages } from '@/server/services/external-api'
 import { v4 as uuid } from 'uuid'
 import type { AppVariables } from '@/server/app'
 import { createLogger } from '@/server/logger'
@@ -35,6 +35,7 @@ function serializeClient(client: typeof apiClients.$inferSelect, keys: (typeof a
     allowedModes: JSON.parse(client.allowedModes) as string[],
     rateLimitPerMin: client.rateLimitPerMin,
     status: client.status,
+    conversationCount: countClientConversations(client.id),
     createdAt: client.createdAt.getTime(),
     updatedAt: client.updatedAt.getTime(),
     keys: keys.map((k) => ({
@@ -177,6 +178,26 @@ apiClientRoutes.post('/:id/keys/:keyId/revoke', (c) => {
   db.update(apiKeys).set({ revokedAt: new Date() }).where(eq(apiKeys.id, keyId)).run()
   log.info({ clientId: id, keyId }, 'External API key revoked')
   return c.json({ ok: true })
+})
+
+// GET /api/api-clients/:id/conversations — list a client's isolated threads (read-only audit).
+apiClientRoutes.get('/:id/conversations', (c) => {
+  const id = c.req.param('id')
+  const exists = db.select({ id: apiClients.id }).from(apiClients).where(eq(apiClients.id, id)).get()
+  if (!exists) {
+    return c.json({ error: { code: 'CLIENT_NOT_FOUND', message: 'Client not found' } }, 404)
+  }
+  return c.json({ conversations: listClientConversations(id) })
+})
+
+// GET /api/api-clients/:id/conversations/:conversationId/messages — read-only transcript.
+apiClientRoutes.get('/:id/conversations/:conversationId/messages', (c) => {
+  const { id, conversationId } = c.req.param()
+  const messages = getClientConversationMessages(id, conversationId)
+  if (!messages) {
+    return c.json({ error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found' } }, 404)
+  }
+  return c.json({ messages })
 })
 
 export { apiClientRoutes }

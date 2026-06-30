@@ -10,6 +10,7 @@ import { EmptyState } from '@/client/components/common/EmptyState'
 import { SettingsListSkeleton } from '@/client/components/common/SettingsListSkeleton'
 import { ApiClientCard } from '@/client/components/api-client/ApiClientCard'
 import { ApiClientFormDialog, type ApiClientFormValues } from '@/client/components/api-client/ApiClientFormDialog'
+import { ApiClientConversationsDialog } from '@/client/components/api-client/ApiClientConversationsDialog'
 import { api, toastError, getErrorMessage } from '@/client/lib/api'
 import { useAgentList } from '@/client/hooks/useAgentList'
 import { useCopyToClipboard } from '@/client/hooks/useCopyToClipboard'
@@ -35,6 +36,7 @@ export function ExternalApiSettings() {
   const [isLoading, setIsLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<ApiClientSummary | null>(null)
+  const [conversationsClient, setConversationsClient] = useState<ApiClientSummary | null>(null)
 
   // Key creation: ask for a label, then reveal the full key exactly once.
   const [keyClient, setKeyClient] = useState<ApiClientSummary | null>(null)
@@ -153,6 +155,7 @@ export function ExternalApiSettings() {
                 onDelete={() => handleDelete(client.id)}
                 onCreateKey={() => openCreateKey(client)}
                 onRevokeKey={(keyId) => handleRevokeKey(client.id, keyId)}
+                onViewConversations={() => setConversationsClient(client)}
               />
             ))}
           </div>
@@ -171,6 +174,14 @@ export function ExternalApiSettings() {
         client={editingClient}
         agents={agents}
         onSave={handleSave}
+      />
+
+      {/* Read-only viewer for a client's isolated conversations */}
+      <ApiClientConversationsDialog
+        open={!!conversationsClient}
+        onOpenChange={(v) => { if (!v) setConversationsClient(null) }}
+        client={conversationsClient}
+        agentName={(id) => agentNameById.get(id) ?? null}
       />
 
       {/* Key label prompt */}

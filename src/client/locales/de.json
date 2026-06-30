@@ -2518,7 +2518,19 @@
       "revokeConfirm": "Dies widerruft den Schlüssel dauerhaft. Alles, was ihn nutzt, funktioniert nicht mehr.",
       "saved": "Client aktualisiert",
       "added": "Client erstellt",
-      "deleted": "Client gelöscht"
+      "deleted": "Client gelöscht",
+      "conversations": "Unterhaltungen",
+      "viewConversations": "{{count}} isolierte Unterhaltungen",
+      "noConversations": "Keine isolierten Unterhaltungen",
+      "noConversationsDescription": "Dieser Client hat noch keine isolierte Unterhaltung geöffnet.",
+      "convUntitled": "Unterhaltung ohne Titel",
+      "convClosed": "Geschlossen",
+      "convMessages": "{{count}} Nachrichten",
+      "backToConversations": "Zurück zu den Unterhaltungen",
+      "transcriptEmpty": "Keine Nachrichten in dieser Unterhaltung",
+      "roleAgent": "Agent",
+      "roleClient": "Client",
+      "roleSystem": "System"
     }
   },
   "notifications": {

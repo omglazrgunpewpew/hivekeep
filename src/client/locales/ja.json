@@ -2518,7 +2518,19 @@
       "revokeConfirm": "キーを完全に失効させます。使用中のものは動作しなくなります。",
       "saved": "クライアントを更新しました",
       "added": "クライアントを作成しました",
-      "deleted": "クライアントを削除しました"
+      "deleted": "クライアントを削除しました",
+      "conversations": "会話",
+      "viewConversations": "分離会話 {{count}} 件",
+      "noConversations": "分離会話はありません",
+      "noConversationsDescription": "このクライアントはまだ分離会話を開いていません。",
+      "convUntitled": "無題の会話",
+      "convClosed": "クローズ済み",
+      "convMessages": "{{count}} 件のメッセージ",
+      "backToConversations": "会話一覧に戻る",
+      "transcriptEmpty": "この会話にメッセージはありません",
+      "roleAgent": "エージェント",
+      "roleClient": "クライアント",
+      "roleSystem": "システム"
     }
   },
   "notifications": {

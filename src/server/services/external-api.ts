@@ -1,8 +1,8 @@
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto'
-import { eq, and, desc, lt, isNotNull } from 'drizzle-orm'
+import { eq, and, asc, desc, lt, isNotNull, sql } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '@/server/db/index'
-import { apiClients, apiKeys, apiRequests, apiConversations, quickSessions } from '@/server/db/schema'
+import { apiClients, apiKeys, apiRequests, apiConversations, quickSessions, messages } from '@/server/db/schema'
 import { config } from '@/server/config'
 import { createLogger } from '@/server/logger'
 
@@ -315,6 +315,76 @@ export function getApiConversationSessionId(conversationId: string, clientId: st
     .where(and(eq(apiConversations.id, conversationId), eq(apiConversations.clientId, clientId)))
     .get()
   return row?.sessionId ?? null
+}
+
+// ─── Admin observability (read-only) ─────────────────────────────────────────
+// Isolated threads are hidden from the human quick-session UI; these let the
+// admin audit them from Settings → External API.
+
+/** Number of isolated conversations a client owns (for the client list badge). */
+export function countClientConversations(clientId: string): number {
+  const row = db
+    .select({ c: sql<number>`count(*)` })
+    .from(apiConversations)
+    .where(eq(apiConversations.clientId, clientId))
+    .get()
+  return row?.c ?? 0
+}
+
+export interface AdminApiConversation {
+  conversationId: string
+  agentId: string
+  title: string | null
+  status: string
+  createdAt: number
+  lastMessageAt: number | null
+  messageCount: number
+}
+
+export function listClientConversations(clientId: string): AdminApiConversation[] {
+  const rows = db
+    .select()
+    .from(apiConversations)
+    .where(eq(apiConversations.clientId, clientId))
+    .orderBy(desc(apiConversations.createdAt))
+    .all()
+  return rows.map((r) => {
+    const count = db.select({ c: sql<number>`count(*)` }).from(messages).where(eq(messages.sessionId, r.sessionId)).get()
+    return {
+      conversationId: r.id,
+      agentId: r.agentId,
+      title: r.title,
+      status: r.status,
+      createdAt: r.createdAt.getTime(),
+      lastMessageAt: r.lastMessageAt ? r.lastMessageAt.getTime() : null,
+      messageCount: count?.c ?? 0,
+    }
+  })
+}
+
+export interface AdminConversationMessage {
+  id: string
+  role: string
+  content: string | null
+  sourceType: string
+  createdAt: number
+}
+
+/** Read-only transcript of a client's isolated thread, or null if not owned. */
+export function getClientConversationMessages(clientId: string, conversationId: string): AdminConversationMessage[] | null {
+  const conv = db
+    .select({ sessionId: apiConversations.sessionId })
+    .from(apiConversations)
+    .where(and(eq(apiConversations.id, conversationId), eq(apiConversations.clientId, clientId)))
+    .get()
+  if (!conv) return null
+  return db
+    .select({ id: messages.id, role: messages.role, content: messages.content, sourceType: messages.sourceType, createdAt: messages.createdAt })
+    .from(messages)
+    .where(eq(messages.sessionId, conv.sessionId))
+    .orderBy(asc(messages.createdAt))
+    .all()
+    .map((m) => ({ id: m.id, role: m.role, content: m.content, sourceType: m.sourceType, createdAt: m.createdAt.getTime() }))
 }
 
 /** Allowed conversation targets for a client (parsed from the JSON column). */

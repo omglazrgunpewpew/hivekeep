@@ -2518,7 +2518,19 @@
       "revokeConfirm": "This permanently revokes the key. Anything using it will stop working.",
       "saved": "Client updated",
       "added": "Client created",
-      "deleted": "Client deleted"
+      "deleted": "Client deleted",
+      "conversations": "Conversations",
+      "viewConversations": "{{count}} isolated conversations",
+      "noConversations": "No isolated conversations",
+      "noConversationsDescription": "This client has not opened any isolated conversation yet.",
+      "convUntitled": "Untitled conversation",
+      "convClosed": "Closed",
+      "convMessages": "{{count}} messages",
+      "backToConversations": "Back to conversations",
+      "transcriptEmpty": "No messages in this conversation",
+      "roleAgent": "Agent",
+      "roleClient": "Client",
+      "roleSystem": "System"
     }
   },
   "notifications": {

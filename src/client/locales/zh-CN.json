@@ -2518,7 +2518,19 @@
       "revokeConfirm": "这将永久吊销该密钥。使用它的任何程序都将停止工作。",
       "saved": "客户端已更新",
       "added": "客户端已创建",
-      "deleted": "客户端已删除"
+      "deleted": "客户端已删除",
+      "conversations": "会话",
+      "viewConversations": "{{count}} 个隔离会话",
+      "noConversations": "没有隔离会话",
+      "noConversationsDescription": "该客户端尚未打开任何隔离会话。",
+      "convUntitled": "无标题会话",
+      "convClosed": "已关闭",
+      "convMessages": "{{count}} 条消息",
+      "backToConversations": "返回会话列表",
+      "transcriptEmpty": "此会话没有消息",
+      "roleAgent": "智能体",
+      "roleClient": "客户端",
+      "roleSystem": "系统"
     }
   },
   "notifications": {

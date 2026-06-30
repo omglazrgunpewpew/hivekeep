@@ -452,9 +452,31 @@ export interface ApiClientSummary {
   allowedModes: string[]
   rateLimitPerMin: number | null
   status: 'active' | 'disabled'
+  /** Number of isolated conversations this client owns. */
+  conversationCount: number
   createdAt: number
   updatedAt: number
   keys: ApiKeySummary[]
+}
+
+/** An isolated conversation as listed for admin audit (Settings → External API). */
+export interface ApiClientConversation {
+  conversationId: string
+  agentId: string
+  title: string | null
+  status: string
+  createdAt: number
+  lastMessageAt: number | null
+  messageCount: number
+}
+
+/** A message in an isolated conversation transcript (admin read-only view). */
+export interface ApiConversationMessage {
+  id: string
+  role: string
+  content: string | null
+  sourceType: string
+  createdAt: number
 }
 
 /** Webhook trigger log entry as returned by GET /api/webhooks/:id/logs */

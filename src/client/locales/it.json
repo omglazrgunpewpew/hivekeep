@@ -2518,7 +2518,19 @@
       "revokeConfirm": "Questo revoca definitivamente la chiave. Tutto ciò che la usa smetterà di funzionare.",
       "saved": "Client aggiornato",
       "added": "Client creato",
-      "deleted": "Client eliminato"
+      "deleted": "Client eliminato",
+      "conversations": "Conversazioni",
+      "viewConversations": "{{count}} conversazioni isolate",
+      "noConversations": "Nessuna conversazione isolata",
+      "noConversationsDescription": "Questo client non ha ancora aperto alcuna conversazione isolata.",
+      "convUntitled": "Conversazione senza titolo",
+      "convClosed": "Chiusa",
+      "convMessages": "{{count}} messaggi",
+      "backToConversations": "Torna alle conversazioni",
+      "transcriptEmpty": "Nessun messaggio in questa conversazione",
+      "roleAgent": "Agente",
+      "roleClient": "Client",
+      "roleSystem": "Sistema"
     }
   },
   "notifications": {

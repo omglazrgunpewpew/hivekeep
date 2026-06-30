@@ -2536,7 +2536,19 @@
       "revokeConfirm": "To trwale unieważnia klucz. Wszystko, co go używa, przestanie działać.",
       "saved": "Zaktualizowano klienta",
       "added": "Utworzono klienta",
-      "deleted": "Usunięto klienta"
+      "deleted": "Usunięto klienta",
+      "conversations": "Rozmowy",
+      "viewConversations": "{{count}} izolowanych rozmów",
+      "noConversations": "Brak izolowanych rozmów",
+      "noConversationsDescription": "Ten klient nie otworzył jeszcze żadnej izolowanej rozmowy.",
+      "convUntitled": "Rozmowa bez tytułu",
+      "convClosed": "Zamknięta",
+      "convMessages": "{{count}} wiadomości",
+      "backToConversations": "Powrót do rozmów",
+      "transcriptEmpty": "Brak wiadomości w tej rozmowie",
+      "roleAgent": "Agent",
+      "roleClient": "Klient",
+      "roleSystem": "System"
     }
   },
   "notifications": {

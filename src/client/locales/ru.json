@@ -2542,7 +2542,19 @@
       "revokeConfirm": "Это безвозвратно отзовёт ключ. Всё, что его использует, перестанет работать.",
       "saved": "Клиент обновлён",
       "added": "Клиент создан",
-      "deleted": "Клиент удалён"
+      "deleted": "Клиент удалён",
+      "conversations": "Разговоры",
+      "viewConversations": "{{count}} изолированных разговоров",
+      "noConversations": "Нет изолированных разговоров",
+      "noConversationsDescription": "Этот клиент ещё не открывал ни одного изолированного разговора.",
+      "convUntitled": "Разговор без названия",
+      "convClosed": "Закрыт",
+      "convMessages": "{{count}} сообщений",
+      "backToConversations": "Назад к разговорам",
+      "transcriptEmpty": "В этом разговоре нет сообщений",
+      "roleAgent": "Агент",
+      "roleClient": "Клиент",
+      "roleSystem": "Система"
     }
   },
   "notifications": {

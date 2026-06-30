@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, KeyRound } from 'lucide-react'
+import { Pencil, Plus, KeyRound, MessagesSquare } from 'lucide-react'
 import { Button } from '@/client/components/ui/button'
 import { Badge } from '@/client/components/ui/badge'
 import { ConfirmDeleteButton } from '@/client/components/common/ConfirmDeleteButton'
@@ -14,15 +14,15 @@ interface ApiClientCardProps {
   onDelete: () => void
   onCreateKey: () => void
   onRevokeKey: (keyId: string) => void
+  onViewConversations: () => void
 }
 
 function formatDate(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-export function ApiClientCard({ client, agentName, onEdit, onDelete, onCreateKey, onRevokeKey }: ApiClientCardProps) {
+export function ApiClientCard({ client, agentName, onEdit, onDelete, onCreateKey, onRevokeKey, onViewConversations }: ApiClientCardProps) {
   const { t } = useTranslation()
-  const activeKeys = client.keys.filter((k) => !k.revokedAt)
 
   return (
     <div className="surface-card space-y-4 p-4">
@@ -120,6 +120,17 @@ export function ApiClientCard({ client, agentName, onEdit, onDelete, onCreateKey
           </ul>
         )}
       </div>
+
+      {client.conversationCount > 0 && (
+        <button
+          type="button"
+          onClick={onViewConversations}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <MessagesSquare className="size-3.5" />
+          {t('settings.externalApi.viewConversations', { count: client.conversationCount })}
+        </button>
+      )}
     </div>
   )
 }
