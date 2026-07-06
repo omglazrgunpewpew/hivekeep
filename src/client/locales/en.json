@@ -3037,7 +3037,13 @@
       "thought": "Thought",
       "todosTitle": "Plan",
       "todosProgress": "{{completed}}/{{total}} done",
-      "todosEmpty": "No steps"
+      "todosEmpty": "No steps",
+      "editingFile": "Preparing edit preview…",
+      "writingFile": "Preparing write preview…",
+      "listingDirectory": "Preparing directory listing…"
+    },
+    "status": {
+      "pending": "Pending"
     }
   },
   "invite": {

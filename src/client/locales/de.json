@@ -3037,7 +3037,13 @@
       "thought": "Gedanke",
       "todosTitle": "Plan",
       "todosProgress": "{{completed}}/{{total}} erledigt",
-      "todosEmpty": "Keine Schritte"
+      "todosEmpty": "Keine Schritte",
+      "editingFile": "Bearbeitungsvorschau wird vorbereitet…",
+      "writingFile": "Schreibvorschau wird vorbereitet…",
+      "listingDirectory": "Verzeichnisauflistung wird vorbereitet…"
+    },
+    "status": {
+      "pending": "Ausstehend"
     }
   },
   "invite": {

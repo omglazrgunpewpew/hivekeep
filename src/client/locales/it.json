@@ -3037,7 +3037,13 @@
       "thought": "Pensiero",
       "todosTitle": "Piano",
       "todosProgress": "{{completed}}/{{total}} fatti",
-      "todosEmpty": "Nessun passo"
+      "todosEmpty": "Nessun passo",
+      "editingFile": "Preparazione dell'anteprima di modifica…",
+      "writingFile": "Preparazione dell'anteprima di scrittura…",
+      "listingDirectory": "Preparazione dell'elenco della directory…"
+    },
+    "status": {
+      "pending": "In attesa"
     }
   },
   "invite": {

@@ -3037,7 +3037,13 @@
       "thought": "思考",
       "todosTitle": "计划",
       "todosProgress": "{{completed}}/{{total}} 已完成",
-      "todosEmpty": "没有步骤"
+      "todosEmpty": "没有步骤",
+      "editingFile": "正在准备编辑预览…",
+      "writingFile": "正在准备写入预览…",
+      "listingDirectory": "正在准备目录列表…"
+    },
+    "status": {
+      "pending": "待处理"
     }
   },
   "invite": {
