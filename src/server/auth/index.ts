@@ -4,6 +4,7 @@ import { APIError } from 'better-auth/api'
 import { db } from '@/server/db/index'
 import * as schema from '@/server/db/schema'
 import { config } from '@/server/config'
+import { resolveTrustedOrigins } from '@/server/auth/trusted-origins'
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_BASE_URL ?? config.publicUrl,
@@ -33,13 +34,10 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes
     },
   },
-  trustedOrigins: process.env.TRUSTED_ORIGINS
-    ? process.env.TRUSTED_ORIGINS.split(',')
-    : [
-        config.publicUrl,
-        'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000',
-        'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://127.0.0.1:3000',
-      ],
+  // Function form: re-evaluated per request so the request's own origin is
+  // trusted (see resolveTrustedOrigins). Fixes "Invalid origin" on LAN/IP
+  // access when PUBLIC_URL was never configured.
+  trustedOrigins: (request) => resolveTrustedOrigins(request),
 })
 
 export type Session = typeof auth.$Infer.Session

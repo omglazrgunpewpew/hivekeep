@@ -16,8 +16,8 @@ Hivekeep uses environment variables for configuration. Copy `.env.example` to `.
 | `ENCRYPTION_KEY` | *(auto-generated)* | 64-char hex key for AES-256-GCM vault encryption. Auto-generated and persisted to `data/.encryption-key` on first run. |
 | `BETTER_AUTH_SECRET` | *(uses ENCRYPTION_KEY)* | Secret for session signing. Falls back to `ENCRYPTION_KEY` if not set. |
 | `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
-| `PUBLIC_URL` | `http://localhost:<PORT>` | Public-facing URL (used in webhooks, invitation links, and CORS) |
-| `TRUSTED_ORIGINS` | *(none)* | Comma-separated list of additional origins allowed for CORS (e.g. `https://app.example.com,https://other.example.com`). `PUBLIC_URL` is always included automatically. |
+| `PUBLIC_URL` | `http://localhost:<PORT>` | Public-facing URL (used in webhooks, invitation links, and CORS). Sign-in works from any address the server itself is reached at (same-origin requests are always trusted), so this is about the URLs Hivekeep generates, not about being able to log in. |
+| `TRUSTED_ORIGINS` | *(none)* | Comma-separated list of additional origins allowed for CORS and auth (e.g. `https://app.example.com,https://other.example.com`). Setting it replaces the defaults (`PUBLIC_URL` + localhost dev origins), so include `PUBLIC_URL` yourself. The origin a request arrives on is always trusted regardless. |
 
 ## Data directory
 

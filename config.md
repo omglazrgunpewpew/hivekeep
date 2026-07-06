@@ -14,7 +14,7 @@ All configurable values of the platform, grouped by domain. These values are def
 | `encryptionKey` | `ENCRYPTION_KEY` | auto-generated | Encryption key for Vault secrets and provider configs. Auto-generated and persisted in the data directory if absent |
 | `logLevel` | `LOG_LEVEL` | `info` | Log level: 'debug', 'info', 'warn', 'error' |
 | `appVersion` | `HIVEKEEP_VERSION` | *(auto-detected)* | Application version. Read from `package.json` by default. Can be set explicitly to override detection. In Docker, automatically extracted by the entrypoint |
-| — | `TRUSTED_ORIGINS` | *(none)* | List of additional origins allowed for CORS, comma-separated (e.g. `https://app.example.com`). The `PUBLIC_URL` is always included automatically. Read directly in `app.ts` |
+| — | `TRUSTED_ORIGINS` | *(none)* | List of additional origins allowed for CORS and auth, comma-separated (e.g. `https://app.example.com`). Setting it replaces the default list (`PUBLIC_URL` + localhost dev origins). The origin a request arrives on (its own `Host` / `X-Forwarded-Host`) is always trusted for auth regardless, so LAN/IP access works without configuration. Read in `app.ts` (CORS) and `auth/trusted-origins.ts` (auth) |
 
 ---
 
