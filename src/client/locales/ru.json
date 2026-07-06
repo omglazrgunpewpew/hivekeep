@@ -3061,7 +3061,12 @@
       "thought": "Мысль",
       "todosTitle": "План",
       "todosProgress": "Готово: {{completed}}/{{total}}",
-      "todosEmpty": "Шагов нет"
+      "todosEmpty": "Шагов нет",
+      "editingFile": "Подготовка предпросмотра изменений…",
+      "writingFile": "Подготовка предпросмотра записи…"
+    },
+    "status": {
+      "pending": "Ожидание"
     }
   },
   "invite": {

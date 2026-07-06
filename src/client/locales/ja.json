@@ -3037,7 +3037,12 @@
       "thought": "思考",
       "todosTitle": "プラン",
       "todosProgress": "{{completed}}/{{total}}完了",
-      "todosEmpty": "ステップなし"
+      "todosEmpty": "ステップなし",
+      "editingFile": "編集プレビューを準備中…",
+      "writingFile": "書き込みプレビューを準備中…"
+    },
+    "status": {
+      "pending": "保留中"
     }
   },
   "invite": {

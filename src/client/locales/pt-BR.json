@@ -3037,7 +3037,12 @@
       "thought": "Pensamento",
       "todosTitle": "Plano",
       "todosProgress": "{{completed}}/{{total}} concluídos",
-      "todosEmpty": "Nenhuma etapa"
+      "todosEmpty": "Nenhuma etapa",
+      "editingFile": "Preparando a prévia da edição…",
+      "writingFile": "Preparando a prévia da escrita…"
+    },
+    "status": {
+      "pending": "Pendente"
     }
   },
   "invite": {
