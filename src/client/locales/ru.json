@@ -3063,7 +3063,8 @@
       "todosProgress": "Готово: {{completed}}/{{total}}",
       "todosEmpty": "Шагов нет",
       "editingFile": "Подготовка предпросмотра изменений…",
-      "writingFile": "Подготовка предпросмотра записи…"
+      "writingFile": "Подготовка предпросмотра записи…",
+      "listingDirectory": "Подготовка списка каталога…"
     },
     "status": {
       "pending": "Ожидание"

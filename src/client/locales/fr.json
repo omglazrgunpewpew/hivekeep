@@ -3039,7 +3039,8 @@
       "todosProgress": "{{completed}}/{{total}} terminé",
       "todosEmpty": "Aucune étape",
       "editingFile": "Préparation de l'aperçu de modification…",
-      "writingFile": "Préparation de l'aperçu d'écriture…"
+      "writingFile": "Préparation de l'aperçu d'écriture…",
+      "listingDirectory": "Préparation du listing du répertoire…"
     },
     "status": {
       "pending": "En attente"

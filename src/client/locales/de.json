@@ -3039,7 +3039,8 @@
       "todosProgress": "{{completed}}/{{total}} erledigt",
       "todosEmpty": "Keine Schritte",
       "editingFile": "Bearbeitungsvorschau wird vorbereitet…",
-      "writingFile": "Schreibvorschau wird vorbereitet…"
+      "writingFile": "Schreibvorschau wird vorbereitet…",
+      "listingDirectory": "Verzeichnisauflistung wird vorbereitet…"
     },
     "status": {
       "pending": "Ausstehend"

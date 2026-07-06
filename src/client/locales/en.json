@@ -3039,7 +3039,8 @@
       "todosProgress": "{{completed}}/{{total}} done",
       "todosEmpty": "No steps",
       "editingFile": "Preparing edit preview…",
-      "writingFile": "Preparing write preview…"
+      "writingFile": "Preparing write preview…",
+      "listingDirectory": "Preparing directory listing…"
     },
     "status": {
       "pending": "Pending"

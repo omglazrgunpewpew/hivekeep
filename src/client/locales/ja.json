@@ -3039,7 +3039,8 @@
       "todosProgress": "{{completed}}/{{total}}完了",
       "todosEmpty": "ステップなし",
       "editingFile": "編集プレビューを準備中…",
-      "writingFile": "書き込みプレビューを準備中…"
+      "writingFile": "書き込みプレビューを準備中…",
+      "listingDirectory": "ディレクトリ一覧を準備中…"
     },
     "status": {
       "pending": "保留中"

@@ -3057,7 +3057,8 @@
       "todosProgress": "ukończono {{completed}}/{{total}}",
       "todosEmpty": "Brak kroków",
       "editingFile": "Przygotowywanie podglądu edycji…",
-      "writingFile": "Przygotowywanie podglądu zapisu…"
+      "writingFile": "Przygotowywanie podglądu zapisu…",
+      "listingDirectory": "Przygotowywanie listy katalogu…"
     },
     "status": {
       "pending": "Oczekuje"
