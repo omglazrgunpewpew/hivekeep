@@ -1659,8 +1659,10 @@ create_systemd_system_service() {
   local env_file="$HIVEKEEP_DATA_DIR/hivekeep.env"
   local bun_dir
   local escaped_bun_bin
+  local service_path
   bun_dir="$(dirname "$BUN_BIN")"
   escaped_bun_bin="$(escape_systemd_exec_token "$BUN_BIN")"
+  service_path="$(escape_systemd_environment_value "${bun_dir}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")"
   UNIT_FILE="$HIVEKEEP_SYSTEMD_UNIT"
 
   if [ "$IS_UPDATE" = true ] && systemctl is-active --quiet hivekeep 2>/dev/null; then
@@ -1681,7 +1683,7 @@ User=$HIVEKEEP_USER
 Group=$HIVEKEEP_USER
 WorkingDirectory=$HIVEKEEP_DIR
 EnvironmentFile=-${env_file}
-Environment="PATH=${bun_dir}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PATH=${service_path}"
 ExecStart="$escaped_bun_bin" src/server/index.ts
 Restart=always
 RestartSec=5

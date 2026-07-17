@@ -147,9 +147,11 @@ test_systemd_user_unit
 pass "Generated systemd user unit preserves and validates the Bun path"
 
 test_systemd_system_unit() (
-  local system_bun="$TEST_ROOT/system-runtime/bin/bun"
+  local system_bun="$TEST_ROOT/system%runtime/bin/bun"
   local system_unit="$TEST_ROOT/system-hivekeep.service"
   local systemctl_log="$TEST_ROOT/systemctl-calls"
+  local escaped_bun
+  local escaped_service_path
   local -a systemctl_calls
   make_bun "$system_bun"
   mkdir -p "$TEST_ROOT/system-app" "$TEST_ROOT/system-data"
@@ -166,9 +168,11 @@ test_systemd_system_unit() (
 
   grep -Fq "User=$TEST_USER" "$UNIT_FILE" || fail "systemd system unit lost its service user"
   grep -Fq "Group=$TEST_USER" "$UNIT_FILE" || fail "systemd system unit lost its service group"
-  grep -Fq "ExecStart=\"$system_bun\" src/server/index.ts" "$UNIT_FILE" || \
+  escaped_bun="$(escape_systemd_exec_token "$system_bun")"
+  grep -Fq "ExecStart=\"$escaped_bun\" src/server/index.ts" "$UNIT_FILE" || \
     fail "systemd system unit lost the verified Bun path"
-  grep -Fq "Environment=\"PATH=$(dirname "$system_bun"):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" "$UNIT_FILE" || \
+  escaped_service_path="$(escape_systemd_environment_value "$(dirname "$system_bun"):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")"
+  grep -Fq "Environment=\"PATH=$escaped_service_path\"" "$UNIT_FILE" || \
     fail "systemd system unit lost the Bun service PATH"
   if command -v systemd-analyze &>/dev/null; then
     systemd-analyze verify "$UNIT_FILE" || fail "generated systemd system unit failed verification"
