@@ -20,8 +20,12 @@ All 48 items are **Proposed** unless repository evidence proves otherwise.
 ## Build order
 
 ### Reliability and recovery, A then C
-1. **Provider fallback/routing** (**Proposed**): route providers and models.  
-   - Acceptance direction: observable safe fallback with checkpoints and idempotency.
+1. **Provider fallback/routing** (**Proposed**): automatically recover conversational turns from transient runtime provider failures.  
+   - Retry the selected provider briefly with bounded backoff for transient failures, including Anthropic `overloaded_error` / HTTP 529, HTTP 429, 502, 503, 504, connection reset, and timeout, then use a configurable fallback provider/model route.
+   - Replay the same user turn with the same conversation context, preserving one logical turn and never inserting a duplicate user message.
+   - Visibly disclose that fallback occurred and identify the provider/model route used.
+   - Automatically replay only when no tool invocation or side effect has begun. If tool execution began, stop for reconciliation; resume only through explicit reconciliation or idempotency guarantees that prevent duplicate effects.
+   - Acceptance direction: tests cover same-provider retry, cross-provider fallback, context equivalence, visible disclosure, one-turn persistence, and refusal to auto-replay after tool execution begins.
 2. **Error classification** (**Proposed**): normalize failure classes.  
    - Acceptance direction: classifications guide retry and recovery.
 3. **Durable checkpoints/resume** (**Proposed**): persist safe progress boundaries.  
