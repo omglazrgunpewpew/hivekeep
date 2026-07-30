@@ -6,7 +6,7 @@
 - **In progress**: active delivery.
 - **Shipped**: released and supported.
 
-All 48 items are **Proposed** unless repository evidence proves otherwise.
+All 49 items are **Proposed** unless repository evidence proves otherwise.
 
 ## Release sequence
 
@@ -100,43 +100,48 @@ All 48 items are **Proposed** unless repository evidence proves otherwise.
    - Acceptance direction: policy evaluates before action with history.
 32. **Data governance** (**Proposed**): control retention, access, locality, handling.  
    - Acceptance direction: data classes have enforcement points.
+33. **Scoped delegated approval for Agent-created crons** (**Proposed**): let a user grant an individual Agent permission to self-approve only the crons it creates that target that same Agent, while preserving human approval as the default when no delegation exists.  
+   - Policy controls constrain allowed toolboxes, one-shot versus recurring schedules, minimum interval/frequency, duration and runtime limits, model/provider selection, external messaging, secret access, and state-changing or destructive tools.
+   - Self-approval of a cron targeting another Agent is denied by default.
+   - Audit records capture each delegated grant and every activation made through self-approval, and users can revoke delegation globally or per Agent.
+   - Acceptance direction: the UI clearly labels delegated approval, policy is enforced before activation, revocation prevents future self-approvals, and crons outside a grant continue through human approval.
 
 ### Platform and DX, E
-33. **Cancellation semantics** (**Proposed**): make cancellation safe.  
+34. **Cancellation semantics** (**Proposed**): make cancellation safe.  
    - Acceptance direction: completed effects and cleanup are reported.
-34. **Replay harness** (**Proposed**): reproduce controlled executions.  
+35. **Replay harness** (**Proposed**): reproduce controlled executions.  
    - Acceptance direction: simulation stays separate from live effects.
-35. **Agent config versioning** (**Proposed**): version instructions, tools, permissions.  
+36. **Agent config versioning** (**Proposed**): version instructions, tools, permissions.  
    - Acceptance direction: changes are reviewable and reversible.
-36. **Staged updates** (**Proposed**): roll out changes progressively.  
+37. **Staged updates** (**Proposed**): roll out changes progressively.  
    - Acceptance direction: pause and rollback are supported.
-37. **Backup/DR** (**Proposed**): test restore and recovery.  
+38. **Backup/DR** (**Proposed**): test restore and recovery.  
    - Acceptance direction: objectives and drills are documented.
-38. **Plugin/tool trust** (**Proposed**): establish extension provenance and isolation.  
+39. **Plugin/tool trust** (**Proposed**): establish extension provenance and isolation.  
    - Acceptance direction: access and trust basis are assessable.
 
 ### Workflow and collaboration, E
-39. **Workflow graphs** (**Proposed**): model dependency graphs.  
+40. **Workflow graphs** (**Proposed**): model dependency graphs.  
    - Acceptance direction: nodes, edges, retries, approvals are visible.
-40. **Projects/tickets/incidents as context** (**Proposed**): attach work objects.  
+41. **Projects/tickets/incidents as context** (**Proposed**): attach work objects.  
    - Acceptance direction: status and history are directly available.
-41. **Handoff packages** (**Proposed**): transfer goals, evidence, decisions, next steps.  
+42. **Handoff packages** (**Proposed**): transfer goals, evidence, decisions, next steps.  
    - Acceptance direction: recipients continue safely.
-42. **User/group permissions** (**Proposed**): apply role and group controls.  
+43. **User/group permissions** (**Proposed**): apply role and group controls.  
    - Acceptance direction: effective access is inspectable.
 
 ### Optimization and polish, F
-43. **Budgets** (**Proposed**): control cost, time, tokens, and tools.  
+44. **Budgets** (**Proposed**): control cost, time, tokens, and tools.  
    - Acceptance direction: consumption and exhaustion are visible.
-44. **Quality routing** (**Proposed**): route by quality, latency, cost, risk.  
+45. **Quality routing** (**Proposed**): route by quality, latency, cost, risk.  
    - Acceptance direction: decisions are explainable.
-45. **Operational learning** (**Proposed**): capture reusable operational lessons.  
+46. **Operational learning** (**Proposed**): capture reusable operational lessons.  
    - Acceptance direction: lessons are reviewed and reusable.
-46. **Templates** (**Proposed**): provide reusable workflow and policy patterns.  
+47. **Templates** (**Proposed**): provide reusable workflow and policy patterns.  
    - Acceptance direction: templates include safe defaults.
-47. **Searchable timeline** (**Proposed**): unify turns, jobs, approvals, incidents, changes.  
+48. **Searchable timeline** (**Proposed**): unify turns, jobs, approvals, incidents, changes.  
    - Acceptance direction: users navigate to evidence.
-48. **Platform self-monitoring** (**Proposed**): monitor availability, queues, dependencies, control plane.  
+49. **Platform self-monitoring** (**Proposed**): monitor availability, queues, dependencies, control plane.  
    - Acceptance direction: degradation yields recovery paths.
 
 ## Principles
