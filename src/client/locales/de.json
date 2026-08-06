@@ -1053,7 +1053,10 @@
     "quickChat": "Quick-Chat",
     "react": "Reagieren",
     "messageRedacted": "Diese Nachricht wurde geschwärzt",
-    "reactionFailed": "Reaktion konnte nicht umgeschaltet werden"
+    "reactionFailed": "Reaktion konnte nicht umgeschaltet werden",
+    "forceReset": "Entsperren",
+    "forceResetHint": "Dieser Durchlauf dauert ungewöhnlich lange. Entsperren Sie den Agenten, damit er wieder Nachrichten annimmt.",
+    "forceResetDone": "Agent entsperrt"
   },
   "quickChat": {
     "title": "Quick-Session",
@@ -2051,7 +2054,7 @@
       "active": "Aktiv",
       "pendingApproval": "Wartet auf Freigabe",
       "oneShot": "Einmalig",
-      "oneShotHint": "Deaktiviert sich nach der ersten passenden E-Mail.",
+      "oneShotHint": "Wird nach der ersten passenden E-Mail entfernt.",
       "deleteTitle": "Trigger löschen",
       "deleteConfirm": "Diesen Trigger löschen? Das kann nicht rückgängig gemacht werden.",
       "errorName": "Name ist erforderlich.",

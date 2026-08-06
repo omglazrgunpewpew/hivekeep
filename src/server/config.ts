@@ -359,6 +359,14 @@ export const config = {
       similarityThreshold: Number(process.env.MEMORY_SIMILARITY_THRESHOLD ?? 0.5),
       embeddingModel: embedding.model ?? 'text-embedding-3-small',
       embeddingProviderId: embedding.providerId,
+      // Embedding calls run under the compacting lock; unbounded, a silent
+      // endpoint pins the Agent with no recovery path. 0 disables.
+      embeddingTimeoutMs: Number(process.env.MEMORY_EMBEDDING_TIMEOUT ?? 60_000),
+      // Ceiling for the retrieval-side LLM calls (multi-query, HyDE, rerank,
+      // contextual rewrite). They sit on the prompt-building path of a turn,
+      // so they must never be the reason a turn hangs. These are optional
+      // enhancements: on timeout the caller falls back to plain retrieval.
+      retrievalLlmTimeoutMs: Number(process.env.MEMORY_RETRIEVAL_LLM_TIMEOUT ?? 45_000),
       embeddingDimension: Number(process.env.MEMORY_EMBEDDING_DIMENSION ?? 1536),
       temporalDecayLambda: Number(process.env.MEMORY_TEMPORAL_DECAY_LAMBDA ?? 0.01),
       temporalDecayFloor: Number(process.env.MEMORY_TEMPORAL_DECAY_FLOOR ?? 0.7),
@@ -425,6 +433,14 @@ export const config = {
     agentPriority: 50,
     taskPriority: 50,
     pollIntervalMs: Number(process.env.QUEUE_POLL_INTERVAL ?? 500),
+    // Stuck-Agent detection. Recovery used to run only at boot, so a wedged
+    // Agent could stay mute for hours with nobody informed.
+    stuckSweepIntervalMs: Number(process.env.QUEUE_STUCK_SWEEP_INTERVAL ?? 300_000),
+    // Notify a human but leave the turn alone: it may still be legitimate.
+    stuckWarnMs: Number(process.env.QUEUE_STUCK_WARN ?? 900_000),
+    // Past any plausible turn duration (turnTimeoutMs plus a wide margin),
+    // requeue so the Agent starts answering again. 0 disables.
+    stuckRecoverMs: Number(process.env.QUEUE_STUCK_RECOVER ?? 3_600_000),
   },
 
   tasks: {
@@ -461,10 +477,24 @@ export const config = {
     // favor of `adaptive`. Default on; set HIVEKEEP_ADAPTIVE_THINKING=false to
     // revert to fixed budgets.
     adaptiveThinking: process.env.HIVEKEEP_ADAPTIVE_THINKING !== 'false',
+    // Inactivity ceiling while reading a provider's response stream, reset on
+    // every chunk (so a slow-but-alive generation is never cut). Provider SDKs
+    // clear their own request timeout once response HEADERS arrive, leaving the
+    // whole streamed body unbounded: a frozen connection would otherwise pin
+    // the Agent in "processing" until the process restarts. 0 disables.
+    streamIdleTimeoutMs: Number(process.env.LLM_STREAM_IDLE_TIMEOUT ?? 120_000),
   },
 
   tools: {
-    maxSteps: Number(process.env.TOOLS_MAX_STEPS ?? 0), // 0 (default) = truly unlimited (no cap); > 0 = hard cap at this value
+    // Hard cap on tool-call steps in one turn. Was 0 (unlimited): a model that
+    // loops on tool calls then runs until the process restarts. The ceiling is
+    // deliberately high — it is a runaway guard, not a budget.
+    maxSteps: Number(process.env.TOOLS_MAX_STEPS ?? 100), // 0 = truly unlimited (no cap)
+    // Wall-clock ceiling for a single turn, measured from dequeue. Aborts the
+    // turn through its own AbortController so the normal error path runs and
+    // the failure is reported (including back to the originating channel).
+    // Queue waiting time is NOT counted. 0 disables.
+    turnTimeoutMs: Number(process.env.TOOLS_TURN_TIMEOUT ?? 1_800_000),
     // Temperature for tool-enabled turns. Local/self-hosted backends default to
     // ~0.7-0.8, which makes structured tool-call JSON unreliable on small models;
     // a low value steadies it. Reasoning models are exempted in code (they reject
@@ -496,11 +526,36 @@ export const config = {
   toolOutputs: {
     spillThreshold: Number(process.env.TOOL_OUTPUT_SPILL_THRESHOLD ?? 10000), // bytes before spilling to file
     previewLines: Number(process.env.TOOL_OUTPUT_PREVIEW_LINES ?? 200),       // lines to include in preview
+    // Hard size bound on the preview. The line count alone is not a bound:
+    // JSON.stringify escapes newlines, so a single-string result (an email
+    // body, a grep hit list, shell stdout) serializes to a handful of very
+    // long lines and "200 lines" keeps the ENTIRE payload. Spilled outputs
+    // then cost as much context as if nothing had been spilled.
+    // Must stay below spillThreshold, otherwise spilling saves nothing.
+    previewMaxChars: Number(process.env.TOOL_OUTPUT_PREVIEW_MAX_CHARS ?? 4000),
     ttlHours: Number(process.env.TOOL_OUTPUT_TTL_HOURS ?? 24),                // cleanup after N hours
   },
 
   humanPrompts: {
     maxPendingPerAgent: Number(process.env.HUMAN_PROMPTS_MAX_PENDING ?? 5),
+  },
+
+  search: {
+    // Ceiling for one web_search round-trip. Runs on the turn path.
+    requestTimeoutMs: Number(process.env.SEARCH_REQUEST_TIMEOUT ?? 30_000),
+  },
+
+  email: {
+    // Ceiling for one Gmail / Microsoft Graph API call. IMAP has its own
+    // socket-level timeouts already.
+    requestTimeoutMs: Number(process.env.EMAIL_REQUEST_TIMEOUT ?? 60_000),
+  },
+
+  hooks: {
+    // Ceiling for one plugin hook handler. Handlers run in-process on the
+    // Agent's turn path, so one that never settles would pin the turn (and the
+    // Agent) forever. 0 disables the bound.
+    handlerTimeoutMs: Number(process.env.HOOK_HANDLER_TIMEOUT ?? 30_000),
   },
 
   interAgent: {
@@ -619,6 +674,9 @@ export const config = {
     maxPerCycle: Number(process.env.EMAIL_TRIGGER_MAX_PER_CYCLE ?? 50),
     logRetentionDays: Number(process.env.EMAIL_TRIGGER_LOG_RETENTION_DAYS ?? 30),
     maxLogsPerTrigger: Number(process.env.EMAIL_TRIGGER_MAX_LOGS_PER_TRIGGER ?? 500),
+    // One-shot (reply-watch) triggers are deleted as soon as they fire. This TTL
+    // collects the ones whose reply never came, so they stop holding quota.
+    oneShotTtlDays: Number(process.env.EMAIL_TRIGGER_ONE_SHOT_TTL_DAYS ?? 30),
     // Ring buffer of recently-seen message ids per (account, folder), to drop
     // boundary duplicates (provider `after` filters are second-granular/inclusive).
     seenIdsRing: Number(process.env.EMAIL_TRIGGER_SEEN_IDS_RING ?? 200),
@@ -627,7 +685,21 @@ export const config = {
   channels: {
     maxPerAgent: Number(process.env.CHANNELS_MAX_PER_KIN ?? 5),
     telegramWebhookPath: '/api/channels/telegram',
-    pendingOriginTtlMs: Number(process.env.CHANNEL_PENDING_ORIGIN_TTL ?? 300_000),
+    // Freshness guard on the persisted channel origin (`channel_origins`): how
+    // long after the inbound message an Agent reply is still auto-delivered
+    // back to the channel. Sub-Agent chains routinely run for many minutes, so
+    // this is deliberately generous; it only exists to stop a reply from
+    // landing on a conversation nobody remembers.
+    originTtlMs: Number(process.env.CHANNEL_ORIGIN_TTL ?? 86_400_000),
+    // How often the "typing" hint is refreshed while a turn runs. Platforms
+    // expire it in seconds, so without a refresh a long turn is silent and
+    // indistinguishable from a dead one.
+    typingRefreshMs: Number(process.env.CHANNEL_TYPING_REFRESH ?? 5_000),
+    // Attempts for one outbound send (1 = no retry). A transient 429 or 5xx
+    // used to drop the Agent's reply silently.
+    sendRetries: Number(process.env.CHANNEL_SEND_RETRIES ?? 3),
+    // Upper bound on a backoff wait, including a platform-provided retry_after.
+    maxRetryDelayMs: Number(process.env.CHANNEL_MAX_RETRY_DELAY ?? 60_000),
     // Max messages buffered per pending contact while they await approval. On
     // approval the buffer is replayed as a single Agent turn; only the most
     // recent N are kept (older ones are dropped).

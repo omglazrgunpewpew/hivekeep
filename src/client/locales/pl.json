@@ -1065,7 +1065,10 @@
     "quickChat": "Szybki czat",
     "react": "Zareaguj",
     "messageRedacted": "Ta wiadomość została zredagowana",
-    "reactionFailed": "Nie udało się przełączyć reakcji"
+    "reactionFailed": "Nie udało się przełączyć reakcji",
+    "forceReset": "Odblokuj",
+    "forceResetHint": "Ta tura trwa nienaturalnie długo. Odblokuj Agenta, aby ponownie przyjmował wiadomości.",
+    "forceResetDone": "Agent odblokowany"
   },
   "quickChat": {
     "title": "Szybka sesja",
@@ -2067,7 +2070,7 @@
       "active": "Aktywny",
       "pendingApproval": "Oczekuje na zatwierdzenie",
       "oneShot": "Jednorazowo",
-      "oneShotHint": "Wyłącza się po pierwszym pasującym e-mailu.",
+      "oneShotHint": "Usuwany po pierwszym pasującym e-mailu.",
       "deleteTitle": "Usuń wyzwalacz",
       "deleteConfirm": "Usunąć ten wyzwalacz? Tej operacji nie można cofnąć.",
       "errorName": "Nazwa jest wymagana.",

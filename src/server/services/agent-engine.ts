@@ -27,7 +27,7 @@ import { buildSegmentedMessages } from '@/server/services/llm-cache-hints'
 import { stringifyToolResultValue } from '@/server/llm/core/vercel-bridge'
 import { DEFAULT_MAX_LLM_TOOLS, getMaxToolsForRequest } from '@/server/services/tool-cap'
 import { toolTurnSampling } from '@/server/services/tool-sampling'
-import { dequeueMessage, markQueueItemDone, isAgentProcessing, getQueueSize, recoverStaleProcessingItems, popQueueMessageMetadata } from '@/server/services/queue'
+import { dequeueMessage, markQueueItemDone, isAgentProcessing, getQueueSize, recoverStaleProcessingItems, requeueProcessingItems, popQueueMessageMetadata } from '@/server/services/queue'
 import { recoverStaleTasks, promoteGlobalQueue } from '@/server/services/tasks'
 import { sseManager } from '@/server/sse/index'
 import { eventBus } from '@/server/services/events'
@@ -42,11 +42,13 @@ import { listAvailableAgents } from '@/server/services/inter-agent'
 import { listContactsForPrompt, findContactByLinkedUserId } from '@/server/services/contacts'
 import { contactNotes as contactNotesTable } from '@/server/db/schema'
 import { linkFilesToMessage, getFilesForMessage, serializeFile } from '@/server/services/files'
-import { popChannelQueueMeta, getChannelQueueMeta, deliverChannelResponse, getActiveChannelsForAgent, getChannel, findContactByPlatformId, getChannelOriginMeta } from '@/server/services/channels'
+import { popChannelQueueMeta, getChannelQueueMeta, deliverChannelResponse, getActiveChannelsForAgent, getChannel, findContactByPlatformId, getChannelOriginMeta, reportUndeliveredChannelReply, peekChannelTarget, startTypingKeepalive, notifyChannelOfFailure } from '@/server/services/channels'
+import type { ChannelQueueMeta } from '@/server/services/channels'
 import { popStagedAttachments, clearStagedAttachments } from '@/server/tools/attach-file-tool'
 import { parseMentions, notifyMentionedUsers } from '@/server/services/mentions'
 import { getGlobalPrompt, getSetting, setSetting } from '@/server/services/app-settings'
-import { wrapToolsWithSpill } from '@/server/services/tool-output-spill'
+import { isContextTooLargeError, parseContextOverflowTokens, resolveOverflowCalibration, CALIBRATION_MIN } from '@/server/services/context-overflow'
+import { wrapToolsWithSpill, capToolResultText } from '@/server/services/tool-output-spill'
 import { executeToolBatch } from '@/server/services/tool-executor'
 import { recordUsage, aggregateUsages } from '@/server/services/token-usage'
 import { runStreamStep, normalizeToolUseInput, type ReasoningSegment } from '@/server/services/stream-runner'
@@ -281,10 +283,13 @@ const lastContextUsage = new Map<string, {
   /** EMA-smoothed ratio observed from past API roundtrips (api / raw_estimate).
    *  Defaults to 1.0 before any roundtrip. Clamped to [0.7, 3.0] for safety. */
   calibrationFactor?: number
+  /** Window the PROVIDER enforced when it rejected an oversized prompt. The
+   *  model registry only knows what a model can do, not what this account is
+   *  entitled to, so this is the only trustworthy ceiling once observed. */
+  observedContextWindow?: number
 }>()
 
 const CALIBRATION_EMA_ALPHA = 0.4 // weight given to the new observation
-const CALIBRATION_MIN = 0.7
 const CALIBRATION_MAX = 3.0
 
 function scaleBreakdown(b: ContextTokenBreakdown, factor: number): ContextTokenBreakdown {
@@ -322,6 +327,7 @@ export function setLastContextUsage(
     contextTokensRaw,
     apiContextTokens: existing?.apiContextTokens,
     contextWindow,
+    observedContextWindow: existing?.observedContextWindow,
     updatedAt: Date.now(),
     breakdown: breakdownRaw ? scaleBreakdown(breakdownRaw, calibrationFactor) : undefined,
     breakdownRaw,
@@ -366,8 +372,48 @@ export function recordApiContextSize(agentId: string, peakStepInputTokens: numbe
     contextTokensRaw: existing?.contextTokensRaw,
     apiContextTokens: peakStepInputTokens,
     contextWindow: existing?.contextWindow ?? 0,
+    observedContextWindow: existing?.observedContextWindow,
     updatedAt: Date.now(),
     breakdown: existing?.breakdown,
+    breakdownRaw: existing?.breakdownRaw,
+    pipelineStatus: existing?.pipelineStatus,
+    calibrationFactor,
+  }
+  lastContextUsage.set(agentId, data)
+  setSetting(`context_usage:${agentId}`, JSON.stringify(data)).catch(() => {})
+}
+
+/**
+ * Record the payload size the provider measured when it REJECTED a request for
+ * exceeding the context window. Unlike `recordApiContextSize` (fed by
+ * successful roundtrips) this is the only signal available on the failure path,
+ * where the provider returns no usage at all.
+ *
+ * Differs from the success path on purpose:
+ *  - the observed ratio replaces the EMA instead of blending into it. The
+ *    estimate was just proven wrong by a hard count; averaging it with the
+ *    history that produced the wrong value only slows the correction down.
+ *  - it is bounded by CALIBRATION_OVERFLOW_MAX, not CALIBRATION_MAX, so a
+ *    large divergence can actually be represented.
+ *  - `maxTokens` (the provider's own limit) overrides the cached window when
+ *    present: the registry can disagree with what the account really gets.
+ */
+export function recordApiContextOverflow(agentId: string, actualTokens: number, maxTokens?: number): void {
+  const existing = lastContextUsage.get(agentId)
+  const calibrationFactor = resolveOverflowCalibration(actualTokens, existing?.contextTokensRaw, existing?.calibrationFactor ?? 1)
+  const contextWindow = maxTokens && maxTokens > 0 ? maxTokens : existing?.contextWindow ?? 0
+  const data = {
+    contextTokens: existing?.contextTokensRaw
+      ? Math.round(existing.contextTokensRaw * calibrationFactor)
+      : actualTokens,
+    contextTokensRaw: existing?.contextTokensRaw,
+    apiContextTokens: actualTokens,
+    contextWindow,
+    // Remembered so later reads cannot be talked back up to the registry's
+    // advertised (and for this account, unreachable) window.
+    observedContextWindow: maxTokens && maxTokens > 0 ? maxTokens : existing?.observedContextWindow,
+    updatedAt: Date.now(),
+    breakdown: existing?.breakdownRaw ? scaleBreakdown(existing.breakdownRaw, calibrationFactor) : existing?.breakdown,
     breakdownRaw: existing?.breakdownRaw,
     pipelineStatus: existing?.pipelineStatus,
     calibrationFactor,
@@ -425,10 +471,19 @@ export async function getLastContextUsage(agentId: string) {
   }
   if (!cached) return null
 
-  // Refresh contextWindow from the current model.
+  // Refresh contextWindow from the current model, but never ABOVE a limit the
+  // provider itself has already enforced. The registry advertises a model's
+  // capability, not the account's entitlement: it happily reports 1M for a
+  // subscription that is refused the long-context beta and rejects at 200k.
+  // Overwriting unconditionally is what silently discarded the measured window
+  // recorded by `recordApiContextOverflow`, leaving compacting aiming at a
+  // ceiling the account cannot reach.
   const agentRow = db.select({ model: agents.model }).from(agents).where(eq(agents.id, agentId)).get()
   if (agentRow?.model) {
-    return { ...cached, contextWindow: getModelContextWindow(agentRow.model) }
+    const registryWindow = getModelContextWindow(agentRow.model)
+    const observed = cached.observedContextWindow
+    const effective = observed && observed > 0 ? Math.min(registryWindow, observed) : registryWindow
+    return { ...cached, contextWindow: effective }
   }
   return cached
 }
@@ -454,21 +509,10 @@ export function extractApiErrorMessage(err: unknown): string {
   return JSON.stringify(err)
 }
 
-/**
- * Match the various ways providers report "you sent too many tokens".
- * Anthropic: "prompt is too long: X tokens > Y maximum"
- * OpenAI:    "This model's maximum context length is X tokens..." or `code:context_length_exceeded`
- * Google:    "input token count (X) exceeds the maximum number of tokens allowed (Y)"
- * Generic:   "context window" appears in many provider messages.
- *
- * Used both to friendly-format the error AND to decide whether to fire a
- * background recovery compacting in the catch block.
- */
-const CONTEXT_TOO_LARGE_RE = /prompt is too long|context[\s_-]?length[\s_-]?exceed|maximum context length|context window|exceeds the maximum number of tokens|input token count[^.]{0,40}exceed/i
-
-export function isContextTooLargeError(errorMsg: string): boolean {
-  return CONTEXT_TOO_LARGE_RE.test(errorMsg)
-}
+// Provider "context too large" recognition lives in its own dependency-free
+// module so it can be unit-tested directly. Re-exported here because callers
+// (tasks.ts) have always imported it from the engine.
+export { isContextTooLargeError }
 
 /**
  * Convert a raw error message into a user-friendly display message.
@@ -922,6 +966,72 @@ export function abortAgentStream(agentId: string): boolean {
 }
 
 /**
+ * Publish a per-step input count while a turn is still running.
+ *
+ * Distinct from `recordApiContextSize`, which also refines the calibration
+ * factor: that comparison is only valid against the PRE-TURN estimate, and by
+ * step N the payload has grown by tool results the estimate never saw. Feeding
+ * those steps into the EMA would teach it that the estimator under-counts by a
+ * factor it does not. So this updates the observed size (and only upward, since
+ * the gauge should track the peak) and leaves calibration to end-of-turn.
+ */
+export function updateLiveApiContextSize(agentId: string, stepInputTokens: number): void {
+  const existing = lastContextUsage.get(agentId)
+  if (!existing) return
+  if (existing.apiContextTokens != null && existing.apiContextTokens >= stepInputTokens) return
+  const data = { ...existing, apiContextTokens: stepInputTokens, updatedAt: Date.now() }
+  lastContextUsage.set(agentId, data)
+  setSetting(`context_usage:${agentId}`, JSON.stringify(data)).catch(() => {})
+}
+
+export interface ForceResetResult {
+  abortedStream: boolean
+  clearedLock: boolean
+  clearedCompacting: boolean
+  requeuedItems: number
+}
+
+/**
+ * Break an Agent out of a stuck state, unconditionally.
+ *
+ * Every other recovery path has a precondition that a genuinely stuck Agent
+ * fails: `/messages/stop` needs a live AbortController (gone once the stream
+ * ended, so it cannot help a turn frozen in a post-stream await),
+ * force-compact refuses with 409 while `compactingAgents` is held, and the
+ * queue reset only ran at boot. That left restarting the whole server as the
+ * only cure — for a single Agent — which is exactly what happened in
+ * production. `cancelTask` already proves the pattern for sub-Agents; this is
+ * its equivalent for the main thread.
+ *
+ * Deliberately unconditional: it is an escape hatch, so it must work precisely
+ * when the state is inconsistent. Clearing the in-memory lock is safe because a
+ * still-running turn's `finally` only deletes its own key, and its queue item
+ * is idempotent on re-processing (`created_message_id` prevents duplicates).
+ */
+export async function forceResetAgent(agentId: string): Promise<ForceResetResult> {
+  const abortedStream = abortAgentStream(agentId)
+  const clearedLock = agentLocks.delete(agentId)
+  const clearedCompacting = compactingAgents.delete(agentId)
+  activeAbortControllers.delete(agentId)
+  activeAgentStreams.delete(agentId)
+
+  const requeuedItems = requeueProcessingItems(agentId)
+
+  log.warn(
+    { agentId, abortedStream, clearedLock, clearedCompacting, requeuedItems },
+    'Agent force-reset by an operator',
+  )
+
+  sseManager.sendToAgent(agentId, {
+    type: 'queue:update',
+    agentId,
+    data: { agentId, queueSize: await getQueueSize(agentId), isProcessing: false },
+  })
+
+  return { abortedStream, clearedLock, clearedCompacting, requeuedItems }
+}
+
+/**
  * Abort the active LLM stream for a quick session, if any.
  * Returns true if a stream was aborted, false if none was active.
  */
@@ -950,6 +1060,16 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
 
   // Hoisted so the finally block can guarantee cleanup
   let queueItem: Awaited<ReturnType<typeof dequeueMessage>> = null
+  // Turn-level watchdog state, hoisted for the same reason.
+  let turnDeadlineTimer: ReturnType<typeof setTimeout> | null = null
+  let turnTimedOut = false
+  // Where this turn's outcome must be reported. Resolved once, up front, and
+  // hoisted so the catch/finally can reach it: previously the error path had no
+  // access to the channel at all, so a failed turn was invisible to anyone
+  // whose only view is the chat app.
+  let channelTarget: ChannelQueueMeta | undefined
+  let stopTyping: (() => void) | null = null
+  let turnDelivered = false
 
   try {
     // Don't process if already processing (DB-level check, main slot only)
@@ -960,10 +1080,35 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
 
     log.info({ agentId, queueItemId: queueItem.id, messageType: queueItem.messageType, sourceType: queueItem.sourceType }, 'Processing message')
 
+    // Resolve the channel destination once, before anything can throw, so every
+    // exit path (success, error, timeout, abort) can report to it.
+    channelTarget =
+      queueItem.sourceType === 'channel' || shouldAutoDeliverToChannel(queueItem)
+        ? peekChannelTarget(queueItem)
+        : undefined
+
     // Create an AbortController early so the stream can be cancelled even before
     // the LLM call starts (during prompt building, memory search, etc.)
     const abortController = new AbortController()
     activeAbortControllers.set(agentId, abortController)
+
+    // Wall-clock ceiling on the whole turn. The stall guard in stream-runner
+    // covers a provider going silent, but not a turn that stays technically
+    // alive forever (a model looping on tool calls, a tool with no timeout of
+    // its own). Without this, such a turn holds the Agent's lock until the
+    // process restarts — and a channel user just sees silence. Firing the
+    // turn's own controller routes it through the normal abort path, so all
+    // existing cleanup applies.
+    turnDeadlineTimer = config.tools.turnTimeoutMs > 0
+      ? setTimeout(() => {
+          turnTimedOut = true
+          log.error(
+            { agentId, queueItemId: queueItem?.id, timeoutMs: config.tools.turnTimeoutMs },
+            'Turn exceeded its time ceiling — aborting',
+          )
+          abortController.abort()
+        }, config.tools.turnTimeoutMs)
+      : null
 
     // Notify clients that this Agent started processing
     const pendingCount = await getQueueSize(agentId)
@@ -1541,19 +1686,12 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       },
     })
 
-    // Send typing indicator on the channel when LLM processing starts (fire-and-forget)
-    if (queueItem.sourceType === 'channel') {
-      const meta = getChannelQueueMeta(queueItem.id)
-      if (meta) {
-        const ch = await getChannel(meta.channelId)
-        if (ch) {
-          const chAdapter = channelAdapters.get(ch.platform)
-          if (chAdapter?.sendTypingIndicator) {
-            const chCfg = JSON.parse(ch.platformConfig) as Record<string, unknown>
-            chAdapter.sendTypingIndicator(ch.id, chCfg, meta.platformChatId).catch(() => {})
-          }
-        }
-      }
+    // Keep the channel's "typing" hint alive for the whole turn. Covers
+    // follow-up turns too (task_result / wakeup / agent_reply carrying a
+    // channelOriginId), which previously showed no activity at all even though
+    // they were about to deliver on the channel.
+    if (channelTarget) {
+      stopTyping = startTypingKeepalive(channelTarget)
     }
 
     // Call LLM with streaming — custom single-step loop to prevent hallucinated
@@ -1651,6 +1789,15 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       }, step)
       if (outcome.usage) {
         stepUsages.push(outcome.usage)
+        // Record the provider's per-step input count as it arrives. The context
+        // gauge used to be written once, before the turn, and only reconciled
+        // after it ended — so throughout a multi-hour, tool-heavy turn (exactly
+        // when the context grows fastest) the navbar and the compacting
+        // proximity check both read a stale pre-turn number. This is ground
+        // truth and was already in hand; it was simply discarded.
+        if (outcome.usage.inputTokens) {
+          updateLiveApiContextSize(agentId, outcome.usage.inputTokens)
+        }
         // Push the running output-token total to clients so the thinking
         // bubble can show real tokens accumulating across steps. Usage is only
         // known at each step's `finish` chunk, so this increments per step
@@ -1721,7 +1868,14 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         content: batch.toolResults.map((tr) => ({
           type: 'tool-result',
           toolUseId: tr.toolCallId,
-          content: stringifyToolResultValue(tr.output.value),
+          // Capped here too: within a turn these are re-sent at every later
+          // step, so an oversized result is paid for again and again. The
+          // history rebuild applies the same cap on the next turn.
+          content: capToolResultText(
+            stringifyToolResultValue(tr.output.value),
+            tr.toolName ?? 'unknown',
+            config.toolResultSizeCapTokens,
+          ),
         })),
       })
 
@@ -1777,6 +1931,23 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       }, 'Prompt cache stats')
     }
 
+    // Turn watchdog fired. Deliberately treated as a FAILED turn rather than a
+    // user abort: an abort is silent by design (the user knows, they clicked
+    // stop), but nobody asked for this one. Clearing `wasAborted` lets the
+    // normal completion path persist the partial answer AND deliver it to the
+    // originating channel, so the person waiting on Telegram learns the turn
+    // died instead of waiting forever.
+    if (turnTimedOut) {
+      wasAborted = false
+      const minutes = Math.round(config.tools.turnTimeoutMs / 60_000)
+      const notice = `*(This turn was interrupted after ${minutes} minutes — it exceeded the maximum turn duration. Some work may be incomplete; ask me to continue.)*`
+      fullContent = fullContent ? `${fullContent}\n\n${notice}` : notice
+      log.error(
+        { agentId, messageId: assistantMessageId, steps: step + 1, toolCalls: toolCallsLog.length },
+        'Turn aborted by the time ceiling',
+      )
+    }
+
     log.info({
       agentId,
       messageId: assistantMessageId,
@@ -1785,6 +1956,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       contentLength: fullContent.length,
       toolCalls: toolCallsLog.length,
       wasAborted,
+      turnTimedOut,
       silentStopAfterTools,
     }, 'LLM turn completed')
 
@@ -1931,33 +2103,36 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         timestamp: Date.now(),
       })
 
-      // Channel response delivery (fire-and-forget)
-      if (queueItem.sourceType === 'channel' && fullContent) {
-        // Direct channel response: one-shot pop of channel queue meta
-        const channelMeta = popChannelQueueMeta(queueItem.id)
-        if (channelMeta) {
+      // Channel response delivery (fire-and-forget). The destination was
+      // resolved up front (`channelTarget`) so success and failure paths agree
+      // on where this turn is owed an answer.
+      const owesChannelReply =
+        queueItem.sourceType === 'channel' ||
+        (Boolean(queueItem.channelOriginId) && shouldAutoDeliverToChannel(queueItem))
+      if (fullContent && owesChannelReply) {
+        if (channelTarget) {
+          // Consume the one-shot sideband now that we are actually delivering.
+          popChannelQueueMeta(queueItem.id)
           const stagedFiles = popStagedAttachments(agentId)
-          deliverChannelResponse(channelMeta, assistantMessageId, fullContent, stagedFiles.length > 0 ? stagedFiles : undefined).catch((err) => {
-            log.error({ agentId, channelId: channelMeta.channelId, err }, 'Channel response delivery failed')
-          })
-        } else {
-          clearStagedAttachments(agentId)
-        }
-      } else if (queueItem.channelOriginId && fullContent && shouldAutoDeliverToChannel(queueItem)) {
-        // Follow-up auto-delivery: this turn is part of a causal chain from an external channel
-        const originMeta = getChannelOriginMeta(queueItem.channelOriginId)
-        if (originMeta) {
-          const stagedFiles = popStagedAttachments(agentId)
+          turnDelivered = true
           deliverChannelResponse(
-            { channelId: originMeta.channelId, platformChatId: originMeta.platformChatId, platformMessageId: originMeta.platformMessageId, platformUserId: originMeta.platformUserId },
+            channelTarget,
             assistantMessageId,
             fullContent,
             stagedFiles.length > 0 ? stagedFiles : undefined,
           ).catch((err) => {
-            log.error({ agentId, channelOriginId: queueItem!.channelOriginId, err }, 'Follow-up channel delivery failed')
+            log.error({ agentId, channelId: channelTarget!.channelId, err }, 'Channel response delivery failed')
           })
         } else {
           clearStagedAttachments(agentId)
+          const reason = queueItem.channelOriginId ? 'channel origin not found or expired' : 'no channel origin recorded for this turn'
+          log.warn(
+            { agentId, channelOriginId: queueItem.channelOriginId ?? null, queueItemId: queueItem.id, messageType: queueItem.messageType, sourceType: queueItem.sourceType, contentLength: fullContent.length, reason },
+            'Agent reply had a channel origin but no destination could be resolved, not delivered',
+          )
+          reportUndeliveredChannelReply({ agentId, assistantMessageId, channelOriginId: queueItem.channelOriginId ?? undefined, reason }).catch((err) => {
+            log.error({ agentId, err }, 'Failed to report undelivered channel reply')
+          })
         }
       } else {
         clearStagedAttachments(agentId)
@@ -2047,6 +2222,20 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
     // previous turn), trigger a forced compacting in the background so the
     // user can retry without manual intervention.
     if (isContextTooLargeError(errorMsg)) {
+      // The rejection carries the real payload size. Record it before anything
+      // else reads the cache: otherwise recovery runs against the stale count
+      // from the last successful turn, finds it below the compacting trigger,
+      // and does nothing while every retry rebuilds the same oversized prompt.
+      const overflow = parseContextOverflowTokens(errorMsg)
+      if (overflow) {
+        const estimatedTokens = lastContextUsage.get(agentId)?.contextTokensRaw ?? null
+        recordApiContextOverflow(agentId, overflow.actual, overflow.max)
+        log.warn(
+          { agentId, actualTokens: overflow.actual, maxTokens: overflow.max, estimatedTokens },
+          'Provider rejected the prompt as too long; recorded the measured size as ground truth',
+        )
+      }
+
       // Skip recovery if compacting is already running for this Agent — racing
       // would risk duplicate summaries (both reading the same message range)
       // AND the recovery's `finally` would clear the lock the other path
@@ -2061,9 +2250,11 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
             // Re-fetch the Agent since `agent` was scoped to the try block.
             const recoveryAgent = await db.select({ model: agents.model }).from(agents).where(eq(agents.id, agentId)).get()
             if (!recoveryAgent) return
-            const ctxWindow = getModelContextWindow(recoveryAgent.model)
+            // Prefer the provider's own limit: the model registry can advertise
+            // a window the account does not actually get.
+            const ctxWindow = overflow?.max ?? getModelContextWindow(recoveryAgent.model)
             const cached = lastContextUsage.get(agentId)
-            await maybeCompact(agentId, cached?.apiContextTokens ?? cached?.contextTokens, ctxWindow)
+            await maybeCompact(agentId, overflow?.actual ?? cached?.apiContextTokens ?? cached?.contextTokens, ctxWindow)
           } catch (err) {
             log.error({ agentId, err }, 'Recovery compacting after prompt-too-long failed')
           } finally {
@@ -2105,6 +2296,14 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       createNotification({ type: 'agent:error', title: 'Agent error', body: displayError, agentId, relatedId: agentId, relatedType: 'agent' }),
     ).catch(() => {})
 
+    // Tell the channel the turn failed. Until now this whole block wrote only
+    // to the web timeline, so a user reachable solely through Telegram saw the
+    // Agent go quiet with no explanation and no end.
+    if (channelTarget) {
+      turnDelivered = true
+      await notifyChannelOfFailure(channelTarget, displayError).catch(() => {})
+    }
+
     // Emit queue update to clear processing state on error
     sseManager.sendToAgent(agentId, {
       type: 'queue:update',
@@ -2114,6 +2313,23 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
 
     return true
   } finally {
+    stopTyping?.()
+    // Last-resort guarantee. Any exit that produced neither a reply nor an
+    // error notice (an abort, an empty non-substituted turn, an early return)
+    // still owes the channel an outcome — silence is what made these states
+    // indistinguishable from a hang.
+    if (channelTarget && !turnDelivered) {
+      await notifyChannelOfFailure(
+        channelTarget,
+        'That request ended without a reply. Nothing was lost — send it again, or ask me what happened.',
+      ).catch(() => {})
+    }
+    if (turnDeadlineTimer) clearTimeout(turnDeadlineTimer)
+    // These were only cleared on the nominal and catch paths, so an early
+    // return (e.g. the Agent row vanished) left a dead controller registered
+    // and made /messages/stop claim it had stopped a turn that no longer ran.
+    activeAbortControllers.delete(agentId)
+    activeAgentStreams.delete(agentId)
     // Safety net: guarantee queue item is marked done regardless of exit path.
     // markQueueItemDone is idempotent — safe to call even if already done above.
     if (queueItem) {
@@ -2514,7 +2730,14 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
         content: batch.toolResults.map((tr) => ({
           type: 'tool-result',
           toolUseId: tr.toolCallId,
-          content: stringifyToolResultValue(tr.output.value),
+          // Capped here too: within a turn these are re-sent at every later
+          // step, so an oversized result is paid for again and again. The
+          // history rebuild applies the same cap on the next turn.
+          content: capToolResultText(
+            stringifyToolResultValue(tr.output.value),
+            tr.toolName ?? 'unknown',
+            config.toolResultSizeCapTokens,
+          ),
         })),
       })
 

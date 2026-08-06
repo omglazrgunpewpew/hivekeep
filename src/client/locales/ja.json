@@ -1053,7 +1053,10 @@
     "quickChat": "クイックチャット",
     "react": "リアクション",
     "messageRedacted": "このメッセージは秘匿されました",
-    "reactionFailed": "リアクションの切り替えに失敗しました"
+    "reactionFailed": "リアクションの切り替えに失敗しました",
+    "forceReset": "ブロック解除",
+    "forceResetHint": "このターンは異常に長く実行されています。ブロックを解除すると、エージェントが再びメッセージを受け付けます。",
+    "forceResetDone": "エージェントのブロックを解除しました"
   },
   "quickChat": {
     "title": "クイックセッション",
@@ -2051,7 +2054,7 @@
       "active": "有効",
       "pendingApproval": "承認待ち",
       "oneShot": "一度のみ",
-      "oneShotHint": "最初に一致したメールの後に無効になります。",
+      "oneShotHint": "最初に一致したメールの後に削除されます。",
       "deleteTitle": "トリガーを削除",
       "deleteConfirm": "このトリガーを削除しますか?この操作は元に戻せません。",
       "errorName": "名前は必須です。",

@@ -630,7 +630,7 @@ export const accountTriggers = sqliteTable('account_triggers', {
   dispatchMode: text('dispatch_mode').notNull().default('conversation'), // 'conversation' | 'task'
   maxConcurrentTasks: integer('max_concurrent_tasks').notNull().default(1), // 0 = unlimited
   needsBody: integer('needs_body', { mode: 'boolean' }).notNull().default(false), // tree references body/attachment_*
-  disableAfterFire: integer('disable_after_fire', { mode: 'boolean' }).notNull().default(false), // one-shot: deactivate on first match (send_email reply-watch)
+  disableAfterFire: integer('disable_after_fire', { mode: 'boolean' }).notNull().default(false), // one-shot: row is deleted on first match (send_email reply-watch)
   lastTriggeredAt: integer('last_triggered_at', { mode: 'timestamp_ms' }),
   triggerCount: integer('trigger_count').notNull().default(0),
   createdBy: text('created_by').notNull().default('user'), // 'user' | 'agent'
@@ -849,6 +849,23 @@ export const channelMessageLinks = sqliteTable('channel_message_links', {
 }, (table) => [
   index('idx_cml_message').on(table.messageId),
   index('idx_cml_channel').on(table.channelId),
+])
+
+// Durable destination of an inbound channel turn, keyed by the queue item id
+// that started the causal chain (`channel_origin_id` on queue items, messages
+// and tasks). A sub-Agent can run for hours before the parent Agent wakes up
+// and writes the reply that must go back to the channel, so this snapshot has
+// to outlive both the turn and a process restart. Rows older than
+// `config.channels.originTtlMs` are treated as stale and pruned.
+export const channelOrigins = sqliteTable('channel_origins', {
+  originId: text('origin_id').primaryKey(),
+  channelId: text('channel_id').notNull().references(() => channels.id, { onDelete: 'cascade' }),
+  platformChatId: text('platform_chat_id').notNull(),
+  platformMessageId: text('platform_message_id').notNull(),
+  platformUserId: text('platform_user_id').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+}, (table) => [
+  index('idx_channel_origins_created_at').on(table.createdAt),
 ])
 
 // ─── Invitations ────────────────────────────────────────────────────────────

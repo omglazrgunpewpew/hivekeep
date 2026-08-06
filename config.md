@@ -63,6 +63,7 @@ All configurable values of the platform, grouped by domain. These values are def
 |---|---|---|---|
 | `toolOutputs.spillThreshold` | `TOOL_OUTPUT_SPILL_THRESHOLD` | `10000` | Threshold in bytes above which a tool result is saved to a temporary file instead of being included in full in the context |
 | `toolOutputs.previewLines` | `TOOL_OUTPUT_PREVIEW_LINES` | `200` | Number of preview lines included in the compact reference when a result is "spilled" |
+| `toolOutputs.previewMaxChars` | `TOOL_OUTPUT_PREVIEW_MAX_CHARS` | `4000` | Hard size bound on that preview. The line count alone is not a bound: `JSON.stringify` escapes newlines, so a single-string result (email body, grep output, shell stdout) serializes to a few very long lines and "200 lines" keeps the whole payload. Keep it below `spillThreshold`. |
 | `toolOutputs.ttlHours` | `TOOL_OUTPUT_TTL_HOURS` | `24` | Retention duration of temporary files (hours). Older files are deleted automatically |
 
 ---
@@ -71,11 +72,43 @@ All configurable values of the platform, grouped by domain. These values are def
 
 | Key | Env var | Default | Description |
 |---|---|---|---|
-| `tools.maxSteps` | `TOOLS_MAX_STEPS` | `0` | Max number of tool-calling steps per LLM turn. 0 = unlimited (capped at 100 internally) |
+| `tools.maxSteps` | `TOOLS_MAX_STEPS` | `100` | Max number of tool-calling steps per LLM turn. Runaway guard, not a budget. 0 = truly unlimited (the old default, which let a looping model run until the process restarted) |
+| `tools.turnTimeoutMs` | `TOOLS_TURN_TIMEOUT` | `1800000` (30 min) | Wall-clock ceiling for one turn, measured from dequeue (queue wait excluded). Aborts via the turn's own AbortController so the failure is reported, including back to the originating channel. 0 disables |
 | `tools.concurrencyCap` | `TOOLS_CONCURRENCY_CAP` | `5` | Max number of parallel read-only tool executions. When all tool calls in a step are read-only, they run in parallel (limited to this value). Mixed batches with at least one mutating tool stay sequential |
 | `tools.temperature` | `TOOLS_TEMPERATURE` | `0` | Sampling temperature applied on tool-enabled turns. Local backends (Ollama, llama.cpp, LM Studio) default to ~0.7-0.8, which makes small models emit unreliable tool-call JSON; a low value steadies it. Reasoning models are exempted automatically (they reject a custom temperature). Set to `off` to defer to the backend default |
 | `shell.defaultTimeoutMs` | `HIVEKEEP_SHELL_TIMEOUT` | `30000` | Default timeout for a `run_shell` command (ms), used when the Agent does not provide a `timeout` |
 | `shell.maxTimeoutMs` | `HIVEKEEP_SHELL_MAX_TIMEOUT` | `600000` | Maximum timeout an Agent can request per `run_shell` call (ms). The tool's `timeout` parameter is capped at this value (10 min by default, raise it for longer test suites/builds) |
+
+---
+
+## Turn reliability (timeouts)
+
+Every wait on the turn path is bounded. An await that never settles holds the
+Agent's lock, skips its `finally`, and used to be recoverable only by restarting
+the process.
+
+| Key | Env var | Default | Description |
+|---|---|---|---|
+| `llm.streamIdleTimeoutMs` | `LLM_STREAM_IDLE_TIMEOUT` | `120000` (2 min) | Inactivity ceiling while reading a provider's response stream, reset on every chunk (a slow-but-alive generation is never cut). Provider SDKs clear their own request timeout once response headers arrive, leaving the streamed body unbounded. 0 disables |
+| `hooks.handlerTimeoutMs` | `HOOK_HANDLER_TIMEOUT` | `30000` | Ceiling for one plugin hook handler. Handlers run in-process on the turn path, after the abort controller is released, so one that never settles pins the Agent |
+| `memory.embeddingTimeoutMs` | `MEMORY_EMBEDDING_TIMEOUT` | `60000` | Ceiling for an embedding call. These run under the compacting lock, where a hang makes the engine refuse every message for that Agent |
+| `memory.retrievalLlmTimeoutMs` | `MEMORY_RETRIEVAL_LLM_TIMEOUT` | `45000` | Ceiling for the retrieval-side LLM calls (multi-query, HyDE, rerank, contextual rewrite). On timeout the caller falls back to plain retrieval |
+| `search.requestTimeoutMs` | `SEARCH_REQUEST_TIMEOUT` | `30000` | Ceiling for one `web_search` round-trip |
+| `email.requestTimeoutMs` | `EMAIL_REQUEST_TIMEOUT` | `60000` | Ceiling for one Gmail / Microsoft Graph call (IMAP has its own socket timeouts) |
+
+---
+
+## Stuck-Agent detection
+
+| Key | Env var | Default | Description |
+|---|---|---|---|
+| `queue.stuckSweepIntervalMs` | `QUEUE_STUCK_SWEEP_INTERVAL` | `300000` (5 min) | How often Agents wedged in `processing` are swept for |
+| `queue.stuckWarnMs` | `QUEUE_STUCK_WARN` | `900000` (15 min) | Past this age a human is notified, but the turn is left running (it may be legitimately long) |
+| `queue.stuckRecoverMs` | `QUEUE_STUCK_RECOVER` | `3600000` (1 h) | Past this age (beyond any plausible turn) the queue item is requeued so the Agent answers again. 0 disables |
+
+Manual escape hatch: `POST /api/agents/:id/force-reset` aborts any stream, clears
+the in-memory lock and the compacting flag, and requeues that Agent's in-flight
+items. Surfaced in the UI inside the typing indicator after 15 minutes.
 
 ---
 
@@ -337,6 +370,7 @@ Triggers on connected email accounts: a matching incoming email prompts a target
 | `EMAIL_TRIGGER_MAX_PER_CYCLE` | `50` | Anti-flood cap: max messages processed per (account, folder) per cycle. |
 | `EMAIL_TRIGGER_LOG_RETENTION_DAYS` | `30` | Retention of trigger evaluation logs. |
 | `EMAIL_TRIGGER_MAX_LOGS_PER_TRIGGER` | `500` | Max log entries retained per trigger. |
+| `EMAIL_TRIGGER_ONE_SHOT_TTL_DAYS` | `30` | Age after which a one-shot reply-watch that never fired is deleted. Fired ones are deleted immediately. |
 | `EMAIL_TRIGGER_SEEN_IDS_RING` | `200` | Size of the per-(account, folder) seen-ids dedup ring. |
 
 > Whether Agent-created triggers need user approval is a runtime setting (`agent_triggers_require_approval` in `app_settings`, default off), not an env var.
@@ -346,8 +380,11 @@ Triggers on connected email accounts: a matching incoming email prompts a target
 | Env Var | Default | Description |
 |---------|---------|-------------|
 | `CHANNELS_MAX_PER_KIN` | `5` | Max number of channels connected per Agent. |
-| `CHANNEL_PENDING_ORIGIN_TTL` | `300_000` (5 min) | TTL of the pending origin verification during setup. |
+| `CHANNEL_ORIGIN_TTL` | `86_400_000` (24 h) | How long after an inbound channel message an Agent reply is still auto-delivered back to that channel. The origin is persisted in `channel_origins`, so it survives restarts; this is only a freshness guard. Rows past it are pruned. |
 | `CHANNEL_MAX_PENDING_BUFFERED` | `10` | Max messages buffered per pending contact while they await approval. On approval the buffer is replayed as a single Agent turn; only the most recent N are kept (older ones are dropped). |
+| `CHANNEL_TYPING_REFRESH` | `5_000` | How often the platform "typing" hint is refreshed while a turn runs. Platforms expire it in seconds, so without this a long turn is silent and indistinguishable from a dead one. |
+| `CHANNEL_SEND_RETRIES` | `3` | Attempts for one outbound send (1 = no retry). A transient 429 or 5xx used to drop the reply silently. |
+| `CHANNEL_MAX_RETRY_DELAY` | `60_000` | Upper bound on a backoff wait, including a platform-provided `retry_after`. |
 | `WHATSAPP_WEB_DIR` | `<data>/whatsapp-web` | Directory holding the per-channel WhatsApp-Web (QR pairing) session state. One subfolder per channel; persisted so a paired session reconnects after restart. |
 
 ## Tasks (sub-Agents)

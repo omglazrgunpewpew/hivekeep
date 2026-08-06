@@ -1053,7 +1053,10 @@
     "quickChat": "Chat rápido",
     "react": "Reaccionar",
     "messageRedacted": "Este mensaje fue censurado",
-    "reactionFailed": "No se pudo cambiar la reacción"
+    "reactionFailed": "No se pudo cambiar la reacción",
+    "forceReset": "Desbloquear",
+    "forceResetHint": "Este turno lleva demasiado tiempo. Desbloquea el Agente para que vuelva a aceptar mensajes.",
+    "forceResetDone": "Agente desbloqueado"
   },
   "quickChat": {
     "title": "Sesión rápida",
@@ -2051,7 +2054,7 @@
       "active": "Activo",
       "pendingApproval": "Pendiente de aprobación",
       "oneShot": "Una vez",
-      "oneShotHint": "Se desactiva tras el primer correo coincidente.",
+      "oneShotHint": "Se elimina tras el primer correo coincidente.",
       "deleteTitle": "Eliminar disparador",
       "deleteConfirm": "¿Eliminar este disparador? No se puede deshacer.",
       "errorName": "El nombre es obligatorio.",

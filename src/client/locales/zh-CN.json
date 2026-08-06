@@ -1053,7 +1053,10 @@
     "quickChat": "快速聊天",
     "react": "回应",
     "messageRedacted": "此消息已被隐去",
-    "reactionFailed": "切换回应失败"
+    "reactionFailed": "切换回应失败",
+    "forceReset": "解除阻塞",
+    "forceResetHint": "本轮运行时间异常长。解除阻塞后，该 Agent 可以重新接收消息。",
+    "forceResetDone": "Agent 已解除阻塞"
   },
   "quickChat": {
     "title": "快速会话",
@@ -2051,7 +2054,7 @@
       "active": "已启用",
       "pendingApproval": "待批准",
       "oneShot": "一次性",
-      "oneShotHint": "匹配到第一封邮件后自动停用。",
+      "oneShotHint": "匹配到第一封邮件后自动删除。",
       "deleteTitle": "删除触发器",
       "deleteConfirm": "删除此触发器？此操作无法撤销。",
       "errorName": "名称为必填项。",
