@@ -6,7 +6,7 @@
 - **In progress**: active delivery.
 - **Shipped**: released and supported.
 
-All 49 items are **Proposed** unless repository evidence proves otherwise.
+All 50 items are **Proposed** unless repository evidence proves otherwise.
 
 ## Release sequence
 
@@ -66,82 +66,89 @@ All 49 items are **Proposed** unless repository evidence proves otherwise.
    - Acceptance direction: monitors are low-cost and auditable.
 18. **Event wakeups** (**Proposed**): wake work from trusted events.  
    - Acceptance direction: source context and deduplication are retained.
-19. **Cron health/dependencies** (**Proposed**): surface job health and blocks.  
+19. **Channel reaction events** (**Proposed**): treat emoji reactions as inbound signal.  
+   - Subscribe adapters that support it, Discord first, to reaction add and remove events.
+   - Resolve the platform message id back to the stored Agent message and deliver emoji, actor, target message, and add-or-remove.
+   - Default to recording the reaction without waking an LLM turn, with opt-in per-Agent config for reactions that should, such as approval while a turn awaits confirmation.
+   - Persist reactions so an Agent can query them on past messages, not only receive them live.
+   - Open questions: uneven platform support (Telegram, Slack, WhatsApp), whether reaction meaning is Agent-defined or platform-wide, and rate protection against rapid reacting.
+   - Acceptance direction: reactions are attributable, queryable after the fact, and never cause an unbounded turn storm.
+20. **Cron health/dependencies** (**Proposed**): surface job health and blocks.  
    - Acceptance direction: missed scheduling is diagnosable.
 
 ### Observability and context, C then D
-20. **Live execution** (**Proposed**): expose active progress and waits.  
+21. **Live execution** (**Proposed**): expose active progress and waits.  
    - Acceptance direction: active, waiting, terminal states are distinct.
-21. **Typing indicators** (**Proposed**): show truthful response activity.  
+22. **Typing indicators** (**Proposed**): show truthful response activity.  
    - Acceptance direction: indicators start and stop reliably.
-22. **Sessions** (**Proposed**): manage durable task and conversation boundaries.  
+23. **Sessions** (**Proposed**): manage durable task and conversation boundaries.  
    - Acceptance direction: scope and linkage are inspectable.
-23. **Context/compaction health** (**Proposed**): measure pressure and retention.  
+24. **Context/compaction health** (**Proposed**): measure pressure and retention.  
    - Acceptance direction: warnings precede continuity risk.
-24. **Compaction fallback/quality** (**Proposed**): preserve source access on weak compaction.  
+25. **Compaction fallback/quality** (**Proposed**): preserve source access on weak compaction.  
    - Acceptance direction: quality failures have safe fallback.
 
 ### Lifecycle and dependencies, D
-25. **Secret lifecycle** (**Proposed**): manage rotation, expiry, access, revocation.  
+26. **Secret lifecycle** (**Proposed**): manage rotation, expiry, access, revocation.  
    - Acceptance direction: affected integrations are known first.
-26. **Blast-radius views** (**Proposed**): show change consumers and risk.  
+27. **Blast-radius views** (**Proposed**): show change consumers and risk.  
    - Acceptance direction: dependencies are visible before change.
-27. **Provider/model migration** (**Proposed**): make controlled transitions.  
+28. **Provider/model migration** (**Proposed**): make controlled transitions.  
    - Acceptance direction: compatibility, rollback, comparison are supported.
-28. **Model review workflow** (**Proposed**): review model changes.  
+29. **Model review workflow** (**Proposed**): review model changes.  
    - Acceptance direction: evidence and approval precede rollout.
 
 ### Governance, B then E
-29. **Audit trail** (**Proposed**): record actions and outcomes.  
+30. **Audit trail** (**Proposed**): record actions and outcomes.  
    - Acceptance direction: entries are attributable and linked to evidence.
-30. **Approval ledger** (**Proposed**): retain risky-action approvals.  
+31. **Approval ledger** (**Proposed**): retain risky-action approvals.  
    - Acceptance direction: approvals are searchable by scope and expiry.
-31. **Policy-as-code** (**Proposed**): review and test policy configuration.  
+32. **Policy-as-code** (**Proposed**): review and test policy configuration.  
    - Acceptance direction: policy evaluates before action with history.
-32. **Data governance** (**Proposed**): control retention, access, locality, handling.  
+33. **Data governance** (**Proposed**): control retention, access, locality, handling.  
    - Acceptance direction: data classes have enforcement points.
-33. **Scoped delegated approval for Agent-created crons** (**Proposed**): let a user grant an individual Agent permission to self-approve only the crons it creates that target that same Agent, while preserving human approval as the default when no delegation exists.  
+34. **Scoped delegated approval for Agent-created crons** (**Proposed**): let a user grant an individual Agent permission to self-approve only the crons it creates that target that same Agent, while preserving human approval as the default when no delegation exists.  
    - Policy controls constrain allowed toolboxes, one-shot versus recurring schedules, minimum interval/frequency, duration and runtime limits, model/provider selection, external messaging, secret access, and state-changing or destructive tools.
    - Self-approval of a cron targeting another Agent is denied by default.
    - Audit records capture each delegated grant and every activation made through self-approval, and users can revoke delegation globally or per Agent.
    - Acceptance direction: the UI clearly labels delegated approval, policy is enforced before activation, revocation prevents future self-approvals, and crons outside a grant continue through human approval.
 
 ### Platform and DX, E
-34. **Cancellation semantics** (**Proposed**): make cancellation safe.  
+35. **Cancellation semantics** (**Proposed**): make cancellation safe.  
    - Acceptance direction: completed effects and cleanup are reported.
-35. **Replay harness** (**Proposed**): reproduce controlled executions.  
+36. **Replay harness** (**Proposed**): reproduce controlled executions.  
    - Acceptance direction: simulation stays separate from live effects.
-36. **Agent config versioning** (**Proposed**): version instructions, tools, permissions.  
+37. **Agent config versioning** (**Proposed**): version instructions, tools, permissions.  
    - Acceptance direction: changes are reviewable and reversible.
-37. **Staged updates** (**Proposed**): roll out changes progressively.  
+38. **Staged updates** (**Proposed**): roll out changes progressively.  
    - Acceptance direction: pause and rollback are supported.
-38. **Backup/DR** (**Proposed**): test restore and recovery.  
+39. **Backup/DR** (**Proposed**): test restore and recovery.  
    - Acceptance direction: objectives and drills are documented.
-39. **Plugin/tool trust** (**Proposed**): establish extension provenance and isolation.  
+40. **Plugin/tool trust** (**Proposed**): establish extension provenance and isolation.  
    - Acceptance direction: access and trust basis are assessable.
 
 ### Workflow and collaboration, E
-40. **Workflow graphs** (**Proposed**): model dependency graphs.  
+41. **Workflow graphs** (**Proposed**): model dependency graphs.  
    - Acceptance direction: nodes, edges, retries, approvals are visible.
-41. **Projects/tickets/incidents as context** (**Proposed**): attach work objects.  
+42. **Projects/tickets/incidents as context** (**Proposed**): attach work objects.  
    - Acceptance direction: status and history are directly available.
-42. **Handoff packages** (**Proposed**): transfer goals, evidence, decisions, next steps.  
+43. **Handoff packages** (**Proposed**): transfer goals, evidence, decisions, next steps.  
    - Acceptance direction: recipients continue safely.
-43. **User/group permissions** (**Proposed**): apply role and group controls.  
+44. **User/group permissions** (**Proposed**): apply role and group controls.  
    - Acceptance direction: effective access is inspectable.
 
 ### Optimization and polish, F
-44. **Budgets** (**Proposed**): control cost, time, tokens, and tools.  
+45. **Budgets** (**Proposed**): control cost, time, tokens, and tools.  
    - Acceptance direction: consumption and exhaustion are visible.
-45. **Quality routing** (**Proposed**): route by quality, latency, cost, risk.  
+46. **Quality routing** (**Proposed**): route by quality, latency, cost, risk.  
    - Acceptance direction: decisions are explainable.
-46. **Operational learning** (**Proposed**): capture reusable operational lessons.  
+47. **Operational learning** (**Proposed**): capture reusable operational lessons.  
    - Acceptance direction: lessons are reviewed and reusable.
-47. **Templates** (**Proposed**): provide reusable workflow and policy patterns.  
+48. **Templates** (**Proposed**): provide reusable workflow and policy patterns.  
    - Acceptance direction: templates include safe defaults.
-48. **Searchable timeline** (**Proposed**): unify turns, jobs, approvals, incidents, changes.  
+49. **Searchable timeline** (**Proposed**): unify turns, jobs, approvals, incidents, changes.  
    - Acceptance direction: users navigate to evidence.
-49. **Platform self-monitoring** (**Proposed**): monitor availability, queues, dependencies, control plane.  
+50. **Platform self-monitoring** (**Proposed**): monitor availability, queues, dependencies, control plane.  
    - Acceptance direction: degradation yields recovery paths.
 
 ## Principles
