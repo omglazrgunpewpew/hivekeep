@@ -1,7 +1,11 @@
 import type { ModelMessage, UserContent, JSONValue } from '@/server/tools/tool-helper'
 import type { Tool } from '@/server/tools/tool-helper'
 import type { HivekeepMessage, HivekeepMessageBlock } from '@/server/llm/llm/types'
-import { eq, and, isNull, ne, asc, desc } from 'drizzle-orm'
+import { eq, and, isNull, ne, asc, desc, sql } from 'drizzle-orm'
+// Submodule specifier on purpose: several test files mock the bare
+// 'drizzle-orm' module with a partial stub, and bun's module mocks leak
+// across files — the submodule id stays intact.
+import { getTableColumns } from 'drizzle-orm/utils'
 import { v4 as uuid } from 'uuid'
 import { db, sqlite } from '@/server/db/index'
 import { createLogger } from '@/server/logger'
@@ -15,10 +19,8 @@ import {
   queueItems,
   channels,
   tasks,
-  tickets,
   quickSessions,
 } from '@/server/db/schema'
-import { buildActiveProjectInfo } from '@/server/services/projects'
 import { getContactDisplayName } from '@/shared/contact-display'
 import { decrypt } from '@/server/services/encryption'
 import { buildSystemPrompt, joinSystemPrompt } from '@/server/services/prompt-builder'
@@ -33,8 +35,8 @@ import { sseManager } from '@/server/sse/index'
 import { eventBus } from '@/server/services/events'
 import { hookRegistry } from '@/server/hooks/index'
 import { config } from '@/server/config'
-import { getRelevantMemories, rewriteQueryWithContext } from '@/server/services/memory'
-import { maybeCompact } from '@/server/services/compacting'
+import { getProfile } from '@/server/services/agent-profile'
+import { maybeCompact, resolveCompactionBoundary, isAfterCompactionBoundary } from '@/server/services/compacting'
 import { getMCPToolsSummary } from '@/server/services/mcp'
 import { resolveToolset } from '@/server/services/toolset-resolver'
 import type { AgentThinkingConfig, AgentThinkingEffort, ContextTokenBreakdown, ContextPipelineStatus } from '@/shared/types'
@@ -231,6 +233,10 @@ export interface ActiveAgentStreamSnapshot {
   agentId: string
   messageId: string
   content: string
+  /** In-flight provisional text of the current step, mirrored delta-by-delta
+   *  by the stream runner. Served appended to `content` for mid-stream
+   *  rehydration; cleared when the step commits or retracts. */
+  provisional: string
   reasoning: ReasoningSegment[]
   toolCalls: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }>
   /** Running sum of output tokens reported so far this turn (one increment per
@@ -1015,10 +1021,30 @@ export async function forceResetAgent(agentId: string): Promise<ForceResetResult
   activeAbortControllers.delete(agentId)
   activeAgentStreams.delete(agentId)
 
+  // The quick/API lane has its own lock + controllers; leaving them out made
+  // the "unconditional" operator escape hatch unable to recover a wedged
+  // quick session (only a restart could).
+  const quickSessionIds = db
+    .select({ id: quickSessions.id })
+    .from(quickSessions)
+    .where(eq(quickSessions.agentId, agentId))
+    .all()
+    .map((s) => s.id)
+  let abortedQuickStreams = 0
+  for (const sid of quickSessionIds) {
+    const controller = quickAbortControllers.get(sid)
+    if (controller) {
+      controller.abort()
+      quickAbortControllers.delete(sid)
+      abortedQuickStreams++
+    }
+  }
+  const clearedQuickLock = quickLocks.delete(agentId)
+
   const requeuedItems = requeueProcessingItems(agentId)
 
   log.warn(
-    { agentId, abortedStream, clearedLock, clearedCompacting, requeuedItems },
+    { agentId, abortedStream, clearedLock, clearedCompacting, clearedQuickLock, abortedQuickStreams, requeuedItems },
     'Agent force-reset by an operator',
   )
 
@@ -1353,41 +1379,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       role: k.role,
     }))
 
-    // Retrieve relevant memories via hybrid search (semantic + FTS5)
-    // If contextual rewriting is enabled, enrich short/ambiguous queries with conversation context
-    let relevantMemories: Array<{ id: string; category: string; content: string; subject: string | null; importance: number | null; updatedAt: Date | null; score: number }> = []
-    try {
-      let memoryQuery = queueItem.content
-      if (config.memory.contextualRewriteModel) {
-        // Fetch last few messages for context (lightweight — only content + role, limit 6)
-        const recentMsgs = await db
-          .select({ role: messages.role, content: messages.content })
-          .from(messages)
-          .where(and(eq(messages.agentId, agentId), isNull(messages.taskId), isNull(messages.sessionId)))
-          .orderBy(desc(messages.createdAt))
-          .limit(6)
-          .all()
-        // Reverse to chronological, exclude the current message (already inserted above), filter nulls
-        const contextMsgs = recentMsgs
-          .reverse()
-          .slice(0, -1) // drop last (= current user message)
-          .filter((m) => m.content)
-          .map((m) => ({ role: m.role, content: m.content! }))
-        memoryQuery = await rewriteQueryWithContext(queueItem.content, contextMsgs, agentId)
-      }
-      relevantMemories = await getRelevantMemories(agentId, memoryQuery)
-    } catch {
-      // Memory retrieval failure is non-fatal — proceed without memories
-    }
 
-    // Retrieve relevant knowledge base chunks
-    let relevantKnowledge: Array<{ content: string; sourceId: string; score: number }> = []
-    try {
-      const { searchKnowledge } = await import('@/server/services/knowledge')
-      relevantKnowledge = await searchKnowledge(agentId, queueItem.content, 5)
-    } catch {
-      // Knowledge retrieval failure is non-fatal
-    }
 
     // Resolve MCP tool summaries for system prompt injection
     const mcpToolsSummary = await getMCPToolsSummary(agentId)
@@ -1456,32 +1448,6 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       }
     }
 
-    // Resolve active project for the [7.8] block.
-    // If the current message is a ticket-linked task_result, override the agent's
-    // persistent active project with the ticket's project for this turn only
-    // (projects.md § 4 — temporary override on task-completed turns).
-    let resolvedActiveProjectId: string | null = agent.activeProjectId ?? null
-    if (queueItem.taskId && queueItem.messageType === 'task_result') {
-      const taskRow = await db
-        .select({ ticketId: tasks.ticketId })
-        .from(tasks)
-        .where(eq(tasks.id, queueItem.taskId))
-        .get()
-      if (taskRow?.ticketId) {
-        const ticketRow = await db
-          .select({ projectId: tickets.projectId })
-          .from(tickets)
-          .where(eq(tickets.id, taskRow.ticketId))
-          .get()
-        if (ticketRow) {
-          resolvedActiveProjectId = ticketRow.projectId
-        }
-      }
-    }
-    const activeProject = resolvedActiveProjectId
-      ? await buildActiveProjectInfo(resolvedActiveProjectId)
-      : null
-
     // Resolve LLM (provider + model + decrypted config) BEFORE building
     // the system prompt — the prompt's tool-gating decision needs to
     // see `resolved.model.maxTools`. The provider/model are
@@ -1505,11 +1471,11 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
     }
 
     const accountTriggerSummaries = await listActiveTriggerSummariesForAgent(agent.id)
+    const memoryProfile = await getProfile(agentId)
     const systemSegments = buildSystemPrompt({
       agent: { name: agent.name, slug: agent.slug, role: agent.role, character: agent.character, expertise: agent.expertise, kind: agent.kind },
       contacts: contactsWithSlug,
-      relevantMemories,
-      relevantKnowledge,
+      profile: memoryProfile.content,
       agentDirectory,
       mcpTools: mcpToolsSummary,
       isSubAgent: false,
@@ -1529,7 +1495,6 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         oldestVisibleMessageAt,
       },
       workspacePath: agent.workspacePath,
-      activeProject: activeProject ?? undefined,
       // When the model declares maxTools=0 (Replicate-style non-tool-
       // calling completion model), strip every tool-related section
       // of the prompt — otherwise the model sees "use these tools"
@@ -1551,6 +1516,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         agentId,
         messageId: mockAssistantId,
         content: '',
+        provisional: '',
         reasoning: [],
         toolCalls: [],
         outputTokens: 0,
@@ -1570,7 +1536,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         sseManager.sendToAgent(agentId, {
           type: 'chat:token',
           agentId,
-          data: { agentId, messageId: mockAssistantId, token: piece },
+          data: { agentId, messageId: mockAssistantId, token: piece, contentLength: mockAccum.length },
         })
         await new Promise((r) => setTimeout(r, mockDelay))
       }
@@ -1591,7 +1557,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       sseManager.sendToAgent(agentId, {
         type: 'queue:update',
         agentId,
-        data: { agentId, queueSize: 0, isProcessing: false },
+        data: { agentId, queueSize: await getQueueSize(agentId), isProcessing: false },
       })
       return true
     }
@@ -1669,7 +1635,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       type: 'queue:update',
       agentId,
       data: {
-        agentId, queueSize: 0, isProcessing: true, processingStartedAt,
+        agentId, queueSize: await getQueueSize(agentId), isProcessing: true, processingStartedAt,
         // Send the CALIBRATED estimate + breakdown (raw BPE × the per-Agent
         // real/BPE factor), the same numbers the context visualizer and the
         // /context-usage REST endpoint return — otherwise the navbar tooltip
@@ -1711,6 +1677,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       agentId,
       messageId: assistantMessageId,
       content: '',
+      provisional: '',
       reasoning: reasoningSegments,
       toolCalls: toolCallsLog,
       outputTokens: 0,
@@ -1766,9 +1733,9 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         resolved.config,
       )
 
-      // Buffer text per step until finishReason is known — see stream-runner.ts.
-      // Intermediate steps (with tool_use) drop their text; final pure-text
-      // steps flush it. Tool-call / reasoning events are forwarded immediately.
+      // Text streams live and commits at each normal step end (see
+      // stream-runner.ts): pre-tool-call preamble included, interleaved with
+      // tool cards by offset. Tool-call / reasoning events forward immediately.
       const outcome = await runStreamStep(stream, {
         agentId,
         assistantMessageId,
@@ -1784,7 +1751,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         onCommittedText: (delta) => { fullContent += delta },
         onDroppedText: (txt, idx) => log.debug(
           { agentId, assistantMessageId, step: idx, droppedChars: txt.length, preview: txt.slice(0, 200) },
-          'Dropped pre-narration from intermediate step',
+          'Dropped in-flight step text (step died: error/abort/stall)',
         ),
       }, step)
       if (outcome.usage) {
@@ -1812,7 +1779,29 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         }
       }
 
-      if (outcome.error && !outcome.wasAborted) throw outcome.error
+      if (outcome.error && !outcome.wasAborted) {
+        // Persist what already executed BEFORE failing the turn: earlier
+        // steps may have run tools with real side effects (send_email, file
+        // writes, shell commands). Losing the trace meant the next turn's
+        // history had no record of them, so the model re-did them on retry.
+        if (toolCallsLog.length > 0) {
+          await db.insert(messages).values({
+            id: assistantMessageId,
+            agentId,
+            role: 'assistant',
+            content: '',
+            sourceType: 'agent',
+            sourceId: agentId,
+            toolCalls: JSON.stringify(toolCallsLog),
+            channelOriginId: queueItem.channelOriginId ?? null,
+            metadata: JSON.stringify({ midTurnError: true, toolCallCount: toolCallsLog.length }),
+            createdAt: new Date(),
+          }).catch((persistErr) => {
+            log.error({ agentId, err: persistErr }, 'Failed to persist executed tool calls before surfacing the provider error')
+          })
+        }
+        throw outcome.error
+      }
       if (outcome.wasAborted) wasAborted = true
       if (outcome.finishReason !== undefined) stepFinishReasons.push(outcome.finishReason)
       const stepText = outcome.stepText
@@ -1976,7 +1965,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         data: {
           messageId: assistantMessageId,
           token: fullContent,
-          isFirst: true,
+          contentLength: fullContent.length,
         },
       })
     }
@@ -1987,16 +1976,19 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
     if (stepLimitReached) {
       log.warn(
         { agentId, messageId: assistantMessageId, toolCalls: toolCallsLog.length, maxSteps: config.tools.maxSteps },
-        'LLM turn produced tool calls but no text content (step limit truncation)',
+        'LLM turn hit the tool step limit before a final response (step limit truncation)',
       )
-      fullContent = `*(Completed ${toolCallsLog.length} tool call${toolCallsLog.length > 1 ? 's' : ''} but the response was truncated due to the tool step limit of ${config.tools.maxSteps}. You can ask me to continue or summarize the results.)*`
+      // Append (not replace): committed preamble text from earlier steps has
+      // already been streamed to clients and must survive in the persisted row.
+      const notice = `${fullContent ? '\n\n' : ''}*(Completed ${toolCallsLog.length} tool call${toolCallsLog.length > 1 ? 's' : ''} but the response was truncated due to the tool step limit of ${config.tools.maxSteps}. You can ask me to continue or summarize the results.)*`
+      fullContent += notice
       sseManager.sendToAgent(agentId, {
         type: 'chat:token',
         agentId,
         data: {
           messageId: assistantMessageId,
-          token: fullContent,
-          isFirst: true,
+          token: notice,
+          contentLength: fullContent.length,
         },
       })
     }
@@ -2026,7 +2018,7 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         data: {
           messageId: assistantMessageId,
           token: fullContent,
-          isFirst: true,
+          contentLength: fullContent.length,
         },
       })
     }
@@ -2050,7 +2042,6 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
         reasoning: reasoningSegments.length > 0 ? JSON.stringify(reasoningSegments) : null,
         metadata: (() => {
           const meta: Record<string, unknown> = {}
-          if (relevantMemories.length > 0) meta.injectedMemories = relevantMemories
           if (stepLimitReached) {
             meta.stepLimitReached = true
             meta.maxSteps = config.tools.maxSteps
@@ -2304,11 +2295,12 @@ export async function processNextMessage(agentId: string): Promise<boolean> {
       await notifyChannelOfFailure(channelTarget, displayError).catch(() => {})
     }
 
-    // Emit queue update to clear processing state on error
+    // Emit queue update to clear processing state on error. Real queue size:
+    // other items can be pending behind the failed one (sse.md trap #3).
     sseManager.sendToAgent(agentId, {
       type: 'queue:update',
       agentId,
-      data: { agentId, queueSize: 0, isProcessing: false },
+      data: { agentId, queueSize: await getQueueSize(agentId).catch(() => 0), isProcessing: false },
     })
 
     return true
@@ -2386,6 +2378,7 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
   quickLocks.add(agentId)
 
   let queueItem: Awaited<ReturnType<typeof dequeueMessage>> = null
+  let quickDeadlineTimer: ReturnType<typeof setTimeout> | null = null
 
   try {
     if (await isAgentProcessing(agentId, 'quick')) return false
@@ -2400,18 +2393,28 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     const agent = await db.select().from(agents).where(eq(agents.id, agentId)).get()
     if (!agent) return false
 
-    // Save the incoming user message to DB (with sessionId)
-    const userMessageId = uuid()
-    await db.insert(messages).values({
-      id: userMessageId,
-      agentId,
-      sessionId,
-      role: 'user',
-      content: queueItem.content,
-      sourceType: queueItem.sourceType,
-      sourceId: queueItem.sourceId,
-      createdAt: new Date(),
-    })
+    // Save the incoming user message to DB (with sessionId). Reuse the id
+    // recorded on the queue item when this is a crash/requeue recovery —
+    // inserting fresh every time duplicated the user turn in the session
+    // history whenever the item was reprocessed (same mechanism as the main
+    // lane at the top of processNextMessage).
+    const userMessageId = queueItem.createdMessageId ?? uuid()
+    if (!queueItem.createdMessageId) {
+      await db.insert(messages).values({
+        id: userMessageId,
+        agentId,
+        sessionId,
+        role: 'user',
+        content: queueItem.content,
+        sourceType: queueItem.sourceType,
+        sourceId: queueItem.sourceId,
+        createdAt: new Date(),
+      })
+      sqlite.run(
+        `UPDATE queue_items SET created_message_id = ? WHERE id = ?`,
+        [userMessageId, queueItem.id],
+      )
+    }
 
     // Link uploaded files if any
     if (queueItem.fileIds && queueItem.fileIds.length > 0) {
@@ -2429,30 +2432,10 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       if (profile) userLanguage = profile.agentLanguage ?? profile.language
     }
 
-    // Retrieve relevant memories (read-only) via hybrid search
-    let relevantMemories: Array<{ id: string; category: string; content: string; subject: string | null; importance: number | null; updatedAt: Date | null; score: number }> = []
-    try {
-      relevantMemories = await getRelevantMemories(agentId, queueItem.content)
-    } catch {
-      // Non-fatal
-    }
 
-    // Retrieve relevant knowledge base chunks
-    let relevantKnowledge: Array<{ content: string; sourceId: string; score: number }> = []
-    try {
-      const { searchKnowledge } = await import('@/server/services/knowledge')
-      relevantKnowledge = await searchKnowledge(agentId, queueItem.content, 5)
-    } catch {
-      // Non-fatal
-    }
 
     // Build quick session system prompt (minimal — no contacts, no agent directory, no hidden instructions)
     const globalPrompt = await getGlobalPrompt()
-
-    // Active project applies to quick sessions too — the Agent's state is the same regardless of session type.
-    const quickSessionActiveProject = agent.activeProjectId
-      ? await buildActiveProjectInfo(agent.activeProjectId)
-      : null
 
     // Per-session overrides (model/provider/thinking) — quick sessions can run
     // on a different model than the agent without touching its configuration.
@@ -2512,8 +2495,7 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     const systemSegments = buildSystemPrompt({
       agent: { name: agent.name, slug: agent.slug, role: agent.role, character: agent.character, expertise: agent.expertise, kind: agent.kind },
       contacts: apiContacts,
-      relevantMemories,
-      relevantKnowledge,
+      profile: (await getProfile(agentId)).content,
       agentDirectory: apiAgentDirectory,
       mcpTools: apiMcpToolsSummary,
       activeChannels: apiActiveChannels,
@@ -2523,7 +2505,6 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       globalPrompt,
       userLanguage,
       workspacePath: agent.workspacePath,
-      activeProject: quickSessionActiveProject ?? undefined,
       // Same model-driven tool gating as the main queue path.
       toolsEnabled: getMaxToolsForRequest(qsResolved.providerRow.type, qsResolved.model) > 0,
     })
@@ -2615,9 +2596,26 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     let fullContent = ''
     const reasoningSegments: ReasoningSegment[] = []
     const toolCallsLog: Array<{ id: string; name: string; args: unknown; result?: unknown; offset: number }> = []
+    // Committed-text state for the stream runner (drives the inter-step
+    // markdown separator). Not registered anywhere: quick sessions have no
+    // mid-stream rehydration route.
+    const qsContentSnapshot = { content: '', provisional: '' }
 
     const abortController = new AbortController()
     quickAbortControllers.set(sessionId, abortController)
+
+    // Same time ceiling as the main lane. Without it, one hung tool call
+    // pinned quickLocks forever: every later quick/API message for the agent
+    // silently queued, and only a process restart could recover the lane.
+    if (config.tools.turnTimeoutMs > 0) {
+      quickDeadlineTimer = setTimeout(() => {
+        log.error(
+          { agentId, sessionId, timeoutMs: config.tools.turnTimeoutMs },
+          'Quick-session turn exceeded its time ceiling — aborting',
+        )
+        abortController.abort()
+      }, config.tools.turnTimeoutMs)
+    }
 
     // Convert tools to hivekeep shape once.
     const { vercelToolsToHivekeep: qsVercelToolsToHivekeep, markLastHivekeepToolCacheable: qsMarkLastHivekeepToolCacheable } =
@@ -2660,25 +2658,47 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
         qsResolved.config,
       )
 
-      // Buffer text per step until finishReason is known — see stream-runner.ts.
-      // Quick session has no mid-stream rehydration snapshot (no client-side
-      // remount support) and no first-token attribution payload — those are
-      // the only differences from the main Agent path.
+      // Text streams live and commits at each normal step end (see
+      // stream-runner.ts). Quick sessions have no rehydration route (no
+      // client-side remount support) and no first-token attribution payload;
+      // the local snapshot below only feeds the runner's committed-text state
+      // (inter-step markdown separator).
       const outcome = await runStreamStep(stream, {
         agentId,
         assistantMessageId,
         abortController,
         extraSseFields: { sessionId },
         reasoningSegments,
+        contentSnapshot: qsContentSnapshot,
         onCommittedText: (delta) => { fullContent += delta },
         onDroppedText: (txt, idx) => log.debug(
           { agentId, sessionId, assistantMessageId, step: idx, droppedChars: txt.length, preview: txt.slice(0, 200) },
-          'Dropped pre-narration from intermediate step (quick session)',
+          'Dropped in-flight step text (step died: error/abort/stall, quick session)',
         ),
       }, step)
       if (outcome.usage) stepUsages.push(outcome.usage)
 
-      if (outcome.error && !outcome.wasAborted) throw outcome.error
+      if (outcome.error && !outcome.wasAborted) {
+        // Same guarantee as the main lane: tools already executed this turn
+        // (with real side effects) must survive a mid-turn provider error.
+        if (toolCallsLog.length > 0) {
+          await db.insert(messages).values({
+            id: assistantMessageId,
+            agentId,
+            role: 'assistant',
+            content: '',
+            sourceType: 'agent',
+            sourceId: agentId,
+            sessionId,
+            toolCalls: JSON.stringify(toolCallsLog),
+            metadata: JSON.stringify({ midTurnError: true, toolCallCount: toolCallsLog.length }),
+            createdAt: new Date(),
+          }).catch((persistErr) => {
+            log.error({ agentId, sessionId, err: persistErr }, 'Failed to persist executed tool calls before surfacing the provider error')
+          })
+        }
+        throw outcome.error
+      }
       if (outcome.wasAborted) wasAborted = true
       if (outcome.finishReason !== undefined) stepFinishReasons.push(outcome.finishReason)
       const stepText = outcome.stepText
@@ -2792,7 +2812,7 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       sseManager.sendToAgent(agentId, {
         type: 'chat:token',
         agentId,
-        data: { messageId: assistantMessageId, token: fullContent, sessionId },
+        data: { messageId: assistantMessageId, token: fullContent, contentLength: fullContent.length, sessionId },
       })
     }
 
@@ -2801,9 +2821,11 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
     if (stepLimitReached) {
       log.warn(
         { agentId, sessionId, toolCalls: toolCallsLog.length, maxSteps: config.tools.maxSteps },
-        'Quick session LLM turn produced tool calls but no text content (step limit truncation)',
+        'Quick session LLM turn hit the tool step limit before a final response (step limit truncation)',
       )
-      fullContent = `*(Completed ${toolCallsLog.length} tool call${toolCallsLog.length > 1 ? 's' : ''} but the response was truncated due to the tool step limit of ${config.tools.maxSteps}. You can ask me to continue or summarize.)*`
+      // Append (not replace): committed preamble from earlier steps was
+      // already streamed to the client.
+      fullContent += `${fullContent ? '\n\n' : ''}*(Completed ${toolCallsLog.length} tool call${toolCallsLog.length > 1 ? 's' : ''} but the response was truncated due to the tool step limit of ${config.tools.maxSteps}. You can ask me to continue or summarize.)*`
     }
 
     // Surface empty turns (same rationale as main path): no text, no tool
@@ -2825,7 +2847,7 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
       sseManager.sendToAgent(agentId, {
         type: 'chat:token',
         agentId,
-        data: { messageId: assistantMessageId, token: fullContent, sessionId },
+        data: { messageId: assistantMessageId, token: fullContent, contentLength: fullContent.length, sessionId },
       })
     }
 
@@ -2845,7 +2867,6 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
         reasoning: reasoningSegments.length > 0 ? JSON.stringify(reasoningSegments) : null,
         metadata: (() => {
           const meta: Record<string, unknown> = {}
-          if (relevantMemories.length > 0) meta.injectedMemories = relevantMemories
           if (stepLimitReached) {
             meta.stepLimitReached = true
             meta.maxSteps = config.tools.maxSteps
@@ -2946,6 +2967,7 @@ export async function processQuickMessage(agentId: string): Promise<boolean> {
           .catch(() => {})
       }
     }
+    if (quickDeadlineTimer) clearTimeout(quickDeadlineTimer)
     quickLocks.delete(agentId)
   }
 }
@@ -2972,9 +2994,10 @@ export async function buildMessageHistory(agentId: string): Promise<{ messages: 
     .orderBy(asc(compactingSummaries.lastMessageAt))
     .all()
 
-  // Use the latest summary's lastMessageAt as the cutoff for message filtering
+  // Resolve the boundary of the latest summary (rowid-based: a strict
+  // timestamp compare drops same-millisecond siblings — see compacting.ts).
   const latestSummary = activeSummaries.length > 0 ? activeSummaries[activeSummaries.length - 1]! : null
-  const cutoffTimestamp = latestSummary ? (latestSummary.lastMessageAt as unknown as number) : null
+  const boundary = resolveCompactionBoundary(latestSummary)
 
   // [10] Recent messages (main session only, not task or quick session messages)
   // Limit is configurable via HISTORY_MAX_MESSAGES (default 1000). A low limit
@@ -2983,10 +3006,10 @@ export async function buildMessageHistory(agentId: string): Promise<{ messages: 
   // invalidating cross-turn cache. The compacting service is the proper
   // mechanism for keeping the LLM context within token-window limits.
   const recentMessages = await db
-    .select()
+    .select({ ...getTableColumns(messages), rowid: sql<number>`rowid` })
     .from(messages)
     .where(and(eq(messages.agentId, agentId), isNull(messages.taskId), isNull(messages.sessionId), ne(messages.sourceType, 'compacting')))
-    .orderBy(desc(messages.createdAt))
+    .orderBy(desc(messages.createdAt), desc(sql`rowid`))
     .limit(config.historyMaxMessages)
     .all()
 
@@ -2994,12 +3017,9 @@ export async function buildMessageHistory(agentId: string): Promise<{ messages: 
   recentMessages.reverse()
 
   // Only include messages after the latest summary's cutoff
-  const postSnapshotMessages = (cutoffTimestamp
-    ? recentMessages.filter(
-        (m) => m.createdAt && (m.createdAt as unknown as number) > cutoffTimestamp,
-      )
-    : recentMessages
-  ).filter((m) => {
+  const postSnapshotMessages = recentMessages
+    .filter((m) => isAfterCompactionBoundary(boundary, m))
+    .filter((m) => {
     // UI-only audit markers must not reach the LLM prompt. They live in DB
     // so the conversation view can render them (channel handoff banners),
     // but they have no semantic value for the model and would only confuse
