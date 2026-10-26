@@ -1,0 +1,160 @@
+diff --git a/es/Claude/components/Color.js b/es/Claude/components/Color.js
+index fa0b546c2bd733ee1d39584ae7d11f12f635b0ce..a2d07c77a27850d7051e916931379912a9da3ee6 100644
+--- a/es/Claude/components/Color.js
++++ b/es/Claude/components/Color.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/DeepSeek/components/Color.js b/es/DeepSeek/components/Color.js
+index 03ede60d5db52daa386f10e4efed8c6785cb05d3..560a951f47d0b32af2c7caa4a68b10384071d2e3 100644
+--- a/es/DeepSeek/components/Color.js
++++ b/es/DeepSeek/components/Color.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Gemini/components/Color.js b/es/Gemini/components/Color.js
+index 3d04c5fa54200057c278f60f5ff7e748e6e2f491..15c549adf0867498d99c2568c18bdd321f8dd982 100644
+--- a/es/Gemini/components/Color.js
++++ b/es/Gemini/components/Color.js
+@@ -16,8 +16,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { useFillIds } from "../../hooks/useFillId";
+-import { TITLE } from "../style";
++import { useFillIds } from "../../hooks/useFillId.js";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Kimi/components/Color.js b/es/Kimi/components/Color.js
+index 20fe0aaccf7c160fefb84bee862c76dda9065447..b3dd343933c820d69e5e08b1988b11714674d4ea 100644
+--- a/es/Kimi/components/Color.js
++++ b/es/Kimi/components/Color.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Minimax/components/Color.js b/es/Minimax/components/Color.js
+index f72f80ace778a305718c4f2cfab349f29ce776d4..3b1a05374a2b3d85f271df9a1acafbb1d4512870 100644
+--- a/es/Minimax/components/Color.js
++++ b/es/Minimax/components/Color.js
+@@ -10,8 +10,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { useFillId } from "../../hooks/useFillId";
+-import { TITLE } from "../style";
++import { useFillId } from "../../hooks/useFillId.js";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Mistral/components/Color.js b/es/Mistral/components/Color.js
+index 18781aae263675ba213ce1e43f2c8c4e9c89e577..5e45cf00d62e91f93953c5cd40abd48adccb12d9 100644
+--- a/es/Mistral/components/Color.js
++++ b/es/Mistral/components/Color.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Ollama/components/Mono.js b/es/Ollama/components/Mono.js
+index f14651b678dbfa7d4f57a18ac75dce6cfd0fd308..c3e29710a40af901cf5e6458e2b8621822cf9e94 100644
+--- a/es/Ollama/components/Mono.js
++++ b/es/Ollama/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/OpenAI/components/Mono.js b/es/OpenAI/components/Mono.js
+index 9b02cea1bf1af4bedad74d89d4b1d21713172531..7a9a114552ff218bab33301b2d2a970e0fa00298 100644
+--- a/es/OpenAI/components/Mono.js
++++ b/es/OpenAI/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/OpenRouter/components/Mono.js b/es/OpenRouter/components/Mono.js
+index bfbf394d238051aa53282f4504421dcedb16f9d3..7a26a475b3eecb6ef2da598937ba03c135b6b9e0 100644
+--- a/es/OpenRouter/components/Mono.js
++++ b/es/OpenRouter/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Perplexity/components/Mono.js b/es/Perplexity/components/Mono.js
+index 71430fa909bb07b69e5fe20a9ebdaee51e928cff..833581da21dbd9c9034b7594a0dc71ef644785b5 100644
+--- a/es/Perplexity/components/Mono.js
++++ b/es/Perplexity/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/Replicate/components/Mono.js b/es/Replicate/components/Mono.js
+index 83b6b41866961e89cf39448ab4aecd0e6999871a..24ca80506aae9f4133e3087b9fe8045aaea288f6 100644
+--- a/es/Replicate/components/Mono.js
++++ b/es/Replicate/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {
+diff --git a/es/XAI/components/Mono.js b/es/XAI/components/Mono.js
+index 72b0e4949828f80ee6a94c8d50bacc1097a406c0..a35feb5114e43a33336285564554956a2cd5c89f 100644
+--- a/es/XAI/components/Mono.js
++++ b/es/XAI/components/Mono.js
+@@ -10,7 +10,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e
+ function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+ function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+ import { memo } from 'react';
+-import { TITLE } from "../style";
++import { TITLE } from "../style.js";
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { jsxs as _jsxs } from "react/jsx-runtime";
+ var Icon = /*#__PURE__*/memo(function (_ref) {

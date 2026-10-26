@@ -8,20 +8,31 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/react": "^3.6.3",
+    "@astrojs/react": "^5.0.7",
     "@iconify-json/lucide": "^1.2.30",
     "@iconify-json/simple-icons": "^1.2.30",
     "@lobehub/icons": "^5.10.0",
-    "astro": "^4.16.18",
+    "astro": "7.3.3",
     "astro-icon": "^1.1.5",
     "lucide-react": "^1.17.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@astrojs/sitemap": "~3.2.0",
-    "autoprefixer": "^10.4.20",
+    "@astrojs/sitemap": "^3.7.4",
     "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1"
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "patchedDependencies": {
+    "@lobehub/icons@5.18.0": "patches/@lobehub%2Ficons@5.18.0.patch"
+  },
+  "overrides": {
+    "source-map-js": "^1.2.2",
+    "devalue": "^5.9.3",
+    "katex": "^0.18.2"
   }
 }
