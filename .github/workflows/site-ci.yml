@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'docs-site/**'
       - '.github/workflows/site-ci.yml'
 
 permissions:
